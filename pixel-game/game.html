@@ -271,14 +271,17 @@ function hash(x, y, s = 0) {
 }
 
 /*WORLD-START*/
-const W = 88, H = 104, TOTAL = 8, OVER_H = 64;
+const W = 88, H = 116, TOTAL = 8, OVER_H = 64, IN_Y = 104;
 const GRASS = 0, FLOWER = 1, TALL = 2, PATH = 3, TREE = 4, WATER = 5, BRIDGE = 6, ROCK = 7,
       FLOOR = 8, WALL = 9, ROOF = 10, HWALL = 11, DOOR = 12, SAND = 13, CRACK = 14,
       SNOW = 15, PINE = 16, ICE = 17, CLIFF = 18, GATE = 19, GATEO = 20, PLATE = 21, CAVE = 22, STAIRS = 23,
-      CFLOOR = 24, PALM = 25, WRECK = 26, SROCK = 27, SEAL = 28, SKY = 29, CLOUDF = 30, DSTAIRS = 31;
-const SOLID = new Set([TREE, WATER, ROCK, WALL, ROOF, HWALL, DOOR, CRACK, PINE, CLIFF, GATE, PALM, WRECK, SROCK, SEAL, SKY]);
+      CFLOOR = 24, PALM = 25, WRECK = 26, SROCK = 27, SEAL = 28, SKY = 29, CLOUDF = 30, DSTAIRS = 31,
+      WOOD = 32, IWALL = 33, IDOOR = 34;
+const SOLID = new Set([TREE, WATER, ROCK, WALL, ROOF, HWALL, DOOR, CRACK, PINE, CLIFF, GATE, PALM, WRECK, SROCK, SEAL, SKY, IWALL]);
+const HOME = { x: 0, y: 104, w: 16, h: 12 }, ARENA = { x: 18, y: 104, w: 26, h: 12 };
 const DG = { x: 44, y: 64, w: 44, h: 40 };   // dungeon region, regenerated on every visit
 function zoneAt(tx, ty) {
+  if (ty >= IN_Y) return tx < 18 ? 'home' : 'arena';
   if (ty >= OVER_H) return tx < 44 ? 'sky' : 'dungeon';
   if (tx >= 58 && ty >= 36) return 'cave';
   if (tx >= 44 && ty < 36) return 'snow';
@@ -404,6 +407,11 @@ function buildWorld() {
     if (get(x, y) === GRASS) { const r = hash(x, y, 31); if (r < .1) set(x, y, FLOWER); else if (r < .16 && x > 1 && x < 12 && y > OVER_H + 13 && y < OVER_H + 21) set(x, y, TREE); }
   // ---- Dungeon region starts as solid rock ----
   rect(DG.x, DG.y, DG.w, DG.h, WALL);
+  // ---- Interiors: the house for sale and Gordey's arena ----
+  rect(0, IN_Y, W, H - IN_Y, IWALL);
+  rect(2, IN_Y + 2, 12, 8, WOOD); set(7, IN_Y + 10, IDOOR);
+  rect(18, IN_Y, 26, 12, WALL); rect(20, IN_Y + 2, 22, 8, FLOOR); set(30, IN_Y + 10, IDOOR);
+  portals.push({ tx: 7, ty: IN_Y + 10, to: [27, 20] }, { tx: 30, ty: IN_Y + 10, to: [16, 20] });
 
   for (const pz of Object.values(puzzles)) {
     for (const [x, y] of pz.gates) set(x, y, GATE);
@@ -424,6 +432,9 @@ function buildWorld() {
     { kind: 'mob', type: 'storm', id: 'boss_storm', tx: 21, ty: OVER_H + 6 },
     { kind: 'npc', id: 'efim', tx: 59, ty: 19, name: 'Ефим' },
     { kind: 'npc', id: 'tikhon', tx: 21, ty: 42, name: 'Тихон' },
+    { kind: 'npc', id: 'nura', tx: 16, ty: 14, name: 'Бабушка Нюра' },
+    { kind: 'npc', id: 'fedya', tx: 29, ty: 22, name: 'Федя' },
+    { kind: 'npc', id: 'oleg', tx: 40, ty: 19, name: 'Стражник Олег' },
     { kind: 'deco', id: 'lamp', tx: 25, ty: 21 },
     { kind: 'deco', id: 'lamp', tx: 19, ty: 21 },
     { kind: 'sign', id: 'gate', tx: 44, ty: 14 },
@@ -637,6 +648,9 @@ SPR.hero.left = SPR.hero.right.map(flip);
 SPR.varya = mk(HERO_DOWN, { r: 'y', u: 'l', b: 'B', y: 'o' });
 SPR.kitten = mk(CAT, { o: 'w' });
 SPR.tikhon = mk(HERO_DOWN, { r: 'u', u: 'c', b: 'B', y: 'o' });
+SPR.nura = mk(withRows(HERO_DOWN, 1, ['.....kkkkkk', '....kGGGGGGk', '...kGGGGGGGGk', '...kGGGGGGGGk']), { u: 'P', b: 'P', y: 'w' });
+SPR.fedya = mk(HERO_DOWN, { r: 'o', u: 'u', b: 'n', y: 'w' });
+SPR.oleg = mk(HERO_DOWN, { r: 'D', u: 'G', b: 'D', y: 'y', w: 'G' });
 SPR.efim = mk(withRows(HERO_DOWN, 7, ['...kswwwwwwsk', '....kwwwwwwk', '...kkwwwwwwkk']), { r: 'b', u: 'B', b: 'B', y: 'o' });
 SPR.gordey = mk(withRows(HERO_DOWN, 7, ['...ksBBBBBBsk', '....kBBBBBBk']), { r: 'D', u: 'B', b: 'k', y: 'G' });
 
@@ -762,6 +776,17 @@ ICON.star = mkDraw(c => {
     const lim = 3.2 + 3.6 * Math.pow(Math.abs(Math.cos(a * 2.5 + Math.PI / 4)), 3);
     if (r < lim) P(c, x, y, r > lim - 1.1 ? C.k : (dx < 0 && dy < 0 ? C.y : C.o));
   }
+});
+ICON.rod = mkDraw(c => { for (let i = 0; i < 12; i++) P(c, 2 + i, 13 - i, C.B); P(c, 13, 1, C.w, 1, 9); P(c, 3, 10, C.k, 3, 3); P(c, 4, 11, C.G); P(c, 12, 10, C.r, 2, 2); });
+ICON.hook = mkDraw(c => { P(c, 8, 2, C.G, 1, 9); P(c, 4, 10, C.G, 5, 1); P(c, 4, 7, C.G, 1, 3); P(c, 3, 7, C.w); P(c, 7, 1, C.k, 3, 2); });
+ICON.home = mkDraw(c => {
+  for (let i = 0; i < 7; i++) P(c, 7 - i, 2 + i, C.k, 2 + i * 2, 1);
+  for (let i = 1; i < 7; i++) P(c, 8 - i, 2 + i, C.r, i * 2, 1);
+  P(c, 2, 9, C.k, 12, 6); P(c, 3, 9, C.w, 10, 5); P(c, 7, 11, C.b, 3, 3); P(c, 4, 10, C.u, 2, 2);
+});
+ICON.fish = mkDraw(c => {
+  P(c, 3, 6, C.k, 9, 5); P(c, 2, 7, C.k, 11, 3); P(c, 12, 5, C.k, 3, 7);
+  P(c, 3, 7, C.c, 9, 3); P(c, 4, 6, C.c, 7, 1); P(c, 13, 6, C.u, 1, 5); P(c, 5, 7, C.k); P(c, 6, 9, C.u, 5, 1);
 });
 const ICON_URL = {};
 for (const k in ICON) ICON_URL[k] = ICON[k].toDataURL();
@@ -899,6 +924,18 @@ function drawTile(c, t, tx, ty) {
     case CLOUDF:
       P(c, X, Y, C.w, 16, 16); P(c, X, Y + 13, C.S, 16, 3); P(c, X, Y + 15, C.Z, 16, 1);
       for (let i = 0; i < 4; i++) P(c, X + ((hash(tx, ty, 270 + i) * 13) | 0), Y + ((hash(tx, ty, 280 + i) * 11) | 0), C.S, 3, 1);
+      break;
+    case WOOD:
+      P(c, X, Y, C.b, 16, 16);
+      for (let r = 0; r < 4; r++) { P(c, X, Y + r * 4 + 3, C.B, 16, 1); P(c, X + ((r * 7 + tx * 3) % 16), Y + r * 4, C.B, 1, 3); }
+      break;
+    case IWALL:
+      P(c, X, Y, C.R, 16, 16);
+      for (let i = 0; i < 16; i += 4) P(c, X + i, Y, '#6a2430', 2, 16);
+      if (tileAt(tx, ty + 1) !== IWALL) { P(c, X, Y + 12, C.B, 16, 4); P(c, X, Y + 12, C.b, 16, 1); }
+      break;
+    case IDOOR:
+      P(c, X, Y, C.k, 16, 16); P(c, X + 2, Y, C.B, 12, 16); P(c, X + 3, Y + 1, C.b, 10, 15); P(c, X + 7, Y + 1, C.B, 1, 15); P(c, X + 11, Y + 8, C.o);
       break;
     case DSTAIRS:
       P(c, X, Y, C.F, 16, 16);
@@ -1076,6 +1113,9 @@ const TEXT = {
   varya: ['Привет! Я Варя. Зелья, оружие, щиты: выбирай, что нравится.', 'Заходи, у меня всё свежее!', 'Монетки звенят? Значит, пора за покупками.'],
   efim: ['Ох, гость! Я Ефим, живу тут отшельником. В горах злые волки и снеговики, береги голову.',
     'Кристалл вмёрз в озеро. На льду катишься, пока не упрёшься в камень. Думай, куда едешь!', 'А в пещеру без фонаря не суйся.'],
+  fedya: ['Я видел треснувший валун в цветочном поле! Бомбой бы его…', 'На пляже красивые ракушки. Тихон говорит, их пятнадцать.',
+    'По всему краю разбросаны страницы чьего-то дневника. Найдёшь, дай почитать!', 'Видел камни с голубыми рунами? Тронешь, и они просыпаются!',
+    'Под руинами есть люк вниз. Мама не пускает.', 'Тихон даёт удочку. В море водится золотая рыбка!', 'Гордей устроил арену. Я бы победил всех. Ну, почти.'],
   tikhon: ['Я Тихон, рыбак. В бухте за скалами что-то сияет, да ворота заперты.',
     'Нашёл записку в бутылке: «Крайние рычаги вверх, средний вниз». Не про бухту ли?', 'Крабы нынче злые. Щипаются больно.'],
   diary: [
@@ -1124,7 +1164,7 @@ const TEXT = {
     ruins: 'Руины древней крепости. В глубине спит Король слаймов. Опасно!',
     shrine: 'Алтарь кристаллов. Пять гнёзд пустуют.',
   },
-  doors: { 17: 'Дом Мирона. Заперто, хозяин на площади.', 27: 'Заперто. Изнутри пахнет пирогами.' },
+  doors: { 17: 'Дом Мирона. Заперто, хозяин на площади.', 27: 'Дом продаётся. Спроси у Вари в лавке.' },
   chest: { coins30: 'В сундуке 30 монет!', coins40: 'В сундуке 40 монет!', coins10: 'В сундуке 10 монет!', coins15: 'В сундуке 15 монет!', heart: 'В сундуке сердце! Здоровье +1.', coins20: 'Тайник! Внутри 20 монет.', potions: 'Тайник! Внутри два красных зелья.' },
   empty: 'Сундук пуст.',
   faint: 'Ты теряешь сознание… и приходишь в себя уже в деревне.',
@@ -1137,6 +1177,7 @@ const WEAPONS = {
   spear: { name: 'Копьё', desc: 'Бьёт далеко вперёд.', dmg: 1, cd: .4, swing: .24, len: 24, wid: 8 },
   axe: { name: 'Топор', desc: 'Медленный, но бьёт вдвое сильнее и по широкой дуге.', dmg: 2, cd: .6, swing: .3, len: 14, wid: 26 },
   bow: { name: 'Лук', desc: 'Стреляет вперёд издалека.', dmg: 1, cd: .45, swing: .2 },
+  rod: { name: 'Удочка', desc: 'Встань у воды и нажми A.', dmg: 0, cd: .5, swing: .2 },
   bomb: { name: 'Бомбы', desc: 'Взрыв через 1,5 секунды ломает треснувшие камни. Отойди подальше!', dmg: 3, cd: .5, swing: .15 },
 };
 const ammoMax = a => (G.bigBag ? { arrows: 50, bombs: 15 } : { arrows: 30, bombs: 9 })[a];
@@ -1184,6 +1225,10 @@ const ACH = [
   ['ways', 'Путешественник', 'Пробуди все камни-порталы.'],
   ['bosses', 'Охотник на чудищ', 'Победи всех четырёх боссов.'],
   ['elite5', 'Сильнейший', 'Победи 5 элитных врагов.'],
+  ['fisher', 'Рыбак', 'Поймай 10 рыб.'],
+  ['goldfish', 'Золотая рыбка', 'Поймай золотую рыбку.'],
+  ['homeowner', 'Хозяин', 'Купи дом и обставь его всей мебелью.'],
+  ['arena10', 'Гладиатор', 'Пройди 10 волн на арене.'],
   ['sky', 'Небожитель', 'Собери три грозовые печати.'],
   ['stormlord', 'Укротитель бури', 'Победи Повелителя бури.'],
   ['deep5', 'Спелеолог', 'Спустись на 5 этаж подземелья.'],
@@ -1226,6 +1271,8 @@ function checkAch() {
   let seen = 0; for (let i = 0; i < W * OVER_H; i++) seen += G.seen[i];
   if (seen >= W * OVER_H / 2) unlock('map');
   if (['seal1', 'seal2', 'seal3'].every(id => t.has(id))) unlock('sky');
+  if ((st.fish || 0) >= 10) unlock('fisher');
+  if (G.house && G.furn.length >= 6) unlock('homeowner');
 }
 function gainXp(n) {
   if (G.lvl >= MAX_LVL) return;
@@ -1350,7 +1397,8 @@ const SHOPS = {
       { id: 'spear', kind: 'weapon', price: 40 },
       { id: 'axe', kind: 'weapon', price: 70 },
       { id: 'bow', kind: 'weapon', price: 50 },
-      { id: 'lantern', kind: 'gear', price: 60, icon: 'lantern', name: 'Фонарь', desc: 'Освещает тёмную пещеру и ночные тропы.' },
+      { id: 'house', kind: 'gear', flag: 'house', price: 150, icon: 'home', name: 'Дом у площади', desc: 'Свой дом: кровать, мебель и трофеи с боссов.' },
+      { id: 'lantern', kind: 'gear', flag: 'lantern', price: 60, icon: 'lantern', name: 'Фонарь', desc: 'Освещает тёмную пещеру и ночные тропы.' },
       { id: 'shield', kind: 'shield', price: 45, name: 'Щит', desc: 'Держи B, стоя на месте: блокирует удары спереди.' },
     ],
   },
@@ -1359,6 +1407,18 @@ const SHOPS = {
       { id: 'dmg', kind: 'up', icon: 'sword', name: 'Заточка', desc: '+1 к урону любого оружия.', prices: [30, 70, 120] },
       { id: 'hp', kind: 'up', icon: 'heart', name: 'Кольчуга', desc: '+1 сердце к здоровью.', prices: [40, 90] },
       { id: 'reach', kind: 'up', icon: 'spear', name: 'Длинная рукоять', desc: 'Любое оружие бьёт дальше.', prices: [60] },
+      { id: 'bed', kind: 'furn', price: 40, name: 'Кровать', desc: 'Поспать до утра и восстановить здоровье.' },
+      { id: 'fire', kind: 'furn', price: 60, name: 'Камин', desc: 'Тепло и уют.' },
+      { id: 'books', kind: 'furn', price: 50, name: 'Книжный шкаф', desc: 'Сказки и записки о крае.' },
+      { id: 'table', kind: 'furn', price: 30, name: 'Стол', desc: 'Всегда накрыт к ужину.' },
+      { id: 'rug', kind: 'furn', price: 25, name: 'Ковёр', desc: 'Мягкий и красный.' },
+      { id: 'plant', kind: 'furn', price: 15, name: 'Цветок в горшке', desc: 'Растёт, даже когда тебя нет.' },
+    ],
+  },
+  tikhon: {
+    title: 'Лодка Тихона', items: [
+      { id: 'rod', kind: 'weapon', price: 20 },
+      { id: 'hook', kind: 'gear', flag: 'hook', price: 45, icon: 'hook', name: 'Крючок удачи', desc: 'Рыба клюёт быстрее, а вытащить её проще.' },
     ],
   },
 };
@@ -1602,10 +1662,13 @@ function freshState() {
     lvl: 1, xp: 0, perks: [], pendingPerks: 0, perkOffer: [], stats: { kills: 0, nightKills: 0, dashes: 0, deaths: 0, elites: 0 },
     ways: [], amulet: false, regenT: 0, weather: { type: 'clear', t: 50 },
     stormDone: false, postTold: false, dfloor: 0,
+    fish: {}, hook: false, house: false, furn: [], arenaBest: 0, arena: null, fishing: null, fedyaI: 0,
     seen: new Uint8Array(W * H), hitstop: 0, flash: 0,
   };
 }
 function spawnEntities() {
+  if (G.arena) G.arena = null;
+  if (G.fishing) G.fishing = null;
   ents = []; blockers = new Map(); respawns = []; shots = []; bombs = []; blasts = []; waves = []; strikes = [];
   for (const s of world.ents) {
     if (s.id && G.taken.has(s.id) && s.kind !== 'chest') continue;
@@ -1622,6 +1685,24 @@ function spawnEntities() {
     if (s.kind === 'npc' || s.kind === 'sign' || s.kind === 'chest' || s.kind === 'deco' || s.kind === 'way' || s.kind === 'altar') blockers.set(s.ty * W + s.tx, e);
     ents.push(e);
   }
+  refreshHome();
+}
+const TROPHY = { boss: 'Корона Короля слаймов', boss_giant: 'Осколок льда великана', boss_crab: 'Клешня гигантского краба', boss_shadow: 'Маска Тени', boss_storm: 'Сердце бури' };
+const FURN_POS = { bed: [3, IN_Y + 3], fire: [5, IN_Y + 2], books: [12, IN_Y + 2], table: [10, IN_Y + 6], rug: [7, IN_Y + 7], plant: [13, IN_Y + 9] };
+const TROPHY_POS = [[7, IN_Y + 2], [8, IN_Y + 2], [9, IN_Y + 2], [10, IN_Y + 2], [11, IN_Y + 2]];
+function refreshHome() {
+  ents = ents.filter(e => e.kind !== 'furn' && e.kind !== 'trophy');
+  for (const [k, b] of [...blockers]) if (b.kind === 'furn' || b.kind === 'trophy') blockers.delete(k);
+  if (!G.house) return;
+  for (const id of G.furn) {
+    const [tx, ty] = FURN_POS[id], e = { kind: 'furn', id, tx, ty, x: tx * TS, y: ty * TS };
+    ents.push(e); if (id !== 'rug') blockers.set(ty * W + tx, e);
+  }
+  Object.keys(TROPHY).forEach((b, i) => {
+    if (!G.taken.has(b)) return;
+    const [tx, ty] = TROPHY_POS[i], e = { kind: 'trophy', id: b, tx, ty, x: tx * TS, y: ty * TS };
+    ents.push(e); blockers.set(ty * W + tx, e);
+  });
 }
 const crystalCount = () => [...G.taken].filter(id => id.startsWith('cr')).length;
 
@@ -1640,6 +1721,7 @@ function makeSave() {
   return {
     v: 1, x: G.p.x, y: G.p.y, hp: G.p.hp, maxHp: G.p.maxHp, coins: G.coins, taken: [...G.taken], talked: G.talked, won: G.won, time: G.time, dir: G.p.dir,
     inv: G.inv, weapons: G.weapons, weapon: G.weapon, shield: G.shield, up: G.up, met: G.met, ammo: G.ammo, diff: G.diff, lvl: G.lvl, xp: G.xp, perks: G.perks, pendingPerks: G.pendingPerks, stats: G.stats, ways: G.ways, amulet: G.amulet, stormDone: G.stormDone, postTold: G.postTold,
+    fish: G.fish, hook: G.hook, house: G.house, furn: G.furn, arenaBest: G.arenaBest,
     lantern: G.lantern, levers: G.levers, clock: G.clock, q: G.q, bigBag: G.bigBag, temper: G.temper, seen: packSeen(G.seen),
   };
 }
@@ -1665,6 +1747,9 @@ function applySave(s) {
   G.pendingPerks = +s.pendingPerks || 0; Object.assign(G.stats, s.stats || {});
   if (Array.isArray(s.ways)) G.ways = s.ways.slice(); G.amulet = !!s.amulet;
   if (typeof s.seen === 'string') unpackSeen(s.seen, G.seen);
+  Object.assign(G.fish, s.fish || {}); G.hook = !!s.hook; G.house = !!s.house; G.arenaBest = +s.arenaBest || 0;
+  if (Array.isArray(s.furn)) G.furn = s.furn.slice();
+  if (zoneAt(Math.floor((G.p.x + 8) / TS), Math.floor((G.p.y + 12) / TS)) === 'arena') { G.p.x = 16 * TS; G.p.y = 20 * TS - 4; }
   G.stormDone = !!s.stormDone; G.postTold = !!s.postTold;
   // dungeons are not saved: wake up at its entrance
   if (zoneAt(Math.floor((G.p.x + 8) / TS), Math.floor((G.p.y + 12) / TS)) === 'dungeon') { G.p.x = 27 * TS; G.p.y = 26 * TS - 4; }
@@ -1738,6 +1823,7 @@ function pressA() {
 }
 function handleA() {
   if (dlg) { advanceDialog(); return; }
+  if (G.fishing && G.state === 'play' && !panelKind && !menuOpen) { fishA(); return; }
   if (G.state === 'title') { if ($('diffBox').hidden) $('bPlay').click(); return; }
   if (G.state === 'over') { $('bRetry').click(); return; }
   if (G.state === 'win') { $('bCont').click(); return; }
@@ -1748,7 +1834,10 @@ function handleA() {
   const tx = Math.floor(cx / TS), ty = Math.floor(cy / TS);
   const e = blockers.get(ty * W + tx);
   if (e) { interact(e); return; }
-  if (tileAt(tx, ty) === DOOR) { say('', TEXT.doors[tx] || 'Заперто.'); return; }
+  if (tileAt(tx, ty) === DOOR) {
+    if (tx === 27 && G.house) { travelPoint(7, IN_Y + 8); toast('Дом, милый дом'); return; }
+    say('', TEXT.doors[tx] || 'Заперто.'); return;
+  }
   swing();
 }
 function interact(e) {
@@ -1809,11 +1898,22 @@ function interact(e) {
   }
   if (e.id === 'efim' || e.id === 'tikhon') {
     const lines = TEXT[e.id], first = !G.met[e.id];
-    if (!first && questTalk(e)) return;
+    const after = e.id === 'tikhon' ? () => openPanel('tikhon') : undefined;
+    if (!first && questTalk(e, after)) return;
     G.met[e.id] = true;
-    say(e.name, first ? lines.slice(0, 2) : lines[1 + ((Math.random() * (lines.length - 1)) | 0)]);
+    say(e.name, first ? lines.slice(0, 2) : lines[1 + ((Math.random() * (lines.length - 1)) | 0)], after);
     return;
   }
+  if (e.id === 'nura' || e.id === 'fedya' || e.id === 'oleg') { say(e.name, gossip(e.id)); return; }
+  if (e.kind === 'furn') {
+    if (e.id === 'bed') {
+      say('', 'Ты сладко выспался. Здоровье восстановлено, на дворе утро.', () => {
+        G.p.hp = G.p.maxHp; G.clock = Math.ceil(G.clock / DAY_LEN) * DAY_LEN + 5; G.fade = .6; persist();
+      });
+    } else say('', { fire: 'Камин потрескивает. Так тепло…', books: 'На полке: «Сказки Листвянки», «Как приручить слайма», дневник Странника.', table: 'На столе пирожки от бабушки Нюры.', plant: 'Цветок подрос.' }[e.id] || '');
+    return;
+  }
+  if (e.kind === 'trophy') { say('', 'Трофей: ' + TROPHY[e.id] + '.'); return; }
   if (e.kind === 'lever') { toggleLever(e); return; }
   if (e.kind === 'way') {
     if (!G.ways.includes(e.id)) {
@@ -1835,6 +1935,14 @@ function swing() {
   const p = G.p, wp = WEAPONS[G.weapon];
   if (p.cd > 0) return;
   const f = FACE[p.dir];
+  if (G.weapon === 'rod') {
+    p.cd = .4;
+    for (const r of [12, 26]) {
+      const tx = Math.floor((p.x + 8 + f[0] * r) / TS), ty = Math.floor((p.y + 12 + f[1] * r) / TS);
+      if (tileAt(tx, ty) === WATER) { p.swing = wp.swing; startFishing(tx, ty); return; }
+    }
+    toast('Встань лицом к воде'); return;
+  }
   if (G.weapon === 'bow') {
     if (!G.ammo.arrows) { sfx.deny(); toast('Стрелы закончились'); p.cd = .4; return; }
     const asp = hasPerk('archer') ? 220 : 170;
@@ -1876,7 +1984,7 @@ function nightDark() {
   return (1 - ph) / .08 * .62;
 }
 const isNight = () => nightDark() > .3;
-const ZONE_NAMES = { field: 'Листвянка', snow: 'Морозный перевал', beach: 'Южный пляж', cave: 'Тёмная пещера', sky: 'Облачный остров', dungeon: 'Подземелье' };
+const ZONE_NAMES = { field: 'Листвянка', snow: 'Морозный перевал', beach: 'Южный пляж', cave: 'Тёмная пещера', sky: 'Облачный остров', dungeon: 'Подземелье', home: 'Свой дом', arena: 'Арена Гордея' };
 function openGate(g) {
   if (G.taken.has('open_' + g)) return;
   G.taken.add('open_' + g);
@@ -1929,6 +2037,102 @@ function travelTo(id) {
   p.x = w.tx * TS; p.y = (w.ty + 1) * TS - 4; p.dir = 'down'; p.slide = null; p.kx = p.ky = 0;
   p.portalCd = .8; G.fade = .5; sfx.portal(); shots = []; bombs = []; waves = [];
   panelKind = null; $('panel').hidden = true; persist();
+}
+const FISH = {
+  karas: { name: 'Карась', price: 4 }, okun: { name: 'Окунь', price: 7 }, shchuka: { name: 'Щука', price: 14 },
+  skumbria: { name: 'Скумбрия', price: 6 }, kambala: { name: 'Камбала', price: 11 }, gold: { name: 'Золотая рыбка', price: 40 },
+};
+const FISH_TABLE = { lake: [['karas', .6, .9], ['okun', .3, 1.2], ['shchuka', .1, 1.7]], sea: [['skumbria', .55, 1], ['kambala', .38, 1.35], ['gold', .07, 2.1]] };
+const fishValue = () => Object.keys(G.fish).reduce((a, k) => a + FISH[k].price * G.fish[k], 0);
+function sellFish() {
+  const v = fishValue(); if (!v) return;
+  G.coins += v; G.fish = {}; sfx.buy(); $('pNote').textContent = 'Тихон заплатил ' + v + ' мон.'; persist(); renderPanel();
+}
+function startFishing(tx, ty) {
+  const zone = zoneAt(tx, ty) === 'beach' ? 'sea' : 'lake';
+  G.fishing = { phase: 'wait', t: (1.5 + Math.random() * 2.5) * (G.hook ? .6 : 1), bx: tx * TS + 8, by: ty * TS + 8, zone, m: 0, dir: 1 };
+  sfx.swing(); toast('Ждём поклёвку…');
+}
+function fishA() {
+  const F = G.fishing;
+  if (F.phase === 'bite') {
+    const tbl = FISH_TABLE[F.zone]; let r = Math.random(), pick = tbl[0];
+    for (const row of tbl) { if (r < row[1]) { pick = row; break; } r -= row[1]; }
+    F.fish = pick[0]; F.speed = pick[2]; F.phase = 'reel'; F.m = 0; F.dir = 1;
+    F.zc = .2 + Math.random() * .6; F.zw = (G.hook ? .3 : .22) - (pick[0] === 'gold' ? .06 : 0);
+    sfx.lever(); return;
+  }
+  if (F.phase === 'reel') {
+    if (Math.abs(F.m - F.zc) < F.zw / 2) {
+      G.fish[F.fish] = (G.fish[F.fish] || 0) + 1; G.stats.fish = (G.stats.fish || 0) + 1;
+      sfx.crystal(); burst(F.bx, F.by, C.c, 12); toast('Поймана рыба: ' + FISH[F.fish].name + '!');
+      if (F.fish === 'gold') unlock('goldfish');
+      persist();
+    } else { sfx.deny(); toast('Рыба сорвалась'); }
+    G.fishing = null; return;
+  }
+  G.fishing = null; toast('Рыбалка прервана');
+}
+function updateFishing(dt, moving) {
+  const F = G.fishing; if (!F) return;
+  if (moving) { G.fishing = null; toast('Рыбалка прервана'); return; }
+  if (F.phase === 'wait') { F.t -= dt; if (F.t <= 0) { F.phase = 'bite'; F.t = .8; sfx.ready(); burst(F.bx, F.by, C.w, 6); } }
+  else if (F.phase === 'bite') { F.t -= dt; if (F.t <= 0) { G.fishing = null; toast('Не успел подсечь'); } }
+  else if (F.phase === 'reel') { F.m += F.dir * F.speed * dt; if (F.m > 1) { F.m = 1; F.dir = -1; } if (F.m < 0) { F.m = 0; F.dir = 1; } }
+}
+const ARENA_POOL = ['slime', 'bat', 'crab', 'wolf', 'skel', 'gslime', 'beetle', 'golem', 'wisp', 'snowman'];
+function enterArena() {
+  G.arena = { wave: 0, t: 1.5 };
+  travelPoint(30, IN_Y + 8); toast('Арена Гордея! Держись');
+}
+function exitArena(msg) {
+  const best = G.arena ? G.arena.wave - 1 : 0;
+  ents = ents.filter(e => !e.ar); G.arena = null;
+  if (best > G.arenaBest) G.arenaBest = best;
+  travelPoint(16, 20);
+  if (msg) say('Гордей', msg.replace('{n}', Math.max(0, best)));
+}
+function updateArena(dt) {
+  const A = G.arena; if (!A) return;
+  if (G.zone !== 'arena') {
+    if (A.entered) { if (A.wave - 1 > G.arenaBest) G.arenaBest = A.wave - 1; ents = ents.filter(e => !e.ar); G.arena = null; }
+    return;
+  }
+  A.entered = true;
+  if (ents.some(e => e.ar && e.kind === 'mob' && !e.dead)) return;
+  if (A.wave > 0 && !A.paid) { A.paid = true; G.coins += 4 * A.wave; toast('Волна ' + A.wave + ' пройдена! +' + 4 * A.wave + ' мон.'); if (A.wave >= 10) unlock('arena10'); if (A.wave > G.arenaBest) G.arenaBest = A.wave; }
+  A.t -= dt; if (A.t > 0) return;
+  A.wave++; A.t = 3; A.paid = false;
+  const n = 2 + A.wave, pool = ARENA_POOL.slice(0, Math.min(ARENA_POOL.length, 2 + A.wave));
+  for (let i = 0; i < n; i++) {
+    let x = 0, y = 0;
+    for (let tries = 0; tries < 20; tries++) {
+      x = 20 + ((Math.random() * 22) | 0); y = IN_Y + 2 + ((Math.random() * 8) | 0);
+      if (Math.hypot(x * TS - G.p.x, y * TS - G.p.y) > 60) break;
+    }
+    const m = makeMob({ type: pool[(Math.random() * pool.length) | 0], tx: x, ty: y, eliteChance: Math.min(.5, .04 * A.wave) });
+    m.ar = true; ents.push(m);
+  }
+  sfx.roar(); toast('Волна ' + A.wave);
+}
+function gossip(id) {
+  const t = G.taken;
+  if (id === 'fedya') return TEXT.fedya[G.fedyaI++ % TEXT.fedya.length];
+  const L = id === 'nura' ? [
+    [G.stormDone, 'Небо-то какое чистое! Я уж и не помню, когда так было.'],
+    [G.won, 'Говорят, буря ушла в небо. Ох, не к добру это, внучек. Сходи-ка ты к алтарю.'],
+    [t.has('boss_shadow'), 'Пещера, говорят, посветлела. Тень-то ты прогнал!'],
+    [t.has('boss_giant'), 'Великана одолел? А я в молодости снежки дальше всех кидала!'],
+    [t.has('boss'), 'Король слаймов повержен! Внучка не верит, что это ты.'],
+    [isNight(), 'Ночь на дворе, а ты всё бегаешь. Поешь хоть пирожок.'],
+    [true, 'В руинах по ночам что-то булькает. Слаймы, поди. Будь осторожен.'],
+  ] : [
+    [G.stormDone, 'Служу тихо, спасибо тебе. Даже волки присмирели.'],
+    [t.has('open_mtn'), 'Ворота перевала открыты? Ну ты даёшь! Береги себя в горах.'],
+    [isNight(), 'Ночью стерегу деревню. Монстры в темноте быстрее, держись света.'],
+    [true, 'Дальше на восток горы. Там волки, держи меч наготове. А ворота открываются камнями на плитах.'],
+  ];
+  return L.find(r => r[0])[1];
 }
 function travelPoint(tx, ty) {
   const p = G.p;
@@ -2005,7 +2209,7 @@ function enterDungeon(floor) {
 }
 function weatherHere() {
   const z = G.zone || 'field', w = G.weather.type;
-  if (z === 'cave' || z === 'dungeon' || z === 'sky') return 'clear';
+  if (z === 'cave' || z === 'dungeon' || z === 'sky' || z === 'home' || z === 'arena') return 'clear';
   if (z === 'snow') return w === 'rain' ? 'blizzard' : w === 'clear' ? 'flurry' : w;
   return w;
 }
@@ -2332,6 +2536,7 @@ function killMob(m) {
     const cs = world.ents.find(e => e.kind === 'crystal' && e.boss === B.id);
     if (cs && !G.taken.has(cs.id)) ents.push({ ...cs, x: cs.tx * TS, y: cs.ty * TS });
     if (m.type === 'giant') { setTile(79, 24, CAVE); toast('Лёд у входа в пещеру треснул!'); }
+    refreshHome();
     if (m.type === 'storm') { G.stormDone = true; strikes = []; unlock('stormlord'); say('', TEXT.ending2); }
     for (let i = 0; i < 8; i++) ents.push({ kind: 'coin', id: null, x: m.x + 2 + (i % 4) * 7, y: m.y + 12 + Math.floor(i / 4) * 8 });
     ents.push({ kind: 'heart', x: m.x + 8, y: m.y + 20, ttl: 30 });
@@ -2347,7 +2552,7 @@ function killMob(m) {
     G.q.crabs.n++; toast(G.q.crabs.n >= QUESTS.crabs.need ? QUESTS.crabs.ready : 'Крабы: ' + G.q.crabs.n + ' из ' + QUESTS.crabs.need);
   }
   G.shake = Math.max(G.shake, .08);
-  if (m.type !== 'mini' && !m.summon && !m.dg) respawns.push({ type: m.type, tx: m.tx, ty: m.ty, t: 35 });
+  if (m.type !== 'mini' && !m.summon && !m.dg && !m.ar) respawns.push({ type: m.type, tx: m.tx, ty: m.ty, t: 35 });
   const r = Math.random(), luck = m.type === 'mini' ? .4 : 1;
   if (r < .1 * luck) for (let i = 0; i < 3; i++) ents.push({ kind: 'coin', id: null, x: c.x - 8 + (i - 1) * 7, y: c.y - 10 + (i % 2) * 4 });
   else if (r < .55 * luck) ents.push({ kind: 'coin', id: null, x: c.x - 8, y: c.y - 10 });
@@ -2422,6 +2627,11 @@ function hurt(from) {
   p.hp--; p.inv = .9; G.shake = .25; G.flash = .2; sfx.hurt();
   try { navigator.vibrate && navigator.vibrate(40); } catch (err) {}
   p.kx = dx / d * 150; p.ky = dy / d * 150;
+  if (p.hp <= 0 && G.zone === 'arena') {
+    p.hp = p.maxHp; p.inv = 1.5;
+    exitArena('Ну-ну, полежи. Гордей вытащил тебя с арены. Ты продержался до волны {n}.');
+    return;
+  }
   if (p.hp <= 0 && G.diff === 'hard') {
     say('', 'Ты пал в бою. В хардкоре вторая попытка не положена.', gameOver);
     return;
@@ -2450,7 +2660,7 @@ function update(dt) {
   {
     const kingOn = G.state === 'play' && ents.some(e => e.kind === 'mob' && BOSS[e.type] && !e.dead && e.state !== 'sleep' && Math.hypot(e.x - G.p.x, e.y - G.p.y) < 220);
     const z = G.zone || 'field';
-    setTrack(G.state !== 'play' || menuOpen ? null : kingOn ? 'boss' : z === 'field' && isNight() ? 'night' : z === 'dungeon' ? 'cave' : z);
+    setTrack(G.state !== 'play' || menuOpen ? null : kingOn ? 'boss' : z === 'field' && isNight() ? 'night' : z === 'dungeon' ? 'cave' : z === 'home' ? 'night' : z === 'arena' ? 'boss' : z);
   }
   for (const q of popups) { q.y -= 22 * dt; q.life -= dt; }
   popups = popups.filter(q => q.life > 0);
@@ -2466,6 +2676,8 @@ function update(dt) {
   p.inv = Math.max(0, p.inv - dt); p.cd = Math.max(0, p.cd - dt); p.swing = Math.max(0, p.swing - dt);
   G.buff.speed = Math.max(0, G.buff.speed - dt); G.buff.guard = Math.max(0, G.buff.guard - dt);
   const ix = input.tx || input.kx, iy = input.ty || input.ky;
+  updateFishing(dt, !!(ix || iy));
+  updateArena(dt);
   const run = input.tb || input.kb;
   const charging = (p.charge || 0) > .1, wh = weatherHere();
   const sp = (run ? 80 : 52) * (G.buff.speed > 0 ? 1.45 : 1) * (hasPerk('swift') ? 1.12 : 1) * (charging ? .55 : 1) * (wh === 'blizzard' ? .85 : 1), len = Math.hypot(ix, iy) || 1;
@@ -2855,6 +3067,25 @@ function drawAnvil(x, y) {
   P(ctx, x + 6, y + 10, C.k, 5, 3); P(ctx, x + 7, y + 10, C.D, 3, 3);
   P(ctx, x + 4, y + 13, C.k, 9, 3); P(ctx, x + 5, y + 13, C.D, 7, 2);
 }
+function drawFurn(id, x, y) {
+  if (id === 'bed') { P(ctx, x + 1, y, C.k, 14, 16); P(ctx, x + 2, y + 1, C.B, 12, 14); P(ctx, x + 3, y + 2, C.w, 10, 4); P(ctx, x + 3, y + 7, C.r, 10, 7); P(ctx, x + 3, y + 7, C.R, 10, 1); }
+  else if (id === 'fire') {
+    P(ctx, x, y, C.k, 16, 16); P(ctx, x + 1, y + 1, C.D, 14, 14); P(ctx, x + 1, y + 1, C.G, 14, 2); P(ctx, x + 4, y + 6, C.k, 8, 9);
+    const f = Math.floor(G.t * 8) % 2; P(ctx, x + 5, y + 9 - f, C.r, 6, 5 + f); P(ctx, x + 6, y + 10, C.o, 4, 4); P(ctx, x + 7, y + 11 + f, C.y, 2, 2);
+  } else if (id === 'books') {
+    P(ctx, x + 1, y, C.k, 14, 16); P(ctx, x + 2, y + 1, C.B, 12, 14);
+    for (let r = 0; r < 3; r++) for (let i = 0; i < 5; i++) P(ctx, x + 3 + i * 2, y + 2 + r * 5, [C.r, C.u, C.l, C.o, C.p][(i + r) % 5], 2, 4);
+  } else if (id === 'table') {
+    P(ctx, x + 1, y + 5, C.k, 14, 6); P(ctx, x + 2, y + 6, C.b, 12, 4); P(ctx, x + 2, y + 10, C.B, 2, 5); P(ctx, x + 12, y + 10, C.B, 2, 5);
+    P(ctx, x + 5, y + 3, C.k, 6, 4); P(ctx, x + 6, y + 4, C.o, 4, 2);
+  } else if (id === 'rug') { P(ctx, x - 14, y + 2, C.R, 44, 12); P(ctx, x - 12, y + 4, C.r, 40, 8); P(ctx, x - 8, y + 6, C.o, 32, 1); P(ctx, x - 8, y + 9, C.o, 32, 1); }
+  else if (id === 'plant') { P(ctx, x + 4, y + 9, C.k, 8, 7); P(ctx, x + 5, y + 10, C.b, 6, 5); P(ctx, x + 7, y + 3, C.d, 2, 7); P(ctx, x + 4, y + 2, C.g, 4, 4); P(ctx, x + 8, y + 1, C.l, 4, 4); P(ctx, x + 6, y + 6, C.g, 6, 2); }
+}
+function drawTrophy(id, x, y) {
+  P(ctx, x + 1, y + 11, C.k, 14, 4); P(ctx, x + 2, y + 12, C.b, 12, 2);
+  const col = { boss: C.o, boss_giant: C.I, boss_crab: C.r, boss_shadow: C.P, boss_storm: C.y }[id];
+  P(ctx, x + 4, y + 2, C.k, 8, 9); P(ctx, x + 5, y + 3, col, 6, 7); P(ctx, x + 6, y + 4, C.w, 1, 2);
+}
 function drawAltar(x, y, on) {
   P(ctx, x + 1, y + 10, C.k, 14, 6); P(ctx, x + 2, y + 11, C.F, 12, 4); P(ctx, x + 2, y + 11, C.G, 12, 1);
   P(ctx, x + 4, y + 3, C.k, 8, 8); P(ctx, x + 5, y + 4, C.G, 6, 6);
@@ -2961,7 +3192,7 @@ const sctx = shadeCv.getContext('2d');
 function drawLighting(camX, camY) {
   const p = G.p, inCave = G.zone === 'cave' || G.zone === 'dungeon';
   const dark = inCave ? .95 : nightDark();
-  if (dark <= .01) return;
+  if (dark <= .01 || G.zone === 'home' || G.zone === 'arena') return;
   sctx.globalCompositeOperation = 'source-over'; sctx.globalAlpha = 1;
   sctx.clearRect(0, 0, VW, VH);
   sctx.fillStyle = inCave ? 'rgb(6,5,12)' : 'rgb(14,16,44)';
@@ -2989,6 +3220,8 @@ function drawStall(x, y) {
   P(ctx, x + 3, y + 4, C.w);
 }
 function layerOf(px, py) {
+  // interiors: frame exactly the 10 rows from the top wall to the door
+  if (py / TS >= IN_Y) return px / TS < 18 ? [HOME.x, IN_Y + 1, HOME.w, 10] : [ARENA.x, IN_Y + 1, ARENA.w, 10];
   if (py / TS < OVER_H) return [0, 0, W, OVER_H];
   return px / TS < 44 ? [0, OVER_H, 44, H - OVER_H] : [DG.x, DG.y, DG.w, DG.h];
 }
@@ -3069,6 +3302,8 @@ function render() {
       case 'coll': drawColl(e, x, y); break;
       case 'altar': drawAltar(x, y, e.id === 'alt_sky' || G.won); break;
       case 'seal': drawSeal(x, y); break;
+      case 'furn': drawFurn(e.id, x, y); break;
+      case 'trophy': drawTrophy(e.id, x, y); break;
       case 'way': drawWay(x, y, G.ways.includes(e.id)); break;
       case 'crystal': {
         P(ctx, x + 5, y + 14, 'rgba(0,0,0,.25)', 6, 1);
@@ -3078,6 +3313,19 @@ function render() {
     }
   }
   drawShots(camX, camY);
+  if (G.fishing) {
+    const F = G.fishing, bx = Math.round(F.bx - camX), by = Math.round(F.by - camY + HUD) + (F.phase === 'bite' ? Math.round(Math.sin(G.t * 40)) : Math.round(Math.sin(G.t * 3)));
+    const hx = Math.round(p.x + 8 - camX), hy = Math.round(p.y + 6 - camY + HUD);
+    for (let i = 0; i <= 12; i++) { const k = i / 12; P(ctx, Math.round(hx + (bx - hx) * k), Math.round(hy + (by - hy) * k - Math.sin(k * Math.PI) * 6), C.w); }
+    P(ctx, bx - 2, by - 2, C.k, 5, 5); P(ctx, bx - 1, by - 1, C.r, 3, 2); P(ctx, bx - 1, by + 1, C.w, 3, 1);
+    if (F.phase === 'bite') { P(ctx, hx - 1, hy - 16, C.k, 4, 10); P(ctx, hx, hy - 15, C.y, 2, 5); P(ctx, hx, hy - 9, C.y, 2, 2); }
+    if (F.phase === 'reel') {
+      const bw = 110, bx0 = (VW - bw) >> 1, by0 = HUD + VH - 20;
+      P(ctx, bx0 - 2, by0 - 2, C.k, bw + 4, 12); P(ctx, bx0, by0, C.n, bw, 8);
+      P(ctx, bx0 + Math.round((F.zc - F.zw / 2) * bw), by0, C.l, Math.round(F.zw * bw), 8);
+      P(ctx, bx0 + Math.round(F.m * bw) - 1, by0 - 3, C.w, 3, 14);
+    }
+  }
   for (const st of strikes) {
     const sx = Math.round(st.x - camX), sy = Math.round(st.y - camY + HUD);
     if (st.t > 0) {
@@ -3145,7 +3393,8 @@ function itemInfo(it) {
     const n = G.ammo[it.ammo];
     return { icon: it.icon, name: it.name, desc: it.desc + ' Есть: ' + n + '.' + (it.ammo === 'arrows' && !G.weapons.includes('bow') ? ' Сначала купи лук.' : ''), price: it.price, label: n >= ammoMax(it.ammo) ? 'Полно' : null };
   }
-  if (it.kind === 'gear') return { icon: it.icon, name: it.name, desc: it.desc, price: it.price, label: G.lantern ? 'Есть' : null };
+  if (it.kind === 'gear') return { icon: it.icon, name: it.name, desc: it.desc, price: it.price, label: G[it.flag] ? 'Есть' : null };
+  if (it.kind === 'furn') return { icon: 'home', name: it.name, desc: it.desc, price: it.price, label: !G.house ? 'Нужен дом' : G.furn.includes(it.id) ? 'Есть' : null };
   if (it.kind === 'shield') return { icon: 'shield', name: it.name, desc: it.desc, price: it.price, label: G.shield ? 'Есть' : null };
   const lvl = G.up[it.id], max = it.prices.length;
   return {
@@ -3165,7 +3414,9 @@ function buy(it) {
     if (it.ammo === 'bombs' && !G.weapons.includes('bomb')) G.weapons.push('bomb');
   }
   if (it.kind === 'shield') G.shield = true;
-  if (it.kind === 'gear') G.lantern = true;
+  if (it.kind === 'gear') G[it.flag] = true;
+  if (it.kind === 'furn') { G.furn.push(it.id); refreshHome(); }
+  if (it.id === 'house') refreshHome();
   if (it.kind === 'up') {
     G.up[it.id]++;
     if (it.id === 'hp') { G.p.maxHp++; G.p.hp = G.p.maxHp; }
@@ -3253,6 +3504,10 @@ function renderPanel() {
     }
     html += '<div class="psec">Снаряжение</div>';
     let gear = 0;
+    const fishN = Object.keys(G.fish).filter(k => G.fish[k] > 0);
+    if (fishN.length) html += '<div class="psec">Улов</div>' + fishN.map(k => rowHtml('fish', FISH[k].name + ' ×' + G.fish[k], 'Тихон купит по ' + FISH[k].price + ' мон.')).join('');
+    if (G.house) { gear++; html += rowHtml('home', 'Дом у площади', 'Мебели: ' + G.furn.length + ' из 6. Трофеев: ' + Object.keys(TROPHY).filter(b => G.taken.has(b)).length + ' из 5.'); }
+    if (G.hook) { gear++; html += rowHtml('hook', 'Крючок удачи', 'Рыба клюёт быстрее.'); }
     if (G.temper) { gear++; html += rowHtml('sword', 'Закалка', '+1 к урону от кузнеца Гордея.'); }
     if (G.bigBag) { gear++; html += rowHtml('bomb', 'Большая сумка', 'До 50 стрел и 15 бомб.'); }
     if (G.lantern) { gear++; html += rowHtml('lantern', 'Фонарь', 'Освещает пещеру и ночные тропы.'); }
@@ -3264,6 +3519,15 @@ function renderPanel() {
   } else {
     const shop = SHOPS[panelKind];
     $('pTitle').textContent = shop.title;
+    if (panelKind === 'tikhon') {
+      const val = fishValue(), n = Object.values(G.fish).reduce((a, b) => a + b, 0);
+      html += rowHtml('fish', 'Продать рыбу', n ? 'Рыбы в сумке: ' + n + '. Тихон даст ' + val + ' мон.' : 'Рыбы пока нет. Лови в озере и в море.',
+        '<button class="rbtn" type="button" data-sell="1"' + (n ? '>Продать' : ' disabled>Пусто') + '</button>');
+    }
+    if (panelKind === 'gordey') {
+      html += rowHtml('sword', 'Арена Гордея', 'Волны врагов одна за другой. Рекорд: ' + (G.arenaBest ? 'волна ' + G.arenaBest : 'пока нет') + '.',
+        '<button class="rbtn" type="button" data-arena="1">На арену</button>');
+    }
     shop.items.forEach((it, i) => {
       const info = itemInfo(it);
       const btn = '<button class="rbtn" type="button" data-buy="' + i + '"' + (info.label ? ' disabled>' + info.label : '>' + info.price + ' мон.') + '</button>';
@@ -3278,7 +3542,7 @@ const MAPCOL = {
   [DOOR]: '#a0683f', [SAND]: '#e4d29a', [CRACK]: '#9a98ad', [SNOW]: '#e8eef6', [PINE]: '#36663d', [ICE]: '#a7d3ee',
   [CLIFF]: '#5c5a72', [GATE]: '#1d1b2c', [GATEO]: '#9a98ad', [PLATE]: '#f2b23a', [CAVE]: '#1d1b2c', [STAIRS]: '#9a98ad',
   [CFLOOR]: '#4a4152', [PALM]: '#6aa84f', [WRECK]: '#5c3a2a', [SROCK]: '#9a98ad', [SEAL]: '#a7d3ee',
-  [SKY]: '#86c3ec', [CLOUDF]: '#e8eef6', [DSTAIRS]: '#1d1b2c',
+  [WOOD]: '#a0683f', [IWALL]: '#7e2a33', [IDOOR]: '#5c3a2a', [SKY]: '#86c3ec', [CLOUDF]: '#e8eef6', [DSTAIRS]: '#1d1b2c',
 };
 function drawMap(cv) {
   const k = 3, c = cv.getContext('2d'), p = G.p;
@@ -3366,6 +3630,8 @@ $('pList').addEventListener('click', e => {
   if (b.dataset.drink) drink(b.dataset.drink);
   if (b.dataset.perk) takePerk(b.dataset.perk);
   if (b.dataset.way) travelTo(b.dataset.way);
+  if (b.dataset.sell) sellFish();
+  if (b.dataset.arena) { panelKind = null; $('panel').hidden = true; enterArena(); }
 });
 $('pClose').addEventListener('click', closePanel);
 $('bAch').addEventListener('click', () => { unlockAudio(); openPanel('ach'); });
