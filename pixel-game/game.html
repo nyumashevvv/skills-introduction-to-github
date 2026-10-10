@@ -275,8 +275,8 @@ const W = 88, H = 64, TOTAL = 8;
 const GRASS = 0, FLOWER = 1, TALL = 2, PATH = 3, TREE = 4, WATER = 5, BRIDGE = 6, ROCK = 7,
       FLOOR = 8, WALL = 9, ROOF = 10, HWALL = 11, DOOR = 12, SAND = 13, CRACK = 14,
       SNOW = 15, PINE = 16, ICE = 17, CLIFF = 18, GATE = 19, GATEO = 20, PLATE = 21, CAVE = 22, STAIRS = 23,
-      CFLOOR = 24, PALM = 25, WRECK = 26, SROCK = 27;
-const SOLID = new Set([TREE, WATER, ROCK, WALL, ROOF, HWALL, DOOR, CRACK, PINE, CLIFF, GATE, PALM, WRECK, SROCK]);
+      CFLOOR = 24, PALM = 25, WRECK = 26, SROCK = 27, SEAL = 28;
+const SOLID = new Set([TREE, WATER, ROCK, WALL, ROOF, HWALL, DOOR, CRACK, PINE, CLIFF, GATE, PALM, WRECK, SROCK, SEAL]);
 function zoneAt(tx, ty) {
   if (tx >= 58 && ty >= 36) return 'cave';
   if (tx >= 44 && ty < 36) return 'snow';
@@ -358,10 +358,10 @@ function buildWorld() {
   rect(61, 3, 11, 9, CLIFF); rect(62, 4, 9, 7, ICE); set(66, 11, PATH);
   for (const [x, y] of [[0, 4], [1, 0], [2, 5], [3, 6], [4, 1], [4, 5], [5, 5]]) set(62 + x, 4 + y, SROCK);
   // cliff with the cave mouth
-  rect(74, 24, 12, 10, CLIFF); set(79, 24, CAVE);
+  rect(74, 24, 12, 10, CLIFF); set(79, 24, SEAL);   // sealed by ice until the Frost Giant falls
   portals.push({ tx: 79, ty: 24, to: [61, 40] });
   for (const [x, y] of [[54, 27], [57, 9], [70, 24], [83, 9], [60, 31], [77, 4]]) if (get(x, y) === SNOW) set(x, y, SROCK);
-  scatter(52, 2, 85, 33, SNOW, PINE, 21, .09, (x, y) => inR(x, y, 60, 2, 72, 12) || inR(x, y, 54, 14, 61, 21) || inR(x, y, 72, 21, 86, 33) || inR(x, y, 81, 2, 85, 6));
+  scatter(52, 2, 85, 33, SNOW, PINE, 21, .09, (x, y) => inR(x, y, 74, 15, 84, 23) || inR(x, y, 60, 2, 72, 12) || inR(x, y, 54, 14, 61, 21) || inR(x, y, 72, 21, 86, 33) || inR(x, y, 81, 2, 85, 6));
 
   // ---- South beach ----
   rect(0, 36, 58, 28, SAND);
@@ -412,8 +412,8 @@ function buildWorld() {
     ...[[5, 8], [41, 8], [14, 27], [54, 10], [60, 24], [35, 38], [4, 48], [55, 45]].map(([x, y], i) => ({ kind: 'qitem', quest: 'bloom', id: 'q_bl' + i, tx: x, ty: y })),
     ...[[57, 12], [82, 15], [63, 30], [72, 41], [80, 44]].map(([x, y], i) => ({ kind: 'qitem', quest: 'ore', id: 'q_or' + i, tx: x, ty: y })),
     { kind: 'crystal', id: 'cr6', tx: 64, ty: 6 },
-    { kind: 'crystal', id: 'cr7', tx: 53, ty: 46 },
-    { kind: 'crystal', id: 'cr8', tx: 82, ty: 55 },
+    { kind: 'crystal', id: 'cr7', tx: 53, ty: 46, boss: 'boss_crab' },
+    { kind: 'crystal', id: 'cr8', tx: 82, ty: 55, boss: 'boss_shadow' },
     { kind: 'npc', id: 'asya', tx: 24, ty: 13, name: 'Ася' },
     { kind: 'npc', id: 'cat', tx: 13, ty: 21, name: 'Кот' },
     { kind: 'npc', id: 'varya', tx: 28, ty: 21, name: 'Варя' },
@@ -433,7 +433,7 @@ function buildWorld() {
     { kind: 'crystal', id: 'cr1', tx: 5, ty: 5 },
     { kind: 'crystal', id: 'cr2', tx: 33, ty: 7 },
     { kind: 'crystal', id: 'cr3', tx: 5, ty: 31 },
-    { kind: 'crystal', id: 'cr4', tx: 38, ty: 31, boss: true },
+    { kind: 'crystal', id: 'cr4', tx: 38, ty: 31, boss: 'boss' },
     { kind: 'crystal', id: 'cr5', tx: 38, ty: 16 },
   ];
   const coins = [[9, 9], [9, 12], [6, 10], [12, 7], [14, 11], [24, 7], [23, 10], [30, 15], [35, 14], [32, 7], [34, 8],
@@ -449,10 +449,10 @@ function buildWorld() {
     skel: [[31, 25], [37, 25]],
     beetle: [[34, 17], [21, 31], [25, 25]],
     wolf: [[56, 25], [63, 16], [72, 22], [80, 10], [70, 29], [58, 9], [83, 30]],
-    snowman: [[59, 5], [76, 15], [83, 19], [60, 28]],
-    crab: [[10, 44], [30, 46], [36, 40], [50, 44], [53, 48], [26, 51], [6, 40], [47, 49]],
+    snowman: [[59, 5], [76, 13], [70, 13], [60, 28]],
+    crab: [[10, 44], [30, 46], [36, 40], [53, 48], [26, 51], [6, 40], [47, 49]],
     gslime: [[64, 41], [80, 40], [78, 44], [83, 52], [70, 52]],
-    caveskel: [[83, 43], [79, 56], [72, 56]],
+    caveskel: [[83, 43], [72, 56]],
     cavebat: [[70, 40], [80, 42], [66, 55], [78, 57]],
   };
   for (const key in mobs) for (const [x, y] of mobs[key]) {
@@ -462,6 +462,9 @@ function buildWorld() {
   for (const [g, pz] of Object.entries(puzzles)) (pz.blocks || []).forEach(([x, y], i) => ents.push({ kind: 'block', group: g, i, tx: x, ty: y }));
   for (const [x, y] of [[67, 38], [60, 57], [73, 50], [85, 38], [85, 59], [75, 50], [60, 43], [76, 45]]) ents.push({ kind: 'deco', id: 'torch', tx: x, ty: y });
   ents.push({ kind: 'mob', type: 'king', id: 'boss', tx: 32, ty: 30 });
+  ents.push({ kind: 'mob', type: 'giant', id: 'boss_giant', tx: 78, ty: 17 });
+  ents.push({ kind: 'mob', type: 'bigcrab', id: 'boss_crab', tx: 49, ty: 44 });
+  ents.push({ kind: 'mob', type: 'shadow', id: 'boss_shadow', tx: 79, ty: 53 });
   return { m, ents, puzzles, portals };
 }
 /*WORLD-END*/
@@ -650,6 +653,10 @@ const SNOWMAN = ['', '', '......kkkk', '.....kSSSSk', '....kSkSSkSk', '....kSSoo
   '..kSSSSkSSSSk', '..kSSSSSSSSSk', '..kSSSSkSSSSk', '..kSSSSSSSSSk', '...kSSSSSSSk', '....kkkkkkk', ''];
 const CRAB = ['', '', '', '', '', '', '..kk......kk', '.krrk....krrk', '.krkk.kk.kkrk', '..kk.kwkwk.kk', '....krrrrrrk',
   '...krrrrrrrrk', '..kkrRrrrrRrkk', '.k.krrrrrrrrk.k', '...k.k.kk.k.k', ''];
+const GIANT = ['', '.....kkkkkk', '....kIIIIIIk', '...kIwIIIIwIk', '...kIkkIIkkIk', '...kIIIIIIIIk', '..kkIIkkkkIIkk',
+  '.kIIkIIIIIIkIIk', 'kIIIkSSSSSSkIIIk', 'kIIkSSSSSSSSkIIk', 'kIIkSSSSSSSSkIIk', '.kkkSSSSSSSSkkk', '...kSSSkkSSSk', '...kIIIk.kIIIk', '...kIIk..kIIk', '...kkk...kkk'];
+const SHADOW = ['', '......kkkk', '....kkKKKKkk', '...kKKKKKKKKk', '..kKKKKKKKKKKk', '..kKKyKKKKyKKk', '..kKKKKKKKKKKk', '..kKKKKkkKKKKk',
+  '...kKKKKKKKKk', '...kKpKKKKpKk', '..kKKKpKKpKKKk', '.kKKKKKKKKKKKKk', '.kKpKKKpKKKpKKk', 'kKk.kKk.kKk.kKk', 'k...k...k...k', ''];
 const beetleSet = rows => { const b = mk(rows); return { down: b, right: rot(b, -1), up: rot(b, 2), left: rot(b, 1) }; };
 Object.assign(SPR, {
   wolf: { right: mk(WOLF) }, wolfHit: { right: mk(WOLF, WHITE) },
@@ -658,6 +665,9 @@ Object.assign(SPR, {
   gslime: mk(SLIME, { r: 'g', R: 'd' }),
   mini: mk(MINI, { r: 'p' }), miniHit: mk(MINI, WHITE),
   king: mk(SLIME, { r: 'p', R: 'n' }), kingHit: mk(SLIME, WHITE),
+  giant: mk(GIANT), giantHit: mk(GIANT, { I: 'w', S: 'w' }),
+  bigcrab: mk(CRAB, { r: 'o', R: 'O' }), bigcrabHit: mk(CRAB, WHITE),
+  shadow: mk(SHADOW), shadowHit: mk(SHADOW, { K: 'q', p: 'w', y: 'w' }),
   bat: [mk(BAT_A), mk(BAT_B)], batHit: mk(BAT_A, WHITE),
   skel: mk(SKEL), skelHit: mk(SKEL, { w: 'r' }),
   beetle: beetleSet(BEETLE),
@@ -846,7 +856,7 @@ function drawTile(c, t, tx, ty) {
         P(c, X + x, Y + y, C.w, 3, 1); P(c, X + x + 3, Y + y + 1, C.c, 2, 1);
       }
       break;
-    case CLIFF: case CAVE: {
+    case CLIFF: case CAVE: case SEAL: {
       const cave = zoneAt(tx, ty) === 'cave';
       P(c, X, Y, cave ? C.K : C.D, 16, 16);
       for (let i = 0; i < 5; i++) {
@@ -857,6 +867,11 @@ function drawTile(c, t, tx, ty) {
       if (zoneAt(tx, ty) === 'snow' && up !== CLIFF && up !== CAVE) {
         P(c, X, Y, C.S, 16, 3);
         for (let i = 0; i < 16; i++) if (hash(tx * 16 + i, ty, 210) < .5) P(c, X + i, Y + 3, C.S);
+      }
+      if (t === SEAL) {
+        P(c, X + 3, Y + 5, C.k, 10, 11); P(c, X + 4, Y + 4, C.k, 8, 1); P(c, X + 5, Y + 3, C.k, 6, 1);
+        P(c, X + 4, Y + 5, C.I, 8, 11); P(c, X + 5, Y + 4, C.I, 6, 1);
+        P(c, X + 5, Y + 6, C.w, 2, 4); P(c, X + 9, Y + 10, C.c, 2, 3); P(c, X + 7, Y + 8, C.c, 1, 5); P(c, X + 8, Y + 7, C.w);
       }
       if (t === CAVE) {
         P(c, X + 3, Y + 5, C.k, 10, 11); P(c, X + 4, Y + 4, C.k, 8, 1); P(c, X + 5, Y + 3, C.k, 6, 1);
@@ -960,6 +975,7 @@ function resetWorld() {
   world = buildWorld(); renderWorld();
   for (const id of G.taken) if (id.startsWith('brk')) setTile(+id.slice(3) % W, Math.floor(+id.slice(3) / W), GRASS);
   for (const g in world.puzzles) if (G.taken.has('open_' + g)) for (const [x, y] of world.puzzles[g].gates) setTile(x, y, GATEO);
+  if (G.taken.has('boss_giant')) setTile(79, 24, CAVE);
 }
 function renderWorld() {
   worldCv = document.createElement('canvas'); worldCv.width = W * TS; worldCv.height = H * TS;
@@ -991,8 +1007,8 @@ const TEXT = {
     cr4: 'Один охраняет Король слаймов в глубине руин на юго-востоке. Возьми зелья.',
     cr5: 'Один упал в рощу на востоке, у края озера.',
     cr6: 'Один вмёрз в озеро высоко в горах на востоке. Ворота перевала откроются, если положить камни на плиты.',
-    cr7: 'Один спрятан в бухте на южном пляже, за воротами. Рыбак Тихон знает, как их открыть.',
-    cr8: 'Последний лежит в тёмной пещере в горах. Купи у Вари фонарь, без него там ничего не видно.',
+    cr7: 'Один спрятан в бухте на южном пляже, за воротами. Тихон знает, как их открыть. Говорят, бухту стережёт огромный краб.',
+    cr8: 'Последний лежит в тёмной пещере в горах. Вход сторожит Ледяной великан, а внутри прячется Тень. Купи у Вари фонарь.',
   },
   win: ['Все восемь кристаллов! Не верю своим глазам.', 'Листвянка спасена. Спасибо тебе, герой!'],
   asya: ['Мост ведёт на остров. Говорят, там что-то блестит.', 'Я видела, как слаймы ползли к руинам. Брр.', 'Монеты? Собирай, вдруг пригодятся!',
@@ -1002,7 +1018,7 @@ const TEXT = {
     village: 'ЛИСТВЯНКА\nСевер: алтарь, озеро. Восток: горы.\nЮг: лес, руины, за ними пляж.',
     gate: 'Ворота перевала. Поставь камни на обе плиты.\nЗастрял камень? Отойди подальше, он вернётся.',
     ice: 'Ледяное озеро. На льду не остановиться, пока не упрёшься в камень.',
-    cave: 'Пещера. Без фонаря там ничего не видно.',
+    cave: 'Пещера. Вход сковал лёд Ледяного великана. А внутри без фонаря ничего не видно.',
     cavepuz: 'Три плиты, три камня. Дверь откроется, когда все плиты прижаты.',
     cove: 'Бухта Тихая. Ворота открываются рычагами.',
     meadow: 'Цветочное поле. Не топтать!\n(Ну, разве что чуть-чуть.)',
@@ -1031,7 +1047,7 @@ const hasPerk = id => G.perks.includes(id);
 const BD = () => G.up.dmg + (G.temper ? 1 : 0) + Math.floor(G.lvl / 5) + (hasPerk('blade') ? 1 : 0);
 const MAX_LVL = 20;
 const xpNeed = l => 20 + (l - 1) * 15;
-const XP = { slime: 3, mini: 1, bat: 3, skel: 6, beetle: 6, wolf: 5, snowman: 6, crab: 5, gslime: 6, king: 60 };
+const XP = { slime: 3, mini: 1, bat: 3, skel: 6, beetle: 6, wolf: 5, snowman: 6, crab: 5, gslime: 6, king: 60, giant: 80, bigcrab: 80, shadow: 100 };
 const PERKS = {
   quick: { icon: 'sword', name: 'Быстрый удар', desc: 'Оружие перезаряжается на четверть быстрее.' },
   blade: { icon: 'sword', name: 'Острый клинок', desc: '+1 к урону любого оружия.' },
@@ -1065,6 +1081,8 @@ const ACH = [
   ['puzzles', 'Головастик', 'Открой все ворота с головоломками.'],
   ['quests', 'Добрый сосед', 'Выполни все поручения жителей.'],
   ['map', 'Картограф', 'Исследуй половину карты.'],
+  ['bosses', 'Охотник на чудищ', 'Победи всех четырёх боссов.'],
+  ['elite5', 'Сильнейший', 'Победи 5 элитных врагов.'],
   ['win', 'Спаситель Листвянки', 'Собери все восемь кристаллов.'],
   ['nodeath', 'Несокрушимый', 'Пройди игру, ни разу не потеряв сознание.'],
   ['hard', 'Железная воля', 'Пройди игру на хардкоре.'],
@@ -1086,6 +1104,8 @@ function checkAch() {
   if (st.kills >= 150) unlock('slayer');
   if (st.nightKills >= 20) unlock('night');
   if (t.has('boss')) unlock('king');
+  if (['boss', 'boss_giant', 'boss_crab', 'boss_shadow'].every(id => t.has(id))) unlock('bosses');
+  if ((st.elites || 0) >= 5) unlock('elite5');
   if (st.dashes >= 50) unlock('dasher');
   if (G.lvl >= 5) unlock('lvl5');
   if (G.lvl >= 10) unlock('lvl10');
@@ -1135,7 +1155,7 @@ function spinAttack() {
   for (const m of ents) {
     if (m.kind !== 'mob' || m.dead) continue;
     const c = mobCenter(m);
-    if (Math.hypot(c.x - cx, c.y - cy) < R + (m.type === 'king' ? 14 : 6)) { hitMob(m, wp.dmg * 2 + BD(), cx, cy, true); hits++; }
+    if (Math.hypot(c.x - cx, c.y - cy) < R + (MOBS[m.type].big ? 14 : 6)) { hitMob(m, wp.dmg * 2 + BD(), cx, cy, true); hits++; }
   }
   for (let ty = Math.floor((cy - R) / TS); ty <= Math.floor((cy + R) / TS); ty++)
     for (let tx = Math.floor((cx - R) / TS); tx <= Math.floor((cx + R) / TS); tx++)
@@ -1454,7 +1474,7 @@ document.addEventListener('dblclick', e => e.preventDefault());
 // ---------- Game state ----------
 const PHB = { x: 3, y: 9, w: 10, h: 6 };   // player hitbox inside its 16x16 sprite
 const START = { x: 22 * TS, y: 21 * TS };
-let shots = [], bombs = [], blasts = [], popups = [];
+let shots = [], bombs = [], blasts = [], popups = [], waves = [];
 const told = new Set();
 let G, ents, blockers, respawns = [], panelKind = null, dlg = null, menuOpen = false, toastTimer = 0, saveTimer = 0, particles = [];
 
@@ -1468,15 +1488,15 @@ function freshState() {
     ammo: { arrows: 0, bombs: 0 }, diff: 'normal',
     lantern: false, levers: { lv1: false, lv2: false, lv3: false }, clock: 30, zone: null,
     q: { kitten: { s: 0, n: 0 }, bloom: { s: 0, n: 0 }, ore: { s: 0, n: 0 }, crabs: { s: 0, n: 0 } }, bigBag: false, temper: false,
-    lvl: 1, xp: 0, perks: [], pendingPerks: 0, perkOffer: [], stats: { kills: 0, nightKills: 0, dashes: 0, deaths: 0 },
+    lvl: 1, xp: 0, perks: [], pendingPerks: 0, perkOffer: [], stats: { kills: 0, nightKills: 0, dashes: 0, deaths: 0, elites: 0 },
     seen: new Uint8Array(W * H), hitstop: 0, flash: 0,
   };
 }
 function spawnEntities() {
-  ents = []; blockers = new Map(); respawns = []; shots = []; bombs = []; blasts = [];
+  ents = []; blockers = new Map(); respawns = []; shots = []; bombs = []; blasts = []; waves = [];
   for (const s of world.ents) {
     if (s.id && G.taken.has(s.id) && s.kind !== 'chest') continue;
-    if (s.boss && !G.taken.has('boss')) continue;
+    if (s.boss && !G.taken.has(s.boss)) continue;
     if (s.kind === 'qitem' && G.q[s.quest].s !== 1) continue;
     const e = { ...s, x: s.tx * TS, y: s.ty * TS };
     if (s.kind === 'chest') e.open = G.taken.has(s.id);
@@ -1764,26 +1784,37 @@ const MOBS = {
   bat: { hp: 2, hb: { x: 3, y: 2, w: 10, h: 8 }, fly: true },
   skel: { hp: 5, hb: { x: 3, y: 4, w: 10, h: 11 } },
   beetle: { hp: 4, hb: { x: 2, y: 3, w: 12, h: 11 } },
-  king: { hp: 12, hb: { x: 3, y: 12, w: 26, h: 19 } },
+  king: { hp: 12, hb: { x: 3, y: 12, w: 26, h: 19 }, big: true },
+  giant: { hp: 30, hb: { x: 5, y: 8, w: 22, h: 23 }, big: true },
+  bigcrab: { hp: 26, hb: { x: 3, y: 12, w: 26, h: 18 }, big: true },
+  shadow: { hp: 24, hb: { x: 6, y: 6, w: 20, h: 22 }, big: true },
   wolf: { hp: 4, hb: { x: 2, y: 7, w: 12, h: 8 } },
   snowman: { hp: 5, hb: { x: 3, y: 4, w: 10, h: 11 } },
   crab: { hp: 5, hb: { x: 2, y: 8, w: 12, h: 7 } },
   gslime: { hp: 5, hb: { x: 2, y: 8, w: 12, h: 7 } },
 };
 const DIFF = {
-  easy: { name: 'лёгкая', spd: .85, boss: 14, hp: 7 },
-  normal: { name: 'обычная', spd: 1.05, boss: 22, hp: 5 },
-  hard: { name: 'хардкор', spd: 1.2, boss: 30, hp: 5 },
+  easy: { name: 'лёгкая', spd: .85, bmul: .65, hp: 7 },
+  normal: { name: 'обычная', spd: 1.05, bmul: 1, hp: 5 },
+  hard: { name: 'хардкор', spd: 1.2, bmul: 1.35, hp: 5 },
+};
+const BOSS = {
+  king: { name: 'Король слаймов', id: 'boss', base: 22, col: C.p, wake: 'wait' },
+  giant: { name: 'Ледяной великан', id: 'boss_giant', base: 30, col: C.I, wake: 'walk' },
+  bigcrab: { name: 'Гигантский краб', id: 'boss_crab', base: 26, col: C.r, wake: 'wait' },
+  shadow: { name: 'Тень пещеры', id: 'boss_shadow', base: 24, col: C.P, wake: 'float' },
 };
 function makeMob(s) {
-  const def = MOBS[s.type], hp = s.type === 'king' ? DIFF[G.diff].boss : def.hp;
+  const def = MOBS[s.type], boss = BOSS[s.type];
+  const elite = !boss && !s.summon && s.type !== 'mini' && Math.random() < .08;
+  const hp = boss ? Math.round(boss.base * DIFF[G.diff].bmul) : elite ? Math.round(def.hp * 2.5) : def.hp;
   return {
     kind: 'mob', type: s.type, id: s.id || null, tx: s.tx, ty: s.ty, x: s.x ?? s.tx * TS, y: s.y ?? s.ty * TS,
     hp, maxHp: hp, hb: def.hb, t: Math.random() * 2, vx: 0, vy: 0, kx: 0, ky: 0, flash: 0, ph: Math.random() * 6,
-    cd: 1 + Math.random() * 2, dir: 'down', state: s.type === 'king' ? 'sleep' : 'walk', st: 0,
+    cd: 1 + Math.random() * 2, dir: 'down', state: boss ? 'sleep' : 'walk', st: 0, elite, summon: !!s.summon,
   };
 }
-function mobCenter(m) { const z = m.type === 'king' ? 32 : 16; return { x: m.x + z / 2, y: m.y + z * .62 }; }
+function mobCenter(m) { const z = MOBS[m.type].big ? 32 : 16; return { x: m.x + z / 2, y: m.y + z * .62 }; }
 function wander(m, dt, spd) {
   m.t -= dt;
   if (m.t > 0) return;
@@ -1793,7 +1824,7 @@ function wander(m, dt, spd) {
 }
 const dir4 = (dx, dy) => Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
 function updateMob(m, dt, p) {
-  const k = DIFF[G.diff].spd * (isNight() && zoneAt(m.tx, m.ty) !== 'cave' ? 1.2 : 1), c = mobCenter(m);
+  const k = DIFF[G.diff].spd * (isNight() && zoneAt(m.tx, m.ty) !== 'cave' ? 1.2 : 1) * (m.elite ? 1.15 : 1), c = mobCenter(m);
   m.ph += dt * 6; m.flash = Math.max(0, m.flash - dt); m.st -= dt;
   const dx = p.x + 8 - c.x, dy = p.y + 10 - c.y, d = Math.hypot(dx, dy) || 1, alive = p.hp > 0;
   let vx = 0, vy = 0;
@@ -1863,9 +1894,56 @@ function updateMob(m, dt, p) {
       }
       vx = m.vx; vy = m.vy;
       break;
+    case 'giant':
+      if (m.state === 'sleep') { if (alive && d < 90) wakeBoss(m); break; }
+      if (m.state === 'walk') {
+        vx = dx / d * 16; vy = dy / d * 16;
+        if (m.st <= 0) { const near = d < 64; m.state = near ? 'raise' : 'wind'; m.st = near ? .6 : .5; }
+      } else if (m.state === 'raise') {
+        if (m.st <= 0) {
+          m.state = 'walk'; m.st = (1.2 + Math.random() * .6) / k; G.shake = .3; sfx.land();
+          waves.push({ x: c.x, y: c.y + 6, r: 6, hit: false }); burst(c.x, c.y + 10, C.S, 14);
+        }
+      } else if (m.state === 'wind' && m.st <= 0) {
+        m.state = 'walk'; m.st = (1.4 + Math.random() * .6) / k; sfx.throw();
+        const a0 = Math.atan2(dy, dx);
+        for (const da of [-.28, 0, .28]) shots.push({ kind: 'ice', enemy: true, x: c.x, y: c.y - 8, vx: Math.cos(a0 + da) * 85 * k, vy: Math.sin(a0 + da) * 85 * k, life: 2.2 });
+      }
+      break;
+    case 'bigcrab':
+      if (m.state === 'sleep') { if (alive && d < 90) wakeBoss(m); break; }
+      if (m.state === 'wait' || m.state === 'aim') {
+        vy = Math.sign(dy) * Math.min(m.state === 'aim' ? 50 : 36, Math.abs(dy) * 4);
+        if (m.st <= 0 && m.state === 'wait') { m.state = 'aim'; m.st = .45; }
+        else if (m.st <= 0) { m.state = 'charge'; m.st = 2; m.cdir = Math.sign(dx) || 1; sfx.charge(); }
+      } else if (m.state === 'charge') {
+        vx = m.cdir * 125;
+        if (m.st <= 0) { m.state = 'wait'; m.st = .8; }
+      } else if (m.state === 'stun' && m.st <= 0) { m.state = 'wait'; m.st = .6 / k; }
+      break;
+    case 'shadow':
+      if (m.state === 'sleep') { if (alive && d < 80) wakeBoss(m); break; }
+      if (m.state === 'float') {
+        vx = dx / d * 18; vy = dy / d * 18;
+        if (m.st <= 0) { m.state = 'fade'; m.st = .5; sfx.portal(); }
+      } else if (m.state === 'fade') {
+        if (m.st <= 0) { shadowJump(m, p); m.state = 'appear'; m.st = .4; }
+      } else if (m.state === 'appear') {
+        if (m.st <= 0) { m.state = 'cast'; m.st = .55; }
+      } else if (m.state === 'cast' && m.st <= 0) {
+        m.casts = (m.casts || 0) + 1; sfx.throw();
+        const off = Math.random();
+        for (let i = 0; i < 8; i++) {
+          const a = off + i / 8 * Math.PI * 2;
+          shots.push({ kind: 'orb', enemy: true, x: c.x, y: c.y - 4, vx: Math.cos(a) * 60 * k, vy: Math.sin(a) * 60 * k, life: 2.5 });
+        }
+        if (m.casts % 3 === 0) spawnMinis(m, 2, 'bat');
+        m.state = 'float'; m.st = (1.6 + Math.random()) / k;
+      }
+      break;
     case 'king':
       if (m.state === 'sleep') {
-        if (alive && d < 84) wakeKing(m);
+        if (alive && d < 84) wakeBoss(m);
         break;
       }
       if (m.state === 'wait') {
@@ -1887,23 +1965,33 @@ function updateMob(m, dt, p) {
     m.x = Math.min(Math.max(m.x + (vx * k + m.kx) * dt, 2 * TS), (W - 3) * TS);
     m.y = Math.min(Math.max(m.y + (vy * k + m.ky) * dt, 2 * TS), (H - 3) * TS);
   } else moveBody(m, (vx * k + m.kx) * dt, (vy * k + m.ky) * dt, m.hb, false);
-  if (m.type === 'beetle' && m.state !== 'stun' && !m.kx && !m.ky) {
+  if ((m.type === 'beetle' || m.type === 'bigcrab') && m.state !== 'stun' && !m.kx && !m.ky) {
     const want = (Math.abs(vx) + Math.abs(vy)) * k * dt, got = Math.abs(m.x - ox) + Math.abs(m.y - oy);
     if (want > .2 && got < want * .3) {
-      if (m.state === 'charge') { m.state = 'stun'; m.st = 1.4; sfx.land(); burst(c.x, c.y, C.G, 6); }
-      else m.st = 0;
+      if (m.state === 'charge') {
+        m.state = 'stun'; m.st = m.type === 'bigcrab' ? 1.7 : 1.4; sfx.land(); burst(c.x, c.y, C.G, 6);
+        if (m.type === 'bigcrab') { G.shake = .3; hint('crabstun', 'Краб оглушён! Бей, пока панцирь не защищает'); }
+      } else if (m.type === 'beetle') m.st = 0;
     }
   }
   const kd = Math.max(0, 1 - 8 * dt); m.kx *= kd; m.ky *= kd;
   if (Math.abs(m.kx) < 2) m.kx = 0;
   if (Math.abs(m.ky) < 2) m.ky = 0;
-  if (m.type === 'king' && m.state === 'sleep') return;
+  if (BOSS[m.type] && m.state === 'sleep') return;
+  if (m.type === 'shadow' && m.state === 'fade') return;
   const h = m.hb;
   if (overlap(p.x + PHB.x, p.y + PHB.y, PHB.w, PHB.h, m.x + h.x + 1, m.y + h.y + 1, h.w - 2, h.h - 2)) hurt(m);
 }
-function wakeKing(m) {
-  m.state = 'wait'; m.st = 1; sfx.roar(); G.shake = .3;
-  toast('Король слаймов проснулся!');
+function wakeBoss(m) {
+  m.state = BOSS[m.type].wake; m.st = 1; sfx.roar(); G.shake = .3;
+  toast(BOSS[m.type].name + ' пробуждается!');
+}
+function shadowJump(m, p) {
+  for (let i = 0; i < 30; i++) {
+    const a = Math.random() * Math.PI * 2, r = 40 + Math.random() * 30;
+    const nx = p.x + 8 + Math.cos(a) * r - 16, ny = p.y + 10 + Math.sin(a) * r - 20;
+    if (zoneAt(Math.floor((nx + 16) / TS), Math.floor((ny + 20) / TS)) === 'cave' && !boxHit(nx, ny, m.hb)) { m.x = nx; m.y = ny; return; }
+  }
 }
 function hitMob(m, dmg, sx, sy, pierce) {
   if (m.dead) return;
@@ -1916,23 +2004,33 @@ function hitMob(m, dmg, sx, sy, pierce) {
       return;
     }
   }
+  if (m.type === 'shadow' && m.state === 'fade') return;
+  if (m.type === 'bigcrab' && m.state !== 'stun' && !pierce) {
+    dmg = Math.max(1, Math.floor(dmg / 3)); sfx.block();
+    hint('crab', 'Панцирь краба слишком крепкий. Пусть он врежется в стену!');
+  }
+  if (m.elite) hint('elite', 'Элитный враг! Он сильнее, но с богатой добычей');
   m.hp -= dmg; m.flash = .18; sfx.hit();
   G.hitstop = Math.max(G.hitstop || 0, .045);
   popups.push({ x: c.x, y: c.y - 12, n: dmg, life: .6 });
-  const dx = c.x - sx, dy = c.y - sy, d = Math.hypot(dx, dy) || 1, kb = m.type === 'king' ? 30 : 95;
+  const dx = c.x - sx, dy = c.y - sy, d = Math.hypot(dx, dy) || 1, kb = BOSS[m.type] ? 30 : 95;
   m.kx = dx / d * kb; m.ky = dy / d * kb;
+  if (BOSS[m.type] && m.state === 'sleep') wakeBoss(m);
   if (m.type === 'king') {
-    if (m.state === 'sleep') wakeKing(m);
     const third = m.maxHp / 3;
     if (m.hp > 0 && Math.ceil(m.hp / third) < Math.ceil((m.hp + dmg) / third)) spawnMinis(m, 2);
   }
+  if (m.type === 'bigcrab') {
+    const q = m.maxHp / 4;
+    if (m.hp > 0 && Math.ceil(m.hp / q) < Math.ceil((m.hp + dmg) / q)) spawnMinis(m, 1, 'crab');
+  }
   if (m.hp <= 0) killMob(m);
 }
-function spawnMinis(m, n) {
+function spawnMinis(m, n, type = 'mini') {
   const c = mobCenter(m);
   for (let i = 0; i < n; i++) {
     const a = Math.PI * 2 * i / n + Math.random();
-    const mm = makeMob({ type: 'mini', tx: m.tx, ty: m.ty, x: c.x - 8 + Math.cos(a) * 8, y: c.y - 12 + Math.sin(a) * 6 });
+    const mm = makeMob({ type, summon: true, tx: Math.floor(c.x / TS), ty: Math.floor(c.y / TS), x: c.x - 8 + Math.cos(a) * 8, y: c.y - 12 + Math.sin(a) * 6 });
     if (boxHit(mm.x, mm.y, mm.hb)) { mm.x = c.x - 8; mm.y = c.y - 12; }
     mm.kx = Math.cos(a) * 110; mm.ky = Math.sin(a) * 110;
     ents.push(mm);
@@ -1944,20 +2042,30 @@ function killMob(m) {
   G.stats.kills++; if (isNight()) G.stats.nightKills++;
   gainXp(XP[m.type] || 2);
   if (hasPerk('vamp') && Math.random() < .2 && G.p.hp < G.p.maxHp) { G.p.hp++; burst(G.p.x + 8, G.p.y + 6, C.r, 8); }
-  burst(c.x, c.y, { slime: C.r, mini: C.p, bat: C.p, skel: C.w, beetle: C.n, king: C.p, wolf: C.G, snowman: C.S, crab: C.r, gslime: C.g }[m.type], m.type === 'king' ? 40 : 16);
-  if (m.type === 'king') {
-    G.taken.add('boss'); spawnMinis(m, 4); G.shake = .5; sfx.win();
-    const cs = world.ents.find(e => e.id === 'cr4');
-    if (!G.taken.has('cr4')) ents.push({ ...cs, x: cs.tx * TS, y: cs.ty * TS });
-    for (let i = 0; i < 6; i++) ents.push({ kind: 'coin', id: null, x: m.x + 2 + i * 5, y: m.y + 14 + (i % 2) * 6 });
-    toast('Король слаймов повержен!'); persist();
+  burst(c.x, c.y, { slime: C.r, mini: C.p, bat: C.p, skel: C.w, beetle: C.n, king: C.p, wolf: C.G, snowman: C.S, crab: C.r, gslime: C.g,
+    giant: C.I, bigcrab: C.o, shadow: C.P }[m.type], BOSS[m.type] ? 40 : 16);
+  if (BOSS[m.type]) {
+    const B = BOSS[m.type];
+    G.taken.add(B.id); G.shake = .5; sfx.win();
+    if (m.type === 'king') spawnMinis(m, 4);
+    const cs = world.ents.find(e => e.kind === 'crystal' && e.boss === B.id);
+    if (cs && !G.taken.has(cs.id)) ents.push({ ...cs, x: cs.tx * TS, y: cs.ty * TS });
+    if (m.type === 'giant') { setTile(79, 24, CAVE); toast('Лёд у входа в пещеру треснул!'); }
+    for (let i = 0; i < 8; i++) ents.push({ kind: 'coin', id: null, x: m.x + 2 + (i % 4) * 7, y: m.y + 12 + Math.floor(i / 4) * 8 });
+    ents.push({ kind: 'heart', x: m.x + 8, y: m.y + 20, ttl: 30 });
+    toast(B.name + ' повержен!'); persist();
     return;
+  }
+  if (m.elite) {
+    G.stats.elites = (G.stats.elites || 0) + 1; gainXp((XP[m.type] || 2) * 2);
+    for (let i = 0; i < 4; i++) ents.push({ kind: 'coin', id: null, x: c.x - 14 + i * 7, y: c.y - 10 + (i % 2) * 5 });
+    if (Math.random() < .5) ents.push({ kind: 'heart', x: c.x - 8, y: c.y - 2, ttl: 12 });
   }
   if (m.type === 'crab' && G.q.crabs.s === 1 && G.q.crabs.n < QUESTS.crabs.need) {
     G.q.crabs.n++; toast(G.q.crabs.n >= QUESTS.crabs.need ? QUESTS.crabs.ready : 'Крабы: ' + G.q.crabs.n + ' из ' + QUESTS.crabs.need);
   }
   G.shake = Math.max(G.shake, .08);
-  if (m.type !== 'mini') respawns.push({ type: m.type, tx: m.tx, ty: m.ty, t: 35 });
+  if (m.type !== 'mini' && !m.summon) respawns.push({ type: m.type, tx: m.tx, ty: m.ty, t: 35 });
   const r = Math.random(), luck = m.type === 'mini' ? .4 : 1;
   if (r < .1 * luck) for (let i = 0; i < 3; i++) ents.push({ kind: 'coin', id: null, x: c.x - 8 + (i - 1) * 7, y: c.y - 10 + (i % 2) * 4 });
   else if (r < .55 * luck) ents.push({ kind: 'coin', id: null, x: c.x - 8, y: c.y - 10 });
@@ -1967,7 +2075,7 @@ function updateShots(dt, p) {
   for (const s of shots) {
     s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
     const t = tileAt(Math.floor(s.x / TS), Math.floor(s.y / TS));
-    if (SOLID.has(t) && t !== WATER) { s.life = 0; burst(s.x, s.y, s.kind === 'arrow' ? C.b : C.w, 3); continue; }
+    if (SOLID.has(t) && t !== WATER) { s.life = 0; burst(s.x, s.y, s.kind === 'arrow' ? C.b : s.kind === 'orb' ? C.P : C.w, 3); continue; }
     if (s.enemy) {
       if (overlap(s.x - 2, s.y - 2, 4, 4, p.x + PHB.x, p.y + PHB.y - 4, PHB.w, PHB.h + 4)) { s.life = 0; hurt({ x: s.x - 8, y: s.y - 10 }); }
       continue;
@@ -1989,7 +2097,7 @@ function explode(b) {
   for (const m of ents) {
     if (m.kind !== 'mob' || m.dead) continue;
     const c = mobCenter(m);
-    if (Math.hypot(c.x - b.x, c.y - b.y) < R + (m.type === 'king' ? 14 : 6)) { hitMob(m, 3 + BD(), b.x, b.y, true); hits++; }
+    if (Math.hypot(c.x - b.x, c.y - b.y) < R + (MOBS[m.type].big ? 14 : 6)) { hitMob(m, 3 + BD(), b.x, b.y, true); hits++; }
   }
   if (hits >= 3) unlock('bomb3');
   if (!hasPerk('bomber') && Math.hypot(p.x + 8 - b.x, p.y + 11 - b.y) < R) hurt({ x: b.x - 8, y: b.y - 10 });
@@ -2014,7 +2122,7 @@ function burst(x, y, col, n) {
 function hurt(from) {
   const p = G.p;
   if (p.inv > 0 || p.hp <= 0) return;
-  const big = from.type === 'king' ? 1 : 0;
+  const big = from.type && MOBS[from.type] && MOBS[from.type].big ? 1 : 0;
   const dx = p.x - (from.x + big * 8), dy = p.y - (from.y + big * 10), d = Math.hypot(dx, dy) || 1;
   const f = FACE[p.dir];
   if (p.shield && (-dx / d) * f[0] + (-dy / d) * f[1] > .45) {
@@ -2058,7 +2166,7 @@ function update(dt) {
   if (aQueued) { aQueued = false; handleA(); }
   if (dlg) { if (dlg.shown < dlg.pages[dlg.i].length) { const before = Math.floor(dlg.shown); dlg.shown += dt * 45; if (Math.floor(dlg.shown) !== before) { renderDialog(); if (before % 3 === 0) sfx.blip(); } } return; }
   {
-    const kingOn = G.state === 'play' && ents.some(e => e.kind === 'mob' && e.type === 'king' && !e.dead && e.state !== 'sleep' && Math.hypot(e.x - G.p.x, e.y - G.p.y) < 220);
+    const kingOn = G.state === 'play' && ents.some(e => e.kind === 'mob' && BOSS[e.type] && !e.dead && e.state !== 'sleep' && Math.hypot(e.x - G.p.x, e.y - G.p.y) < 220);
     const z = G.zone || 'field';
     setTrack(G.state !== 'play' || menuOpen ? null : kingOn ? 'boss' : z === 'field' && isNight() ? 'night' : z);
   }
@@ -2197,6 +2305,11 @@ function update(dt) {
   // enemies, projectiles, bombs
   for (const m of ents) if (m.kind === 'mob' && !m.dead) updateMob(m, dt, p);
   updateShots(dt, p);
+  for (const w of waves) {
+    w.r += 95 * dt;
+    if (!w.hit && !(p.dash > 0) && Math.abs(Math.hypot(p.x + 8 - w.x, p.y + 12 - w.y) - w.r) < 6) { w.hit = true; hurt({ x: w.x - 8, y: w.y - 10 }); }
+  }
+  waves = waves.filter(w => w.r < 62);
   for (const b of bombs) { b.t -= dt; if (b.t <= 0) explode(b); }
   bombs = bombs.filter(b => b.t > 0);
   for (const b of blasts) b.t += dt;
@@ -2285,6 +2398,13 @@ function drawWeapon(p, ox, oy) {
 }
 function drawMob(m, x, y) {
   const fl = m.flash > 0;
+  if (m.elite) {
+    for (let i = 0; i < 8; i++) {
+      const a = i / 8 * Math.PI * 2 + G.t * 3;
+      P(ctx, x + 8 + Math.round(Math.cos(a) * 9), y + 10 + Math.round(Math.sin(a) * 6), i % 2 ? C.o : C.y);
+    }
+    P(ctx, x + 6, y - 4, C.k, 5, 4); P(ctx, x + 7, y - 3, C.o, 3, 2); P(ctx, x + 8, y - 5, C.y);
+  }
   switch (m.type) {
     case 'slime': case 'gslime': { const sq = Math.sin(m.ph) > .3 ? 1 : 0; ctx.drawImage(fl ? SPR.slimeHit : SPR[m.type], 0, 0, 16, 16, x, y + sq, 16, 16 - sq); break; }
     case 'wolf': ctx.drawImage((fl ? SPR.wolfHit : SPR.wolf)[m.dir === 'left' ? 'left' : 'right'], x, y - (Math.floor(G.t * 8 + m.ph) % 2)); break;
@@ -2304,6 +2424,35 @@ function drawMob(m, x, y) {
       }
       break;
     }
+    case 'giant': {
+      const lift = m.state === 'raise' ? Math.round((1 - Math.max(0, m.st) / .6) * 6) : 0;
+      const sway = m.state === 'wind' ? Math.round(Math.sin(G.t * 30)) : 0;
+      P(ctx, x + 5, y + 30, 'rgba(0,0,0,.3)', 22, 2);
+      ctx.drawImage(fl ? SPR.giantHit : SPR.giant, 0, 0, 16, 16, x + sway, y - lift, 32, 32);
+      if (m.state === 'sleep') drawZ(x, y);
+      break;
+    }
+    case 'bigcrab': {
+      const jit = m.state === 'charge' || m.state === 'aim' ? Math.round(Math.random() * 2 - 1) : 0;
+      P(ctx, x + 4, y + 30, 'rgba(0,0,0,.3)', 24, 2);
+      ctx.drawImage(fl ? SPR.bigcrabHit : SPR.bigcrab, 0, 0, 16, 16, x + jit, y, 32, 32);
+      if (m.state === 'stun') for (let i = 0; i < 4; i++) {
+        const a = G.t * 6 + i * 1.6; P(ctx, x + 16 + Math.round(Math.cos(a) * 10), y + 8 + Math.round(Math.sin(a) * 3), C.y, 2, 2);
+      }
+      if (m.state === 'sleep') drawZ(x, y);
+      break;
+    }
+    case 'shadow': {
+      let a = .85 + Math.sin(G.t * 9) * .1;
+      if (m.state === 'fade') a = Math.max(0, m.st / .5) * .85;
+      if (m.state === 'appear') a = (1 - Math.max(0, m.st) / .4) * .85;
+      ctx.globalAlpha = a;
+      ctx.drawImage(fl ? SPR.shadowHit : SPR.shadow, 0, 0, 16, 16, x, y + Math.round(Math.sin(G.t * 2) * 2), 32, 32);
+      if (m.state === 'cast') for (let i = 0; i < 6; i++) { const b = G.t * 8 + i; P(ctx, x + 16 + Math.round(Math.cos(b) * 14), y + 14 + Math.round(Math.sin(b) * 10), C.P); }
+      ctx.globalAlpha = 1;
+      if (m.state === 'sleep') drawZ(x, y);
+      break;
+    }
     case 'king': {
       const sq = m.state === 'crouch' ? 3 : m.state === 'leap' ? 0 : (Math.sin(m.ph * .6) > .3 ? 1 : 0);
       const lift = m.state === 'leap' ? Math.round(Math.sin(Math.max(0, Math.min(1, 1 - m.st / .55)) * Math.PI) * 10) : 0;
@@ -2321,12 +2470,21 @@ function drawMob(m, x, y) {
     }
   }
 }
+function drawZ(x, y) {
+  const zy = y - 2 - (Math.floor(G.t * 2) % 3) * 2;
+  P(ctx, x + 26, zy, C.w, 3, 1); P(ctx, x + 27, zy + 1, C.w); P(ctx, x + 26, zy + 2, C.w, 3, 1);
+}
 function drawShots(ox, oy) {
   for (const s of shots) {
     const x = Math.round(s.x - ox), y = Math.round(s.y - oy + HUD);
     if (s.kind === 'arrow') {
       if (s.vx) { const sg = Math.sign(s.vx); P(ctx, x - 4, y, C.b, 8, 1); P(ctx, x + sg * 4 - (sg < 0 ? 1 : 0), y - 1, C.G, 2, 3); P(ctx, x - sg * 5, y - 1, C.w, 1, 3); }
       else { const sg = Math.sign(s.vy); P(ctx, x, y - 4, C.b, 1, 8); P(ctx, x - 1, y + sg * 4 - (sg < 0 ? 1 : 0), C.G, 3, 2); P(ctx, x - 1, y - sg * 5, C.w, 3, 1); }
+    } else if (s.kind === 'ice') {
+      P(ctx, x - 2, y - 3, C.k, 5, 7); P(ctx, x - 1, y - 2, C.I, 3, 5); P(ctx, x, y - 2, C.w, 1, 2);
+    } else if (s.kind === 'orb') {
+      const f = Math.floor(G.t * 10) % 2;
+      P(ctx, x - 3, y - 3, C.K, 6, 6); P(ctx, x - 2, y - 2, C.p, 4, 4); P(ctx, x - 1 + f, y - 1, C.P, 1, 1);
     } else if (s.kind === 'snow') {
       P(ctx, x - 2, y - 2, C.k, 5, 5); P(ctx, x - 1, y - 1, C.S, 3, 3); P(ctx, x - 1, y - 1, C.w);
     } else {
@@ -2418,6 +2576,7 @@ function drawLighting(camX, camY) {
   const lights = [[p.x + 8 - camX, p.y + 9 - camY, (inCave ? (G.lantern ? 60 : 16) : (G.lantern ? 58 : 34)) + (hasPerk('owl') ? 18 : 0)]];
   for (const e of ents) if (e.kind === 'deco' && (e.id === 'torch' || e.id === 'lamp')) lights.push([e.x + 8 - camX, e.y + 2 - camY, e.id === 'torch' ? 40 : 46]);
   for (const b of blasts) lights.push([b.x - camX, b.y - camY, 50]);
+  for (const e of ents) if (e.kind === 'mob' && e.type === 'shadow' && !e.dead && e.state !== 'fade') lights.push([e.x + 16 - camX, e.y + 14 - camY, 22]);
   for (const [x, y, r0] of lights) {
     if (x < -70 || y < -70 || x > VW + 70 || y > VH + 70) continue;
     const r = r0 + Math.sin(G.t * 9 + x) * 1.2;
@@ -2462,7 +2621,8 @@ function render() {
   drawBombs(camX, camY);
   const draw = ents.filter(e => !e.dead && e.x > camX - 40 && e.x < camX + VW + 8 && e.y > camY - 40 && e.y < camY + VH + 8);
   draw.push({ kind: 'player', x: p.x, y: p.y });
-  draw.sort((a, b) => (a.y + (a.type === 'king' ? 16 : 0)) - (b.y + (b.type === 'king' ? 16 : 0)));
+  const big = e => e.kind === 'mob' && MOBS[e.type].big ? 16 : 0;
+  draw.sort((a, b) => (a.y + big(a)) - (b.y + big(b)));
   for (const e of draw) {
     const x = Math.round(e.x - camX), y = Math.round(e.y - camY + HUD);
     switch (e.kind) {
@@ -2515,6 +2675,10 @@ function render() {
   }
   drawShots(camX, camY);
   for (const q of particles) P(ctx, Math.round(q.x - camX), Math.round(q.y - camY + HUD), q.col);
+  for (const w of waves) for (let i = 0; i < 36; i++) {
+    const a = i / 36 * Math.PI * 2;
+    P(ctx, Math.round(w.x - camX + Math.cos(a) * w.r), Math.round(w.y - camY + HUD + Math.sin(a) * w.r * .7), i % 2 ? C.I : C.w, 2, 1);
+  }
   drawLighting(camX, camY);
   for (const q of popups) {
     const px = Math.round(q.x - camX) - 1, py = Math.round(q.y - camY + HUD);
@@ -2523,10 +2687,10 @@ function render() {
   }
   if (G.flash > 0) { ctx.globalAlpha = G.flash * 1.6; P(ctx, 0, HUD, C.r, VW, VH); ctx.globalAlpha = 1; }
   if (G.fade > 0) { ctx.globalAlpha = Math.min(1, G.fade * 2.2); P(ctx, 0, HUD, C.k, VW, VH); ctx.globalAlpha = 1; }
-  const king = ents.find(e => e.kind === 'mob' && e.type === 'king' && !e.dead && e.state !== 'sleep');
-  if (king && Math.hypot(king.x - p.x, king.y - p.y) < 200) {
+  const king = ents.find(e => e.kind === 'mob' && BOSS[e.type] && !e.dead && e.state !== 'sleep' && Math.hypot(e.x - p.x, e.y - p.y) < 200);
+  if (king) {
     P(ctx, 19, CH - 10, C.k, 122, 7); P(ctx, 20, CH - 9, C.D, 120, 5);
-    P(ctx, 20, CH - 9, C.p, Math.max(0, Math.round(120 * king.hp / king.maxHp)), 5);
+    P(ctx, 20, CH - 9, BOSS[king.type].col, Math.max(0, Math.round(120 * king.hp / king.maxHp)), 5);
     P(ctx, 20, CH - 9, C.P, Math.max(0, Math.round(120 * king.hp / king.maxHp)), 1);
     P(ctx, 12, CH - 11, C.k, 7, 7); P(ctx, 13, CH - 10, C.o, 5, 5); P(ctx, 14, CH - 11, C.k, 1, 2); P(ctx, 16, CH - 11, C.k, 1, 2);
   }
