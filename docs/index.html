@@ -478,6 +478,22 @@ function buildWorld() {
   ents.push({ kind: 'mob', type: 'giant', id: 'boss_giant', tx: 78, ty: 17 });
   ents.push({ kind: 'mob', type: 'bigcrab', id: 'boss_crab', tx: 49, ty: 44 });
   ents.push({ kind: 'mob', type: 'shadow', id: 'boss_shadow', tx: 79, ty: 53 });
+  // waystones, shells and diary pages, nudged onto the nearest free tile
+  const taken = new Set(ents.filter(e => e.kind !== 'mob').map(e => e.ty * W + e.tx));
+  const place = (x, y) => {
+    for (let r = 0; r < 4; r++) for (let dy = -r; dy <= r; dy++) for (let dx = -r; dx <= r; dx++) {
+      const nx = x + dx, ny = y + dy, t = get(nx, ny);
+      if (SOLID.has(t) || [CAVE, STAIRS, PLATE, ICE, GATE, GATEO, BRIDGE].includes(t) || taken.has(ny * W + nx)) continue;
+      taken.add(ny * W + nx); return [nx, ny];
+    }
+    return [x, y];
+  };
+  [['w_village', 22, 23, 'Листвянка'], ['w_ruins', 32, 22, 'Руины'], ['w_pass', 61, 21, 'Перевал'], ['w_beach', 24, 39, 'Пляж'], ['w_cave', 66, 42, 'Пещера']]
+    .forEach(([id, x, y, name]) => { const [tx, ty] = place(x, y); ents.push({ kind: 'way', id, tx, ty, name }); });
+  [[4, 38], [9, 41], [13, 45], [3, 51], [15, 52], [20, 48], [27, 44], [31, 38], [29, 52], [35, 49], [39, 43], [42, 52], [46, 38], [50, 42], [56, 47]]
+    .forEach(([x, y], i) => { const [tx, ty] = place(x, y); ents.push({ kind: 'coll', sub: 'shell', id: 'sh' + i, tx, ty }); });
+  [[3, 3], [16, 29], [38, 25], [31, 7], [21, 4], [54, 18], [84, 3], [13, 47], [78, 42], [76, 58]]
+    .forEach(([x, y], i) => { const [tx, ty] = place(x, y); ents.push({ kind: 'coll', sub: 'page', id: 'pg' + i, n: i, tx, ty }); });
   return { m, ents, puzzles, portals };
 }
 /*WORLD-END*/
@@ -1011,6 +1027,19 @@ const TEXT = {
     'Кристалл вмёрз в озеро. На льду катишься, пока не упрёшься в камень. Думай, куда едешь!', 'А в пещеру без фонаря не суйся.'],
   tikhon: ['Я Тихон, рыбак. В бухте за скалами что-то сияет, да ворота заперты.',
     'Нашёл записку в бутылке: «Крайние рычаги вверх, средний вниз». Не про бухту ли?', 'Крабы нынче злые. Щипаются больно.'],
+  diary: [
+    'День 1. Я пришёл в Листвянку искать кристаллы, о которых поют в тавернах. Говорят, их восемь, и они держат лес живым.',
+    'День 3. Старый Мирон стережёт алтарь и смотрит на меня с подозрением. И правильно делает.',
+    'День 5. Я нашёл способ разбудить кристаллы. Если вынуть их из алтаря разом, их сила станет моей.',
+    'День 6. Король слаймов почуял кристалл и уполз с ним в руины. Жадная слизь.',
+    'День 8. Ночью я вынул кристаллы. Поднялась буря. Я не удержал их, они разлетелись по всему краю.',
+    'День 9. Один кристалл упал в горное озеро и вмёрз в лёд. Проснулся великан и замуровал пещеру.',
+    'День 11. Огромный краб утащил кристалл в бухту. Рыбак видел сияние, но промолчал. Боится.',
+    'День 13. В пещере живёт Тень. Она пьёт свет кристалла и растёт.',
+    'День 15. Без кристаллов лес умрёт, а с ним и Листвянка. Это моя вина.',
+    'Последняя страница. Если ты читаешь это, верни кристаллы Мирону. И прости меня. Странник.',
+  ],
+  amulet: ['Пятнадцать ракушек! Да ты настоящий морской волк.', 'Возьми амулет прилива. С ним раны затягиваются сами: одно сердце каждые полминуты.'],
   night: { miron: 'Ночь на дворе. Монстры в темноте злее, держись света.', varya: 'Поздно уже, но для тебя открою.' },
   gordey: ['Кузнец Гордей к твоим услугам. Наточу клинок, подгоню кольчугу. Не бесплатно, конечно.', 'Опять ты? Ну, показывай монеты.', 'Хороший клинок любит заботу.'],
   hints: {
@@ -1094,6 +1123,9 @@ const ACH = [
   ['puzzles', 'Головастик', 'Открой все ворота с головоломками.'],
   ['quests', 'Добрый сосед', 'Выполни все поручения жителей.'],
   ['map', 'Картограф', 'Исследуй половину карты.'],
+  ['shells', 'Морской коллекционер', 'Собери все 15 ракушек.'],
+  ['pages', 'Летописец', 'Найди все 10 страниц дневника.'],
+  ['ways', 'Путешественник', 'Пробуди все камни-порталы.'],
   ['bosses', 'Охотник на чудищ', 'Победи всех четырёх боссов.'],
   ['elite5', 'Сильнейший', 'Победи 5 элитных врагов.'],
   ['win', 'Спаситель Листвянки', 'Собери все восемь кристаллов.'],
@@ -1119,6 +1151,9 @@ function checkAch() {
   if (t.has('boss')) unlock('king');
   if (['boss', 'boss_giant', 'boss_crab', 'boss_shadow'].every(id => t.has(id))) unlock('bosses');
   if ((st.elites || 0) >= 5) unlock('elite5');
+  if (collCount('shell') >= 15) unlock('shells');
+  if (collCount('page') >= 10) unlock('pages');
+  if (G.ways.length >= 5) unlock('ways');
   if (st.dashes >= 50) unlock('dasher');
   if (G.lvl >= 5) unlock('lvl5');
   if (G.lvl >= 10) unlock('lvl10');
@@ -1502,6 +1537,7 @@ function freshState() {
     lantern: false, levers: { lv1: false, lv2: false, lv3: false }, clock: 30, zone: null,
     q: { kitten: { s: 0, n: 0 }, bloom: { s: 0, n: 0 }, ore: { s: 0, n: 0 }, crabs: { s: 0, n: 0 } }, bigBag: false, temper: false,
     lvl: 1, xp: 0, perks: [], pendingPerks: 0, perkOffer: [], stats: { kills: 0, nightKills: 0, dashes: 0, deaths: 0, elites: 0 },
+    ways: [], amulet: false, regenT: 0, weather: { type: 'clear', t: 50 },
     seen: new Uint8Array(W * H), hitstop: 0, flash: 0,
   };
 }
@@ -1519,7 +1555,7 @@ function spawnEntities() {
     if (s.kind === 'block') { e.hx = s.tx; e.hy = s.ty; blockers.set(e.ty * W + e.tx, e); ents.push(e); continue; }
     if (s.kind === 'lever') { blockers.set(s.ty * W + s.tx, e); ents.push(e); continue; }
     if (s.kind === 'mob') { ents.push(makeMob(s)); continue; }
-    if (s.kind === 'npc' || s.kind === 'sign' || s.kind === 'chest' || s.kind === 'deco') blockers.set(s.ty * W + s.tx, e);
+    if (s.kind === 'npc' || s.kind === 'sign' || s.kind === 'chest' || s.kind === 'deco' || s.kind === 'way') blockers.set(s.ty * W + s.tx, e);
     ents.push(e);
   }
 }
@@ -1539,7 +1575,7 @@ function unpackSeen(str, a) {
 function makeSave() {
   return {
     v: 1, x: G.p.x, y: G.p.y, hp: G.p.hp, maxHp: G.p.maxHp, coins: G.coins, taken: [...G.taken], talked: G.talked, won: G.won, time: G.time, dir: G.p.dir,
-    inv: G.inv, weapons: G.weapons, weapon: G.weapon, shield: G.shield, up: G.up, met: G.met, ammo: G.ammo, diff: G.diff, lvl: G.lvl, xp: G.xp, perks: G.perks, pendingPerks: G.pendingPerks, stats: G.stats,
+    inv: G.inv, weapons: G.weapons, weapon: G.weapon, shield: G.shield, up: G.up, met: G.met, ammo: G.ammo, diff: G.diff, lvl: G.lvl, xp: G.xp, perks: G.perks, pendingPerks: G.pendingPerks, stats: G.stats, ways: G.ways, amulet: G.amulet,
     lantern: G.lantern, levers: G.levers, clock: G.clock, q: G.q, bigBag: G.bigBag, temper: G.temper, seen: packSeen(G.seen),
   };
 }
@@ -1563,6 +1599,7 @@ function applySave(s) {
   G.lvl = Math.min(MAX_LVL, Math.max(1, +s.lvl || 1)); G.xp = +s.xp || 0;
   if (Array.isArray(s.perks)) G.perks = s.perks.filter(k => PERKS[k]);
   G.pendingPerks = +s.pendingPerks || 0; Object.assign(G.stats, s.stats || {});
+  if (Array.isArray(s.ways)) G.ways = s.ways.slice(); G.amulet = !!s.amulet;
   if (typeof s.seen === 'string') unpackSeen(s.seen, G.seen);
   if (G.won) { G.p.x = START.x; G.p.y = START.y; }
 }
@@ -1681,6 +1718,10 @@ function interact(e) {
     say(e.name, line, () => openPanel(e.id));
     return;
   }
+  if (e.id === 'tikhon' && !G.amulet && collCount('shell') >= 15) {
+    G.amulet = true; say(e.name, TEXT.amulet); sfx.win(); persist();
+    return;
+  }
   if (e.id === 'efim' || e.id === 'tikhon') {
     const lines = TEXT[e.id], first = !G.met[e.id];
     if (!first && questTalk(e)) return;
@@ -1689,6 +1730,14 @@ function interact(e) {
     return;
   }
   if (e.kind === 'lever') { toggleLever(e); return; }
+  if (e.kind === 'way') {
+    if (!G.ways.includes(e.id)) {
+      G.ways.push(e.id); sfx.portal(); burst(e.x + 8, e.y + 4, C.c, 16); persist();
+      say('', 'Камень-портал пробуждён: ' + e.name + '.' + (G.ways.length > 1 ? ' Подойди к любому пробуждённому камню, чтобы перенестись сюда.' : ' Пробуди другие камни, и между ними можно будет перемещаться.'));
+    } else if (G.ways.length < 2) say('', 'Камень гудит. Пробуди ещё хотя бы один камень-портал.');
+    else { G.wayFrom = e.id; openPanel('travel'); }
+    return;
+  }
   if (e.kind === 'deco' || e.kind === 'block') { swing(); }
 }
 function weaponBox(p) {
@@ -1787,6 +1836,28 @@ function toggleLever(e) {
   G.levers[e.id] = !G.levers[e.id]; sfx.lever();
   if (pz.levers.every((id, i) => G.levers[id] === pz.pattern[i])) openGate('cove');
   persist();
+}
+const collCount = sub => world.ents.filter(e => e.kind === 'coll' && e.sub === sub && G.taken.has(e.id)).length;
+function travelTo(id) {
+  const w = world.ents.find(e => e.kind === 'way' && e.id === id), p = G.p;
+  if (!w) return;
+  p.x = w.tx * TS; p.y = (w.ty + 1) * TS - 4; p.dir = 'down'; p.slide = null; p.kx = p.ky = 0;
+  p.portalCd = .8; G.fade = .5; sfx.portal(); shots = []; bombs = []; waves = [];
+  panelKind = null; $('panel').hidden = true; persist();
+}
+function weatherHere() {
+  const z = G.zone || 'field', w = G.weather.type;
+  if (z === 'cave') return 'clear';
+  if (z === 'snow') return w === 'rain' ? 'blizzard' : w === 'clear' ? 'flurry' : w;
+  return w;
+}
+const WEATHER_MSG = { rain: 'Пошёл дождь. Скользко!', blizzard: 'Началась метель', fog: 'Опустился туман', clear: 'Прояснилось', flurry: 'Метель утихла' };
+function updateWeather(dt) {
+  G.weather.t -= dt;
+  if (G.weather.t > 0) return;
+  const old = G.weather.type, r = Math.random();
+  G.weather = { type: r < .5 ? 'clear' : r < .8 ? 'rain' : 'fog', t: 70 + Math.random() * 80 };
+  if (G.weather.type !== old && G.zone !== 'cave') toast(WEATHER_MSG[weatherHere()]);
 }
 function hint(key, msg) { if (told.has(key)) return; told.add(key); toast(msg); }
 
@@ -2198,8 +2269,8 @@ function update(dt) {
   G.buff.speed = Math.max(0, G.buff.speed - dt); G.buff.guard = Math.max(0, G.buff.guard - dt);
   const ix = input.tx || input.kx, iy = input.ty || input.ky;
   const run = input.tb || input.kb;
-  const charging = (p.charge || 0) > .1;
-  const sp = (run ? 80 : 52) * (G.buff.speed > 0 ? 1.45 : 1) * (hasPerk('swift') ? 1.12 : 1) * (charging ? .55 : 1), len = Math.hypot(ix, iy) || 1;
+  const charging = (p.charge || 0) > .1, wh = weatherHere();
+  const sp = (run ? 80 : 52) * (G.buff.speed > 0 ? 1.45 : 1) * (hasPerk('swift') ? 1.12 : 1) * (charging ? .55 : 1) * (wh === 'blizzard' ? .85 : 1), len = Math.hypot(ix, iy) || 1;
   let vx = ix / len * sp, vy = iy / len * sp;
   if (p.swing > 0) { vx *= .35; vy *= .35; }
   if (ix || iy) {
@@ -2236,7 +2307,12 @@ function update(dt) {
     p.dash -= dt;
     moveBody(p, p.dvx * dt, p.dvy * dt, PHB, false);
     particles.push({ x: p.x + 4 + Math.random() * 8, y: p.y + 4 + Math.random() * 10, vx: 0, vy: 0, life: .2, col: C.c });
-  } else if (!p.slide) moveBody(p, (vx + p.kx) * dt, (vy + p.ky) * dt, PHB, !p.kx && !p.ky);
+  } else if (!p.slide) {
+    // rain makes the ground slippery: velocity follows input with inertia
+    if (wh === 'rain') { const a = Math.min(1, dt * 3.5); p.mvx = (p.mvx || 0) + (vx - (p.mvx || 0)) * a; p.mvy = (p.mvy || 0) + (vy - (p.mvy || 0)) * a; vx = p.mvx; vy = p.mvy; }
+    else { p.mvx = vx; p.mvy = vy; }
+    moveBody(p, (vx + p.kx) * dt, (vy + p.ky) * dt, PHB, !p.kx && !p.ky);
+  }
   if (!p.slide) tryPush(p, ix, iy, dt);
   p.portalCd = Math.max(0, (p.portalCd || 0) - dt);
   {
@@ -2282,12 +2358,23 @@ function update(dt) {
   // pickups
   const pcx = p.x + 8, pcy = p.y + 11;
   for (const e of ents) {
-    if (e.dead || !(e.kind === 'coin' || e.kind === 'crystal' || e.kind === 'heart' || e.kind === 'qitem')) continue;
+    if (e.dead || !(e.kind === 'coin' || e.kind === 'crystal' || e.kind === 'heart' || e.kind === 'qitem' || e.kind === 'coll')) continue;
     if (Math.hypot(e.x + 8 - pcx, e.y + 9 - pcy) > 11) continue;
     e.dead = true;
     if (e.id) G.taken.add(e.id);
     if (e.kind === 'coin') { G.coins += hasPerk('gold') && Math.random() < .34 ? 2 : 1; sfx.coin(); burst(e.x + 8, e.y + 8, C.y, 5); }
     if (e.kind === 'heart') { p.hp = Math.min(p.maxHp, p.hp + 1); sfx.coin(); burst(e.x + 8, e.y + 8, C.r, 6); }
+    if (e.kind === 'coll') {
+      if (e.sub === 'shell') {
+        const n = collCount('shell'); sfx.coin(); burst(e.x + 8, e.y + 8, C.P, 8);
+        toast(n >= 15 ? 'Все ракушки! Покажи их рыбаку Тихону' : 'Ракушка ' + n + ' из 15');
+      } else {
+        const n = collCount('page'); sfx.open();
+        say('Дневник Странника · найдено ' + n + ' из 10', TEXT.diary[e.n]);
+        if (n >= 10) { G.seen.fill(1); toast('Дневник собран! Карта открыта полностью'); }
+      }
+      persist();
+    }
     if (e.kind === 'qitem') {
       const q = QUESTS[e.quest], st = G.q[e.quest];
       st.n++; sfx.open(); burst(e.x + 8, e.y + 8, e.quest === 'bloom' ? C.c : C.w, 10);
@@ -2309,6 +2396,8 @@ function update(dt) {
   G.achT = (G.achT || 0) + dt;
   if (G.achT > 1) { G.achT = 0; checkAch(); }
   if (G.pendingPerks > 0 && !dlg && !panelKind) offerPerks();
+  updateWeather(dt);
+  if (G.amulet && p.hp < p.maxHp) { G.regenT += dt; if (G.regenT >= 30) { G.regenT = 0; p.hp++; burst(p.x + 8, p.y + 6, C.c, 8); } } else G.regenT = 0;
   {
     const cx = Math.floor((p.x + 8) / TS), cy = Math.floor((p.y + 12) / TS);
     const r = (G.zone === 'cave' ? (G.lantern ? 4 : 2) : 6) + (hasPerk('owl') ? 1 : 0);
@@ -2535,6 +2624,27 @@ function drawAnvil(x, y) {
   P(ctx, x + 6, y + 10, C.k, 5, 3); P(ctx, x + 7, y + 10, C.D, 3, 3);
   P(ctx, x + 4, y + 13, C.k, 9, 3); P(ctx, x + 5, y + 13, C.D, 7, 2);
 }
+function drawColl(e, x, y) {
+  const b = Math.round(Math.sin(G.t * 3 + e.tx) * 1);
+  P(ctx, x + 5, y + 14, 'rgba(0,0,0,.2)', 6, 1);
+  if (e.sub === 'shell') {
+    P(ctx, x + 4, y + 7 + b, C.k, 8, 7); P(ctx, x + 5, y + 6 + b, C.k, 6, 1);
+    P(ctx, x + 5, y + 7 + b, C.P, 6, 6); P(ctx, x + 6, y + 8 + b, C.w, 1, 4); P(ctx, x + 8, y + 7 + b, C.w, 1, 5); P(ctx, x + 10, y + 8 + b, C.w, 1, 4);
+    P(ctx, x + 7, y + 13 + b, C.p, 2, 1);
+  } else {
+    P(ctx, x + 4, y + 4 + b, C.k, 9, 11); P(ctx, x + 5, y + 5 + b, C.w, 7, 9);
+    for (let i = 0; i < 4; i++) P(ctx, x + 6, y + 7 + i * 2 + b, C.F, 5, 1);
+    P(ctx, x + 10, y + 5 + b, C.a, 2, 2);
+  }
+  if (Math.floor(G.t * 3 + e.tx) % 5 === 0) P(ctx, x + 12, y + 4 + b, C.w);
+}
+function drawWay(x, y, on) {
+  P(ctx, x + 2, y + 13, C.k, 12, 3); P(ctx, x + 3, y + 13, C.D, 10, 2);
+  P(ctx, x + 4, y + 1, C.k, 8, 13); P(ctx, x + 5, y, C.k, 6, 1);
+  P(ctx, x + 5, y + 1, C.F, 6, 12); P(ctx, x + 5, y + 1, C.G, 2, 12);
+  const g = on ? (Math.floor(G.t * 4) % 2 ? C.c : C.w) : C.D;
+  P(ctx, x + 7, y + 3, g, 2, 1); P(ctx, x + 6, y + 5, g, 4, 1); P(ctx, x + 7, y + 7, g, 2, 3); P(ctx, x + 6, y + 10, g, 4, 1);
+}
 function drawQItem(e, x, y) {
   const t = G.t;
   if (e.quest === 'kitten') { ctx.drawImage(SPR.kitten, x, y - (Math.floor(t * 2) % 2)); return; }
@@ -2575,6 +2685,31 @@ function drawLever(x, y, on) {
   P(ctx, x + 7 + Math.round(dx * 4), y + 2, C.k, 4, 4); P(ctx, x + 8 + Math.round(dx * 4), y + 3, C.r, 2, 2);
   P(ctx, x + 5, y + 13, on ? C.l : C.R, 2, 1);
 }
+const fogCv = document.createElement('canvas'); fogCv.width = VW; fogCv.height = VH;
+const fctx = fogCv.getContext('2d');
+function drawWeather(camX, camY) {
+  const wh = weatherHere(), t = G.t, p = G.p;
+  if (wh === 'clear') return;
+  if (wh === 'rain') {
+    ctx.globalAlpha = .14; P(ctx, 0, HUD, '#1d2a44', VW, VH);
+    ctx.globalAlpha = .6;
+    for (let i = 0; i < 46; i++) P(ctx, Math.floor((i * 53 + t * 30) % VW), HUD + Math.floor((i * 97 + t * 230) % VH), C.c, 1, 3);
+    ctx.globalAlpha = 1;
+    return;
+  }
+  const flakes = (n, sp, col) => { for (let i = 0; i < n; i++) P(ctx, Math.floor((i * 41 + t * sp * .6 + Math.sin(t + i) * 6) % VW), HUD + Math.floor((i * 89 + t * sp) % VH), col, i % 3 ? 1 : 2, 1); };
+  if (wh === 'flurry') { flakes(22, 18, C.w); return; }
+  // blizzard or fog: veil the screen, keep a clear circle around the hero
+  fctx.globalCompositeOperation = 'source-over'; fctx.globalAlpha = 1; fctx.clearRect(0, 0, VW, VH);
+  fctx.fillStyle = wh === 'fog' ? 'rgb(170,176,190)' : 'rgb(232,238,246)';
+  fctx.globalAlpha = wh === 'fog' ? .5 : .62; fctx.fillRect(0, 0, VW, VH);
+  fctx.globalCompositeOperation = 'destination-out';
+  const r = (wh === 'fog' ? 54 : 42) + (hasPerk('owl') ? 12 : 0);
+  for (let i = 0; i < 4; i++) { fctx.globalAlpha = .3; fctx.beginPath(); fctx.arc(Math.round(p.x + 8 - camX), Math.round(p.y + 9 - camY), r * (1 - i * .2), 0, Math.PI * 2); fctx.fill(); }
+  fctx.globalCompositeOperation = 'source-over'; fctx.globalAlpha = 1;
+  ctx.drawImage(fogCv, 0, HUD);
+  if (wh === 'blizzard') flakes(70, 120, C.w);
+}
 const shadeCv = document.createElement('canvas'); shadeCv.width = VW; shadeCv.height = VH;
 const sctx = shadeCv.getContext('2d');
 function drawLighting(camX, camY) {
@@ -2588,6 +2723,7 @@ function drawLighting(camX, camY) {
   sctx.globalCompositeOperation = 'destination-out';
   const lights = [[p.x + 8 - camX, p.y + 9 - camY, (inCave ? (G.lantern ? 60 : 16) : (G.lantern ? 58 : 34)) + (hasPerk('owl') ? 18 : 0)]];
   for (const e of ents) if (e.kind === 'deco' && (e.id === 'torch' || e.id === 'lamp')) lights.push([e.x + 8 - camX, e.y + 2 - camY, e.id === 'torch' ? 40 : 46]);
+  for (const e of ents) if (e.kind === 'way' && G.ways.includes(e.id)) lights.push([e.x + 8 - camX, e.y + 6 - camY, 30]);
   for (const b of blasts) lights.push([b.x - camX, b.y - camY, 50]);
   for (const e of ents) if (e.kind === 'mob' && e.type === 'shadow' && !e.dead && e.state !== 'fade') lights.push([e.x + 16 - camX, e.y + 14 - camY, 22]);
   for (const [x, y, r0] of lights) {
@@ -2679,6 +2815,8 @@ function render() {
       case 'coin': drawCoin(x + 4, y + 4 + Math.round(Math.sin(t * 3 + e.x) * 1), t + e.x); break;
       case 'heart': if (e.ttl > 3 || Math.floor(t * 8) % 2) drawHeart(x + 4, y + 5 + Math.round(Math.sin(t * 4) * 1), true); break;
       case 'qitem': drawQItem(e, x, y); break;
+      case 'coll': drawColl(e, x, y); break;
+      case 'way': drawWay(x, y, G.ways.includes(e.id)); break;
       case 'crystal': {
         P(ctx, x + 5, y + 14, 'rgba(0,0,0,.25)', 6, 1);
         ctx.drawImage(SPR.crystal, x, y - 1 + Math.round(Math.sin(t * 2.5) * 1.5));
@@ -2692,6 +2830,7 @@ function render() {
     const a = i / 36 * Math.PI * 2;
     P(ctx, Math.round(w.x - camX + Math.cos(a) * w.r), Math.round(w.y - camY + HUD + Math.sin(a) * w.r * .7), i % 2 ? C.I : C.w, 2, 1);
   }
+  drawWeather(camX, camY);
   drawLighting(camX, camY);
   for (const q of popups) {
     const px = Math.round(q.x - camX) - 1, py = Math.round(q.y - camY + HUD);
@@ -2796,7 +2935,7 @@ function renderPanel() {
     $('pMeta').textContent = ZONE_NAMES[G.zone || 'field'] + ' · ' + (isNight() ? 'ночь' : 'день');
     list.innerHTML = '<div class="mapwrap"><canvas id="mapCv"></canvas><div class="legend"><span><i style="background:#c8463e"></i>ты</span>' +
       '<span><i style="background:#f2b23a"></i>Мирон</span><span><i style="background:#7fbf5a"></i>лавка, кузница</span>' +
-      '<span><i style="background:#d4b8f5"></i>кристалл</span><span><i style="background:#8fd0ea"></i>поручение</span></div></div>' + journalHtml();
+      '<span><i style="background:#d4b8f5"></i>кристалл</span><span><i style="background:#8fd0ea"></i>поручение, портал</span></div></div>' + journalHtml();
     drawMap($('mapCv'));
     return;
   }
@@ -2806,6 +2945,17 @@ function renderPanel() {
     $('pNote').textContent = 'Выбери одно умение.';
     list.innerHTML = G.perkOffer.map(id => rowHtml(PERKS[id].icon, PERKS[id].name, PERKS[id].desc,
       '<button class="rbtn" type="button" data-perk="' + id + '">Взять</button>')).join('');
+    return;
+  }
+  if (panelKind === 'travel') {
+    $('pTitle').textContent = 'Камни-порталы';
+    $('pMeta').textContent = G.ways.length + ' из 5';
+    $('pNote').textContent = 'Куда перенестись?';
+    list.innerHTML = world.ents.filter(e => e.kind === 'way').map(w => {
+      const on = G.ways.includes(w.id), here = w.id === G.wayFrom;
+      return rowHtml('star', w.name, on ? (here ? 'Ты здесь.' : 'Камень пробуждён.') : 'Ещё не пробуждён.',
+        '<button class="rbtn" type="button" data-way="' + w.id + '"' + (on && !here ? '>Перенестись' : ' disabled>' + (here ? 'Здесь' : 'Спит')) + '</button>');
+    }).join('');
     return;
   }
   if (panelKind === 'ach') {
@@ -2885,6 +3035,7 @@ function drawMap(cv) {
     if (e.dead || !G.seen[e.ty * W + e.tx]) continue;
     if (e.kind === 'npc') dot(e.tx, e.ty, e.id === 'miron' ? '#f2b23a' : (e.id === 'varya' || e.id === 'gordey') ? '#7fbf5a' : '#f4ecd6');
     if (e.kind === 'crystal') dot(e.tx, e.ty, '#d4b8f5', true);
+    if (e.kind === 'way') dot(e.tx, e.ty, G.ways.includes(e.id) ? '#8fd0ea' : '#6f6c86', true);
     if (e.kind === 'qitem') dot(Math.floor((e.x + 8) / TS), Math.floor((e.y + 8) / TS), '#8fd0ea');
   }
   const p = G.p;
@@ -2895,15 +3046,20 @@ function journalHtml() {
   const missing = ['cr1', 'cr2', 'cr3', 'cr4', 'cr5', 'cr6', 'cr7', 'cr8'].find(id => !G.taken.has(id));
   let html = '<div class="psec">Главное</div><div class="quest"><b>Кристаллы Листвянки: ' + n + ' из ' + TOTAL + '</b><span>' +
     esc(n >= TOTAL ? 'Все кристаллы у тебя. Неси их Мирону!' : 'Подсказка Мирона: ' + TEXT.hints[missing]) + '</span></div>';
-  html += '<div class="psec">Поручения</div>';
-  let any = 0;
+  let any = 0, qhtml = '';
   for (const id in QUESTS) {
     const q = QUESTS[id], st = G.q[id];
     if (!st.s) continue;
     any++;
     const txt = st.s === 2 ? 'Выполнено. ' + q.reward : st.n >= q.need ? q.ready : q.task(st.n);
-    html += '<div class="quest' + (st.s === 2 ? ' done' : '') + '"><b>' + (st.s === 2 ? '✓ ' : '') + esc(q.title) + '</b><span>' + esc(txt) + '</span></div>';
+    qhtml += '<div class="quest' + (st.s === 2 ? ' done' : '') + '"><b>' + (st.s === 2 ? '✓ ' : '') + esc(q.title) + '</b><span>' + esc(txt) + '</span></div>';
   }
+  html += '<div class="psec">Коллекции</div>';
+  const sh = collCount('shell'), pg = collCount('page');
+  html += '<div class="quest' + (G.amulet ? ' done' : '') + '"><b>Ракушки: ' + sh + ' из 15</b><span>' + (G.amulet ? 'Тихон подарил амулет прилива.' : sh >= 15 ? 'Покажи ракушки рыбаку Тихону.' : 'Разбросаны по южному пляжу и бухте.') + '</span></div>';
+  html += '<div class="quest' + (pg >= 10 ? ' done' : '') + '"><b>Страницы дневника: ' + pg + ' из 10</b><span>' + (pg >= 10 ? 'Дневник Странника собран, карта открыта.' : 'Странник оставил их по всему краю.') + '</span></div>';
+  html += '<div class="psec">Поручения</div>';
+  html += qhtml;
   if (!any) html += '<div class="rdesc">Пока поручений нет. Поговори с жителями: Асей, Варей, Гордеем, рыбаком Тихоном.</div>';
   return html;
 }
@@ -2936,6 +3092,7 @@ $('pList').addEventListener('click', e => {
   if (b.dataset.equip) { G.weapon = b.dataset.equip; sfx.swing(); persist(); renderPanel(); }
   if (b.dataset.drink) drink(b.dataset.drink);
   if (b.dataset.perk) takePerk(b.dataset.perk);
+  if (b.dataset.way) travelTo(b.dataset.way);
 });
 $('pClose').addEventListener('click', closePanel);
 $('bAch').addEventListener('click', () => { unlockAudio(); openPanel('ach'); });
