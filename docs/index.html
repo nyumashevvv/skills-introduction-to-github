@@ -96,6 +96,9 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
 .quest b { display: block; font-weight: 600; }
 .quest span { font-size: .85em; color: var(--muted); line-height: 1.25; }
 .rec { color: var(--gold); }
+.row.locked { opacity: .45; }
+.xpbar { height: calc(var(--px) * 3px); background: #2c2843; margin-top: .3em; }
+.xpbar i { display: block; height: 100%; background: var(--gold); }
 
 @media (orientation: landscape) and (max-height: 560px) {
   .app {
@@ -146,7 +149,7 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
 }
 /* Shop and bag panels */
 .panel {
-  position: absolute; inset: 0; display: flex; flex-direction: column; gap: .45em;
+  z-index: 6; position: absolute; inset: 0; display: flex; flex-direction: column; gap: .45em;
   background: var(--ink); padding: .7em .8em .8em; font-size: 1.05em;
 }
 .phead { display: flex; justify-content: space-between; align-items: baseline; gap: .6em; }
@@ -200,6 +203,7 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
             <div class="mrow" id="titleBtns">
               <button class="mbtn" id="bPlay" type="button">Играть</button>
               <button class="mbtn ghost" id="bNew" type="button" hidden>Новая игра</button>
+              <button class="mbtn ghost" id="bAch" type="button">Достижения</button>
             </div>
             <div class="card" id="diffBox" hidden>
               <div class="eyebrow">выбери сложность</div>
@@ -211,7 +215,7 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
               <p class="help">Лёгкая: 7 сердец, враги медленнее. Хардкор: одна жизнь, враги быстрее, босс крепче.</p>
             </div>
             <p class="help rec" id="records" hidden></p>
-            <p class="help">Крестовина: ходить. A: говорить и бить, держать на месте: щит. B: бежать.<br>На компьютере: стрелки, Z, X, I (сумка) и M (карта).</p>
+            <p class="help">Крестовина: ходить. A: говорить и бить, держать A: круговой удар. B: бег, двойное B: рывок, держать B на месте: щит.<br>На компьютере: стрелки, Z, X, I (сумка) и M (карта).</p>
           </div>
         </div>
         <div class="overlay" id="over" hidden>
@@ -699,6 +703,14 @@ ICON.lantern = mkDraw(c => {
   P(c, 4, 6, C.k, 8, 7); P(c, 5, 6, C.o, 6, 7); P(c, 6, 7, C.y, 4, 5); P(c, 7, 8, C.w, 2, 3);
   P(c, 5, 4, C.D, 6, 1); P(c, 5, 14, C.D, 6, 1);
 });
+ICON.coin = mkDraw(c => { P(c, 4, 3, C.k, 8, 10); P(c, 3, 4, C.k, 10, 8); P(c, 4, 4, C.o, 8, 8); P(c, 5, 5, C.y, 2, 5); P(c, 9, 5, C.O, 1, 6); });
+ICON.star = mkDraw(c => {
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) {
+    const dx = x - 7.5, dy = y - 8, a = Math.atan2(dy, dx), r = Math.hypot(dx, dy);
+    const lim = 3.2 + 3.6 * Math.pow(Math.abs(Math.cos(a * 2.5 + Math.PI / 4)), 3);
+    if (r < lim) P(c, x, y, r > lim - 1.1 ? C.k : (dx < 0 && dy < 0 ? C.y : C.o));
+  }
+});
 const ICON_URL = {};
 for (const k in ICON) ICON_URL[k] = ICON[k].toDataURL();
 
@@ -974,7 +986,8 @@ const TEXT = {
     'Эй, путник! Хорошо, что ты здесь.',
     'Ночью буря разбросала восемь кристаллов Листвянки по всей округе. Без них наш лес засохнет.',
     'Найди их и принеси мне. Где искать, подскажут таблички. Или спроси меня ещё раз.',
-    'И осторожно: слаймы совсем озверели. Жми A, чтобы взмахнуть мечом. Держи B, чтобы бежать.',
+    'И осторожно: слаймы совсем озверели. Жми A, чтобы взмахнуть мечом, а если держать A, получится круговой удар.',
+    'B — бег, двойное нажатие B — рывок. За победы над врагами растёт уровень, а с ним и умения.',
     'Монеты неси Варе в лавку и кузнецу Гордею. А всё, что купишь, лежит в сумке: кнопка внизу экрана.',
   ],
   varya: ['Привет! Я Варя. Зелья, оружие, щиты: выбирай, что нравится.', 'Заходи, у меня всё свежее!', 'Монетки звенят? Значит, пора за покупками.'],
@@ -1026,7 +1039,125 @@ const WEAPONS = {
   bomb: { name: 'Бомбы', desc: 'Взрыв через 1,5 секунды ломает треснувшие камни. Отойди подальше!', dmg: 3, cd: .5, swing: .15 },
 };
 const ammoMax = a => (G.bigBag ? { arrows: 50, bombs: 15 } : { arrows: 30, bombs: 9 })[a];
-const BD = () => G.up.dmg + (G.temper ? 1 : 0);   // bonus damage from upgrades and quests
+const hasPerk = id => G.perks.includes(id);
+// bonus damage from smith upgrades, the ore quest, levels and the blade perk
+const BD = () => G.up.dmg + (G.temper ? 1 : 0) + Math.floor(G.lvl / 5) + (hasPerk('blade') ? 1 : 0);
+const MAX_LVL = 20;
+const xpNeed = l => 20 + (l - 1) * 15;
+const XP = { slime: 3, mini: 1, bat: 3, skel: 6, beetle: 6, wolf: 5, snowman: 6, crab: 5, gslime: 6, king: 60 };
+const PERKS = {
+  quick: { icon: 'sword', name: 'Быстрый удар', desc: 'Оружие перезаряжается на четверть быстрее.' },
+  blade: { icon: 'sword', name: 'Острый клинок', desc: '+1 к урону любого оружия.' },
+  skin: { icon: 'heart', name: 'Крепкая кожа', desc: '+1 сердце.' },
+  vamp: { icon: 'heart', name: 'Вампиризм', desc: 'Каждый пятый побеждённый враг лечит одно сердце.' },
+  lucky: { icon: 'heart', name: 'Везунчик', desc: 'Сердца выпадают из врагов вдвое чаще.' },
+  gold: { icon: 'coin', name: 'Двойные монеты', desc: 'Каждая третья монета считается за две.' },
+  archer: { icon: 'arrow', name: 'Меткий стрелок', desc: 'Стрелы летят быстрее и бьют на 1 сильнее.' },
+  bomber: { icon: 'bomb', name: 'Подрывник', desc: 'Взрыв шире и не ранит тебя.' },
+  ninja: { icon: 'star', name: 'Ловкач', desc: 'Рывок перезаряжается вдвое быстрее.' },
+  storm: { icon: 'star', name: 'Вихрь', desc: 'Круговой удар заряжается почти вдвое быстрее.' },
+  owl: { icon: 'lantern', name: 'Совиный глаз', desc: 'Ночью и в пещере видно дальше.' },
+  swift: { icon: 'star', name: 'Скороход', desc: 'Ходишь и бегаешь на 12% быстрее.' },
+};
+const ACH = [
+  ['first', 'Первая победа', 'Победи первого врага.'],
+  ['hunter', 'Охотник', 'Победи 50 врагов за одну игру.'],
+  ['slayer', 'Гроза монстров', 'Победи 150 врагов за одну игру.'],
+  ['night', 'Полуночник', 'Победи 20 врагов ночью.'],
+  ['king', 'Корона пала', 'Победи Короля слаймов.'],
+  ['storm', 'Ураган', 'Задень трёх врагов одним круговым ударом.'],
+  ['bomb3', 'Бомбист', 'Задень трёх врагов одним взрывом.'],
+  ['dasher', 'Неуловимый', 'Сделай 50 рывков.'],
+  ['lvl5', 'Ученик', 'Достигни 5 уровня.'],
+  ['lvl10', 'Ветеран', 'Достигни 10 уровня.'],
+  ['perks5', 'Мастер на все руки', 'Возьми 5 умений.'],
+  ['rich', 'Богач', 'Накопи 300 монет.'],
+  ['caches', 'Кладоискатель', 'Открой оба тайника за треснувшими камнями.'],
+  ['chests', 'Сундучник', 'Открой все сундуки.'],
+  ['ice', 'Фигурист', 'Достань кристалл из ледяного озера.'],
+  ['puzzles', 'Головастик', 'Открой все ворота с головоломками.'],
+  ['quests', 'Добрый сосед', 'Выполни все поручения жителей.'],
+  ['map', 'Картограф', 'Исследуй половину карты.'],
+  ['win', 'Спаситель Листвянки', 'Собери все восемь кристаллов.'],
+  ['nodeath', 'Несокрушимый', 'Пройди игру, ни разу не потеряв сознание.'],
+  ['hard', 'Железная воля', 'Пройди игру на хардкоре.'],
+  ['fast', 'Молния', 'Пройди игру быстрее чем за 40 минут.'],
+];
+function loadAch() { try { return JSON.parse(localStorage.getItem('lv_ach') || '{}') || {}; } catch (e) { return {}; } }
+let achDone = loadAch();
+function unlock(id) {
+  if (achDone[id]) return;
+  achDone[id] = Date.now();
+  try { localStorage.setItem('lv_ach', JSON.stringify(achDone)); } catch (e) {}
+  const a = ACH.find(x => x[0] === id);
+  if (a) { toast('Достижение: ' + a[1]); sfx.ach(); }
+}
+function checkAch() {
+  const st = G.stats, t = G.taken;
+  if (st.kills >= 1) unlock('first');
+  if (st.kills >= 50) unlock('hunter');
+  if (st.kills >= 150) unlock('slayer');
+  if (st.nightKills >= 20) unlock('night');
+  if (t.has('boss')) unlock('king');
+  if (st.dashes >= 50) unlock('dasher');
+  if (G.lvl >= 5) unlock('lvl5');
+  if (G.lvl >= 10) unlock('lvl10');
+  if (G.perks.length >= 5) unlock('perks5');
+  if (G.coins >= 300) unlock('rich');
+  if ([...t].filter(id => id.startsWith('brk')).length >= 2) unlock('caches');
+  if (world.ents.filter(e => e.kind === 'chest').every(e => t.has(e.id))) unlock('chests');
+  if (t.has('cr6')) unlock('ice');
+  if (['mtn', 'cave', 'cove'].every(g => t.has('open_' + g))) unlock('puzzles');
+  if (Object.values(G.q).every(q => q.s === 2)) unlock('quests');
+  let seen = 0; for (let i = 0; i < G.seen.length; i++) seen += G.seen[i];
+  if (seen >= G.seen.length / 2) unlock('map');
+}
+function gainXp(n) {
+  if (G.lvl >= MAX_LVL) return;
+  G.xp += n;
+  while (G.lvl < MAX_LVL && G.xp >= xpNeed(G.lvl)) {
+    G.xp -= xpNeed(G.lvl); G.lvl++;
+    const p = G.p, gain = [];
+    if (G.lvl % 3 === 0) { p.maxHp++; gain.push('+1 сердце'); }
+    if (G.lvl % 5 === 0) gain.push('+1 к урону');
+    if (G.lvl % 2 === 0) { G.pendingPerks++; gain.push('новое умение'); }
+    p.hp = p.maxHp; sfx.levelup(); burst(p.x + 8, p.y + 6, C.y, 24);
+    toast('Уровень ' + G.lvl + '!' + (gain.length ? ' ' + gain.join(', ') : ''));
+  }
+  if (G.lvl >= MAX_LVL) G.xp = 0;
+}
+function offerPerks() {
+  const free = Object.keys(PERKS).filter(k => !hasPerk(k));
+  for (let i = free.length - 1; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [free[i], free[j]] = [free[j], free[i]]; }
+  G.perkOffer = free.slice(0, 3);
+  if (!G.perkOffer.length) { G.pendingPerks = 0; return; }
+  openPanel('perk');
+}
+function takePerk(id) {
+  if (!PERKS[id] || hasPerk(id)) return;
+  G.perks.push(id); G.pendingPerks = Math.max(0, G.pendingPerks - 1);
+  if (id === 'skin') { G.p.maxHp++; G.p.hp = G.p.maxHp; }
+  sfx.buy(); toast('Новое умение: ' + PERKS[id].name);
+  panelKind = null; $('panel').hidden = true; persist();
+}
+const chargeFull = () => hasPerk('storm') ? .42 : .75;
+function spinAttack() {
+  const p = G.p, wp = WEAPONS[G.weapon], cx = p.x + 8, cy = p.y + 10, R = 26 + (G.up.reach ? 5 : 0);
+  p.spin = .3; p.cd = .35; sfx.spin(); G.shake = Math.max(G.shake, .12);
+  let hits = 0;
+  for (const m of ents) {
+    if (m.kind !== 'mob' || m.dead) continue;
+    const c = mobCenter(m);
+    if (Math.hypot(c.x - cx, c.y - cy) < R + (m.type === 'king' ? 14 : 6)) { hitMob(m, wp.dmg * 2 + BD(), cx, cy, true); hits++; }
+  }
+  for (let ty = Math.floor((cy - R) / TS); ty <= Math.floor((cy + R) / TS); ty++)
+    for (let tx = Math.floor((cx - R) / TS); tx <= Math.floor((cx + R) / TS); tx++)
+      if (tileAt(tx, ty) === TALL && Math.hypot(tx * TS + 8 - cx, ty * TS + 8 - cy) < R + 4) {
+        setTile(tx, ty, GRASS); burst(tx * TS + 8, ty * TS + 8, C.l, 5);
+        if (Math.random() < .14) ents.push({ kind: 'coin', id: null, x: tx * TS, y: ty * TS });
+      }
+  if (hits >= 3) unlock('storm');
+}
 const QUESTS = {
   kitten: {
     giver: 'asya', title: 'Потерянный котёнок', need: 1,
@@ -1105,7 +1236,7 @@ const SHOPS = {
       { id: 'axe', kind: 'weapon', price: 70 },
       { id: 'bow', kind: 'weapon', price: 50 },
       { id: 'lantern', kind: 'gear', price: 60, icon: 'lantern', name: 'Фонарь', desc: 'Освещает тёмную пещеру и ночные тропы.' },
-      { id: 'shield', kind: 'shield', price: 45, name: 'Щит', desc: 'Держи A, стоя на месте: блокирует удары спереди.' },
+      { id: 'shield', kind: 'shield', price: 45, name: 'Щит', desc: 'Держи B, стоя на месте: блокирует удары спереди.' },
     ],
   },
   gordey: {
@@ -1165,6 +1296,11 @@ const sfx = {
   deny: () => tone(180, 140, .12, 'square', .05),
   bow: () => tone(500, 1400, .08, 'triangle', .05),
   push: () => tone(150, 110, .12, 'square', .04),
+  dash: () => tone(900, 300, .12, 'triangle', .05),
+  spin: () => { tone(300, 1200, .15, 'sawtooth', .04); tone(1200, 400, .15, 'triangle', .04, .1); },
+  ready: () => tone(1500, 1500, .04, 'square', .025),
+  levelup: () => [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, f, .12, 'square', .05, i * .07)),
+  ach: () => [784, 988, 1175].forEach((f, i) => tone(f, f, .1, 'triangle', .06, i * .08)),
   lever: () => { tone(600, 300, .06, 'square', .04); tone(900, 900, .05, 'square', .03, .06); },
   portal: () => [300, 400, 500].forEach((f, i) => tone(f, f * .8, .1, 'triangle', .05, i * .05)),
   fuse: () => tone(2000, 1500, .1, 'sawtooth', .02),
@@ -1267,7 +1403,7 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyM') { toggleMap(); return; }
   if (panelKind) return;
   if (['KeyZ', 'Space', 'Enter'].includes(e.code)) { if (!e.repeat) pressA(); input.ka = true; e.preventDefault(); return; }
-  if (['KeyX', 'ShiftLeft', 'ShiftRight'].includes(e.code)) { input.kb = true; return; }
+  if (['KeyX', 'ShiftLeft', 'ShiftRight'].includes(e.code)) { if (!e.repeat) pressB(); input.kb = true; return; }
   if (e.code === 'Escape') { toggleMenu(); return; }
   keys.add(e.code); syncKeys();
   if (e.code.startsWith('Arrow')) e.preventDefault();
@@ -1318,7 +1454,12 @@ function holdButton(el, down, up) {
   el.addEventListener('click', e => { if (e.detail === 0) { down(); up(); } }); // keyboard activation
 }
 holdButton($('btnA'), () => { input.ta = true; pressA(); }, () => { input.ta = false; });
-holdButton($('btnB'), () => { input.tb = true; }, () => { input.tb = false; });
+let lastB = 0;
+function pressB() {
+  const now = performance.now();
+  if (now - lastB < 300) { input.dash = true; lastB = 0; } else lastB = now;
+}
+holdButton($('btnB'), () => { input.tb = true; pressB(); }, () => { input.tb = false; });
 document.addEventListener('touchmove', e => { if (!(e.target.closest && e.target.closest('.plist'))) e.preventDefault(); }, { passive: false });
 document.addEventListener('gesturestart', e => e.preventDefault());
 document.addEventListener('dblclick', e => e.preventDefault());
@@ -1340,6 +1481,7 @@ function freshState() {
     ammo: { arrows: 0, bombs: 0 }, diff: 'normal',
     lantern: false, levers: { lv1: false, lv2: false, lv3: false }, clock: 30, zone: null,
     q: { kitten: { s: 0, n: 0 }, bloom: { s: 0, n: 0 }, ore: { s: 0, n: 0 }, crabs: { s: 0, n: 0 } }, bigBag: false, temper: false,
+    lvl: 1, xp: 0, perks: [], pendingPerks: 0, perkOffer: [], stats: { kills: 0, nightKills: 0, dashes: 0, deaths: 0 },
     seen: new Uint8Array(W * H), hitstop: 0, flash: 0,
   };
 }
@@ -1377,7 +1519,7 @@ function unpackSeen(str, a) {
 function makeSave() {
   return {
     v: 1, x: G.p.x, y: G.p.y, hp: G.p.hp, maxHp: G.p.maxHp, coins: G.coins, taken: [...G.taken], talked: G.talked, won: G.won, time: G.time, dir: G.p.dir,
-    inv: G.inv, weapons: G.weapons, weapon: G.weapon, shield: G.shield, up: G.up, met: G.met, ammo: G.ammo, diff: G.diff,
+    inv: G.inv, weapons: G.weapons, weapon: G.weapon, shield: G.shield, up: G.up, met: G.met, ammo: G.ammo, diff: G.diff, lvl: G.lvl, xp: G.xp, perks: G.perks, pendingPerks: G.pendingPerks, stats: G.stats,
     lantern: G.lantern, levers: G.levers, clock: G.clock, q: G.q, bigBag: G.bigBag, temper: G.temper, seen: packSeen(G.seen),
   };
 }
@@ -1398,6 +1540,9 @@ function applySave(s) {
   G.lantern = !!s.lantern; Object.assign(G.levers, s.levers || {}); G.clock = +s.clock || 30;
   for (const k in G.q) if (s.q && s.q[k]) Object.assign(G.q[k], s.q[k]);
   G.bigBag = !!s.bigBag; G.temper = !!s.temper;
+  G.lvl = Math.min(MAX_LVL, Math.max(1, +s.lvl || 1)); G.xp = +s.xp || 0;
+  if (Array.isArray(s.perks)) G.perks = s.perks.filter(k => PERKS[k]);
+  G.pendingPerks = +s.pendingPerks || 0; Object.assign(G.stats, s.stats || {});
   if (typeof s.seen === 'string') unpackSeen(s.seen, G.seen);
   if (G.won) { G.p.x = START.x; G.p.y = START.y; }
 }
@@ -1457,7 +1602,12 @@ function advanceDialog() {
   dlg.shown = 0; renderDialog();
 }
 $('dialog').addEventListener('pointerdown', e => { e.preventDefault(); if (dlg) advanceDialog(); });
-function toast(msg) { $('toast').textContent = msg; $('toast').hidden = false; toastTimer = 2.2; }
+const toastQ = [];
+function showToast(msg) { $('toast').textContent = msg; $('toast').hidden = false; toastTimer = 2.2; }
+function toast(msg) {
+  if (!$('toast').hidden && toastTimer > .7) { if (toastQ.length < 5 && !toastQ.includes(msg)) toastQ.push(msg); return; }
+  showToast(msg);
+}
 
 // ---------- Actions ----------
 function pressA() {
@@ -1533,8 +1683,9 @@ function swing() {
   const f = FACE[p.dir];
   if (G.weapon === 'bow') {
     if (!G.ammo.arrows) { sfx.deny(); toast('Стрелы закончились'); p.cd = .4; return; }
-    G.ammo.arrows--; p.swing = wp.swing; p.cd = wp.cd; sfx.bow();
-    shots.push({ kind: 'arrow', x: p.x + 8 + f[0] * 8, y: p.y + 10 + f[1] * 6, vx: f[0] * 170, vy: f[1] * 170, life: .85, dmg: 1 + Math.floor(BD() / 2) });
+    const asp = hasPerk('archer') ? 220 : 170;
+    G.ammo.arrows--; p.swing = wp.swing; p.cd = wp.cd * (hasPerk('quick') ? .75 : 1); sfx.bow();
+    shots.push({ kind: 'arrow', x: p.x + 8 + f[0] * 8, y: p.y + 10 + f[1] * 6, vx: f[0] * asp, vy: f[1] * asp, life: 145 / asp, dmg: 1 + Math.floor(BD() / 2) + (hasPerk('archer') ? 1 : 0) });
     return;
   }
   if (G.weapon === 'bomb') {
@@ -1546,7 +1697,7 @@ function swing() {
     hint('bomb', 'Отбегай! Взрыв через секунду');
     return;
   }
-  p.swing = wp.swing; p.cd = wp.cd; sfx.swing();
+  p.swing = wp.swing; p.cd = wp.cd * (hasPerk('quick') ? .75 : 1); sfx.swing();
   const b = weaponBox(p), dmg = wp.dmg + BD();
   // cut tall grass
   for (let ty = Math.floor(b.y / TS); ty <= Math.floor((b.y + b.h - 1) / TS); ty++)
@@ -1803,6 +1954,9 @@ function spawnMinis(m, n) {
 function killMob(m) {
   m.dead = true;
   const c = mobCenter(m);
+  G.stats.kills++; if (isNight()) G.stats.nightKills++;
+  gainXp(XP[m.type] || 2);
+  if (hasPerk('vamp') && Math.random() < .2 && G.p.hp < G.p.maxHp) { G.p.hp++; burst(G.p.x + 8, G.p.y + 6, C.r, 8); }
   burst(c.x, c.y, { slime: C.r, mini: C.p, bat: C.p, skel: C.w, beetle: C.n, king: C.p, wolf: C.G, snowman: C.S, crab: C.r, gslime: C.g }[m.type], m.type === 'king' ? 40 : 16);
   if (m.type === 'king') {
     G.taken.add('boss'); spawnMinis(m, 4); G.shake = .5; sfx.win();
@@ -1820,7 +1974,7 @@ function killMob(m) {
   const r = Math.random(), luck = m.type === 'mini' ? .4 : 1;
   if (r < .1 * luck) for (let i = 0; i < 3; i++) ents.push({ kind: 'coin', id: null, x: c.x - 8 + (i - 1) * 7, y: c.y - 10 + (i % 2) * 4 });
   else if (r < .55 * luck) ents.push({ kind: 'coin', id: null, x: c.x - 8, y: c.y - 10 });
-  else if (r < .63 * luck) ents.push({ kind: 'heart', x: c.x - 8, y: c.y - 10, ttl: 12 });
+  else if (r < (hasPerk('lucky') ? .71 : .63) * luck) ents.push({ kind: 'heart', x: c.x - 8, y: c.y - 10, ttl: 12 });
 }
 function updateShots(dt, p) {
   for (const s of shots) {
@@ -1841,15 +1995,17 @@ function updateShots(dt, p) {
   shots = shots.filter(s => s.life > 0);
 }
 function explode(b) {
-  const R = 26, p = G.p;
+  const R = hasPerk('bomber') ? 36 : 26, p = G.p;
+  let hits = 0;
   sfx.boom(); G.shake = .35; blasts.push({ x: b.x, y: b.y, t: 0 });
   burst(b.x, b.y, C.o, 22); burst(b.x, b.y, C.D, 12);
   for (const m of ents) {
     if (m.kind !== 'mob' || m.dead) continue;
     const c = mobCenter(m);
-    if (Math.hypot(c.x - b.x, c.y - b.y) < R + (m.type === 'king' ? 14 : 6)) hitMob(m, 3 + BD(), b.x, b.y, true);
+    if (Math.hypot(c.x - b.x, c.y - b.y) < R + (m.type === 'king' ? 14 : 6)) { hitMob(m, 3 + BD(), b.x, b.y, true); hits++; }
   }
-  if (Math.hypot(p.x + 8 - b.x, p.y + 11 - b.y) < R) hurt({ x: b.x - 8, y: b.y - 10 });
+  if (hits >= 3) unlock('bomb3');
+  if (!hasPerk('bomber') && Math.hypot(p.x + 8 - b.x, p.y + 11 - b.y) < R) hurt({ x: b.x - 8, y: b.y - 10 });
   for (let ty = Math.floor((b.y - R) / TS); ty <= Math.floor((b.y + R) / TS); ty++)
     for (let tx = Math.floor((b.x - R) / TS); tx <= Math.floor((b.x + R) / TS); tx++) {
       if (Math.hypot(tx * TS + 8 - b.x, ty * TS + 8 - b.y) > R + 4) continue;
@@ -1894,6 +2050,7 @@ function hurt(from) {
     return;
   }
   if (p.hp <= 0) {
+    G.stats.deaths++;
     say('', TEXT.faint, () => {
       Object.assign(p, { x: START.x, y: START.y, hp: p.maxHp, dir: 'down', inv: 1.5, kx: 0, ky: 0, slide: null });
       G.buff.speed = G.buff.guard = 0;
@@ -1905,7 +2062,10 @@ function hurt(from) {
 // ---------- Update ----------
 function update(dt) {
   G.t += dt;
-  if (toastTimer > 0) { toastTimer -= dt; if (toastTimer <= 0) $('toast').hidden = true; }
+  if (toastTimer > 0) {
+    toastTimer -= dt;
+    if (toastTimer <= 0) { if (toastQ.length) showToast(toastQ.shift()); else $('toast').hidden = true; }
+  }
   for (const q of particles) { q.x += q.vx * dt; q.y += q.vy * dt; q.vy += 120 * dt; q.life -= dt; }
   particles = particles.filter(q => q.life > 0);
   if (aQueued) { aQueued = false; handleA(); }
@@ -1930,7 +2090,8 @@ function update(dt) {
   G.buff.speed = Math.max(0, G.buff.speed - dt); G.buff.guard = Math.max(0, G.buff.guard - dt);
   const ix = input.tx || input.kx, iy = input.ty || input.ky;
   const run = input.tb || input.kb;
-  const sp = (run ? 80 : 52) * (G.buff.speed > 0 ? 1.45 : 1), len = Math.hypot(ix, iy) || 1;
+  const charging = (p.charge || 0) > .1;
+  const sp = (run ? 80 : 52) * (G.buff.speed > 0 ? 1.45 : 1) * (hasPerk('swift') ? 1.12 : 1) * (charging ? .55 : 1), len = Math.hypot(ix, iy) || 1;
   let vx = ix / len * sp, vy = iy / len * sp;
   if (p.swing > 0) { vx *= .35; vy *= .35; }
   if (ix || iy) {
@@ -1954,7 +2115,20 @@ function update(dt) {
     if (FACE[p.slide][0]) p.y = pty * TS - 4; else p.x = ptx * TS;
     vx = vy = 0;
   }
-  if (!p.slide) moveBody(p, (vx + p.kx) * dt, (vy + p.ky) * dt, PHB, !p.kx && !p.ky);
+  p.dashCd = Math.max(0, (p.dashCd || 0) - dt);
+  if (input.dash) {
+    input.dash = false;
+    if (p.dashCd <= 0 && !p.slide && !(p.dash > 0)) {
+      const l2 = Math.hypot(ix, iy), f = l2 ? [ix / l2, iy / l2] : FACE[p.dir];
+      p.dash = .18; p.dvx = f[0] * 230; p.dvy = f[1] * 230; p.dashCd = hasPerk('ninja') ? .45 : .9;
+      p.inv = Math.max(p.inv, .28); G.stats.dashes++; sfx.dash();
+    }
+  }
+  if (p.dash > 0) {
+    p.dash -= dt;
+    moveBody(p, p.dvx * dt, p.dvy * dt, PHB, false);
+    particles.push({ x: p.x + 4 + Math.random() * 8, y: p.y + 4 + Math.random() * 10, vx: 0, vy: 0, life: .2, col: C.c });
+  } else if (!p.slide) moveBody(p, (vx + p.kx) * dt, (vy + p.ky) * dt, PHB, !p.kx && !p.ky);
   if (!p.slide) tryPush(p, ix, iy, dt);
   p.portalCd = Math.max(0, (p.portalCd || 0) - dt);
   {
@@ -1974,7 +2148,24 @@ function update(dt) {
   const decay = Math.max(0, 1 - 9 * dt); p.kx *= decay; p.ky *= decay;
   if (Math.abs(p.kx) < 2) p.kx = 0; if (Math.abs(p.ky) < 2) p.ky = 0;
   p.moving = !!(ix || iy) || !!p.slide;
-  p.shield = G.shield && (input.ta || input.ka) && p.swing <= 0 && !p.moving;
+  p.shield = G.shield && run && p.swing <= 0 && !p.moving && !(p.dash > 0);
+  // charged spin attack: hold A with a melee weapon, release when ready
+  {
+    const aHeld = input.ta || input.ka, melee = G.weapon === 'sword' || G.weapon === 'spear' || G.weapon === 'axe';
+    p.spin = Math.max(0, (p.spin || 0) - dt);
+    if (aHeld && melee && p.swing <= 0 && !p.slide) {
+      const before = p.charge || 0;
+      p.charge = Math.min(chargeFull() + .01, before + dt);
+      if (before < chargeFull() && p.charge >= chargeFull()) { sfx.ready(); burst(p.x + 8, p.y + 8, C.y, 8); }
+      if (p.charge > .15 && Math.random() < dt * 25) {
+        const a = Math.random() * Math.PI * 2;
+        particles.push({ x: p.x + 8 + Math.cos(a) * 10, y: p.y + 9 + Math.sin(a) * 10, vx: -Math.cos(a) * 20, vy: -Math.sin(a) * 20, life: .25, col: p.charge >= chargeFull() ? C.y : C.c });
+      }
+    } else if (!aHeld) {
+      if ((p.charge || 0) >= chargeFull()) spinAttack();
+      p.charge = 0;
+    }
+  }
   if (G.buff.speed > 0 && p.moving && Math.random() < dt * 20) particles.push({ x: p.x + 4 + Math.random() * 8, y: p.y + 6 + Math.random() * 8, vx: -ix * 20, vy: -iy * 20, life: .25, col: C.c });
   if (G.buff.guard > 0 && Math.random() < dt * 10) { const a = G.t * 6; particles.push({ x: p.x + 8 + Math.cos(a) * 9, y: p.y + 9 + Math.sin(a) * 9, vx: 0, vy: -6, life: .3, col: C.l }); }
   if (p.moving) p.anim += dt * (run ? 11 : 7); else p.anim = 0;
@@ -1987,7 +2178,7 @@ function update(dt) {
     if (Math.hypot(e.x + 8 - pcx, e.y + 9 - pcy) > 11) continue;
     e.dead = true;
     if (e.id) G.taken.add(e.id);
-    if (e.kind === 'coin') { G.coins++; sfx.coin(); burst(e.x + 8, e.y + 8, C.y, 5); }
+    if (e.kind === 'coin') { G.coins += hasPerk('gold') && Math.random() < .34 ? 2 : 1; sfx.coin(); burst(e.x + 8, e.y + 8, C.y, 5); }
     if (e.kind === 'heart') { p.hp = Math.min(p.maxHp, p.hp + 1); sfx.coin(); burst(e.x + 8, e.y + 8, C.r, 6); }
     if (e.kind === 'qitem') {
       const q = QUESTS[e.quest], st = G.q[e.quest];
@@ -2007,9 +2198,12 @@ function update(dt) {
     b.x += Math.max(-st, Math.min(st, tx - b.x)); b.y += Math.max(-st, Math.min(st, ty - b.y));
   }
   resetFarBlocks(p);
+  G.achT = (G.achT || 0) + dt;
+  if (G.achT > 1) { G.achT = 0; checkAch(); }
+  if (G.pendingPerks > 0 && !dlg && !panelKind) offerPerks();
   {
     const cx = Math.floor((p.x + 8) / TS), cy = Math.floor((p.y + 12) / TS);
-    const r = G.zone === 'cave' ? (G.lantern ? 4 : 2) : 6;
+    const r = (G.zone === 'cave' ? (G.lantern ? 4 : 2) : 6) + (hasPerk('owl') ? 1 : 0);
     for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++)
       if (x >= 0 && y >= 0 && x < W && y < H && (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r * r + 1) G.seen[y * W + x] = 1;
   }
@@ -2036,7 +2230,7 @@ function update(dt) {
 }
 
 // ---------- Render ----------
-const DIGITS = { '0': '111101101101111', '1': '010110010010111', '2': '111001111100111', '3': '111001111001111', '4': '101101111001001', '5': '111100111001111', '6': '111100111101111', '7': '111001001001001', '8': '111101111101111', '9': '111101111001111', '/': '001001010100100' };
+const DIGITS = { 'L': '100100100100111', '0': '111101101101111', '1': '010110010010111', '2': '111001111100111', '3': '111001111001111', '4': '101101111001001', '5': '111100111001111', '6': '111100111101111', '7': '111001001001001', '8': '111101111101111', '9': '111101111001111', '/': '001001010100100' };
 function drawText(str, x, y, col) {
   for (const ch of String(str)) {
     const g = DIGITS[ch];
@@ -2234,7 +2428,7 @@ function drawLighting(camX, camY) {
   sctx.fillStyle = inCave ? 'rgb(6,5,12)' : 'rgb(14,16,44)';
   sctx.globalAlpha = dark; sctx.fillRect(0, 0, VW, VH);
   sctx.globalCompositeOperation = 'destination-out';
-  const lights = [[p.x + 8 - camX, p.y + 9 - camY, inCave ? (G.lantern ? 60 : 16) : (G.lantern ? 58 : 34)]];
+  const lights = [[p.x + 8 - camX, p.y + 9 - camY, (inCave ? (G.lantern ? 60 : 16) : (G.lantern ? 58 : 34)) + (hasPerk('owl') ? 18 : 0)]];
   for (const e of ents) if (e.kind === 'deco' && (e.id === 'torch' || e.id === 'lamp')) lights.push([e.x + 8 - camX, e.y + 2 - camY, e.id === 'torch' ? 40 : 46]);
   for (const b of blasts) lights.push([b.x - camX, b.y - camY, 50]);
   for (const [x, y, r0] of lights) {
@@ -2293,6 +2487,13 @@ function render() {
         ctx.drawImage(frames[f], x, y - (p.moving && f ? 1 : 0));
         if (p.shield && p.dir !== 'up') drawShield(p, camX, camY);
         if (p.swing > 0) drawWeapon(p, camX, camY);
+        if (p.spin > 0) {
+          const k = 1 - p.spin / .3, r = 6 + k * (26 + (G.up.reach ? 5 : 0));
+          for (let i = 0; i < 32; i++) {
+            const a = i / 32 * Math.PI * 2 + k * 6;
+            P(ctx, Math.round(x + 8 + Math.cos(a) * r), Math.round(y + 10 + Math.sin(a) * r * .8), i % 3 ? C.c : C.w, 2, 1);
+          }
+        }
         break;
       }
       case 'npc': {
@@ -2345,9 +2546,13 @@ function render() {
 
   // HUD
   P(ctx, 0, 0, C.k, CW, HUD); P(ctx, 0, HUD - 1, '#2c2843', CW, 1);
-  for (let i = 0; i < p.maxHp; i++) drawHeart(4 + i * 9, 3, i < p.hp);
-  if (G.buff.speed > 0) P(ctx, 4, 12, C.c, Math.max(1, Math.round(G.buff.speed / 20 * 30)), 2);
-  if (G.buff.guard > 0) P(ctx, 38, 12, C.l, Math.max(1, Math.round(G.buff.guard / 15 * 30)), 2);
+  if (p.maxHp <= 6) for (let i = 0; i < p.maxHp; i++) drawHeart(4 + i * 9, 2, i < p.hp);
+  else { drawHeart(4, 2, true); drawText(p.hp + '/' + p.maxHp, 14, 3, p.hp <= 2 ? C.r : C.w); }
+  drawText('L' + G.lvl, 60, 3, C.y);
+  P(ctx, 4, 11, '#2c2843', 70, 2);
+  if (G.lvl < MAX_LVL) P(ctx, 4, 11, C.o, Math.round(70 * G.xp / xpNeed(G.lvl)), 2); else P(ctx, 4, 11, C.y, 70, 2);
+  if (G.buff.speed > 0) P(ctx, 4, 14, C.c, Math.max(1, Math.round(G.buff.speed / 20 * 30)), 1);
+  if (G.buff.guard > 0) P(ctx, 38, 14, C.l, Math.max(1, Math.round(G.buff.guard / 15 * 30)), 1);
   ctx.drawImage(ICON[G.weapon], 76, 0);
   if (G.weapon === 'bow' || G.weapon === 'bomb') {
     const n = G.weapon === 'bow' ? G.ammo.arrows : G.ammo.bombs;
@@ -2431,9 +2636,30 @@ function renderPanel() {
     drawMap($('mapCv'));
     return;
   }
+  if (panelKind === 'perk') {
+    $('pTitle').textContent = 'Новый уровень!';
+    $('pMeta').textContent = 'Уровень ' + G.lvl;
+    $('pNote').textContent = 'Выбери одно умение.';
+    list.innerHTML = G.perkOffer.map(id => rowHtml(PERKS[id].icon, PERKS[id].name, PERKS[id].desc,
+      '<button class="rbtn" type="button" data-perk="' + id + '">Взять</button>')).join('');
+    return;
+  }
+  if (panelKind === 'ach') {
+    const n = ACH.filter(a => achDone[a[0]]).length;
+    $('pTitle').textContent = 'Достижения';
+    $('pMeta').textContent = n + ' из ' + ACH.length;
+    list.innerHTML = ACH.map(([id, name, desc]) => rowHtml(achDone[id] ? 'star' : 'star', name, desc,
+      achDone[id] ? '<span class="rec">✓</span>' : '').replace('<div class="row"', '<div class="row' + (achDone[id] ? '' : ' locked') + '"')).join('');
+    return;
+  }
   if (panelKind === 'bag') {
     $('pTitle').textContent = 'Сумка';
     $('pMeta').textContent = 'Кристаллы ' + crystalCount() + '/' + TOTAL + ' · Монеты ' + G.coins;
+    html += '<div class="psec">Герой</div>';
+    html += '<div class="quest"><b>Уровень ' + G.lvl + (G.lvl >= MAX_LVL ? ' (максимум)' : '') + '</b><span>' +
+      (G.lvl < MAX_LVL ? 'Опыт: ' + G.xp + ' из ' + xpNeed(G.lvl) + '. ' : '') + 'Урон +' + BD() + ', сердец ' + G.p.maxHp + '.</span>' +
+      (G.lvl < MAX_LVL ? '<div class="xpbar"><i style="width:' + Math.round(100 * G.xp / xpNeed(G.lvl)) + '%"></i></div>' : '') + '</div>';
+    for (const id of G.perks) html += rowHtml(PERKS[id].icon, PERKS[id].name, PERKS[id].desc);
     html += '<div class="psec">Оружие</div>';
     for (const id of G.weapons) {
       const w = WEAPONS[id], cur = G.weapon === id;
@@ -2453,7 +2679,7 @@ function renderPanel() {
     if (G.temper) { gear++; html += rowHtml('sword', 'Закалка', '+1 к урону от кузнеца Гордея.'); }
     if (G.bigBag) { gear++; html += rowHtml('bomb', 'Большая сумка', 'До 50 стрел и 15 бомб.'); }
     if (G.lantern) { gear++; html += rowHtml('lantern', 'Фонарь', 'Освещает пещеру и ночные тропы.'); }
-    if (G.shield) { gear++; html += rowHtml('shield', 'Щит', 'Держи A, стоя на месте: блокирует удары спереди.'); }
+    if (G.shield) { gear++; html += rowHtml('shield', 'Щит', 'Держи B, стоя на месте: блокирует удары спереди.'); }
     if (G.up.dmg) { gear++; html += rowHtml('sword', 'Заточка ' + ROMAN[G.up.dmg - 1], '+' + G.up.dmg + ' к урону любого оружия.'); }
     if (G.up.hp) { gear++; html += rowHtml('heart', 'Кольчуга ' + ROMAN[G.up.hp - 1], '+' + G.up.hp + ' к сердцам.'); }
     if (G.up.reach) { gear++; html += rowHtml('spear', 'Длинная рукоять', 'Любое оружие бьёт дальше.'); }
@@ -2518,11 +2744,16 @@ function journalHtml() {
   return html;
 }
 function openPanel(kind) {
-  panelKind = kind; $('pNote').textContent = kind === 'bag' || kind === 'map' ? '' : 'Нажми на цену, чтобы купить.';
-  $('pClose').textContent = kind === 'bag' || kind === 'map' ? 'Закрыть' : 'Уйти';
+  panelKind = kind; $('pNote').textContent = SHOPS[kind] ? 'Нажми на цену, чтобы купить.' : '';
+  $('pClose').textContent = SHOPS[kind] ? 'Уйти' : 'Закрыть';
+  $('pClose').hidden = kind === 'perk';
   renderPanel(); $('pList').scrollTop = 0; $('panel').hidden = false;
 }
-function closePanel() { panelKind = null; $('panel').hidden = true; persist(); }
+function closePanel() {
+  if (panelKind === 'perk') return;
+  panelKind = null; $('panel').hidden = true;
+  if (G.state === 'play') persist();
+}
 function toggleMap() {
   if (panelKind === 'map') { closePanel(); return; }
   if (panelKind || dlg || G.state !== 'play' || menuOpen) return;
@@ -2540,8 +2771,10 @@ $('pList').addEventListener('click', e => {
   if (b.dataset.buy !== undefined) buy(SHOPS[panelKind].items[+b.dataset.buy]);
   if (b.dataset.equip) { G.weapon = b.dataset.equip; sfx.swing(); persist(); renderPanel(); }
   if (b.dataset.drink) drink(b.dataset.drink);
+  if (b.dataset.perk) takePerk(b.dataset.perk);
 });
 $('pClose').addEventListener('click', closePanel);
+$('bAch').addEventListener('click', () => { unlockAudio(); openPanel('ach'); });
 $('bBag').addEventListener('click', () => { unlockAudio(); toggleBag(); });
 $('bMap').addEventListener('click', () => { unlockAudio(); toggleMap(); });
 
@@ -2588,6 +2821,10 @@ function showRecords() {
 function showWin() {
   G.state = 'win';
   const rec = saveRecord();
+  unlock('win');
+  if (!G.stats.deaths) unlock('nodeath');
+  if (G.diff === 'hard') unlock('hard');
+  if (G.time < 40 * 60) unlock('fast');
   $('wRec').textContent = rec.best ? (rec.prev ? 'Новый рекорд! Прошлый: ' + fmtTime(rec.prev.time) : 'Первый рекорд на этой сложности!') : 'Рекорд: ' + fmtTime(rec.prev.time);
   $('wTime').textContent = fmtTime(G.time);
   $('wDiff').textContent = 'конец · ' + DIFF[G.diff].name;
