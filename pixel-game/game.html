@@ -175,16 +175,36 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
             <div class="eyebrow">пиксельная бродилка</div>
             <h1>Кристаллы Листвянки</h1>
             <p class="lead">Буря разбросала пять кристаллов по округе. Найди их и верни старому Мирону.</p>
-            <div class="mrow">
+            <div class="mrow" id="titleBtns">
               <button class="mbtn" id="bPlay" type="button">Играть</button>
               <button class="mbtn ghost" id="bNew" type="button" hidden>Новая игра</button>
+            </div>
+            <div class="card" id="diffBox" hidden>
+              <div class="eyebrow">выбери сложность</div>
+              <div class="mrow">
+                <button class="mbtn ghost" type="button" data-diff="easy">Лёгкая</button>
+                <button class="mbtn" type="button" data-diff="normal">Обычная</button>
+                <button class="mbtn ghost" type="button" data-diff="hard">Хардкор</button>
+              </div>
+              <p class="help">Лёгкая: 7 сердец, враги медленнее. Хардкор: одна жизнь, враги быстрее, босс крепче.</p>
             </div>
             <p class="help">Крестовина: ходить. A: говорить и бить, держать на месте: щит. B: бежать.<br>На компьютере: стрелки, Z, X и I (сумка).</p>
           </div>
         </div>
+        <div class="overlay" id="over" hidden>
+          <div class="card">
+            <div class="eyebrow">хардкор</div>
+            <h1>Игра окончена</h1>
+            <div class="stats">
+              <div><b id="oTime">0:00</b>время</div>
+              <div><b id="oCry">0/5</b>кристаллов</div>
+            </div>
+            <div class="mrow"><button class="mbtn" id="bRetry" type="button">Начать заново</button></div>
+          </div>
+        </div>
         <div class="overlay" id="win" hidden>
           <div class="card">
-            <div class="eyebrow">конец</div>
+            <div class="eyebrow" id="wDiff">конец</div>
             <h1>Листвянка спасена!</h1>
             <div class="stats">
               <div><b id="wTime">0:00</b>время</div>
@@ -236,8 +256,8 @@ function hash(x, y, s = 0) {
 /*WORLD-START*/
 const W = 44, H = 36;
 const GRASS = 0, FLOWER = 1, TALL = 2, PATH = 3, TREE = 4, WATER = 5, BRIDGE = 6, ROCK = 7,
-      FLOOR = 8, WALL = 9, ROOF = 10, HWALL = 11, DOOR = 12, SAND = 13;
-const SOLID = new Set([TREE, WATER, ROCK, WALL, ROOF, HWALL, DOOR]);
+      FLOOR = 8, WALL = 9, ROOF = 10, HWALL = 11, DOOR = 12, SAND = 13, CRACK = 14;
+const SOLID = new Set([TREE, WATER, ROCK, WALL, ROOF, HWALL, DOOR, CRACK]);
 
 function buildWorld() {
   const m = new Uint8Array(W * H);
@@ -281,6 +301,10 @@ function buildWorld() {
     if (open(x, y)) set(x, y, TREE);
   for (const [x, y] of [[12, 9], [13, 9], [18, 13], [5, 15], [30, 21], [40, 22], [21, 25], [23, 30]])
     if (open(x, y)) set(x, y, ROCK);
+  // secret caches behind cracked boulders (bombs open them)
+  for (const [x, y] of [[10, 10], [11, 10], [12, 10], [10, 11], [12, 11], [10, 12], [12, 12]]) set(x, y, ROCK);
+  set(11, 11, GRASS); set(11, 12, CRACK);
+  rect(16, 23, 2, 2, GRASS); set(15, 23, CRACK);
   // borders
   rect(0, 0, W, 2, TREE); rect(0, H - 2, W, 2, TREE); rect(0, 0, 2, H, TREE); rect(W - 2, 0, 2, H, TREE);
 
@@ -300,18 +324,27 @@ function buildWorld() {
     { kind: 'chest', id: 'ch_meadow', tx: 13, ty: 4, loot: 'coins10' },
     { kind: 'chest', id: 'ch_forest', tx: 15, ty: 28, loot: 'coins15' },
     { kind: 'chest', id: 'ch_ruins', tx: 28, ty: 30, loot: 'heart' },
+    { kind: 'chest', id: 'ch_cache1', tx: 11, ty: 11, loot: 'coins20' },
+    { kind: 'chest', id: 'ch_cache2', tx: 17, ty: 24, loot: 'potions' },
     { kind: 'crystal', id: 'cr1', tx: 5, ty: 5 },
     { kind: 'crystal', id: 'cr2', tx: 33, ty: 7 },
     { kind: 'crystal', id: 'cr3', tx: 5, ty: 31 },
-    { kind: 'crystal', id: 'cr4', tx: 38, ty: 31 },
+    { kind: 'crystal', id: 'cr4', tx: 38, ty: 31, boss: true },
     { kind: 'crystal', id: 'cr5', tx: 38, ty: 16 },
   ];
   const coins = [[9, 9], [9, 12], [6, 10], [12, 7], [14, 11], [24, 7], [23, 10], [30, 15], [35, 14], [32, 7], [34, 8],
     [12, 23], [13, 23], [14, 23], [7, 26], [14, 28], [16, 29], [30, 25], [32, 25], [34, 30], [36, 31], [39, 25],
     [37, 17], [39, 18], [5, 18], [3, 21], [40, 21], [18, 14], [21, 9], [27, 22]];
   coins.forEach(([x, y], i) => { if (!SOLID.has(get(x, y))) ents.push({ kind: 'coin', id: 'co' + i, tx: x, ty: y }); });
-  const slimes = [[12, 10], [7, 26], [14, 28], [4, 32], [30, 25], [35, 25], [33, 30], [31, 31], [38, 19], [34, 17], [18, 8], [30, 16], [23, 27]];
-  slimes.forEach(([x, y]) => { if (!SOLID.has(get(x, y))) ents.push({ kind: 'slime', tx: x, ty: y }); });
+  const mobs = {
+    slime: [[13, 7], [7, 26], [14, 28], [4, 32], [38, 19], [18, 8], [30, 16], [23, 27], [5, 16]],
+    bat: [[29, 5], [37, 10], [36, 4], [12, 25], [6, 23]],
+    skel: [[31, 25], [37, 25]],
+    beetle: [[34, 17], [21, 31], [25, 25]],
+  };
+  for (const type in mobs) for (const [x, y] of mobs[type])
+    if (type === 'bat' || !SOLID.has(get(x, y))) ents.push({ kind: 'mob', type, tx: x, ty: y });
+  ents.push({ kind: 'mob', type: 'king', id: 'boss', tx: 32, ty: 30 });
   return { m, ents };
 }
 /*WORLD-END*/
@@ -476,12 +509,56 @@ const ICON = {
   blue: mk(POTION, { L: 'u', M: 'n' }),
   green: mk(POTION, { L: 'l', M: 'd' }),
 };
+const WHITE = { r: 'w', R: 'G', p: 'w', P: 'w', n: 'G', c: 'w', G: 'w', D: 'G', u: 'w', o: 'w', y: 'w', b: 'w', B: 'G' };
+const MINI = ['', '', '', '', '', '', '', '', '',
+  '......kkkk', '.....krwrrk', '....krrrrrrk', '....krkrrkrk', '....krrrrrrk', '.....kkkkkk', ''];
+const BAT_A = ['', '', '', '..kk........kk', '..kpk......kpk', '..kppk.kk.kppk', '...kppkppkppk', '....kpprrppk', '.....kppppk', '......kkkk'];
+const BAT_B = ['', '', '', '', '', '.......kk', '......kppk', '..kkkkprrpkkkk', '.kpppkppppkpppk', '.kpk..kppk..kpk', '..k....kk....k'];
+const SKEL = ['', '.....kkkkkk', '....kwwwwwwk', '...kwwwwwwwwk', '...kwkkwwkkwk', '...kwkkwwkkwk', '...kwwwwwwwwk',
+  '....kwwkkwwk', '....kwkwkwkk', '.....kkkkkk', '....kwwwwwwk', '...kwkwkkwkwk', '....kwwwwwwk', '.....kwkkwk', '.....kwk.kwk', '....kkk..kkk'];
+const BEETLE = ['', '......kkkk', '....kknnnnkk', '...knnccnnnnk', '..knncnnnnnnnk', '.kknnnnnnnnnnkk', '..knnnnknnnnnk',
+  '.kknnnnknnnnnkk', '..knnnnknnnnnk', '...knnnknnnnk', '....kkkkkkkk', '...kGkGGGGkGk', '..kGwkGGGGkwGk', '...kk.kwwk.kk', '.......kk', ''];
+function rot(src, q) {
+  const c = document.createElement('canvas'); c.width = c.height = 16;
+  const x = c.getContext('2d'); x.imageSmoothingEnabled = false;
+  x.translate(8, 8); x.rotate(q * Math.PI / 2); x.drawImage(src, -8, -8);
+  return c;
+}
+const beetleSet = rows => { const b = mk(rows); return { down: b, right: rot(b, -1), up: rot(b, 2), left: rot(b, 1) }; };
+Object.assign(SPR, {
+  mini: mk(MINI, { r: 'p' }), miniHit: mk(MINI, WHITE),
+  king: mk(SLIME, { r: 'p', R: 'n' }), kingHit: mk(SLIME, WHITE),
+  bat: [mk(BAT_A), mk(BAT_B)], batHit: mk(BAT_A, WHITE),
+  skel: mk(SKEL), skelHit: mk(SKEL, { w: 'r' }),
+  beetle: beetleSet(BEETLE),
+});
+SPR.beetleHit = { down: mk(BEETLE, WHITE) }; SPR.beetleHit.right = rot(SPR.beetleHit.down, -1); SPR.beetleHit.up = rot(SPR.beetleHit.down, 2); SPR.beetleHit.left = rot(SPR.beetleHit.down, 1);
+
+function mkDraw(fn) { const c = document.createElement('canvas'); c.width = c.height = 16; fn(c.getContext('2d')); return c; }
+ICON.bow = mkDraw(c => {
+  for (let i = -6; i <= 6; i++) { const a = Math.round(i * i / 9); P(c, 3 + a, 8 + i, C.k, 3, 1); }
+  for (let i = -6; i <= 6; i++) P(c, 4 + Math.round(i * i / 9), 8 + i, C.b);
+  P(c, 9, 2, C.w, 1, 13); P(c, 3, 7, C.B, 2, 3);
+});
+ICON.arrow = mkDraw(c => {
+  for (let i = 0; i < 9; i++) P(c, 3 + i, 12 - i, C.b);
+  P(c, 11, 2, C.k, 4, 4); P(c, 12, 3, C.G, 2, 2);
+  P(c, 1, 12, C.w, 2, 1); P(c, 3, 14, C.w, 1, 2); P(c, 2, 13, C.w);
+});
+ICON.bomb = mkDraw(c => {
+  for (let py = 0; py < 16; py++) for (let px = 0; px < 16; px++) {
+    const dd = Math.hypot(px - 7, py - 9.5);
+    if (dd < 5.6) P(c, px, py, dd > 4.6 ? C.k : C.D);
+  }
+  P(c, 5, 7, C.G, 2, 1); P(c, 5, 8, C.G);
+  P(c, 8, 3, C.k, 2, 2); P(c, 9, 2, C.b); P(c, 10, 1, C.y); P(c, 11, 0, C.o);
+});
 const ICON_URL = {};
 for (const k in ICON) ICON_URL[k] = ICON[k].toDataURL();
 
 // ---------- Tile art (procedural, drawn once into a world canvas) ----------
 let world, worldCv;
-const P = (c, x, y, col, w = 1, h = 1) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+function P(c, x, y, col, w = 1, h = 1) { c.fillStyle = col; c.fillRect(x, y, w, h); }
 const tileAt = (x, y) => (x < 0 || y < 0 || x >= W || y >= H) ? TREE : world.m[y * W + x];
 
 function grassBase(c, X, Y, tx, ty) {
@@ -567,6 +644,12 @@ function drawTile(c, t, tx, ty) {
       }
       break;
     }
+    case CRACK: {
+      drawTile(c, ROCK, tx, ty);
+      for (const [px, py] of [[8, 6], [7, 7], [8, 8], [9, 9], [8, 10], [7, 11], [6, 9], [5, 10], [10, 8], [11, 7]]) P(c, X + px, Y + py, C.k);
+      P(c, X + 9, Y + 10, C.D); P(c, X + 6, Y + 11, C.D);
+      break;
+    }
     case FLOOR: {
       P(c, X, Y, C.F, 16, 16);
       const off = (ty % 2) * 8;
@@ -613,6 +696,14 @@ function drawTile(c, t, tx, ty) {
     }
   }
 }
+function setTile(tx, ty, t) {
+  world.m[ty * W + tx] = t;
+  drawTile(worldCv.getContext('2d'), t, tx, ty);
+}
+function resetWorld() {
+  world = buildWorld(); renderWorld();
+  for (const id of G.taken) if (id.startsWith('brk')) setTile(+id.slice(3) % W, Math.floor(+id.slice(3) / W), GRASS);
+}
 function renderWorld() {
   worldCv = document.createElement('canvas'); worldCv.width = W * TS; worldCv.height = H * TS;
   const c = worldCv.getContext('2d');
@@ -634,21 +725,22 @@ const TEXT = {
     cr1: 'Один лежит в цветочном поле на северо-западе, среди камней.',
     cr2: 'Один сверкает на острове посреди озера. Туда ведёт мост.',
     cr3: 'Один спрятан в глубине леса на юго-западе. Держись тропы.',
-    cr4: 'Один остался в старых руинах на юго-востоке.',
+    cr4: 'Один охраняет Король слаймов в глубине руин на юго-востоке. Возьми зелья.',
     cr5: 'Один упал в рощу на востоке, у края озера.',
   },
   win: ['Все пять кристаллов! Не верю своим глазам.', 'Листвянка спасена. Спасибо тебе, герой!'],
-  asya: ['Мост ведёт на остров. Говорят, там что-то блестит.', 'Я видела, как слаймы ползли к руинам. Брр.', 'Монеты? Собирай, вдруг пригодятся!'],
+  asya: ['Мост ведёт на остров. Говорят, там что-то блестит.', 'Я видела, как слаймы ползли к руинам. Брр.', 'Монеты? Собирай, вдруг пригодятся!',
+    'Видишь треснувшие камни? Говорят, бомба разносит их в щебень. А за ними тайники!', 'Жуки с рогами непробиваемы спереди. Обходи их сзади или жди, пока врежутся в стену.'],
   cat: ['Мяу.', 'Мр-р-р.', 'Кот смотрит на тебя так, будто знает, где лежит кристалл.'],
   signs: {
     village: 'ЛИСТВЯНКА\nСевер: алтарь. Северо-восток: озеро.\nЮг: лес. Юго-восток: руины.',
     meadow: 'Цветочное поле. Не топтать!\n(Ну, разве что чуть-чуть.)',
     forest: 'Старый лес. Не сходи с тропы.',
-    ruins: 'Руины древней крепости. Опасно!',
+    ruins: 'Руины древней крепости. В глубине спит Король слаймов. Опасно!',
     shrine: 'Алтарь кристаллов. Пять гнёзд пустуют.',
   },
   doors: { 17: 'Дом Мирона. Заперто, хозяин на площади.', 27: 'Заперто. Изнутри пахнет пирогами.' },
-  chest: { coins10: 'В сундуке 10 монет!', coins15: 'В сундуке 15 монет!', heart: 'В сундуке сердце! Здоровье +1.' },
+  chest: { coins10: 'В сундуке 10 монет!', coins15: 'В сундуке 15 монет!', heart: 'В сундуке сердце! Здоровье +1.', coins20: 'Тайник! Внутри 20 монет.', potions: 'Тайник! Внутри два красных зелья.' },
   empty: 'Сундук пуст.',
   faint: 'Ты теряешь сознание… и приходишь в себя уже в деревне.',
 };
@@ -659,7 +751,10 @@ const WEAPONS = {
   sword: { name: 'Меч', desc: 'Быстрый и надёжный.', dmg: 1, cd: .32, swing: .22, len: 14, wid: 16 },
   spear: { name: 'Копьё', desc: 'Бьёт далеко вперёд.', dmg: 1, cd: .4, swing: .24, len: 24, wid: 8 },
   axe: { name: 'Топор', desc: 'Медленный, но бьёт вдвое сильнее и по широкой дуге.', dmg: 2, cd: .6, swing: .3, len: 14, wid: 26 },
+  bow: { name: 'Лук', desc: 'Стреляет вперёд издалека.', dmg: 1, cd: .45, swing: .2 },
+  bomb: { name: 'Бомбы', desc: 'Взрыв через 1,5 секунды ломает треснувшие камни. Отойди подальше!', dmg: 3, cd: .5, swing: .15 },
 };
+const AMMO_MAX = { arrows: 30, bombs: 9 };
 const POTIONS = {
   red: { name: 'Красное зелье', desc: 'Лечит 3 сердца.' },
   blue: { name: 'Синее зелье', desc: 'Быстрый шаг на 20 секунд.' },
@@ -672,8 +767,11 @@ const SHOPS = {
       { id: 'red', kind: 'potion', price: 6 },
       { id: 'blue', kind: 'potion', price: 8 },
       { id: 'green', kind: 'potion', price: 12 },
+      { id: 'arrows', kind: 'ammo', ammo: 'arrows', qty: 10, price: 5, icon: 'arrow', name: 'Стрелы ×10', desc: 'Для лука.' },
+      { id: 'bombs', kind: 'ammo', ammo: 'bombs', qty: 3, price: 10, icon: 'bomb', name: 'Бомбы ×3', desc: 'Ломают треснувшие камни. Взрыв ранит и тебя!' },
       { id: 'spear', kind: 'weapon', price: 20 },
       { id: 'axe', kind: 'weapon', price: 35 },
+      { id: 'bow', kind: 'weapon', price: 30 },
       { id: 'shield', kind: 'shield', price: 25, name: 'Щит', desc: 'Держи A, стоя на месте: блокирует удары спереди.' },
     ],
   },
@@ -730,6 +828,14 @@ const sfx = {
   buy: () => { tone(880, 880, .05); tone(1175, 1175, .1, 'square', .05, .05); },
   drink: () => [392, 494, 587].forEach((f, i) => tone(f, f * 1.1, .09, 'triangle', .06, i * .06)),
   deny: () => tone(180, 140, .12, 'square', .05),
+  bow: () => tone(500, 1400, .08, 'triangle', .05),
+  fuse: () => tone(2000, 1500, .1, 'sawtooth', .02),
+  boom: () => { tone(120, 30, .45, 'sawtooth', .09); tone(80, 20, .5, 'square', .06, .02); },
+  throw: () => tone(400, 700, .07, 'triangle', .03),
+  roar: () => { tone(90, 60, .6, 'sawtooth', .08); tone(140, 70, .5, 'square', .04, .1); },
+  jump: () => tone(200, 500, .2, 'square', .04),
+  land: () => tone(100, 40, .2, 'square', .07),
+  charge: () => tone(300, 600, .15, 'sawtooth', .03),
   blip: () => tone(660, 660, .02, 'square', .015),
   open: () => { tone(392, 392, .08); tone(523, 523, .08, 'square', .05, .08); tone(784, 784, .15, 'square', .05, .16); },
   win: () => [523, 659, 784, 659, 784, 1047].forEach((f, i) => tone(f, f, .18, 'triangle', .07, i * .14)),
@@ -808,8 +914,9 @@ document.addEventListener('dblclick', e => e.preventDefault());
 
 // ---------- Game state ----------
 const PHB = { x: 3, y: 9, w: 10, h: 6 };   // player hitbox inside its 16x16 sprite
-const SHB = { x: 2, y: 8, w: 12, h: 7 };   // slime hitbox
 const START = { x: 22 * TS, y: 21 * TS };
+let shots = [], bombs = [], blasts = [];
+const told = new Set();
 let G, ents, blockers, respawns = [], panelKind = null, dlg = null, menuOpen = false, toastTimer = 0, saveTimer = 0, particles = [];
 
 function freshState() {
@@ -819,18 +926,17 @@ function freshState() {
     coins: 0, taken: new Set(), talked: false, won: false, time: 0, shake: 0, asyaI: 0, catI: 0, t: 0,
     inv: { red: 0, blue: 0, green: 0 }, weapons: ['sword'], weapon: 'sword', shield: false,
     up: { dmg: 0, hp: 0, reach: 0 }, buff: { speed: 0, guard: 0 }, met: {},
+    ammo: { arrows: 0, bombs: 0 }, diff: 'normal',
   };
 }
-function makeSlime(s) {
-  return { kind: 'slime', tx: s.tx, ty: s.ty, x: s.tx * TS, y: s.ty * TS, hp: 2, t: Math.random() * 2, vx: 0, vy: 0, kx: 0, ky: 0, flash: 0, ph: Math.random() * 6 };
-}
 function spawnEntities() {
-  ents = []; blockers = new Map(); respawns = [];
+  ents = []; blockers = new Map(); respawns = []; shots = []; bombs = []; blasts = [];
   for (const s of world.ents) {
     if (s.id && G.taken.has(s.id) && s.kind !== 'chest') continue;
+    if (s.boss && !G.taken.has('boss')) continue;
     const e = { ...s, x: s.tx * TS, y: s.ty * TS };
     if (s.kind === 'chest') e.open = G.taken.has(s.id);
-    if (s.kind === 'slime') { ents.push(makeSlime(s)); continue; }
+    if (s.kind === 'mob') { ents.push(makeMob(s)); continue; }
     if (s.kind === 'npc' || s.kind === 'sign' || s.kind === 'chest' || s.kind === 'deco') blockers.set(s.ty * W + s.tx, e);
     ents.push(e);
   }
@@ -840,7 +946,7 @@ const crystalCount = () => [...G.taken].filter(id => id.startsWith('cr')).length
 function makeSave() {
   return {
     v: 1, x: G.p.x, y: G.p.y, hp: G.p.hp, maxHp: G.p.maxHp, coins: G.coins, taken: [...G.taken], talked: G.talked, won: G.won, time: G.time, dir: G.p.dir,
-    inv: G.inv, weapons: G.weapons, weapon: G.weapon, shield: G.shield, up: G.up, met: G.met,
+    inv: G.inv, weapons: G.weapons, weapon: G.weapon, shield: G.shield, up: G.up, met: G.met, ammo: G.ammo, diff: G.diff,
   };
 }
 function persist() { try { localStorage.setItem('lv_save', JSON.stringify(makeSave())); } catch (e) {} }
@@ -855,6 +961,8 @@ function applySave(s) {
   if (!G.weapons.includes('sword')) G.weapons.unshift('sword');
   G.weapon = G.weapons.includes(s.weapon) ? s.weapon : 'sword';
   G.shield = !!s.shield;
+  Object.assign(G.ammo, s.ammo || {});
+  G.diff = DIFF[s.diff] ? s.diff : 'normal';
   if (G.won) { G.p.x = START.x; G.p.y = START.y; }
 }
 
@@ -921,7 +1029,8 @@ function pressA() {
 }
 function handleA() {
   if (dlg) { advanceDialog(); return; }
-  if (G.state === 'title') { $('bPlay').click(); return; }
+  if (G.state === 'title') { if ($('diffBox').hidden) $('bPlay').click(); return; }
+  if (G.state === 'over') { $('bRetry').click(); return; }
   if (G.state === 'win') { $('bAgain').click(); return; }
   if (G.state !== 'play' || menuOpen || panelKind) return;
   const p = G.p;
@@ -941,6 +1050,8 @@ function interact(e) {
     if (e.loot === 'coins10') G.coins += 10;
     if (e.loot === 'coins15') G.coins += 15;
     if (e.loot === 'heart') { G.p.maxHp++; G.p.hp = G.p.maxHp; }
+    if (e.loot === 'coins20') G.coins += 20;
+    if (e.loot === 'potions') G.inv.red = Math.min(POTION_MAX, G.inv.red + 2);
     burst(e.x + 8, e.y + 6, C.o, 14);
     say('', TEXT.chest[e.loot]); persist(); return;
   }
@@ -971,6 +1082,22 @@ function weaponBox(p) {
 function swing() {
   const p = G.p, wp = WEAPONS[G.weapon];
   if (p.cd > 0) return;
+  const f = FACE[p.dir];
+  if (G.weapon === 'bow') {
+    if (!G.ammo.arrows) { sfx.deny(); toast('Стрелы закончились'); p.cd = .4; return; }
+    G.ammo.arrows--; p.swing = wp.swing; p.cd = wp.cd; sfx.bow();
+    shots.push({ kind: 'arrow', x: p.x + 8 + f[0] * 8, y: p.y + 10 + f[1] * 6, vx: f[0] * 170, vy: f[1] * 170, life: .85, dmg: 1 + Math.floor(G.up.dmg / 2) });
+    return;
+  }
+  if (G.weapon === 'bomb') {
+    if (!G.ammo.bombs) { sfx.deny(); toast('Бомбы закончились'); p.cd = .4; return; }
+    if (bombs.length >= 3) return;
+    let bx = p.x + 8 + f[0] * 12, by = p.y + 11 + f[1] * 10;
+    if (solidAt(bx, by)) { bx = p.x + 8; by = p.y + 11; }
+    bombs.push({ x: bx, y: by, t: 1.6 }); G.ammo.bombs--; p.cd = wp.cd; p.swing = wp.swing; sfx.fuse();
+    hint('bomb', 'Отбегай! Взрыв через секунду');
+    return;
+  }
   p.swing = wp.swing; p.cd = wp.cd; sfx.swing();
   const b = weaponBox(p), dmg = wp.dmg + G.up.dmg;
   // cut tall grass
@@ -981,23 +1108,221 @@ function swing() {
       burst(tx * TS + 8, ty * TS + 8, C.l, 6);
       if (Math.random() < .14) ents.push({ kind: 'coin', id: null, x: tx * TS, y: ty * TS });
     }
-  for (const s of ents) {
-    if (s.kind !== 'slime' || s.dead) continue;
-    if (overlap(b.x, b.y, b.w, b.h, s.x + SHB.x, s.y + SHB.y, SHB.w, SHB.h)) {
-      s.hp -= dmg; s.flash = .18; sfx.hit();
-      const dx = s.x - p.x, dy = s.y - p.y, d = Math.hypot(dx, dy) || 1;
-      s.kx = dx / d * 140; s.ky = dy / d * 140;
-      if (s.hp <= 0) killSlime(s);
-    }
+  for (const m of ents) {
+    if (m.kind !== 'mob' || m.dead) continue;
+    if (overlap(b.x, b.y, b.w, b.h, m.x + m.hb.x, m.y + m.hb.y, m.hb.w, m.hb.h)) hitMob(m, dmg, p.x + 8, p.y + 10);
   }
 }
-function killSlime(s) {
-  s.dead = true; burst(s.x + 8, s.y + 10, C.r, 16);
-  respawns.push({ tx: s.tx, ty: s.ty, t: 45 });
-  const r = Math.random();
-  if (r < .1) for (let i = 0; i < 3; i++) ents.push({ kind: 'coin', id: null, x: s.x + (i - 1) * 7, y: s.y + (i % 2) * 4 });
-  else if (r < .55) ents.push({ kind: 'coin', id: null, x: s.x, y: s.y });
-  else if (r < .72) ents.push({ kind: 'heart', x: s.x, y: s.y, ttl: 12 });
+function hint(key, msg) { if (told.has(key)) return; told.add(key); toast(msg); }
+
+// ---------- Enemies ----------
+const MOBS = {
+  slime: { hp: 2, hb: { x: 2, y: 8, w: 12, h: 7 } },
+  mini: { hp: 1, hb: { x: 4, y: 10, w: 8, h: 5 } },
+  bat: { hp: 1, hb: { x: 3, y: 2, w: 10, h: 8 }, fly: true },
+  skel: { hp: 3, hb: { x: 3, y: 4, w: 10, h: 11 } },
+  beetle: { hp: 2, hb: { x: 2, y: 3, w: 12, h: 11 } },
+  king: { hp: 12, hb: { x: 3, y: 12, w: 26, h: 19 } },
+};
+const DIFF = {
+  easy: { name: 'лёгкая', spd: .8, boss: 8, hp: 7 },
+  normal: { name: 'обычная', spd: 1, boss: 12, hp: 5 },
+  hard: { name: 'хардкор', spd: 1.15, boss: 16, hp: 5 },
+};
+function makeMob(s) {
+  const def = MOBS[s.type], hp = s.type === 'king' ? DIFF[G.diff].boss : def.hp;
+  return {
+    kind: 'mob', type: s.type, id: s.id || null, tx: s.tx, ty: s.ty, x: s.x ?? s.tx * TS, y: s.y ?? s.ty * TS,
+    hp, maxHp: hp, hb: def.hb, t: Math.random() * 2, vx: 0, vy: 0, kx: 0, ky: 0, flash: 0, ph: Math.random() * 6,
+    cd: 1 + Math.random() * 2, dir: 'down', state: s.type === 'king' ? 'sleep' : 'walk', st: 0,
+  };
+}
+function mobCenter(m) { const z = m.type === 'king' ? 32 : 16; return { x: m.x + z / 2, y: m.y + z * .62 }; }
+function wander(m, dt, spd) {
+  m.t -= dt;
+  if (m.t > 0) return;
+  m.t = 1 + Math.random() * 1.6;
+  if (Math.random() < .35) { m.vx = m.vy = 0; return; }
+  const a = Math.random() * Math.PI * 2; m.vx = Math.cos(a) * spd; m.vy = Math.sin(a) * spd;
+}
+const dir4 = (dx, dy) => Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
+function updateMob(m, dt, p) {
+  const k = DIFF[G.diff].spd, c = mobCenter(m);
+  m.ph += dt * 6; m.flash = Math.max(0, m.flash - dt); m.st -= dt;
+  const dx = p.x + 8 - c.x, dy = p.y + 10 - c.y, d = Math.hypot(dx, dy) || 1, alive = p.hp > 0;
+  let vx = 0, vy = 0;
+  switch (m.type) {
+    case 'slime': case 'mini': {
+      const range = m.type === 'mini' ? 90 : 64, chase = m.type === 'mini' ? 40 : 30;
+      if (alive && d < range) { m.vx = dx / d * chase; m.vy = dy / d * chase; } else wander(m, dt, 18);
+      const hop = Math.sin(m.ph) > 0 ? 1 : .25;
+      vx = m.vx * hop; vy = m.vy * hop;
+      break;
+    }
+    case 'bat':
+      if (alive && d < 80) {
+        const w = Math.sin(G.t * 7 + m.ph) * 30;
+        vx = dx / d * 44 - dy / d * w; vy = dy / d * 44 + dx / d * w;
+      } else {
+        const hx = m.tx * TS + Math.cos(G.t * .9 + m.ph) * 22, hy = m.ty * TS + Math.sin(G.t * 1.3 + m.ph) * 12;
+        vx = (hx - m.x) * 1.5; vy = (hy - m.y) * 1.5;
+      }
+      break;
+    case 'skel':
+      if (alive && d < 100) {
+        if (d < 40) { vx = -dx / d * 22; vy = -dy / d * 22; }
+        else if (d > 72) { vx = dx / d * 18; vy = dy / d * 18; }
+        m.dir = dir4(dx, dy); m.cd -= dt;
+        if (m.cd <= 0) {
+          m.cd = 2.2 / k; sfx.throw();
+          shots.push({ kind: 'bone', enemy: true, x: c.x, y: c.y - 4, vx: dx / d * 70 * k, vy: dy / d * 70 * k, life: 2.5 });
+        }
+      } else { wander(m, dt, 14); vx = m.vx; vy = m.vy; }
+      break;
+    case 'beetle': {
+      const f = FACE[m.dir];
+      if (m.state === 'walk') {
+        if (m.st <= 0) { m.st = 1.5 + Math.random() * 2; m.dir = ['up', 'down', 'left', 'right'][(Math.random() * 4) | 0]; }
+        const ahead = dx * f[0] + dy * f[1], side = Math.abs(dx * f[1] - dy * f[0]);
+        if (alive && ahead > 0 && ahead < 72 && side < 12) { m.state = 'charge'; m.st = .9; sfx.charge(); }
+        else if (alive && d < 56 && Math.random() < dt * 1.5) m.dir = dir4(dx, dy);
+        vx = f[0] * 20; vy = f[1] * 20;
+      } else if (m.state === 'charge') {
+        vx = f[0] * 75; vy = f[1] * 75;
+        if (m.st <= 0) { m.state = 'stun'; m.st = 1.2; }
+      } else if (m.st <= 0) { m.state = 'walk'; m.st = 1; }
+      break;
+    }
+    case 'king':
+      if (m.state === 'sleep') {
+        if (alive && d < 84) wakeKing(m);
+        break;
+      }
+      if (m.state === 'wait') {
+        vx = dx / d * 14; vy = dy / d * 14;
+        if (m.st <= 0) { m.state = 'crouch'; m.st = .5; }
+      } else if (m.state === 'crouch') {
+        if (m.st <= 0) {
+          m.state = 'leap'; m.st = .55; sfx.jump();
+          const sp = Math.min(150, d / .55); m.vx = dx / d * sp; m.vy = dy / d * sp;
+        }
+      } else if (m.state === 'leap') {
+        vx = m.vx; vy = m.vy;
+        if (m.st <= 0) { m.state = 'wait'; m.st = (.7 + Math.random() * .6) / k; G.shake = .2; sfx.land(); burst(c.x, c.y + 8, C.p, 10); }
+      }
+      break;
+  }
+  const ox = m.x, oy = m.y;
+  if (MOBS[m.type].fly) {
+    m.x = Math.min(Math.max(m.x + (vx * k + m.kx) * dt, 2 * TS), (W - 3) * TS);
+    m.y = Math.min(Math.max(m.y + (vy * k + m.ky) * dt, 2 * TS), (H - 3) * TS);
+  } else moveBody(m, (vx * k + m.kx) * dt, (vy * k + m.ky) * dt, m.hb, false);
+  if (m.type === 'beetle' && m.state !== 'stun' && !m.kx && !m.ky) {
+    const want = (Math.abs(vx) + Math.abs(vy)) * k * dt, got = Math.abs(m.x - ox) + Math.abs(m.y - oy);
+    if (want > .2 && got < want * .3) {
+      if (m.state === 'charge') { m.state = 'stun'; m.st = 1.4; sfx.land(); burst(c.x, c.y, C.G, 6); }
+      else m.st = 0;
+    }
+  }
+  const kd = Math.max(0, 1 - 8 * dt); m.kx *= kd; m.ky *= kd;
+  if (Math.abs(m.kx) < 2) m.kx = 0;
+  if (Math.abs(m.ky) < 2) m.ky = 0;
+  if (m.type === 'king' && m.state === 'sleep') return;
+  const h = m.hb;
+  if (overlap(p.x + PHB.x, p.y + PHB.y, PHB.w, PHB.h, m.x + h.x + 1, m.y + h.y + 1, h.w - 2, h.h - 2)) hurt(m);
+}
+function wakeKing(m) {
+  m.state = 'wait'; m.st = 1; sfx.roar(); G.shake = .3;
+  toast('Король слаймов проснулся!');
+}
+function hitMob(m, dmg, sx, sy, pierce) {
+  if (m.dead) return;
+  const c = mobCenter(m);
+  if (m.type === 'beetle' && m.state !== 'stun' && !pierce) {
+    const f = FACE[m.dir], dx = sx - c.x, dy = sy - c.y, d = Math.hypot(dx, dy) || 1;
+    if ((dx * f[0] + dy * f[1]) / d > .35) {
+      sfx.block(); burst(c.x + f[0] * 7, c.y + f[1] * 7, C.w, 5);
+      hint('beetle', 'Панцирь не пробить! Бей сзади');
+      return;
+    }
+  }
+  m.hp -= dmg; m.flash = .18; sfx.hit();
+  const dx = c.x - sx, dy = c.y - sy, d = Math.hypot(dx, dy) || 1, kb = m.type === 'king' ? 40 : 140;
+  m.kx = dx / d * kb; m.ky = dy / d * kb;
+  if (m.type === 'king') {
+    if (m.state === 'sleep') wakeKing(m);
+    const third = m.maxHp / 3;
+    if (m.hp > 0 && Math.ceil(m.hp / third) < Math.ceil((m.hp + dmg) / third)) spawnMinis(m, 2);
+  }
+  if (m.hp <= 0) killMob(m);
+}
+function spawnMinis(m, n) {
+  const c = mobCenter(m);
+  for (let i = 0; i < n; i++) {
+    const a = Math.PI * 2 * i / n + Math.random();
+    const mm = makeMob({ type: 'mini', tx: m.tx, ty: m.ty, x: c.x - 8 + Math.cos(a) * 8, y: c.y - 12 + Math.sin(a) * 6 });
+    if (boxHit(mm.x, mm.y, mm.hb)) { mm.x = c.x - 8; mm.y = c.y - 12; }
+    mm.kx = Math.cos(a) * 110; mm.ky = Math.sin(a) * 110;
+    ents.push(mm);
+  }
+}
+function killMob(m) {
+  m.dead = true;
+  const c = mobCenter(m);
+  burst(c.x, c.y, { slime: C.r, mini: C.p, bat: C.p, skel: C.w, beetle: C.n, king: C.p }[m.type], m.type === 'king' ? 40 : 16);
+  if (m.type === 'king') {
+    G.taken.add('boss'); spawnMinis(m, 4); G.shake = .5; sfx.win();
+    const cs = world.ents.find(e => e.id === 'cr4');
+    if (!G.taken.has('cr4')) ents.push({ ...cs, x: cs.tx * TS, y: cs.ty * TS });
+    for (let i = 0; i < 6; i++) ents.push({ kind: 'coin', id: null, x: m.x + 2 + i * 5, y: m.y + 14 + (i % 2) * 6 });
+    toast('Король слаймов повержен!'); persist();
+    return;
+  }
+  if (m.type !== 'mini') respawns.push({ type: m.type, tx: m.tx, ty: m.ty, t: 45 });
+  const r = Math.random(), luck = m.type === 'mini' ? .4 : 1;
+  if (r < .1 * luck) for (let i = 0; i < 3; i++) ents.push({ kind: 'coin', id: null, x: c.x - 8 + (i - 1) * 7, y: c.y - 10 + (i % 2) * 4 });
+  else if (r < .55 * luck) ents.push({ kind: 'coin', id: null, x: c.x - 8, y: c.y - 10 });
+  else if (r < .72 * luck) ents.push({ kind: 'heart', x: c.x - 8, y: c.y - 10, ttl: 12 });
+}
+function updateShots(dt, p) {
+  for (const s of shots) {
+    s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
+    const t = tileAt(Math.floor(s.x / TS), Math.floor(s.y / TS));
+    if (SOLID.has(t) && t !== WATER) { s.life = 0; burst(s.x, s.y, s.kind === 'bone' ? C.w : C.b, 3); continue; }
+    if (s.enemy) {
+      if (overlap(s.x - 2, s.y - 2, 4, 4, p.x + PHB.x, p.y + PHB.y - 4, PHB.w, PHB.h + 4)) { s.life = 0; hurt({ x: s.x - 8, y: s.y - 10 }); }
+      continue;
+    }
+    for (const m of ents) {
+      if (m.kind !== 'mob' || m.dead) continue;
+      if (overlap(s.x - 2, s.y - 2, 4, 4, m.x + m.hb.x, m.y + m.hb.y, m.hb.w, m.hb.h)) {
+        s.life = 0; hitMob(m, s.dmg, s.x - s.vx * .05, s.y - s.vy * .05); break;
+      }
+    }
+  }
+  shots = shots.filter(s => s.life > 0);
+}
+function explode(b) {
+  const R = 26, p = G.p;
+  sfx.boom(); G.shake = .35; blasts.push({ x: b.x, y: b.y, t: 0 });
+  burst(b.x, b.y, C.o, 22); burst(b.x, b.y, C.D, 12);
+  for (const m of ents) {
+    if (m.kind !== 'mob' || m.dead) continue;
+    const c = mobCenter(m);
+    if (Math.hypot(c.x - b.x, c.y - b.y) < R + (m.type === 'king' ? 14 : 6)) hitMob(m, 3 + G.up.dmg, b.x, b.y, true);
+  }
+  if (Math.hypot(p.x + 8 - b.x, p.y + 11 - b.y) < R) hurt({ x: b.x - 8, y: b.y - 10 });
+  for (let ty = Math.floor((b.y - R) / TS); ty <= Math.floor((b.y + R) / TS); ty++)
+    for (let tx = Math.floor((b.x - R) / TS); tx <= Math.floor((b.x + R) / TS); tx++) {
+      if (Math.hypot(tx * TS + 8 - b.x, ty * TS + 8 - b.y) > R + 4) continue;
+      const t = tileAt(tx, ty);
+      if (t === CRACK) {
+        setTile(tx, ty, GRASS); G.taken.add('brk' + (ty * W + tx));
+        burst(tx * TS + 8, ty * TS + 8, C.G, 18); sfx.open(); toast('Тайник открыт!'); persist();
+      } else if (t === TALL) {
+        setTile(tx, ty, GRASS); burst(tx * TS + 8, ty * TS + 8, C.l, 6);
+      }
+    }
 }
 function burst(x, y, col, n) {
   for (let i = 0; i < n; i++) {
@@ -1008,7 +1333,8 @@ function burst(x, y, col, n) {
 function hurt(from) {
   const p = G.p;
   if (p.inv > 0 || p.hp <= 0) return;
-  const dx = p.x - from.x, dy = p.y - from.y, d = Math.hypot(dx, dy) || 1;
+  const big = from.type === 'king' ? 1 : 0;
+  const dx = p.x - (from.x + big * 8), dy = p.y - (from.y + big * 10), d = Math.hypot(dx, dy) || 1;
   const f = FACE[p.dir];
   if (p.shield && (-dx / d) * f[0] + (-dy / d) * f[1] > .45) {
     // blocked by the shield: push the attacker back, no damage
@@ -1024,6 +1350,10 @@ function hurt(from) {
   }
   p.hp--; p.inv = 1.1; G.shake = .25; sfx.hurt();
   p.kx = dx / d * 150; p.ky = dy / d * 150;
+  if (p.hp <= 0 && G.diff === 'hard') {
+    say('', 'Ты пал в бою. В хардкоре вторая попытка не положена.', gameOver);
+    return;
+  }
   if (p.hp <= 0) {
     say('', TEXT.faint, () => {
       Object.assign(p, { x: START.x, y: START.y, hp: p.maxHp, dir: 'down', inv: 1.5, kx: 0, ky: 0 });
@@ -1083,29 +1413,17 @@ function update(dt) {
     }
   }
 
-  // slimes
-  for (const s of ents) {
-    if (s.kind !== 'slime' || s.dead) continue;
-    s.ph += dt * 6; s.flash = Math.max(0, s.flash - dt);
-    const dx = p.x - s.x, dy = p.y - s.y, d = Math.hypot(dx, dy);
-    if (d > 0 && d < 64 && p.hp > 0) { s.vx = dx / d * 30; s.vy = dy / d * 30; }
-    else {
-      s.t -= dt;
-      if (s.t <= 0) {
-        s.t = 1 + Math.random() * 1.6;
-        if (Math.random() < .35) { s.vx = s.vy = 0; }
-        else { const a = Math.random() * Math.PI * 2; s.vx = Math.cos(a) * 18; s.vy = Math.sin(a) * 18; }
-      }
-    }
-    const hop = Math.sin(s.ph) > 0 ? 1 : .25;
-    moveBody(s, (s.vx * hop + s.kx) * dt, (s.vy * hop + s.ky) * dt, SHB, false);
-    const kd = Math.max(0, 1 - 8 * dt); s.kx *= kd; s.ky *= kd;
-    if (overlap(p.x + PHB.x, p.y + PHB.y, PHB.w, PHB.h, s.x + SHB.x + 1, s.y + SHB.y + 1, SHB.w - 2, SHB.h - 2)) hurt(s);
-  }
+  // enemies, projectiles, bombs
+  for (const m of ents) if (m.kind === 'mob' && !m.dead) updateMob(m, dt, p);
+  updateShots(dt, p);
+  for (const b of bombs) { b.t -= dt; if (b.t <= 0) explode(b); }
+  bombs = bombs.filter(b => b.t > 0);
+  for (const b of blasts) b.t += dt;
+  blasts = blasts.filter(b => b.t < .3);
   ents = ents.filter(e => !e.dead || e.kind === 'npc');
   for (const r of respawns) {
     r.t -= dt;
-    if (r.t <= 0 && Math.hypot(r.tx * TS - p.x, r.ty * TS - p.y) > 110) { r.done = true; ents.push(makeSlime(r)); }
+    if (r.t <= 0 && Math.hypot(r.tx * TS - p.x, r.ty * TS - p.y) > 110) { r.done = true; ents.push(makeMob(r)); }
   }
   respawns = respawns.filter(r => !r.done);
   for (const e of ents) if (e.kind === 'heart') { e.ttl -= dt; if (e.ttl <= 0) e.dead = true; }
@@ -1153,7 +1471,7 @@ const HAND = { down: [11, 13], up: [3, 3], right: [13, 10], left: [2, 10] };
 function drawWeapon(p, ox, oy) {
   const wp = WEAPONS[G.weapon], x = p.x - ox, y = p.y - oy + HUD, k = 1 - p.swing / wp.swing;
   const f = FACE[p.dir], hx = x + HAND[p.dir][0], hy = y + HAND[p.dir][1], ext = G.up.reach ? 3 : 0;
-  if (G.weapon !== 'spear') {
+  if (G.weapon === 'sword' || G.weapon === 'axe') {
     const base = Math.atan2(f[1], f[0]), span = G.weapon === 'axe' ? 1.6 : 1.1, r = 12 + ext;
     ctx.globalAlpha = .75;
     for (let i = 0; i <= 10; i++) {
@@ -1171,10 +1489,82 @@ function drawWeapon(p, ox, oy) {
     seg(hx, hy, f, push + L - 2, 5, -2, 6, C.k); seg(hx, hy, f, push + L - 1, 3, -1, 4, C.G);
     seg(hx, hy, f, push + L + 2, 1, 0, 2, C.w);
     ctx.globalAlpha = .6; for (let i = 0; i < 3; i++) seg(hx, hy, f, push + L + 4 + i * 3, 1, (i - 1) * 3, 1, C.c); ctx.globalAlpha = 1;
-  } else {
+  } else if (G.weapon === 'bow') {
+    const pp = [-f[1], f[0]], bx = x + 8 + f[0] * 7, by = y + 10 + f[1] * 5;
+    for (let i = -5; i <= 5; i++) {
+      const a = 3 - Math.round(i * i / 9);
+      P(ctx, bx + f[0] * a + pp[0] * i, by + f[1] * a + pp[1] * i, C.b);
+      P(ctx, bx + pp[0] * i, by + pp[1] * i, C.w);
+    }
+  } else if (G.weapon === 'axe') {
     seg(hx, hy, f, -1, 10 + ext, -1, 4, C.k); seg(hx, hy, f, -1, 9 + ext, 0, 2, C.B);
     seg(hx, hy, f, 5 + ext, 7, -5, 12, C.k); seg(hx, hy, f, 6 + ext, 5, -4, 10, C.G);
     seg(hx, hy, f, 10 + ext, 1, -4, 10, C.w);
+  }
+}
+function drawMob(m, x, y) {
+  const fl = m.flash > 0;
+  switch (m.type) {
+    case 'slime': { const sq = Math.sin(m.ph) > .3 ? 1 : 0; ctx.drawImage(fl ? SPR.slimeHit : SPR.slime, 0, 0, 16, 16, x, y + sq, 16, 16 - sq); break; }
+    case 'mini': { const sq = Math.sin(m.ph * 1.3) > .3 ? 1 : 0; ctx.drawImage(fl ? SPR.miniHit : SPR.mini, x, y + sq); break; }
+    case 'bat':
+      P(ctx, x + 5, y + 14, 'rgba(0,0,0,.2)', 6, 1);
+      ctx.drawImage(fl ? SPR.batHit : SPR.bat[Math.floor(G.t * 8 + m.ph) % 2], x, y - 4 + Math.round(Math.sin(G.t * 5 + m.ph) * 2));
+      break;
+    case 'skel': ctx.drawImage(fl ? SPR.skelHit : SPR.skel, x, y - (Math.floor(G.t * 3 + m.ph) % 2)); break;
+    case 'beetle': {
+      const jit = m.state === 'charge' ? Math.round(Math.random() * 2 - 1) : 0;
+      ctx.drawImage((fl ? SPR.beetleHit : SPR.beetle)[m.dir], x + jit, y);
+      if (m.state === 'stun') for (let i = 0; i < 3; i++) {
+        const a = G.t * 6 + i * 2.1; P(ctx, x + 8 + Math.round(Math.cos(a) * 6), y + Math.round(Math.sin(a) * 2), C.y);
+      }
+      break;
+    }
+    case 'king': {
+      const sq = m.state === 'crouch' ? 3 : m.state === 'leap' ? 0 : (Math.sin(m.ph * .6) > .3 ? 1 : 0);
+      const lift = m.state === 'leap' ? Math.round(Math.sin(Math.max(0, Math.min(1, 1 - m.st / .55)) * Math.PI) * 10) : 0;
+      P(ctx, x + 6, y + 30, 'rgba(0,0,0,.3)', 20, 2);
+      ctx.drawImage(fl ? SPR.kingHit : SPR.king, 0, 0, 16, 16, x, y + sq * 2 - lift, 32, 32 - sq * 2);
+      const cy = y + 6 + sq * 2 - lift;
+      P(ctx, x + 9, cy, C.k, 14, 6); P(ctx, x + 10, cy + 1, C.o, 12, 4);
+      for (const px of [9, 15, 21]) { P(ctx, x + px, cy - 3, C.k, 3, 3); P(ctx, x + px + 1, cy - 2, C.o, 1, 2); }
+      P(ctx, x + 15, cy + 2, C.r, 2, 2);
+      if (m.state === 'sleep') {
+        const zy = y - 2 - (Math.floor(G.t * 2) % 3) * 2;
+        P(ctx, x + 26, zy, C.w, 3, 1); P(ctx, x + 27, zy + 1, C.w); P(ctx, x + 26, zy + 2, C.w, 3, 1);
+      }
+      break;
+    }
+  }
+}
+function drawShots(ox, oy) {
+  for (const s of shots) {
+    const x = Math.round(s.x - ox), y = Math.round(s.y - oy + HUD);
+    if (s.kind === 'arrow') {
+      if (s.vx) { const sg = Math.sign(s.vx); P(ctx, x - 4, y, C.b, 8, 1); P(ctx, x + sg * 4 - (sg < 0 ? 1 : 0), y - 1, C.G, 2, 3); P(ctx, x - sg * 5, y - 1, C.w, 1, 3); }
+      else { const sg = Math.sign(s.vy); P(ctx, x, y - 4, C.b, 1, 8); P(ctx, x - 1, y + sg * 4 - (sg < 0 ? 1 : 0), C.G, 3, 2); P(ctx, x - 1, y - sg * 5, C.w, 3, 1); }
+    } else {
+      const h = Math.floor(G.t * 12) % 2;
+      P(ctx, x - (h ? 3 : 1), y - (h ? 1 : 3), C.k, h ? 7 : 3, h ? 3 : 7);
+      P(ctx, x - (h ? 2 : 0), y - (h ? 0 : 2), C.w, h ? 5 : 1, h ? 1 : 5);
+    }
+  }
+}
+function drawBombs(ox, oy) {
+  for (const b of bombs) {
+    const x = Math.round(b.x - ox) - 4, y = Math.round(b.y - oy + HUD) - 5;
+    const blink = Math.floor(b.t * (b.t < .6 ? 12 : 4)) % 2;
+    P(ctx, x + 1, y + 9, 'rgba(0,0,0,.25)', 7, 1);
+    P(ctx, x + 1, y + 1, C.k, 7, 8); P(ctx, x, y + 2, C.k, 9, 6);
+    P(ctx, x + 1, y + 2, blink ? C.r : C.D, 7, 6); P(ctx, x + 2, y + 3, C.G, 2, 1);
+    P(ctx, x + 4, y - 1, C.b, 1, 2); P(ctx, x + 5, y - 2, blink ? C.y : C.o);
+  }
+  for (const b of blasts) {
+    const r = 6 + b.t * 70;
+    for (let i = 0; i < 28; i++) {
+      const a = i / 28 * Math.PI * 2;
+      P(ctx, Math.round(b.x - ox + Math.cos(a) * r), Math.round(b.y - oy + HUD + Math.sin(a) * r), i % 2 ? C.y : C.o, 2, 2);
+    }
   }
 }
 function drawShield(p, ox, oy) {
@@ -1219,9 +1609,10 @@ function render() {
   }
 
   // entities sorted by depth
-  const draw = ents.filter(e => !e.dead && e.x > camX - 24 && e.x < camX + VW + 8 && e.y > camY - 24 && e.y < camY + VH + 8);
+  drawBombs(camX, camY);
+  const draw = ents.filter(e => !e.dead && e.x > camX - 40 && e.x < camX + VW + 8 && e.y > camY - 40 && e.y < camY + VH + 8);
   draw.push({ kind: 'player', x: p.x, y: p.y });
-  draw.sort((a, b) => a.y - b.y);
+  draw.sort((a, b) => (a.y + (a.type === 'king' ? 16 : 0)) - (b.y + (b.type === 'king' ? 16 : 0)));
   for (const e of draw) {
     const x = Math.round(e.x - camX), y = Math.round(e.y - camY + HUD);
     switch (e.kind) {
@@ -1244,6 +1635,7 @@ function render() {
         }
         break;
       }
+      case 'mob': drawMob(e, x, y); break;
       case 'sign': drawSign(x, y); break;
       case 'deco': if (e.id === 'anvil') drawAnvil(x, y); else drawStall(x, y); break;
       case 'chest': drawChest(x, y, e.open); break;
@@ -1254,14 +1646,17 @@ function render() {
         ctx.drawImage(SPR.crystal, x, y - 1 + Math.round(Math.sin(t * 2.5) * 1.5));
         break;
       }
-      case 'slime': {
-        const squash = Math.sin(e.ph) > .3 ? 1 : 0;
-        ctx.drawImage(e.flash > 0 ? SPR.slimeHit : SPR.slime, 0, 0, 16, 16, x - squash * 0, y + squash, 16, 16 - squash);
-        break;
-      }
     }
   }
+  drawShots(camX, camY);
   for (const q of particles) P(ctx, Math.round(q.x - camX), Math.round(q.y - camY + HUD), q.col);
+  const king = ents.find(e => e.kind === 'mob' && e.type === 'king' && !e.dead && e.state !== 'sleep');
+  if (king && Math.hypot(king.x - p.x, king.y - p.y) < 200) {
+    P(ctx, 19, CH - 10, C.k, 122, 7); P(ctx, 20, CH - 9, C.D, 120, 5);
+    P(ctx, 20, CH - 9, C.p, Math.max(0, Math.round(120 * king.hp / king.maxHp)), 5);
+    P(ctx, 20, CH - 9, C.P, Math.max(0, Math.round(120 * king.hp / king.maxHp)), 1);
+    P(ctx, 12, CH - 11, C.k, 7, 7); P(ctx, 13, CH - 10, C.o, 5, 5); P(ctx, 14, CH - 11, C.k, 1, 2); P(ctx, 16, CH - 11, C.k, 1, 2);
+  }
 
   // HUD
   P(ctx, 0, 0, C.k, CW, HUD); P(ctx, 0, HUD - 1, '#2c2843', CW, 1);
@@ -1269,6 +1664,10 @@ function render() {
   if (G.buff.speed > 0) P(ctx, 4, 12, C.c, Math.max(1, Math.round(G.buff.speed / 20 * 30)), 2);
   if (G.buff.guard > 0) P(ctx, 38, 12, C.l, Math.max(1, Math.round(G.buff.guard / 15 * 30)), 2);
   ctx.drawImage(ICON[G.weapon], 76, 0);
+  if (G.weapon === 'bow' || G.weapon === 'bomb') {
+    const n = G.weapon === 'bow' ? G.ammo.arrows : G.ammo.bombs;
+    P(ctx, 84, 9, C.k, String(n).length * 4 + 1, 7); drawText(n, 85, 10, n ? C.w : C.r);
+  }
   const cx = CW - 64;
   ctx.drawImage(SPR.crystal, 3, 2, 10, 12, cx, 2, 10, 12);
   drawText(crystalCount() + '/5', cx + 11, 6, C.w);
@@ -1286,6 +1685,10 @@ function itemInfo(it) {
     const w = WEAPONS[it.id];
     return { icon: it.id, name: w.name, desc: w.desc + ' Урон ' + w.dmg + '.', price: it.price, label: G.weapons.includes(it.id) ? 'Есть' : null };
   }
+  if (it.kind === 'ammo') {
+    const n = G.ammo[it.ammo];
+    return { icon: it.icon, name: it.name, desc: it.desc + ' Есть: ' + n + '.' + (it.ammo === 'arrows' && !G.weapons.includes('bow') ? ' Сначала купи лук.' : ''), price: it.price, label: n >= AMMO_MAX[it.ammo] ? 'Полно' : null };
+  }
   if (it.kind === 'shield') return { icon: 'shield', name: it.name, desc: it.desc, price: it.price, label: G.shield ? 'Есть' : null };
   const lvl = G.up[it.id], max = it.prices.length;
   return {
@@ -1299,13 +1702,17 @@ function buy(it) {
   if (G.coins < info.price) { sfx.deny(); $('pNote').textContent = 'Не хватает монет: нужно ' + info.price + '.'; return; }
   G.coins -= info.price; sfx.buy();
   if (it.kind === 'potion') G.inv[it.id]++;
-  if (it.kind === 'weapon') { G.weapons.push(it.id); G.weapon = it.id; }
+  if (it.kind === 'weapon') { G.weapons.push(it.id); G.weapon = it.id; if (it.id === 'bow') G.ammo.arrows = Math.min(AMMO_MAX.arrows, G.ammo.arrows + 10); }
+  if (it.kind === 'ammo') {
+    G.ammo[it.ammo] = Math.min(AMMO_MAX[it.ammo], G.ammo[it.ammo] + it.qty);
+    if (it.ammo === 'bombs' && !G.weapons.includes('bomb')) G.weapons.push('bomb');
+  }
   if (it.kind === 'shield') G.shield = true;
   if (it.kind === 'up') {
     G.up[it.id]++;
     if (it.id === 'hp') { G.p.maxHp++; G.p.hp = G.p.maxHp; }
   }
-  $('pNote').textContent = 'Куплено: ' + info.name + (it.kind === 'weapon' ? '. Уже в руках.' : '.');
+  $('pNote').textContent = 'Куплено: ' + info.name + (it.id === 'bow' ? '. В руках, и 10 стрел в подарок.' : it.kind === 'weapon' ? '. Уже в руках.' : it.ammo === 'bombs' ? '. Выбери бомбы в сумке.' : '.');
   persist(); renderPanel();
 }
 function drink(id) {
@@ -1334,7 +1741,9 @@ function renderPanel() {
     html += '<div class="psec">Оружие</div>';
     for (const id of G.weapons) {
       const w = WEAPONS[id], cur = G.weapon === id;
-      html += rowHtml(id, w.name, w.desc + ' Урон ' + (w.dmg + G.up.dmg) + '.',
+      const dmg = id === 'bow' ? 1 + Math.floor(G.up.dmg / 2) : w.dmg + G.up.dmg;
+      const extra = id === 'bow' ? ' Стрел: ' + G.ammo.arrows + '.' : id === 'bomb' ? ' Осталось: ' + G.ammo.bombs + '.' : '';
+      html += rowHtml(id, w.name, w.desc + ' Урон ' + dmg + '.' + extra,
         '<button class="rbtn" type="button" data-equip="' + id + '"' + (cur ? ' disabled>В руках' : '>Взять') + '</button>', cur);
     }
     html += '<div class="psec">Зелья</div>';
@@ -1389,10 +1798,22 @@ function showTitle() {
   const has = !!loadSave();
   $('bPlay').textContent = has ? 'Продолжить' : 'Играть';
   $('bNew').hidden = !has; $('bNew').textContent = 'Новая игра'; $('bNew').dataset.arm = '';
-  $('title').hidden = false; $('win').hidden = true;
+  $('title').hidden = false; $('win').hidden = true; $('over').hidden = true;
+  $('titleBtns').hidden = false; $('diffBox').hidden = true;
+}
+function showDiff() {
+  G.state = 'title'; menuOpen = false;
+  $('title').hidden = false; $('win').hidden = true; $('over').hidden = true;
+  $('titleBtns').hidden = true; $('diffBox').hidden = false;
+}
+function fmtTime(t) { const s = Math.floor(t); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+function gameOver() {
+  G.state = 'over'; clearSave();
+  $('oTime').textContent = fmtTime(G.time); $('oCry').textContent = crystalCount() + '/5';
+  $('over').hidden = false;
 }
 function startPlay() {
-  $('title').hidden = true; $('win').hidden = true; menuOpen = false;
+  $('title').hidden = true; $('win').hidden = true; $('over').hidden = true; menuOpen = false;
   G.state = 'play';
   if (!G.talked) {
     G.talked = true;
@@ -1401,32 +1822,40 @@ function startPlay() {
 }
 function showWin() {
   G.state = 'win';
-  const s = Math.floor(G.time);
-  $('wTime').textContent = Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  $('wTime').textContent = fmtTime(G.time);
+  $('wDiff').textContent = 'конец · ' + DIFF[G.diff].name;
   $('wCoins').textContent = G.coins;
   $('win').hidden = false;
   burst(G.p.x + 8, G.p.y, C.P, 30);
 }
-function newGame() {
-  clearSave(); G = freshState(); spawnEntities(); persist();
+function newGame(diff) {
+  clearSave(); G = freshState(); G.diff = DIFF[diff] ? diff : 'normal';
+  G.p.maxHp = G.p.hp = DIFF[G.diff].hp;
+  resetWorld(); spawnEntities(); persist();
 }
 function toggleMenu() {
   if (panelKind) { closePanel(); return; }
   if (G.state === 'title') { if (menuOpen) startPlay(); return; }
-  if (G.state === 'win') return;
+  if (G.state === 'win' || G.state === 'over') return;
   persist(); menuOpen = true; showTitle();
 }
 $('bPlay').addEventListener('click', () => {
   unlockAudio();
-  if (G.won) newGame();
+  if (G.won || !loadSave()) { showDiff(); return; }
   startPlay();
 });
 $('bNew').addEventListener('click', () => {
   const b = $('bNew');
   if (!b.dataset.arm) { b.dataset.arm = '1'; b.textContent = 'Точно? Нажми ещё раз'; return; }
-  unlockAudio(); newGame(); startPlay();
+  unlockAudio(); showDiff();
 });
-$('bAgain').addEventListener('click', () => { unlockAudio(); newGame(); startPlay(); });
+$('bAgain').addEventListener('click', () => { unlockAudio(); showDiff(); });
+$('bRetry').addEventListener('click', () => { unlockAudio(); showDiff(); });
+$('diffBox').addEventListener('click', e => {
+  const b = e.target.closest('[data-diff]');
+  if (!b) return;
+  unlockAudio(); newGame(b.dataset.diff); startPlay();
+});
 $('bMenu').addEventListener('click', () => { unlockAudio(); toggleMenu(); });
 $('bSound').addEventListener('click', () => {
   muted = !muted; updateSoundLabel(); unlockAudio();
@@ -1438,10 +1867,9 @@ const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-mo
 
 // ---------- Boot ----------
 function start() {
-  world = buildWorld(); renderWorld();
   const s = loadSave();
   if (s) applySave(s); else G = freshState();
-  spawnEntities();
+  resetWorld(); spawnEntities();
   updateSoundLabel(); fit(); showTitle();
   let last = performance.now();
   function frame(now) {
