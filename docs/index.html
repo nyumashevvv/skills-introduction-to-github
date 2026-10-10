@@ -60,7 +60,7 @@ button:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
 canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges; image-rendering: pixelated; }
 
 /* D-pad: one touch zone, direction comes from where the finger is */
-.dpad { grid-area: dpad; justify-self: start; display: grid; grid-template-columns: repeat(3, 46px); grid-template-rows: repeat(3, 46px); touch-action: none; }
+.dpad { grid-area: dpad; justify-self: start; display: grid; grid-template-columns: repeat(3, calc(46px * var(--ctl, 1))); grid-template-rows: repeat(3, calc(46px * var(--ctl, 1))); touch-action: none; }
 .dpad span { background: var(--shell-hi); box-shadow: inset 0 -4px 0 var(--shell-lo); display: grid; place-items: center; color: var(--muted); font-size: 13px; }
 .dpad .u { grid-area: 1 / 2; border-radius: 8px 8px 0 0; }
 .dpad .l { grid-area: 2 / 1; border-radius: 8px 0 0 8px; }
@@ -73,7 +73,7 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
 .ab .slot { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .ab .slot.b { margin-top: 38px; }
 .btn {
-  width: 66px; height: 66px; border-radius: 50%; border: 0; touch-action: none;
+  width: calc(66px * var(--ctl, 1)); height: calc(66px * var(--ctl, 1)); border-radius: 50%; border: 0; touch-action: none;
   font-weight: 700; font-size: 24px; color: var(--cream); background: var(--btn-a);
   box-shadow: inset 0 -5px 0 rgba(0, 0, 0, .3), 0 3px 0 var(--shell-lo);
 }
@@ -100,7 +100,18 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
 .xpbar { height: calc(var(--px) * 3px); background: #2c2843; margin-top: .3em; }
 .xpbar i { display: block; height: 100%; background: var(--gold); }
 
+.app.lefty { grid-template-areas: "screen screen" "ab dpad" "bar bar"; }
+.app.lefty .dpad { justify-self: end; }
+.app.lefty .ab { justify-self: start; flex-direction: row-reverse; }
+.cap {
+  position: absolute; left: 4%; right: 4%; bottom: 3%; background: rgba(14, 13, 23, .88);
+  border: calc(var(--px) * 1px) solid var(--cream); padding: .55em .8em .5em; font-size: 1.1em; line-height: 1.3;
+}
+.cap .skip { display: block; margin-left: auto; margin-top: .3em; font-size: .8em; color: var(--muted); background: none; border: 0; padding: .2em 0; }
+.setrow { display: flex; align-items: center; gap: .4em; }
+.setrow .rbtn { min-width: 2.2em; }
 @media (orientation: landscape) and (max-height: 560px) {
+  .app.lefty { grid-template-areas: "ab screen dpad" "bar screen dpad"; }
   .app {
     max-width: none; grid-template-columns: auto minmax(0, 1fr) auto;
     grid-template-rows: minmax(0, 1fr) auto;
@@ -184,6 +195,7 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
       <div class="screen" id="screen">
         <canvas id="game" aria-label="Игровой экран"></canvas>
         <div class="toast" id="toast" hidden></div>
+        <div class="cap" id="cap" hidden><div id="capText"></div><button class="skip" id="capSkip" type="button">Пропустить ›</button></div>
         <div class="dialog" id="dialog" hidden>
           <div class="dname" id="dname"></div>
           <div class="dtext" id="dtext"></div>
@@ -203,7 +215,9 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
             <div class="mrow" id="titleBtns">
               <button class="mbtn" id="bPlay" type="button">Играть</button>
               <button class="mbtn ghost" id="bNew" type="button" hidden>Новая игра</button>
+              <button class="mbtn ghost" id="bSlots" type="button">Сохранения</button>
               <button class="mbtn ghost" id="bAch" type="button">Достижения</button>
+              <button class="mbtn ghost" id="bSet" type="button">Настройки</button>
             </div>
             <div class="card" id="diffBox" hidden>
               <div class="eyebrow">выбери сложность</div>
@@ -214,6 +228,7 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
               </div>
               <p class="help">Лёгкая: 7 сердец, враги медленнее. Хардкор: одна жизнь, враги быстрее, босс крепче.</p>
             </div>
+            <p class="help" id="slotInfo"></p>
             <p class="help rec" id="records" hidden></p>
             <p class="help">Крестовина: ходить. A: говорить и бить, держать A: круговой удар. B: бег, двойное B: рывок, держать B на месте: щит.<br>На компьютере: стрелки, Z, X, I (сумка) и M (карта).</p>
           </div>
@@ -801,6 +816,14 @@ ICON.fish = mkDraw(c => {
   P(c, 3, 6, C.k, 9, 5); P(c, 2, 7, C.k, 11, 3); P(c, 12, 5, C.k, 3, 7);
   P(c, 3, 7, C.c, 9, 3); P(c, 4, 6, C.c, 7, 1); P(c, 13, 6, C.u, 1, 5); P(c, 5, 7, C.k); P(c, 6, 9, C.u, 5, 1);
 });
+ICON.armor = mkDraw(c => {
+  P(c, 3, 3, C.k, 10, 11); P(c, 1, 4, C.k, 3, 5); P(c, 12, 4, C.k, 3, 5);
+  P(c, 4, 4, C.b, 8, 9); P(c, 2, 5, C.b, 1, 3); P(c, 13, 5, C.b, 1, 3); P(c, 6, 3, C.k, 4, 2); P(c, 7, 6, C.B, 2, 6); P(c, 4, 4, C.t, 2, 3);
+});
+ICON.ring = mkDraw(c => {
+  for (let y = 0; y < 16; y++) for (let x = 0; x < 16; x++) { const d = Math.hypot(x - 7.5, y - 9); if (d < 5 && d > 2.6) P(c, x, y, d > 4.1 || d < 3.4 ? C.k : C.o); }
+  P(c, 6, 1, C.k, 4, 4); P(c, 7, 2, C.c, 2, 2);
+});
 const ICON_URL = {};
 for (const k in ICON) ICON_URL[k] = ICON[k].toDataURL();
 
@@ -1193,6 +1216,14 @@ const WEAPONS = {
   rod: { name: 'Удочка', desc: 'Встань у воды и нажми A.', dmg: 0, cd: .5, swing: .2 },
   bomb: { name: 'Бомбы', desc: 'Взрыв через 1,5 секунды ломает треснувшие камни. Отойди подальше!', dmg: 3, cd: .5, swing: .15 },
 };
+const GEAR = {
+  leather: { slot: 'armor', name: 'Кожаная куртка', desc: 'Каждый шестой удар не ранит.' },
+  mail: { slot: 'armor', name: 'Кольчужная рубаха', desc: 'Каждый четвёртый удар не ранит, но ходишь чуть медленнее.' },
+  fur: { slot: 'armor', name: 'Шуба Ефима', desc: 'Метель не замедляет, а лёд и снег чаще не ранят.' },
+  ring_gold: { slot: 'ring', name: 'Кольцо жадности', desc: 'Из врагов выпадает больше монет.' },
+  ring_light: { slot: 'ring', name: 'Кольцо света', desc: 'Светит в темноте не хуже фонаря.' },
+  ring_life: { slot: 'ring', name: 'Кольцо жизни', desc: 'Восстанавливает сердце раз в 45 секунд.' },
+};
 const ammoMax = a => (G.bigBag ? { arrows: 50, bombs: 15 } : { arrows: 30, bombs: 9 })[a];
 const hasPerk = id => G.perks.includes(id);
 // bonus damage from smith upgrades, the ore quest, levels and the blade perk
@@ -1412,6 +1443,9 @@ const SHOPS = {
       { id: 'bow', kind: 'weapon', price: 50 },
       { id: 'house', kind: 'gear', flag: 'house', price: 150, icon: 'home', name: 'Дом у площади', desc: 'Свой дом: кровать, мебель и трофеи с боссов.' },
       { id: 'lantern', kind: 'gear', flag: 'lantern', price: 60, icon: 'lantern', name: 'Фонарь', desc: 'Освещает тёмную пещеру и ночные тропы.' },
+      { id: 'leather', kind: 'equip', price: 60 },
+      { id: 'ring_gold', kind: 'equip', price: 90 },
+      { id: 'ring_light', kind: 'equip', price: 100 },
       { id: 'shield', kind: 'shield', price: 45, name: 'Щит', desc: 'Держи B, стоя на месте: блокирует удары спереди.' },
     ],
   },
@@ -1420,6 +1454,7 @@ const SHOPS = {
       { id: 'dmg', kind: 'up', icon: 'sword', name: 'Заточка', desc: '+1 к урону любого оружия.', prices: [30, 70, 120] },
       { id: 'hp', kind: 'up', icon: 'heart', name: 'Кольчуга', desc: '+1 сердце к здоровью.', prices: [40, 90] },
       { id: 'reach', kind: 'up', icon: 'spear', name: 'Длинная рукоять', desc: 'Любое оружие бьёт дальше.', prices: [60] },
+      { id: 'mail', kind: 'equip', price: 140 },
       { id: 'bed', kind: 'furn', price: 40, name: 'Кровать', desc: 'Поспать до утра и восстановить здоровье.' },
       { id: 'fire', kind: 'furn', price: 60, name: 'Камин', desc: 'Тепло и уют.' },
       { id: 'books', kind: 'furn', price: 50, name: 'Книжный шкаф', desc: 'Сказки и записки о крае.' },
@@ -1428,6 +1463,7 @@ const SHOPS = {
       { id: 'plant', kind: 'furn', price: 15, name: 'Цветок в горшке', desc: 'Растёт, даже когда тебя нет.' },
     ],
   },
+  efim: { title: 'Хижина Ефима', items: [{ id: 'fur', kind: 'equip', price: 80 }] },
   tikhon: {
     title: 'Лодка Тихона', items: [
       { id: 'rod', kind: 'weapon', price: 20 },
@@ -1457,6 +1493,16 @@ function fit() {
 window.addEventListener('resize', fit);
 
 // ---------- Audio ----------
+const SET = { music: .8, sfx: 1, ctl: 1, lefty: false, lang: 'ru' };
+try { Object.assign(SET, JSON.parse(localStorage.getItem('lv_settings') || '{}')); } catch (e) {}
+function saveSettings() { try { localStorage.setItem('lv_settings', JSON.stringify(SET)); } catch (e) {} applySettings(); }
+function applySettings() {
+  const app = document.getElementById('app');
+  app.style.setProperty('--ctl', SET.ctl);
+  app.classList.toggle('lefty', !!SET.lefty);
+  if (mgain) mgain.gain.value = SET.music;
+  if (typeof fit === 'function') fit();
+}
 let actx = null, muted = false, audioMode = 'all', mgain = null;
 try { audioMode = localStorage.getItem('lv_audio') || (localStorage.getItem('lv_muted') === '1' ? 'off' : 'all'); } catch (e) {}
 if (!['all', 'sfx', 'off'].includes(audioMode)) audioMode = 'all';
@@ -1469,7 +1515,8 @@ function tone(f1, f2, dur, type = 'square', vol = .05, delay = 0) {
   if (muted || !actx) return;
   const t = actx.currentTime + delay, o = actx.createOscillator(), g = actx.createGain();
   o.type = type; o.frequency.setValueAtTime(f1, t); o.frequency.exponentialRampToValueAtTime(f2, t + dur);
-  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+  if (SET.sfx <= 0) return;
+  g.gain.setValueAtTime(vol * SET.sfx, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
   o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur + .02);
 }
 const sfx = {
@@ -1565,7 +1612,7 @@ function setTrack(name) {
 }
 function musicTick() {
   if (!actx || audioMode !== 'all' || !music.cur || actx.state !== 'running') return;
-  if (!mgain) { mgain = actx.createGain(); mgain.gain.value = .9; mgain.connect(actx.destination); }
+  if (!mgain) { mgain = actx.createGain(); mgain.gain.value = SET.music; mgain.connect(actx.destination); }
   const tr = TRACKS[music.cur], st = 60 / tr.bpm / 2;
   if (music.next < actx.currentTime - .5) music.next = actx.currentTime + .05;
   while (music.next < actx.currentTime + .25) {
@@ -1675,7 +1722,7 @@ function freshState() {
     lvl: 1, xp: 0, perks: [], pendingPerks: 0, perkOffer: [], stats: { kills: 0, nightKills: 0, dashes: 0, deaths: 0, elites: 0 },
     ways: [], amulet: false, regenT: 0, weather: { type: 'clear', t: 50 },
     stormDone: false, postTold: false, dfloor: 0,
-    fish: {}, hook: false, house: false, furn: [], arenaBest: 0, arena: null, fishing: null, fedyaI: 0,
+    fish: {}, hook: false, house: false, furn: [], equip: [], armor: null, ring: null, arenaBest: 0, arena: null, fishing: null, fedyaI: 0,
     seen: new Uint8Array(W * H), hitstop: 0, flash: 0,
   };
 }
@@ -1734,13 +1781,29 @@ function makeSave() {
   return {
     v: 1, x: G.p.x, y: G.p.y, hp: G.p.hp, maxHp: G.p.maxHp, coins: G.coins, taken: [...G.taken], talked: G.talked, won: G.won, time: G.time, dir: G.p.dir,
     inv: G.inv, weapons: G.weapons, weapon: G.weapon, shield: G.shield, up: G.up, met: G.met, ammo: G.ammo, diff: G.diff, lvl: G.lvl, xp: G.xp, perks: G.perks, pendingPerks: G.pendingPerks, stats: G.stats, ways: G.ways, amulet: G.amulet, stormDone: G.stormDone, postTold: G.postTold,
-    fish: G.fish, hook: G.hook, house: G.house, furn: G.furn, arenaBest: G.arenaBest,
+    fish: G.fish, hook: G.hook, house: G.house, furn: G.furn, arenaBest: G.arenaBest, equip: G.equip, armor: G.armor, ring: G.ring,
     lantern: G.lantern, levers: G.levers, clock: G.clock, q: G.q, bigBag: G.bigBag, temper: G.temper, seen: packSeen(G.seen),
   };
 }
-function persist() { try { localStorage.setItem('lv_save', JSON.stringify(makeSave())); } catch (e) {} }
-function loadSave() { try { const s = JSON.parse(localStorage.getItem('lv_save') || 'null'); return s && s.v === 1 ? s : null; } catch (e) { return null; } }
-function clearSave() { try { localStorage.removeItem('lv_save'); } catch (e) {} }
+let SLOT = 1;
+try { SLOT = Math.min(3, Math.max(1, +localStorage.getItem('lv_slot') || 1)); } catch (e) {}
+const slotKey = n => n === 1 ? 'lv_save' : 'lv_save_' + n;
+function readSlot(n) { try { const s = JSON.parse(localStorage.getItem(slotKey(n)) || 'null'); return s && s.v === 1 ? s : null; } catch (e) { return null; } }
+function persist() { try { localStorage.setItem(slotKey(SLOT), JSON.stringify(makeSave())); } catch (e) {} }
+function loadSave() { return readSlot(SLOT); }
+function clearSave() { try { localStorage.removeItem(slotKey(SLOT)); } catch (e) {} }
+function slotSummary(s) {
+  if (!s) return 'Пусто.';
+  const cr = (s.taken || []).filter(id => /^cr\d$/.test(id)).length;
+  return 'Кристаллы ' + cr + '/' + TOTAL + ', уровень ' + (s.lvl || 1) + ', ' + fmtTime(s.time || 0) + ', ' + DIFF[s.diff || 'normal'].name + (s.stormDone ? ', буря побеждена' : s.won ? ', Листвянка спасена' : '') + '.';
+}
+function selectSlot(n) {
+  SLOT = n; try { localStorage.setItem('lv_slot', n); } catch (e) {}
+  const sv = loadSave();
+  if (sv) applySave(sv); else G = freshState();
+  resetWorld(); spawnEntities();
+  panelKind = null; $('panel').hidden = true; showTitle();
+}
 function applySave(s) {
   G = freshState();
   Object.assign(G.p, { x: s.x, y: s.y, hp: s.hp, maxHp: s.maxHp, dir: s.dir || 'down' });
@@ -1762,6 +1825,8 @@ function applySave(s) {
   if (typeof s.seen === 'string') unpackSeen(s.seen, G.seen);
   Object.assign(G.fish, s.fish || {}); G.hook = !!s.hook; G.house = !!s.house; G.arenaBest = +s.arenaBest || 0;
   if (Array.isArray(s.furn)) G.furn = s.furn.slice();
+  if (Array.isArray(s.equip)) G.equip = s.equip.filter(id => GEAR[id]);
+  G.armor = G.equip.includes(s.armor) ? s.armor : null; G.ring = G.equip.includes(s.ring) ? s.ring : null;
   if (zoneAt(Math.floor((G.p.x + 8) / TS), Math.floor((G.p.y + 12) / TS)) === 'arena') { G.p.x = 16 * TS; G.p.y = 20 * TS - 4; }
   G.stormDone = !!s.stormDone; G.postTold = !!s.postTold;
   // dungeons are not saved: wake up at its entrance
@@ -1840,6 +1905,7 @@ function handleA() {
   if (G.state === 'title') { if ($('diffBox').hidden) $('bPlay').click(); return; }
   if (G.state === 'over') { $('bRetry').click(); return; }
   if (G.state === 'win') { $('bCont').click(); return; }
+  if (G.state === 'scene') { nextFrame(); return; }
   if (G.state !== 'play' || menuOpen || panelKind) return;
   const p = G.p;
   const f = FACE[p.dir];
@@ -1889,7 +1955,7 @@ function interact(e) {
   if (e.id === 'miron') {
     const n = crystalCount();
     if (G.won) { G.postTold = true; say(e.name, G.stormDone ? TEXT.postDone : TEXT.post); persist(); return; }
-    if (n >= TOTAL) { say(e.name, TEXT.win, () => { G.won = true; persist(); showWin(); }); sfx.win(); return; }
+    if (n >= TOTAL) { say(e.name, TEXT.win, () => { G.won = true; persist(); playScene('finale', showWin); }); sfx.win(); return; }
     if (!G.talked) { G.talked = true; say(e.name, TEXT.intro); persist(); return; }
     const missing = ['cr1', 'cr2', 'cr3', 'cr4', 'cr5', 'cr6', 'cr7', 'cr8'].find(id => !G.taken.has(id));
     say(e.name, [(isNight() ? TEXT.night.miron + ' ' : '') + 'Кристаллов у тебя: ' + n + ' из ' + TOTAL + '.', TEXT.hints[missing]]);
@@ -1911,7 +1977,7 @@ function interact(e) {
   }
   if (e.id === 'efim' || e.id === 'tikhon') {
     const lines = TEXT[e.id], first = !G.met[e.id];
-    const after = e.id === 'tikhon' ? () => openPanel('tikhon') : undefined;
+    const after = () => openPanel(e.id);
     if (!first && questTalk(e, after)) return;
     G.met[e.id] = true;
     say(e.name, first ? lines.slice(0, 2) : lines[1 + ((Math.random() * (lines.length - 1)) | 0)], after);
@@ -2113,7 +2179,8 @@ function updateArena(dt) {
   }
   A.entered = true;
   if (ents.some(e => e.ar && e.kind === 'mob' && !e.dead)) return;
-  if (A.wave > 0 && !A.paid) { A.paid = true; G.coins += 4 * A.wave; toast('Волна ' + A.wave + ' пройдена! +' + 4 * A.wave + ' мон.'); if (A.wave >= 10) unlock('arena10'); if (A.wave > G.arenaBest) G.arenaBest = A.wave; }
+  if (A.wave > 0 && !A.paid) { A.paid = true; G.coins += 4 * A.wave; toast('Волна ' + A.wave + ' пройдена! +' + 4 * A.wave + ' мон.'); if (A.wave >= 10) unlock('arena10');
+    if (A.wave >= 8 && !G.equip.includes('ring_life')) { G.equip.push('ring_life'); if (!G.ring) G.ring = 'ring_life'; toast('Гордей вручил тебе Кольцо жизни!'); } if (A.wave > G.arenaBest) G.arenaBest = A.wave; }
   A.t -= dt; if (A.t > 0) return;
   A.wave++; A.t = 3; A.paid = false;
   const n = 2 + A.wave, pool = ARENA_POOL.slice(0, Math.min(ARENA_POOL.length, 2 + A.wave));
@@ -2365,7 +2432,7 @@ function updateMob(m, dt, p) {
       } else if (m.state === 'raise') {
         if (m.st <= 0) {
           m.state = 'walk'; m.st = (1.2 + Math.random() * .6) / k; G.shake = .3; sfx.land();
-          waves.push({ x: c.x, y: c.y + 6, r: 6, hit: false }); burst(c.x, c.y + 10, C.S, 14);
+          waves.push({ x: c.x, y: c.y + 6, r: 6, hit: false, cold: true }); burst(c.x, c.y + 10, C.S, 14);
         }
       } else if (m.state === 'wind' && m.st <= 0) {
         m.state = 'walk'; m.st = (1.4 + Math.random() * .6) / k; sfx.throw();
@@ -2569,6 +2636,7 @@ function killMob(m) {
   const r = Math.random(), luck = m.type === 'mini' ? .4 : 1;
   if (r < .1 * luck) for (let i = 0; i < 3; i++) ents.push({ kind: 'coin', id: null, x: c.x - 8 + (i - 1) * 7, y: c.y - 10 + (i % 2) * 4 });
   else if (r < .55 * luck) ents.push({ kind: 'coin', id: null, x: c.x - 8, y: c.y - 10 });
+  if (G.ring === 'ring_gold' && Math.random() < .5) ents.push({ kind: 'coin', id: null, x: c.x - 4, y: c.y - 6 });
   else if (r < (hasPerk('lucky') ? .71 : .63) * luck) ents.push({ kind: 'heart', x: c.x - 8, y: c.y - 10, ttl: 12 });
 }
 function updateShots(dt, p) {
@@ -2577,7 +2645,7 @@ function updateShots(dt, p) {
     const t = tileAt(Math.floor(s.x / TS), Math.floor(s.y / TS));
     if (SOLID.has(t) && t !== WATER) { s.life = 0; burst(s.x, s.y, s.kind === 'arrow' ? C.b : s.kind === 'orb' ? C.P : C.w, 3); continue; }
     if (s.enemy) {
-      if (overlap(s.x - 2, s.y - 2, 4, 4, p.x + PHB.x, p.y + PHB.y - 4, PHB.w, PHB.h + 4)) { s.life = 0; hurt({ x: s.x - 8, y: s.y - 10 }); }
+      if (overlap(s.x - 2, s.y - 2, 4, 4, p.x + PHB.x, p.y + PHB.y - 4, PHB.w, PHB.h + 4)) { s.life = 0; hurt({ x: s.x - 8, y: s.y - 10, cold: s.kind === 'ice' || s.kind === 'snow' }); }
       continue;
     }
     for (const m of ents) {
@@ -2630,6 +2698,11 @@ function hurt(from) {
     if (from.kx !== undefined) { from.kx = -dx / d * 170; from.ky = -dy / d * 170; }
     p.kx = dx / d * 60; p.ky = dy / d * 60; p.inv = .25; sfx.block();
     burst(p.x + 8 + f[0] * 9, p.y + 10 + f[1] * 8, C.w, 5);
+    return;
+  }
+  const absorb = G.armor === 'leather' ? 1 / 6 : G.armor === 'mail' ? .25 : G.armor === 'fur' && from.cold ? .6 : 0;
+  if (absorb && Math.random() < absorb) {
+    p.inv = .35; sfx.block(); burst(p.x + 8, p.y + 8, C.G, 6);
     return;
   }
   if (G.buff.guard > 0) {
@@ -2693,7 +2766,7 @@ function update(dt) {
   updateArena(dt);
   const run = input.tb || input.kb;
   const charging = (p.charge || 0) > .1, wh = weatherHere();
-  const sp = (run ? 80 : 52) * (G.buff.speed > 0 ? 1.45 : 1) * (hasPerk('swift') ? 1.12 : 1) * (charging ? .55 : 1) * (wh === 'blizzard' ? .85 : 1), len = Math.hypot(ix, iy) || 1;
+  const sp = (run ? 80 : 52) * (G.buff.speed > 0 ? 1.45 : 1) * (hasPerk('swift') ? 1.12 : 1) * (charging ? .55 : 1) * (wh === 'blizzard' && G.armor !== 'fur' ? .85 : 1) * (G.armor === 'mail' ? .95 : 1), len = Math.hypot(ix, iy) || 1;
   let vx = ix / len * sp, vy = iy / len * sp;
   if (p.swing > 0) { vx *= .35; vy *= .35; }
   if (ix || iy) {
@@ -2830,10 +2903,11 @@ function update(dt) {
   if (G.achT > 1) { G.achT = 0; checkAch(); }
   if (G.pendingPerks > 0 && !dlg && !panelKind) offerPerks();
   updateWeather(dt);
-  if (G.amulet && p.hp < p.maxHp) { G.regenT += dt; if (G.regenT >= 30) { G.regenT = 0; p.hp++; burst(p.x + 8, p.y + 6, C.c, 8); } } else G.regenT = 0;
+  const regen = (G.amulet ? 1 / 30 : 0) + (G.ring === 'ring_life' ? 1 / 45 : 0);
+  if (regen && p.hp < p.maxHp) { G.regenT += dt * regen; if (G.regenT >= 1) { G.regenT = 0; p.hp++; burst(p.x + 8, p.y + 6, C.c, 8); } } else G.regenT = 0;
   {
     const cx = Math.floor((p.x + 8) / TS), cy = Math.floor((p.y + 12) / TS);
-    const r = (G.zone === 'cave' || G.zone === 'dungeon' ? (G.lantern ? 4 : 2) : 6) + (hasPerk('owl') ? 1 : 0);
+    const r = (G.zone === 'cave' || G.zone === 'dungeon' ? (G.lantern || G.ring === 'ring_light' ? 4 : 2) : 6) + (hasPerk('owl') ? 1 : 0);
     for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++)
       if (x >= 0 && y >= 0 && x < W && y < H && (x - cx) * (x - cx) + (y - cy) * (y - cy) <= r * r + 1) G.seen[y * W + x] = 1;
   }
@@ -2842,7 +2916,7 @@ function update(dt) {
   updateShots(dt, p);
   for (const w of waves) {
     w.r += 95 * dt;
-    if (!w.hit && !(p.dash > 0) && Math.abs(Math.hypot(p.x + 8 - w.x, p.y + 12 - w.y) - w.r) < 6) { w.hit = true; hurt({ x: w.x - 8, y: w.y - 10 }); }
+    if (!w.hit && !(p.dash > 0) && Math.abs(Math.hypot(p.x + 8 - w.x, p.y + 12 - w.y) - w.r) < 6) { w.hit = true; hurt({ x: w.x - 8, y: w.y - 10, cold: w.cold }); }
   }
   waves = waves.filter(w => w.r < (w.max || 62));
   for (const st of strikes) {
@@ -3211,7 +3285,7 @@ function drawLighting(camX, camY) {
   sctx.fillStyle = inCave ? 'rgb(6,5,12)' : 'rgb(14,16,44)';
   sctx.globalAlpha = dark; sctx.fillRect(0, 0, VW, VH);
   sctx.globalCompositeOperation = 'destination-out';
-  const lights = [[p.x + 8 - camX, p.y + 9 - camY, (inCave ? (G.lantern ? 60 : 16) : (G.lantern ? 58 : 34)) + (hasPerk('owl') ? 18 : 0)]];
+  const lights = [[p.x + 8 - camX, p.y + 9 - camY, (inCave ? (G.lantern || G.ring === 'ring_light' ? 60 : 16) : (G.lantern ? 58 : 34)) + (hasPerk('owl') ? 18 : 0)]];
   for (const e of ents) if (e.kind === 'deco' && (e.id === 'torch' || e.id === 'lamp')) lights.push([e.x + 8 - camX, e.y + 2 - camY, e.id === 'torch' ? 40 : 46]);
   for (const e of ents) if (e.kind === 'way' && G.ways.includes(e.id)) lights.push([e.x + 8 - camX, e.y + 6 - camY, 30]);
   for (const b of blasts) lights.push([b.x - camX, b.y - camY, 50]);
@@ -3239,6 +3313,7 @@ function layerOf(px, py) {
   return px / TS < 44 ? [0, OVER_H, 44, H - OVER_H] : [DG.x, DG.y, DG.w, DG.h];
 }
 function render() {
+  if (scene) { scene.t += 1 / 60; scene.frames[scene.i].draw(scene.t); return; }
   const p = G.p;
   const [lx, ly, lw, lh] = layerOf(p.x + 8, p.y + 12);
   let camX = Math.round(Math.min(Math.max(p.x + 8 - VW / 2, lx * TS), (lx + lw) * TS - VW));
@@ -3407,6 +3482,7 @@ function itemInfo(it) {
     return { icon: it.icon, name: it.name, desc: it.desc + ' Есть: ' + n + '.' + (it.ammo === 'arrows' && !G.weapons.includes('bow') ? ' Сначала купи лук.' : ''), price: it.price, label: n >= ammoMax(it.ammo) ? 'Полно' : null };
   }
   if (it.kind === 'gear') return { icon: it.icon, name: it.name, desc: it.desc, price: it.price, label: G[it.flag] ? 'Есть' : null };
+  if (it.kind === 'equip') return { icon: GEAR[it.id].slot, name: GEAR[it.id].name, desc: GEAR[it.id].desc, price: it.price, label: G.equip.includes(it.id) ? 'Есть' : null };
   if (it.kind === 'furn') return { icon: 'home', name: it.name, desc: it.desc, price: it.price, label: !G.house ? 'Нужен дом' : G.furn.includes(it.id) ? 'Есть' : null };
   if (it.kind === 'shield') return { icon: 'shield', name: it.name, desc: it.desc, price: it.price, label: G.shield ? 'Есть' : null };
   const lvl = G.up[it.id], max = it.prices.length;
@@ -3429,6 +3505,7 @@ function buy(it) {
   if (it.kind === 'shield') G.shield = true;
   if (it.kind === 'gear') G[it.flag] = true;
   if (it.kind === 'furn') { G.furn.push(it.id); refreshHome(); }
+  if (it.kind === 'equip') { G.equip.push(it.id); const sl = GEAR[it.id].slot; if (!G[sl]) G[sl] = it.id; }
   if (it.id === 'house') refreshHome();
   if (it.kind === 'up') {
     G.up[it.id]++;
@@ -3472,6 +3549,29 @@ function renderPanel() {
     $('pNote').textContent = 'Выбери одно умение.';
     list.innerHTML = G.perkOffer.map(id => rowHtml(PERKS[id].icon, PERKS[id].name, PERKS[id].desc,
       '<button class="rbtn" type="button" data-perk="' + id + '">Взять</button>')).join('');
+    return;
+  }
+  if (panelKind === 'slots') {
+    $('pTitle').textContent = 'Сохранения'; $('pMeta').textContent = 'Слот ' + SLOT;
+    $('pNote').textContent = 'Три отдельные игры. Прогресс сохраняется сам.';
+    list.innerHTML = [1, 2, 3].map(n => rowHtml('home', 'Слот ' + n, slotSummary(readSlot(n)),
+      '<div class="setrow"><button class="rbtn" type="button" data-slot="' + n + '"' + (n === SLOT ? ' disabled>Текущий' : '>Выбрать') + '</button>' +
+      (readSlot(n) ? '<button class="rbtn" type="button" data-erase="' + n + '">Стереть</button>' : '') + '</div>', n === SLOT)).join('');
+    return;
+  }
+  if (panelKind === 'settings') {
+    $('pTitle').textContent = 'Настройки'; $('pMeta').textContent = '';
+    $('pNote').textContent = '';
+    const pct = v => Math.round(v * 100) + '%';
+    const two = (a, la, b, lb) => '<div class="setrow"><button class="rbtn" type="button" data-set="' + a + '">' + la + '</button><button class="rbtn" type="button" data-set="' + b + '">' + lb + '</button></div>';
+    list.innerHTML =
+      rowHtml('star', 'Музыка', 'Громкость: ' + pct(SET.music), two('music-', '−', 'music+', '+')) +
+      rowHtml('star', 'Звуки', 'Громкость: ' + pct(SET.sfx), two('sfx-', '−', 'sfx+', '+')) +
+      rowHtml('star', 'Размер кнопок', SET.ctl < 1 ? 'Мелкие' : SET.ctl > 1 ? 'Крупные' : 'Обычные', two('ctl-', '−', 'ctl+', '+')) +
+      rowHtml('star', 'Режим для левши', SET.lefty ? 'Кнопки A и B слева, крестовина справа.' : 'Крестовина слева, кнопки A и B справа.',
+        '<button class="rbtn" type="button" data-set="lefty">' + (SET.lefty ? 'Выкл.' : 'Вкл.') + '</button>') +
+      rowHtml('star', 'Язык / Language', SET.lang === 'en' ? 'English' : 'Русский',
+        '<button class="rbtn" type="button" data-set="lang">' + (SET.lang === 'en' ? 'Русский' : 'English') + '</button>');
     return;
   }
   if (panelKind === 'travel') {
@@ -3523,6 +3623,11 @@ function renderPanel() {
     if (G.hook) { gear++; html += rowHtml('hook', 'Крючок удачи', 'Рыба клюёт быстрее.'); }
     if (G.temper) { gear++; html += rowHtml('sword', 'Закалка', '+1 к урону от кузнеца Гордея.'); }
     if (G.bigBag) { gear++; html += rowHtml('bomb', 'Большая сумка', 'До 50 стрел и 15 бомб.'); }
+    const owned = Object.keys(GEAR).filter(id => G.equip.includes(id));
+    if (owned.length) html += '<div class="psec">Одежда и кольца</div>' + owned.map(id => {
+      const on = G[GEAR[id].slot] === id;
+      return rowHtml(GEAR[id].slot, GEAR[id].name, GEAR[id].desc, '<button class="rbtn" type="button" data-wear="' + id + '">' + (on ? 'Снять' : 'Надеть') + '</button>', on);
+    }).join('');
     if (G.lantern) { gear++; html += rowHtml('lantern', 'Фонарь', 'Освещает пещеру и ночные тропы.'); }
     if (G.shield) { gear++; html += rowHtml('shield', 'Щит', 'Держи B, стоя на месте: блокирует удары спереди.'); }
     if (G.up.dmg) { gear++; html += rowHtml('sword', 'Заточка ' + ROMAN[G.up.dmg - 1], '+' + G.up.dmg + ' к урону любого оружия.'); }
@@ -3624,6 +3729,18 @@ function closePanel() {
   panelKind = null; $('panel').hidden = true;
   if (G.state === 'play') persist();
 }
+function changeSetting(k) {
+  const clamp = v => Math.round(Math.min(1, Math.max(0, v)) * 10) / 10;
+  if (k === 'music-') SET.music = clamp(SET.music - .2);
+  if (k === 'music+') SET.music = clamp(SET.music + .2);
+  if (k === 'sfx-') SET.sfx = clamp(SET.sfx - .2);
+  if (k === 'sfx+') SET.sfx = clamp(SET.sfx + .2);
+  if (k === 'ctl-') SET.ctl = Math.max(.85, Math.round((SET.ctl - .15) * 100) / 100);
+  if (k === 'ctl+') SET.ctl = Math.min(1.3, Math.round((SET.ctl + .15) * 100) / 100);
+  if (k === 'lefty') SET.lefty = !SET.lefty;
+  if (k === 'lang') { SET.lang = SET.lang === 'en' ? 'ru' : 'en'; saveSettings(); if (G.state === 'play') persist(); location.reload(); return; }
+  saveSettings(); sfx.blip(); renderPanel();
+}
 function toggleMap() {
   if (panelKind === 'map') { closePanel(); return; }
   if (panelKind || dlg || G.state !== 'play' || menuOpen) return;
@@ -3644,9 +3761,20 @@ $('pList').addEventListener('click', e => {
   if (b.dataset.perk) takePerk(b.dataset.perk);
   if (b.dataset.way) travelTo(b.dataset.way);
   if (b.dataset.sell) sellFish();
+  if (b.dataset.wear) { const id = b.dataset.wear, sl = GEAR[id].slot; G[sl] = G[sl] === id ? null : id; sfx.swing(); persist(); renderPanel(); }
+  if (b.dataset.slot) selectSlot(+b.dataset.slot);
+  if (b.dataset.erase) {
+    if (b.dataset.arm !== '1') { b.dataset.arm = '1'; b.textContent = 'Точно?'; return; }
+    const n = +b.dataset.erase; try { localStorage.removeItem(slotKey(n)); } catch (e) {}
+    if (n === SLOT) { G = freshState(); resetWorld(); spawnEntities(); showTitle(); }
+    renderPanel();
+  }
+  if (b.dataset.set) changeSetting(b.dataset.set);
   if (b.dataset.arena) { panelKind = null; $('panel').hidden = true; enterArena(); }
 });
 $('pClose').addEventListener('click', closePanel);
+$('bSlots').addEventListener('click', () => { unlockAudio(); openPanel('slots'); });
+$('bSet').addEventListener('click', () => { unlockAudio(); openPanel('settings'); });
 $('bAch').addEventListener('click', () => { unlockAudio(); openPanel('ach'); });
 $('bBag').addEventListener('click', () => { unlockAudio(); toggleBag(); });
 $('bMap').addEventListener('click', () => { unlockAudio(); toggleMap(); });
@@ -3659,6 +3787,7 @@ function showTitle() {
   $('bNew').hidden = !has; $('bNew').textContent = 'Новая игра'; $('bNew').dataset.arm = '';
   $('title').hidden = false; $('win').hidden = true; $('over').hidden = true;
   $('titleBtns').hidden = false; $('diffBox').hidden = true;
+  $('slotInfo').textContent = 'Слот ' + SLOT + ': ' + slotSummary(loadSave());
   showRecords();
 }
 function showDiff() {
@@ -3677,9 +3806,85 @@ function startPlay() {
   G.state = 'play';
   if (!G.talked) {
     G.talked = true;
-    say('Мирон', TEXT.intro);
+    playScene('intro', () => say('Мирон', TEXT.intro));
   }
 }
+// ---------- Cutscenes: a few painted frames with captions ----------
+let scene = null;
+function sky(top, bottom) {
+  for (let y = 0; y < CH; y += 4) {
+    const k = y / CH, a = parseInt(top.slice(1), 16), b = parseInt(bottom.slice(1), 16);
+    const mix = sh => Math.round(((a >> sh) & 255) * (1 - k) + ((b >> sh) & 255) * k);
+    ctx.fillStyle = 'rgb(' + mix(16) + ',' + mix(8) + ',' + mix(0) + ')'; ctx.fillRect(0, y, CW, 4);
+  }
+}
+function stars(t) { for (let i = 0; i < 30; i++) if ((i + Math.floor(t * 2)) % 7) P(ctx, (i * 53) % CW, (i * 31) % 90, C.w); }
+function ground(col) { P(ctx, 0, CH - 92, col, CW, 34); P(ctx, 0, CH - 92, C.k, CW, 1); }
+function crystalsAround(cx, cy, r, t) {
+  for (let i = 0; i < 8; i++) {
+    const a = i / 8 * Math.PI * 2 + t * .4;
+    ctx.drawImage(SPR.crystal, Math.round(cx - 8 + Math.cos(a) * r), Math.round(cy - 8 + Math.sin(a) * r * .5 + Math.sin(t * 3 + i) * 2));
+  }
+}
+function wanderer(x, y) {
+  P(ctx, x + 4, y + 1, C.k, 8, 15); P(ctx, x + 3, y + 5, C.k, 10, 11);
+  P(ctx, x + 5, y + 2, C.K, 6, 13); P(ctx, x + 4, y + 6, C.K, 8, 9); P(ctx, x + 6, y + 5, C.y); P(ctx, x + 9, y + 5, C.y);
+}
+const SCENES = {
+  intro: [
+    { text: 'Давным-давно в Листвянке хранили восемь кристаллов. Их свет берёг лес и людей.', draw: t => {
+      sky('#1d1b2c', '#2c4f8a'); stars(t); ground(C.d); drawAltar(CW / 2 - 8, CH - 108, true); crystalsAround(CW / 2, CH - 128, 44, t);
+    } },
+    { text: 'Однажды ночью пришёл Странник. Он хотел забрать силу кристаллов себе.', draw: t => {
+      sky('#1d1b2c', '#2c4f8a'); stars(t); ground(C.d); drawAltar(CW / 2 - 8, CH - 108, true); crystalsAround(CW / 2, CH - 128, 44, t);
+      wanderer(Math.min(CW / 2 - 30, -16 + t * 30), CH - 110);
+    } },
+    { text: 'Поднялась буря. Кристаллы разлетелись по всему краю.', draw: t => {
+      sky('#14121f', '#3b3659'); if (Math.floor(t * 3) % 4 === 0) { ctx.globalAlpha = .4; P(ctx, 0, 0, C.w, CW, CH); ctx.globalAlpha = 1; }
+      ctx.drawImage(SPR.storm, 0, 0, 16, 16, CW / 2 - 32, 10, 64, 64); ground(C.D); drawAltar(CW / 2 - 8, CH - 108, false);
+      crystalsAround(CW / 2, CH - 128, 20 + t * 45, t * 3);
+    } },
+    { text: 'Наутро в деревню пришёл ты.', draw: t => {
+      sky('#f2b23a', '#86c3ec'); P(ctx, CW - 40, 24, C.y, 14, 14); ground(C.g);
+      for (const hx of [20, 100]) { P(ctx, hx, CH - 120, C.r, 40, 14); P(ctx, hx, CH - 106, C.w, 40, 14); P(ctx, hx + 16, CH - 102, C.b, 8, 10); }
+      const x = Math.min(CW / 2 - 8, -16 + t * 34), fr = SPR.hero.right[Math.floor(t * 6) % 2];
+      ctx.drawImage(fr, Math.round(x), CH - 102);
+    } },
+  ],
+  finale: [
+    { text: 'Восемь кристаллов снова на алтаре.', draw: t => {
+      sky('#1d1b2c', '#2c4f8a'); stars(t); ground(C.d); drawAltar(CW / 2 - 8, CH - 108, true); crystalsAround(CW / 2, CH - 128, Math.max(26, 90 - t * 40), t);
+    } },
+    { text: 'Лес ожил, а небо прояснилось.', draw: t => {
+      ctx.drawImage(worldCv, 14 * TS, 13 * TS, CW, CH, 0, 0, CW, CH);
+      ctx.globalAlpha = Math.min(1, t) * .25; P(ctx, 0, 0, C.y, CW, CH); ctx.globalAlpha = 1;
+      for (let i = 0; i < 14; i++) P(ctx, (i * 47 + Math.floor(t * 20)) % CW, (i * 29 + Math.floor(t * 9)) % CH, i % 2 ? C.w : C.y);
+    } },
+    { text: 'Спасибо, что спас Листвянку!', draw: t => {
+      ctx.drawImage(worldCv, 14 * TS, 13 * TS, CW, CH, 0, 0, CW, CH);
+      ctx.drawImage(SPR.miron, CW / 2 - 24, CH / 2 - 30); ctx.drawImage(SPR.hero.down[0], CW / 2 + 8, CH / 2 - 30);
+      for (let i = 0; i < 4; i++) drawHeart(CW / 2 - 14 + i * 9, CH / 2 - 44 - ((t * 14 + i * 7) % 20), true);
+    } },
+  ],
+};
+function playScene(name, onEnd) {
+  scene = { frames: SCENES[name], i: 0, t: 0, onEnd, back: G.state };
+  G.state = 'scene'; $('cap').hidden = false; $('capText').textContent = scene.frames[0].text;
+}
+function nextFrame() {
+  if (!scene) return;
+  if (scene.t < .4) return;
+  scene.i++; scene.t = 0;
+  if (scene.i >= scene.frames.length) { endScene(); return; }
+  $('capText').textContent = scene.frames[scene.i].text; sfx.blip();
+}
+function endScene() {
+  if (!scene) return;
+  const cb = scene.onEnd; G.state = scene.back === 'scene' ? 'play' : scene.back; scene = null; $('cap').hidden = true;
+  if (cb) cb();
+}
+$('cap').addEventListener('pointerdown', e => { if (e.target.id === 'capSkip') return; e.preventDefault(); nextFrame(); });
+$('capSkip').addEventListener('click', e => { e.stopPropagation(); endScene(); });
 function loadRecords() { try { return JSON.parse(localStorage.getItem('lv_records') || '{}') || {}; } catch (e) { return {}; } }
 function saveRecord() {
   const r = loadRecords(), cur = r[G.diff], best = !cur || G.time < cur.time;
@@ -3711,6 +3916,7 @@ function newGame(diff) {
   resetWorld(); spawnEntities(); persist();
 }
 function toggleMenu() {
+  if (G.state === 'scene') return;
   if (panelKind) { closePanel(); return; }
   if (G.state === 'title') { if (menuOpen) startPlay(); return; }
   if (G.state === 'win' || G.state === 'over') return;
@@ -3753,7 +3959,7 @@ function start() {
   const s = loadSave();
   if (s) applySave(s); else G = freshState();
   resetWorld(); spawnEntities();
-  updateSoundLabel(); fit(); showTitle();
+  updateSoundLabel(); applySettings(); showTitle();
   let last = performance.now();
   function frame(now) {
     const dt = Math.min(.05, (now - last) / 1000); last = now;
