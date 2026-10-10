@@ -135,6 +135,34 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
   background: var(--ink); border: calc(var(--px) * 1px) solid var(--gold);
   padding: .3em .7em; font-size: 1em; white-space: nowrap;
 }
+/* Shop and bag panels */
+.panel {
+  position: absolute; inset: 0; display: flex; flex-direction: column; gap: .45em;
+  background: var(--ink); padding: .7em .8em .8em; font-size: 1.05em;
+}
+.phead { display: flex; justify-content: space-between; align-items: baseline; gap: .6em; }
+.ptitle { font-weight: 700; font-size: 1.45em; }
+.pmeta { color: var(--gold); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.pnote { min-height: 1.3em; font-size: .9em; color: var(--muted); }
+.plist {
+  flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; gap: .35em;
+  touch-action: pan-y; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
+}
+.psec { font-size: .78em; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); padding-top: .35em; }
+.row {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: .6em; align-items: center;
+  padding: .3em .45em; background: #1a1828; border: calc(var(--px) * 1px) solid #2c2843;
+}
+.row.cur { border-color: var(--gold); }
+.row img { width: calc(var(--px) * 16px); height: calc(var(--px) * 16px); image-rendering: pixelated; display: block; }
+.rname { font-weight: 600; }
+.rdesc { font-size: .85em; line-height: 1.25; color: var(--muted); }
+.rbtn {
+  font-weight: 600; font-size: .95em; white-space: nowrap; border: 0; border-radius: 0;
+  padding: .3em .6em; color: var(--ink); background: var(--gold); box-shadow: 0 calc(var(--px) * 1px) 0 var(--gold-lo);
+}
+.rbtn:disabled { background: #2c2843; color: var(--muted); box-shadow: none; }
+.pclose { align-self: center; }
 @media (prefers-reduced-motion: reduce) { .dnext { animation: none; } }
 </style>
 
@@ -149,6 +177,12 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
           <div class="dtext" id="dtext"></div>
           <div class="dnext" id="dnext">▼</div>
         </div>
+        <div class="panel" id="panel" hidden>
+          <div class="phead"><div class="ptitle" id="pTitle"></div><div class="pmeta" id="pMeta"></div></div>
+          <div class="pnote" id="pNote"></div>
+          <div class="plist" id="pList"></div>
+          <button class="mbtn ghost pclose" id="pClose" type="button">Закрыть</button>
+        </div>
         <div class="overlay" id="title">
           <div class="card">
             <div class="eyebrow">пиксельная бродилка</div>
@@ -158,7 +192,7 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
               <button class="mbtn" id="bPlay" type="button">Играть</button>
               <button class="mbtn ghost" id="bNew" type="button" hidden>Новая игра</button>
             </div>
-            <p class="help">Крестовина: ходить. A: говорить и бить мечом. B: бежать.<br>На компьютере: стрелки, Z и X.</p>
+            <p class="help">Крестовина: ходить. A: говорить и бить, держать на месте: щит. B: бежать.<br>На компьютере: стрелки, Z, X и I (сумка).</p>
           </div>
         </div>
         <div class="overlay" id="win" hidden>
@@ -186,6 +220,7 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
   </div>
 
   <div class="bar">
+    <button class="pill" id="bBag" type="button">Сумка</button>
     <button class="pill" id="bSound" type="button">Звук: вкл</button>
     <button class="pill" id="bMenu" type="button">Меню</button>
   </div>
@@ -266,6 +301,10 @@ function buildWorld() {
     { kind: 'npc', id: 'miron', tx: 21, ty: 18, name: 'Мирон' },
     { kind: 'npc', id: 'asya', tx: 24, ty: 13, name: 'Ася' },
     { kind: 'npc', id: 'cat', tx: 13, ty: 21, name: 'Кот' },
+    { kind: 'npc', id: 'varya', tx: 28, ty: 21, name: 'Варя' },
+    { kind: 'deco', id: 'stall', tx: 27, ty: 21 },
+    { kind: 'npc', id: 'gordey', tx: 16, ty: 21, name: 'Гордей' },
+    { kind: 'deco', id: 'anvil', tx: 17, ty: 21 },
     { kind: 'sign', id: 'village', tx: 20, ty: 18 },
     { kind: 'sign', id: 'meadow', tx: 9, ty: 13 },
     { kind: 'sign', id: 'forest', tx: 11, ty: 21 },
@@ -408,6 +447,50 @@ const SPR = {
   crystal: mk(CRYSTAL),
 };
 SPR.hero.left = SPR.hero.right.map(flip);
+SPR.varya = mk(HERO_DOWN, { r: 'y', u: 'l', b: 'B', y: 'o' });
+SPR.gordey = mk(withRows(HERO_DOWN, 7, ['...ksBBBBBBsk', '....kBBBBBBk']), { r: 'D', u: 'B', b: 'k', y: 'G' });
+
+const POTION = [
+  '', '',
+  '......kkkk',
+  '......kbbk',
+  '......kkkk',
+  '......kcck',
+  '.....kcLLck',
+  '....kLwLLLLk',
+  '...kLwLLLLLLk',
+  '...kLLLLLLLLk',
+  '...kLLLLLLLMk',
+  '...kLLLLLLMMk',
+  '....kLLLLMMk',
+  '.....kkkkkk',
+  '', '',
+];
+const ICON = {
+  sword: mk([
+    '..............kk', '.............kwk', '............kwGk', '...........kwGk', '..........kwGk',
+    '.........kwGk', '........kwGk', '..k....kwGk', '..kk..kwGk', '...kokwGk', '....kokk',
+    '....kook', '...kBkkok', '..kBk..kk', '.kBk', '.kk']),
+  spear: mk([
+    '............kkk', '...........kwGk', '..........kwGGk', '.........kGGkk', '........kbkk',
+    '.......kbk', '......kbk', '.....kbk', '....kbk', '...kbk', '..kbk', '.kbk', 'kbk', 'kk', '', '']),
+  axe: mk([
+    '', '....kkkk.kk', '...kGwwGkbk', '..kGwGGGkbk', '..kGGGGGkbk', '..kGGGGGkbk', '...kGGGkkbk',
+    '....kkk.kbk', '........kbk', '........kbk', '........kbk', '........kbk', '........kBk',
+    '........kBk', '.........k', '']),
+  shield: mk([
+    '', '...kkkkkkkkkk', '..kGuuuuuuuuGk', '..kGuuuoouuuGk', '..kGuuuoouuuGk', '..kGooooooooGk',
+    '..kGuuuoouuuGk', '..kGuuuoouuuGk', '...kGuuoouuGk', '....kGuoouGk', '.....kGooGk', '......kGGk',
+    '.......kk', '', '', '']),
+  heart: mk([
+    '', '', '', '....kkk..kkk', '...kwrrkkrrrk', '...kwrrrrrrrk', '...krrrrrrrrk', '....krrrrrrk',
+    '.....krrrrk', '......krrk', '.......kk', '', '', '', '', '']),
+  red: mk(POTION, { L: 'r', M: 'R' }),
+  blue: mk(POTION, { L: 'u', M: 'n' }),
+  green: mk(POTION, { L: 'l', M: 'd' }),
+};
+const ICON_URL = {};
+for (const k in ICON) ICON_URL[k] = ICON[k].toDataURL();
 
 // ---------- Tile art (procedural, drawn once into a world canvas) ----------
 let world, worldCv;
@@ -556,7 +639,10 @@ const TEXT = {
     'Ночью буря разбросала пять кристаллов Листвянки по всей округе. Без них наш лес засохнет.',
     'Найди их и принеси мне. Где искать, подскажут таблички. Или спроси меня ещё раз.',
     'И осторожно: слаймы совсем озверели. Жми A, чтобы взмахнуть мечом. Держи B, чтобы бежать.',
+    'Монеты неси Варе в лавку и кузнецу Гордею. А всё, что купишь, лежит в сумке: кнопка внизу экрана.',
   ],
+  varya: ['Привет! Я Варя. Зелья, оружие, щиты: выбирай, что нравится.', 'Заходи, у меня всё свежее!', 'Монетки звенят? Значит, пора за покупками.'],
+  gordey: ['Кузнец Гордей к твоим услугам. Наточу клинок, подгоню кольчугу. Не бесплатно, конечно.', 'Опять ты? Ну, показывай монеты.', 'Хороший клинок любит заботу.'],
   hints: {
     cr1: 'Один лежит в цветочном поле на северо-западе, среди камней.',
     cr2: 'Один сверкает на острове посреди озера. Туда ведёт мост.',
@@ -579,6 +665,40 @@ const TEXT = {
   empty: 'Сундук пуст.',
   faint: 'Ты теряешь сознание… и приходишь в себя уже в деревне.',
 };
+
+// ---------- Weapons & shops ----------
+const FACE = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
+const WEAPONS = {
+  sword: { name: 'Меч', desc: 'Быстрый и надёжный.', dmg: 1, cd: .32, swing: .22, len: 14, wid: 16 },
+  spear: { name: 'Копьё', desc: 'Бьёт далеко вперёд.', dmg: 1, cd: .4, swing: .24, len: 24, wid: 8 },
+  axe: { name: 'Топор', desc: 'Медленный, но бьёт вдвое сильнее и по широкой дуге.', dmg: 2, cd: .6, swing: .3, len: 14, wid: 26 },
+};
+const POTIONS = {
+  red: { name: 'Красное зелье', desc: 'Лечит 3 сердца.' },
+  blue: { name: 'Синее зелье', desc: 'Быстрый шаг на 20 секунд.' },
+  green: { name: 'Зелёное зелье', desc: '15 секунд враги не ранят.' },
+};
+const POTION_MAX = 9;
+const SHOPS = {
+  varya: {
+    title: 'Лавка Вари', items: [
+      { id: 'red', kind: 'potion', price: 6 },
+      { id: 'blue', kind: 'potion', price: 8 },
+      { id: 'green', kind: 'potion', price: 12 },
+      { id: 'spear', kind: 'weapon', price: 20 },
+      { id: 'axe', kind: 'weapon', price: 35 },
+      { id: 'shield', kind: 'shield', price: 25, name: 'Щит', desc: 'Держи A, стоя на месте: блокирует удары спереди.' },
+    ],
+  },
+  gordey: {
+    title: 'Кузница Гордея', items: [
+      { id: 'dmg', kind: 'up', icon: 'sword', name: 'Заточка', desc: '+1 к урону любого оружия.', prices: [15, 30, 50] },
+      { id: 'hp', kind: 'up', icon: 'heart', name: 'Кольчуга', desc: '+1 сердце к здоровью.', prices: [20, 40] },
+      { id: 'reach', kind: 'up', icon: 'spear', name: 'Длинная рукоять', desc: 'Любое оружие бьёт дальше.', prices: [25] },
+    ],
+  },
+};
+const ROMAN = ['I', 'II', 'III'];
 
 // ---------- DOM ----------
 const $ = id => document.getElementById(id);
@@ -619,6 +739,10 @@ const sfx = {
   swing: () => tone(700, 180, .08, 'triangle', .05),
   hit: () => tone(260, 90, .12, 'sawtooth', .05),
   hurt: () => tone(320, 60, .25, 'square', .06),
+  block: () => { tone(1200, 900, .05, 'square', .04); tone(500, 400, .08, 'triangle', .05, .03); },
+  buy: () => { tone(880, 880, .05); tone(1175, 1175, .1, 'square', .05, .05); },
+  drink: () => [392, 494, 587].forEach((f, i) => tone(f, f * 1.1, .09, 'triangle', .06, i * .06)),
+  deny: () => tone(180, 140, .12, 'square', .05),
   blip: () => tone(660, 660, .02, 'square', .015),
   open: () => { tone(392, 392, .08); tone(523, 523, .08, 'square', .05, .08); tone(784, 784, .15, 'square', .05, .16); },
   win: () => [523, 659, 784, 659, 784, 1047].forEach((f, i) => tone(f, f, .18, 'triangle', .07, i * .14)),
@@ -635,17 +759,21 @@ function syncKeys() {
 }
 window.addEventListener('keydown', e => {
   unlockAudio();
-  if (['KeyZ', 'Space', 'Enter'].includes(e.code)) { if (!e.repeat) pressA(); e.preventDefault(); return; }
+  if (panelKind && e.code === 'Escape') { closePanel(); return; }
+  if (e.code === 'KeyI' || e.code === 'KeyC') { toggleBag(); return; }
+  if (panelKind) return;
+  if (['KeyZ', 'Space', 'Enter'].includes(e.code)) { if (!e.repeat) pressA(); input.ka = true; e.preventDefault(); return; }
   if (['KeyX', 'ShiftLeft', 'ShiftRight'].includes(e.code)) { input.kb = true; return; }
   if (e.code === 'Escape') { toggleMenu(); return; }
   keys.add(e.code); syncKeys();
   if (e.code.startsWith('Arrow')) e.preventDefault();
 });
 window.addEventListener('keyup', e => {
+  if (['KeyZ', 'Space', 'Enter'].includes(e.code)) { input.ka = false; return; }
   if (['KeyX', 'ShiftLeft', 'ShiftRight'].includes(e.code)) { input.kb = false; return; }
   keys.delete(e.code); syncKeys();
 });
-window.addEventListener('blur', () => { keys.clear(); syncKeys(); input.kb = false; });
+window.addEventListener('blur', () => { keys.clear(); syncKeys(); input.kb = false; input.ka = false; input.ta = false; });
 
 const dpad = $('dpad'), arms = {};
 dpad.querySelectorAll('[data-d]').forEach(s => arms[s.dataset.d] = s);
@@ -685,9 +813,9 @@ function holdButton(el, down, up) {
   el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end);
   el.addEventListener('click', e => { if (e.detail === 0) { down(); up(); } }); // keyboard activation
 }
-holdButton($('btnA'), () => pressA(), () => {});
+holdButton($('btnA'), () => { input.ta = true; pressA(); }, () => { input.ta = false; });
 holdButton($('btnB'), () => { input.tb = true; }, () => { input.tb = false; });
-document.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+document.addEventListener('touchmove', e => { if (!(e.target.closest && e.target.closest('.plist'))) e.preventDefault(); }, { passive: false });
 document.addEventListener('gesturestart', e => e.preventDefault());
 document.addEventListener('dblclick', e => e.preventDefault());
 
@@ -695,30 +823,38 @@ document.addEventListener('dblclick', e => e.preventDefault());
 const PHB = { x: 3, y: 9, w: 10, h: 6 };   // player hitbox inside its 16x16 sprite
 const SHB = { x: 2, y: 8, w: 12, h: 7 };   // slime hitbox
 const START = { x: 22 * TS, y: 21 * TS };
-let G, ents, blockers, dlg = null, menuOpen = false, toastTimer = 0, saveTimer = 0, particles = [];
+let G, ents, blockers, respawns = [], panelKind = null, dlg = null, menuOpen = false, toastTimer = 0, saveTimer = 0, particles = [];
 
 function freshState() {
   return {
     state: 'title',
     p: { x: START.x, y: START.y, dir: 'up', anim: 0, moving: false, swing: 0, cd: 0, inv: 0, hp: 5, maxHp: 5, kx: 0, ky: 0 },
     coins: 0, taken: new Set(), talked: false, won: false, time: 0, shake: 0, asyaI: 0, catI: 0, t: 0,
+    inv: { red: 0, blue: 0, green: 0 }, weapons: ['sword'], weapon: 'sword', shield: false,
+    up: { dmg: 0, hp: 0, reach: 0 }, buff: { speed: 0, guard: 0 }, met: {},
   };
 }
+function makeSlime(s) {
+  return { kind: 'slime', tx: s.tx, ty: s.ty, x: s.tx * TS, y: s.ty * TS, hp: 2, t: Math.random() * 2, vx: 0, vy: 0, kx: 0, ky: 0, flash: 0, ph: Math.random() * 6 };
+}
 function spawnEntities() {
-  ents = []; blockers = new Map();
+  ents = []; blockers = new Map(); respawns = [];
   for (const s of world.ents) {
     if (s.id && G.taken.has(s.id) && s.kind !== 'chest') continue;
     const e = { ...s, x: s.tx * TS, y: s.ty * TS };
     if (s.kind === 'chest') e.open = G.taken.has(s.id);
-    if (s.kind === 'slime') Object.assign(e, { hp: 2, t: Math.random() * 2, vx: 0, vy: 0, kx: 0, ky: 0, flash: 0, ph: Math.random() * 6 });
-    if (s.kind === 'npc' || s.kind === 'sign' || s.kind === 'chest') blockers.set(s.ty * W + s.tx, e);
+    if (s.kind === 'slime') { ents.push(makeSlime(s)); continue; }
+    if (s.kind === 'npc' || s.kind === 'sign' || s.kind === 'chest' || s.kind === 'deco') blockers.set(s.ty * W + s.tx, e);
     ents.push(e);
   }
 }
 const crystalCount = () => [...G.taken].filter(id => id.startsWith('cr')).length;
 
 function makeSave() {
-  return { v: 1, x: G.p.x, y: G.p.y, hp: G.p.hp, maxHp: G.p.maxHp, coins: G.coins, taken: [...G.taken], talked: G.talked, won: G.won, time: G.time, dir: G.p.dir };
+  return {
+    v: 1, x: G.p.x, y: G.p.y, hp: G.p.hp, maxHp: G.p.maxHp, coins: G.coins, taken: [...G.taken], talked: G.talked, won: G.won, time: G.time, dir: G.p.dir,
+    inv: G.inv, weapons: G.weapons, weapon: G.weapon, shield: G.shield, up: G.up, met: G.met,
+  };
 }
 function persist() { try { localStorage.setItem('lv_save', JSON.stringify(makeSave())); } catch (e) {} }
 function loadSave() { try { const s = JSON.parse(localStorage.getItem('lv_save') || 'null'); return s && s.v === 1 ? s : null; } catch (e) { return null; } }
@@ -727,6 +863,11 @@ function applySave(s) {
   G = freshState();
   Object.assign(G.p, { x: s.x, y: s.y, hp: s.hp, maxHp: s.maxHp, dir: s.dir || 'down' });
   G.coins = s.coins; G.taken = new Set(s.taken); G.talked = s.talked; G.won = s.won; G.time = s.time;
+  Object.assign(G.inv, s.inv || {}); Object.assign(G.up, s.up || {}); Object.assign(G.met, s.met || {});
+  if (Array.isArray(s.weapons)) G.weapons = s.weapons.filter(w => WEAPONS[w]);
+  if (!G.weapons.includes('sword')) G.weapons.unshift('sword');
+  G.weapon = G.weapons.includes(s.weapon) ? s.weapon : 'sword';
+  G.shield = !!s.shield;
   if (G.won) { G.p.x = START.x; G.p.y = START.y; }
 }
 
@@ -795,9 +936,9 @@ function handleA() {
   if (dlg) { advanceDialog(); return; }
   if (G.state === 'title') { $('bPlay').click(); return; }
   if (G.state === 'win') { $('bAgain').click(); return; }
-  if (G.state !== 'play' || menuOpen) return;
+  if (G.state !== 'play' || menuOpen || panelKind) return;
   const p = G.p;
-  const f = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[p.dir];
+  const f = FACE[p.dir];
   const cx = p.x + 8 + f[0] * 11, cy = p.y + 12 + f[1] * 10;
   const tx = Math.floor(cx / TS), ty = Math.floor(cy / TS);
   const e = blockers.get(ty * W + tx);
@@ -826,17 +967,37 @@ function interact(e) {
   }
   if (e.id === 'asya') { say(e.name, TEXT.asya[G.asyaI++ % TEXT.asya.length]); return; }
   if (e.id === 'cat') { say(e.name, TEXT.cat[G.catI++ % TEXT.cat.length]); return; }
+  if (e.id === 'varya' || e.id === 'gordey') {
+    const lines = TEXT[e.id], first = !G.met[e.id];
+    G.met[e.id] = true;
+    say(e.name, first ? lines[0] : lines[1 + ((Math.random() * (lines.length - 1)) | 0)], () => openPanel(e.id));
+    return;
+  }
+  if (e.kind === 'deco') { swing(); }
+}
+function weaponBox(p) {
+  const wp = WEAPONS[G.weapon], f = FACE[p.dir], L = wp.len + (G.up.reach ? 6 : 0), wd = wp.wid;
+  const cx = p.x + 8 + f[0] * (5 + L / 2), cy = p.y + 10 + f[1] * (5 + L / 2);
+  const w = f[0] ? L : wd, h = f[0] ? wd : L;
+  return { x: cx - w / 2, y: cy - h / 2, w, h };
 }
 function swing() {
-  const p = G.p;
+  const p = G.p, wp = WEAPONS[G.weapon];
   if (p.cd > 0) return;
-  p.swing = .22; p.cd = .32; sfx.swing();
-  const f = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] }[p.dir];
-  const hx = p.x + f[0] * 13, hy = p.y + 4 + f[1] * 12;
+  p.swing = wp.swing; p.cd = wp.cd; sfx.swing();
+  const b = weaponBox(p), dmg = wp.dmg + G.up.dmg;
+  // cut tall grass
+  for (let ty = Math.floor(b.y / TS); ty <= Math.floor((b.y + b.h - 1) / TS); ty++)
+    for (let tx = Math.floor(b.x / TS); tx <= Math.floor((b.x + b.w - 1) / TS); tx++) {
+      if (tileAt(tx, ty) !== TALL) continue;
+      world.m[ty * W + tx] = GRASS; drawTile(worldCv.getContext('2d'), GRASS, tx, ty);
+      burst(tx * TS + 8, ty * TS + 8, C.l, 6);
+      if (Math.random() < .14) ents.push({ kind: 'coin', id: null, x: tx * TS, y: ty * TS });
+    }
   for (const s of ents) {
     if (s.kind !== 'slime' || s.dead) continue;
-    if (overlap(hx, hy, 16, 14, s.x + SHB.x, s.y + SHB.y, SHB.w, SHB.h)) {
-      s.hp--; s.flash = .18; sfx.hit();
+    if (overlap(b.x, b.y, b.w, b.h, s.x + SHB.x, s.y + SHB.y, SHB.w, SHB.h)) {
+      s.hp -= dmg; s.flash = .18; sfx.hit();
       const dx = s.x - p.x, dy = s.y - p.y, d = Math.hypot(dx, dy) || 1;
       s.kx = dx / d * 140; s.ky = dy / d * 140;
       if (s.hp <= 0) killSlime(s);
@@ -845,9 +1006,11 @@ function swing() {
 }
 function killSlime(s) {
   s.dead = true; burst(s.x + 8, s.y + 10, C.r, 16);
+  respawns.push({ tx: s.tx, ty: s.ty, t: 45 });
   const r = Math.random();
-  if (r < .45) ents.push({ kind: 'coin', id: null, x: s.x, y: s.y });
-  else if (r < .65) ents.push({ kind: 'heart', x: s.x, y: s.y, ttl: 12 });
+  if (r < .1) for (let i = 0; i < 3; i++) ents.push({ kind: 'coin', id: null, x: s.x + (i - 1) * 7, y: s.y + (i % 2) * 4 });
+  else if (r < .55) ents.push({ kind: 'coin', id: null, x: s.x, y: s.y });
+  else if (r < .72) ents.push({ kind: 'heart', x: s.x, y: s.y, ttl: 12 });
 }
 function burst(x, y, col, n) {
   for (let i = 0; i < n; i++) {
@@ -858,12 +1021,26 @@ function burst(x, y, col, n) {
 function hurt(from) {
   const p = G.p;
   if (p.inv > 0 || p.hp <= 0) return;
-  p.hp--; p.inv = 1.1; G.shake = .25; sfx.hurt();
   const dx = p.x - from.x, dy = p.y - from.y, d = Math.hypot(dx, dy) || 1;
+  const f = FACE[p.dir];
+  if (p.shield && (-dx / d) * f[0] + (-dy / d) * f[1] > .45) {
+    // blocked by the shield: push the attacker back, no damage
+    if (from.kx !== undefined) { from.kx = -dx / d * 170; from.ky = -dy / d * 170; }
+    p.kx = dx / d * 60; p.ky = dy / d * 60; p.inv = .25; sfx.block();
+    burst(p.x + 8 + f[0] * 9, p.y + 10 + f[1] * 8, C.w, 5);
+    return;
+  }
+  if (G.buff.guard > 0) {
+    if (from.kx !== undefined) { from.kx = -dx / d * 150; from.ky = -dy / d * 150; }
+    p.inv = .4; sfx.block(); burst(p.x + 8, p.y + 8, C.l, 6);
+    return;
+  }
+  p.hp--; p.inv = 1.1; G.shake = .25; sfx.hurt();
   p.kx = dx / d * 150; p.ky = dy / d * 150;
   if (p.hp <= 0) {
     say('', TEXT.faint, () => {
       Object.assign(p, { x: START.x, y: START.y, hp: p.maxHp, dir: 'down', inv: 1.5, kx: 0, ky: 0 });
+      G.buff.speed = G.buff.guard = 0;
       spawnEntities(); persist();
     });
   }
@@ -877,14 +1054,15 @@ function update(dt) {
   particles = particles.filter(q => q.life > 0);
   if (aQueued) { aQueued = false; handleA(); }
   if (dlg) { if (dlg.shown < dlg.pages[dlg.i].length) { const before = Math.floor(dlg.shown); dlg.shown += dt * 45; if (Math.floor(dlg.shown) !== before) { renderDialog(); if (before % 3 === 0) sfx.blip(); } } return; }
-  if (G.state !== 'play' || menuOpen) return;
+  if (G.state !== 'play' || menuOpen || panelKind) return;
 
   G.time += dt; G.shake = Math.max(0, G.shake - dt);
   const p = G.p;
   p.inv = Math.max(0, p.inv - dt); p.cd = Math.max(0, p.cd - dt); p.swing = Math.max(0, p.swing - dt);
+  G.buff.speed = Math.max(0, G.buff.speed - dt); G.buff.guard = Math.max(0, G.buff.guard - dt);
   const ix = input.tx || input.kx, iy = input.ty || input.ky;
   const run = input.tb || input.kb;
-  const sp = run ? 80 : 52, len = Math.hypot(ix, iy) || 1;
+  const sp = (run ? 80 : 52) * (G.buff.speed > 0 ? 1.45 : 1), len = Math.hypot(ix, iy) || 1;
   let vx = ix / len * sp, vy = iy / len * sp;
   if (p.swing > 0) { vx *= .35; vy *= .35; }
   if (ix || iy) {
@@ -896,6 +1074,9 @@ function update(dt) {
   const decay = Math.max(0, 1 - 9 * dt); p.kx *= decay; p.ky *= decay;
   if (Math.abs(p.kx) < 2) p.kx = 0; if (Math.abs(p.ky) < 2) p.ky = 0;
   p.moving = !!(ix || iy);
+  p.shield = G.shield && (input.ta || input.ka) && p.swing <= 0 && !p.moving;
+  if (G.buff.speed > 0 && p.moving && Math.random() < dt * 20) particles.push({ x: p.x + 4 + Math.random() * 8, y: p.y + 6 + Math.random() * 8, vx: -ix * 20, vy: -iy * 20, life: .25, col: C.c });
+  if (G.buff.guard > 0 && Math.random() < dt * 10) { const a = G.t * 6; particles.push({ x: p.x + 8 + Math.cos(a) * 9, y: p.y + 9 + Math.sin(a) * 9, vx: 0, vy: -6, life: .3, col: C.l }); }
   if (p.moving) p.anim += dt * (run ? 11 : 7); else p.anim = 0;
   if (run && p.moving && Math.random() < dt * 14) particles.push({ x: p.x + 8 + (Math.random() - .5) * 6, y: p.y + 15, vx: -ix * 10, vy: -8, life: .3, col: C.a });
 
@@ -935,6 +1116,11 @@ function update(dt) {
     if (overlap(p.x + PHB.x, p.y + PHB.y, PHB.w, PHB.h, s.x + SHB.x + 1, s.y + SHB.y + 1, SHB.w - 2, SHB.h - 2)) hurt(s);
   }
   ents = ents.filter(e => !e.dead || e.kind === 'npc');
+  for (const r of respawns) {
+    r.t -= dt;
+    if (r.t <= 0 && Math.hypot(r.tx * TS - p.x, r.ty * TS - p.y) > 110) { r.done = true; ents.push(makeSlime(r)); }
+  }
+  respawns = respawns.filter(r => !r.done);
   for (const e of ents) if (e.kind === 'heart') { e.ttl -= dt; if (e.ttl <= 0) e.dead = true; }
 
   if (Math.random() < dt * 3) {
@@ -972,21 +1158,54 @@ function drawChest(x, y, open) {
   if (open) { P(ctx, x + 2, y + 6, C.k, 12, 3); P(ctx, x + 1, y + 2, C.k, 14, 4); P(ctx, x + 2, y + 3, C.B, 12, 2); }
   else { P(ctx, x + 2, y + 6, C.B, 12, 3); P(ctx, x + 2, y + 9, C.k, 12, 1); P(ctx, x + 7, y + 8, C.o, 2, 3); P(ctx, x + 2, y + 6, C.O, 1, 9); P(ctx, x + 13, y + 6, C.O, 1, 9); }
 }
-function drawSword(p, ox, oy) {
-  const x = p.x - ox, y = p.y - oy + HUD, k = 1 - p.swing / .22;
-  // swoosh arc
-  const base = { right: 0, down: Math.PI / 2, left: Math.PI, up: -Math.PI / 2 }[p.dir];
-  ctx.globalAlpha = .75;
-  for (let i = 0; i <= 8; i++) {
-    const a = base - 1.1 + 2.2 * Math.min(1, k * 1.4) * (i / 8);
-    P(ctx, Math.round(x + 8 + Math.cos(a) * 12), Math.round(y + 10 + Math.sin(a) * 11), C.c);
+function seg(hx, hy, f, a0, len, c0, th, col) {
+  if (f[0] !== 0) P(ctx, f[0] > 0 ? hx + a0 : hx - a0 - len + 1, hy + c0, col, len, th);
+  else P(ctx, hx + c0, f[1] > 0 ? hy + a0 : hy - a0 - len + 1, col, th, len);
+}
+const HAND = { down: [11, 13], up: [3, 3], right: [13, 10], left: [2, 10] };
+function drawWeapon(p, ox, oy) {
+  const wp = WEAPONS[G.weapon], x = p.x - ox, y = p.y - oy + HUD, k = 1 - p.swing / wp.swing;
+  const f = FACE[p.dir], hx = x + HAND[p.dir][0], hy = y + HAND[p.dir][1], ext = G.up.reach ? 3 : 0;
+  if (G.weapon !== 'spear') {
+    const base = Math.atan2(f[1], f[0]), span = G.weapon === 'axe' ? 1.6 : 1.1, r = 12 + ext;
+    ctx.globalAlpha = .75;
+    for (let i = 0; i <= 10; i++) {
+      const a = base - span + 2 * span * Math.min(1, k * 1.4) * (i / 10);
+      P(ctx, Math.round(x + 8 + Math.cos(a) * r), Math.round(y + 10 + Math.sin(a) * (r - 1)), C.c);
+    }
+    ctx.globalAlpha = 1;
   }
-  ctx.globalAlpha = 1;
-  const B = (bx, by, w, h) => { P(ctx, bx - 1, by - 1, C.k, w + 2, h + 2); P(ctx, bx, by, C.w, w, h); };
-  if (p.dir === 'down') { B(x + 11, y + 14, 2, 8); P(ctx, x + 9, y + 13, C.o, 6, 1); }
-  if (p.dir === 'up') { B(x + 3, y - 4, 2, 8); P(ctx, x + 1, y + 4, C.o, 6, 1); }
-  if (p.dir === 'right') { B(x + 14, y + 10, 8, 2); P(ctx, x + 13, y + 8, C.o, 1, 6); }
-  if (p.dir === 'left') { B(x - 6, y + 10, 8, 2); P(ctx, x + 2, y + 8, C.o, 1, 6); }
+  if (G.weapon === 'sword') {
+    seg(hx, hy, f, 0, 11 + ext, -1, 4, C.k); seg(hx, hy, f, 1, 9 + ext, 0, 2, C.w);
+    seg(hx, hy, f, 0, 1, -2, 6, C.o);
+  } else if (G.weapon === 'spear') {
+    const L = 15 + ext * 2, push = Math.round(Math.sin(Math.min(1, k) * Math.PI) * 6) - 3;
+    seg(hx, hy, f, push - 2, L + 1, -1, 4, C.k); seg(hx, hy, f, push - 2, L, 0, 2, C.b);
+    seg(hx, hy, f, push + L - 2, 5, -2, 6, C.k); seg(hx, hy, f, push + L - 1, 3, -1, 4, C.G);
+    seg(hx, hy, f, push + L + 2, 1, 0, 2, C.w);
+    ctx.globalAlpha = .6; for (let i = 0; i < 3; i++) seg(hx, hy, f, push + L + 4 + i * 3, 1, (i - 1) * 3, 1, C.c); ctx.globalAlpha = 1;
+  } else {
+    seg(hx, hy, f, -1, 10 + ext, -1, 4, C.k); seg(hx, hy, f, -1, 9 + ext, 0, 2, C.B);
+    seg(hx, hy, f, 5 + ext, 7, -5, 12, C.k); seg(hx, hy, f, 6 + ext, 5, -4, 10, C.G);
+    seg(hx, hy, f, 10 + ext, 1, -4, 10, C.w);
+  }
+}
+function drawShield(p, ox, oy) {
+  const f = FACE[p.dir], x = Math.round(p.x - ox + 8 + f[0] * 8) - 4, y = Math.round(p.y - oy + HUD + 9 + f[1] * 5) - 4;
+  P(ctx, x, y, C.k, 9, 10); P(ctx, x + 1, y + 1, C.G, 7, 8); P(ctx, x + 2, y + 2, C.u, 5, 6);
+  P(ctx, x + 4, y + 2, C.o, 1, 6); P(ctx, x + 2, y + 4, C.o, 5, 1);
+}
+function drawAnvil(x, y) {
+  P(ctx, x + 2, y + 5, C.k, 13, 5); P(ctx, x + 3, y + 6, C.D, 11, 3); P(ctx, x + 3, y + 6, C.G, 11, 1);
+  P(ctx, x + 1, y + 6, C.k, 2, 2);
+  P(ctx, x + 6, y + 10, C.k, 5, 3); P(ctx, x + 7, y + 10, C.D, 3, 3);
+  P(ctx, x + 4, y + 13, C.k, 9, 3); P(ctx, x + 5, y + 13, C.D, 7, 2);
+}
+function drawStall(x, y) {
+  P(ctx, x + 1, y + 6, C.k, 14, 10); P(ctx, x + 2, y + 7, C.b, 12, 8);
+  P(ctx, x + 2, y + 10, C.B, 12, 1); P(ctx, x + 7, y + 7, C.B, 1, 8);
+  for (const [ax, col] of [[2, C.r], [6, C.y], [10, C.r]]) { P(ctx, x + ax, y + 3, C.k, 4, 4); P(ctx, x + ax + 1, y + 4, col, 2, 2); }
+  P(ctx, x + 3, y + 4, C.w);
 }
 function render() {
   const p = G.p;
@@ -1023,8 +1242,10 @@ function render() {
         if (p.inv > 0 && Math.floor(p.inv * 12) % 2 === 0) break;
         const frames = SPR.hero[p.dir], f = p.moving ? Math.floor(p.anim) % 2 : 0;
         P(ctx, x + 4, y + 15, 'rgba(0,0,0,.25)', 8, 1);
+        if (p.shield && p.dir === 'up') drawShield(p, camX, camY);
         ctx.drawImage(frames[f], x, y - (p.moving && f ? 1 : 0));
-        if (p.swing > 0) drawSword(p, camX, camY);
+        if (p.shield && p.dir !== 'up') drawShield(p, camX, camY);
+        if (p.swing > 0) drawWeapon(p, camX, camY);
         break;
       }
       case 'npc': {
@@ -1037,6 +1258,7 @@ function render() {
         break;
       }
       case 'sign': drawSign(x, y); break;
+      case 'deco': if (e.id === 'anvil') drawAnvil(x, y); else drawStall(x, y); break;
       case 'chest': drawChest(x, y, e.open); break;
       case 'coin': drawCoin(x + 4, y + 4 + Math.round(Math.sin(t * 3 + e.x) * 1), t + e.x); break;
       case 'heart': if (e.ttl > 3 || Math.floor(t * 8) % 2) drawHeart(x + 4, y + 5 + Math.round(Math.sin(t * 4) * 1), true); break;
@@ -1056,13 +1278,123 @@ function render() {
 
   // HUD
   P(ctx, 0, 0, C.k, CW, HUD); P(ctx, 0, HUD - 1, '#2c2843', CW, 1);
-  for (let i = 0; i < p.maxHp; i++) drawHeart(4 + i * 9, 4, i < p.hp);
+  for (let i = 0; i < p.maxHp; i++) drawHeart(4 + i * 9, 3, i < p.hp);
+  if (G.buff.speed > 0) P(ctx, 4, 12, C.c, Math.max(1, Math.round(G.buff.speed / 20 * 30)), 2);
+  if (G.buff.guard > 0) P(ctx, 38, 12, C.l, Math.max(1, Math.round(G.buff.guard / 15 * 30)), 2);
+  ctx.drawImage(ICON[G.weapon], 76, 0);
   const cx = CW - 64;
   ctx.drawImage(SPR.crystal, 3, 2, 10, 12, cx, 2, 10, 12);
   drawText(crystalCount() + '/5', cx + 11, 6, C.w);
   drawCoin(CW - 30, 4, 0);
   drawText(G.coins, CW - 20, 6, C.w);
 }
+
+// ---------- Shop & bag ----------
+function itemInfo(it) {
+  if (it.kind === 'potion') {
+    const full = G.inv[it.id] >= POTION_MAX;
+    return { icon: it.id, name: POTIONS[it.id].name, desc: POTIONS[it.id].desc + ' В сумке: ' + G.inv[it.id] + '.', price: it.price, label: full ? 'Полно' : null };
+  }
+  if (it.kind === 'weapon') {
+    const w = WEAPONS[it.id];
+    return { icon: it.id, name: w.name, desc: w.desc + ' Урон ' + w.dmg + '.', price: it.price, label: G.weapons.includes(it.id) ? 'Есть' : null };
+  }
+  if (it.kind === 'shield') return { icon: 'shield', name: it.name, desc: it.desc, price: it.price, label: G.shield ? 'Есть' : null };
+  const lvl = G.up[it.id], max = it.prices.length;
+  return {
+    icon: it.icon, name: it.name + (max > 1 ? ' ' + ROMAN[Math.min(lvl, max - 1)] : ''), desc: it.desc,
+    price: it.prices[lvl], label: lvl >= max ? 'Макс.' : null,
+  };
+}
+function buy(it) {
+  const info = itemInfo(it);
+  if (info.label) return;
+  if (G.coins < info.price) { sfx.deny(); $('pNote').textContent = 'Не хватает монет: нужно ' + info.price + '.'; return; }
+  G.coins -= info.price; sfx.buy();
+  if (it.kind === 'potion') G.inv[it.id]++;
+  if (it.kind === 'weapon') { G.weapons.push(it.id); G.weapon = it.id; }
+  if (it.kind === 'shield') G.shield = true;
+  if (it.kind === 'up') {
+    G.up[it.id]++;
+    if (it.id === 'hp') { G.p.maxHp++; G.p.hp = G.p.maxHp; }
+  }
+  $('pNote').textContent = 'Куплено: ' + info.name + (it.kind === 'weapon' ? '. Уже в руках.' : '.');
+  persist(); renderPanel();
+}
+function drink(id) {
+  const p = G.p;
+  if (!G.inv[id]) return;
+  if (id === 'red') { if (p.hp >= p.maxHp) return; p.hp = Math.min(p.maxHp, p.hp + 3); }
+  if (id === 'blue') G.buff.speed = 20;
+  if (id === 'green') G.buff.guard = 15;
+  G.inv[id]--; sfx.drink(); persist();
+  closePanel();
+  toast({ red: 'Здоровье восстановлено', blue: 'Быстрый шаг: 20 секунд', green: 'Защита: 15 секунд' }[id]);
+  burst(p.x + 8, p.y + 6, { red: C.r, blue: C.c, green: C.l }[id], 14);
+}
+const esc = t => String(t).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+function rowHtml(icon, name, desc, btn, cur) {
+  return '<div class="row' + (cur ? ' cur' : '') + '"><img alt="" src="' + ICON_URL[icon] + '"><div><div class="rname">' + esc(name) +
+    '</div><div class="rdesc">' + esc(desc) + '</div></div>' + (btn || '<span></span>') + '</div>';
+}
+function renderPanel() {
+  const list = $('pList');
+  $('pMeta').textContent = 'Монеты: ' + G.coins;
+  let html = '';
+  if (panelKind === 'bag') {
+    $('pTitle').textContent = 'Сумка';
+    $('pMeta').textContent = 'Кристаллы ' + crystalCount() + '/5 · Монеты ' + G.coins;
+    html += '<div class="psec">Оружие</div>';
+    for (const id of G.weapons) {
+      const w = WEAPONS[id], cur = G.weapon === id;
+      html += rowHtml(id, w.name, w.desc + ' Урон ' + (w.dmg + G.up.dmg) + '.',
+        '<button class="rbtn" type="button" data-equip="' + id + '"' + (cur ? ' disabled>В руках' : '>Взять') + '</button>', cur);
+    }
+    html += '<div class="psec">Зелья</div>';
+    for (const id of ['red', 'blue', 'green']) {
+      const n = G.inv[id], off = !n || (id === 'red' && G.p.hp >= G.p.maxHp);
+      html += rowHtml(id, POTIONS[id].name + ' ×' + n, POTIONS[id].desc,
+        '<button class="rbtn" type="button" data-drink="' + id + '"' + (off ? ' disabled' : '') + '>Выпить</button>');
+    }
+    html += '<div class="psec">Снаряжение</div>';
+    let gear = 0;
+    if (G.shield) { gear++; html += rowHtml('shield', 'Щит', 'Держи A, стоя на месте: блокирует удары спереди.'); }
+    if (G.up.dmg) { gear++; html += rowHtml('sword', 'Заточка ' + ROMAN[G.up.dmg - 1], '+' + G.up.dmg + ' к урону любого оружия.'); }
+    if (G.up.hp) { gear++; html += rowHtml('heart', 'Кольчуга ' + ROMAN[G.up.hp - 1], '+' + G.up.hp + ' к сердцам.'); }
+    if (G.up.reach) { gear++; html += rowHtml('spear', 'Длинная рукоять', 'Любое оружие бьёт дальше.'); }
+    if (!gear) html += '<div class="rdesc">Пока пусто. Загляни к Варе и кузнецу Гордею у площади.</div>';
+  } else {
+    const shop = SHOPS[panelKind];
+    $('pTitle').textContent = shop.title;
+    shop.items.forEach((it, i) => {
+      const info = itemInfo(it);
+      const btn = '<button class="rbtn" type="button" data-buy="' + i + '"' + (info.label ? ' disabled>' + info.label : '>' + info.price + ' мон.') + '</button>';
+      html += rowHtml(info.icon, info.name, info.desc, btn);
+    });
+  }
+  list.innerHTML = html;
+}
+function openPanel(kind) {
+  panelKind = kind; $('pNote').textContent = kind === 'bag' ? '' : 'Нажми на цену, чтобы купить.';
+  $('pClose').textContent = kind === 'bag' ? 'Закрыть' : 'Уйти';
+  renderPanel(); $('pList').scrollTop = 0; $('panel').hidden = false;
+}
+function closePanel() { panelKind = null; $('panel').hidden = true; persist(); }
+function toggleBag() {
+  if (panelKind === 'bag') { closePanel(); return; }
+  if (panelKind || dlg || G.state !== 'play' || menuOpen) return;
+  openPanel('bag');
+}
+$('pList').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b || b.disabled) return;
+  unlockAudio();
+  if (b.dataset.buy !== undefined) buy(SHOPS[panelKind].items[+b.dataset.buy]);
+  if (b.dataset.equip) { G.weapon = b.dataset.equip; sfx.swing(); persist(); renderPanel(); }
+  if (b.dataset.drink) drink(b.dataset.drink);
+});
+$('pClose').addEventListener('click', closePanel);
+$('bBag').addEventListener('click', () => { unlockAudio(); toggleBag(); });
 
 // ---------- Screens ----------
 function showTitle() {
@@ -1092,6 +1424,7 @@ function newGame() {
   clearSave(); G = freshState(); spawnEntities(); persist();
 }
 function toggleMenu() {
+  if (panelKind) { closePanel(); return; }
   if (G.state === 'title') { if (menuOpen) startPlay(); return; }
   if (G.state === 'win') return;
   persist(); menuOpen = true; showTitle();
