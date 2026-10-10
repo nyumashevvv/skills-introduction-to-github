@@ -187,7 +187,7 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
           <div class="card">
             <div class="eyebrow">пиксельная бродилка</div>
             <h1>Кристаллы Листвянки</h1>
-            <p class="lead">Буря разбросала пять кристаллов по округе. Найди их и верни старому Мирону.</p>
+            <p class="lead">Буря разбросала восемь кристаллов по округе. Найди их и верни старому Мирону.</p>
             <div class="mrow" id="titleBtns">
               <button class="mbtn" id="bPlay" type="button">Играть</button>
               <button class="mbtn ghost" id="bNew" type="button" hidden>Новая игра</button>
@@ -210,7 +210,7 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
             <h1>Игра окончена</h1>
             <div class="stats">
               <div><b id="oTime">0:00</b>время</div>
-              <div><b id="oCry">0/5</b>кристаллов</div>
+              <div><b id="oCry">0/8</b>кристаллов</div>
             </div>
             <div class="mrow"><button class="mbtn" id="bRetry" type="button">Начать заново</button></div>
           </div>
@@ -256,7 +256,8 @@ const C = {
   k: '#1d1b2c', e: '#36663d', d: '#2f5a3a', g: '#4f8a4b', l: '#7fbf5a', y: '#e8d17a',
   b: '#a0683f', B: '#5c3a2a', w: '#f4ecd6', s: '#eab58a', r: '#c8463e', R: '#7e2a33',
   u: '#3e6fb0', c: '#8fd0ea', n: '#2c4f8a', p: '#8b5cc9', P: '#d4b8f5', G: '#9a98ad',
-  D: '#5c5a72', F: '#6f6c86', o: '#f2b23a', O: '#b9771f', t: '#c9a46a', T: '#a8844e', a: '#e4d29a'
+  D: '#5c5a72', F: '#6f6c86', o: '#f2b23a', O: '#b9771f', t: '#c9a46a', T: '#a8844e', a: '#e4d29a',
+  S: '#e8eef6', Z: '#c3cfe0', I: '#a7d3ee', Q: '#4a4152', q: '#5d5468', K: '#2a2433'
 };
 
 function hash(x, y, s = 0) {
@@ -267,10 +268,18 @@ function hash(x, y, s = 0) {
 }
 
 /*WORLD-START*/
-const W = 44, H = 36;
+const W = 88, H = 64, TOTAL = 8;
 const GRASS = 0, FLOWER = 1, TALL = 2, PATH = 3, TREE = 4, WATER = 5, BRIDGE = 6, ROCK = 7,
-      FLOOR = 8, WALL = 9, ROOF = 10, HWALL = 11, DOOR = 12, SAND = 13, CRACK = 14;
-const SOLID = new Set([TREE, WATER, ROCK, WALL, ROOF, HWALL, DOOR, CRACK]);
+      FLOOR = 8, WALL = 9, ROOF = 10, HWALL = 11, DOOR = 12, SAND = 13, CRACK = 14,
+      SNOW = 15, PINE = 16, ICE = 17, CLIFF = 18, GATE = 19, GATEO = 20, PLATE = 21, CAVE = 22, STAIRS = 23,
+      CFLOOR = 24, PALM = 25, WRECK = 26, SROCK = 27;
+const SOLID = new Set([TREE, WATER, ROCK, WALL, ROOF, HWALL, DOOR, CRACK, PINE, CLIFF, GATE, PALM, WRECK, SROCK]);
+function zoneAt(tx, ty) {
+  if (tx >= 58 && ty >= 36) return 'cave';
+  if (tx >= 44 && ty < 36) return 'snow';
+  if (ty >= 36) return 'beach';
+  return 'field';
+}
 
 function buildWorld() {
   const m = new Uint8Array(W * H);
@@ -320,9 +329,85 @@ function buildWorld() {
   rect(16, 23, 2, 2, GRASS); set(15, 23, CRACK);
   // borders
   rect(0, 0, W, 2, TREE); rect(0, H - 2, W, 2, TREE); rect(0, 0, 2, H, TREE); rect(W - 2, 0, 2, H, TREE);
+  // village edges with passes to the east (mountains) and south (beach)
+  rect(42, 0, 2, 36, TREE); rect(42, 19, 2, 4, GRASS); rect(42, 20, 2, 1, PATH);
+  rect(0, 34, 44, 2, TREE); rect(21, 34, 3, 2, GRASS); rect(22, 34, 1, 2, PATH);
+  const puzzles = {}, portals = [];
+  const nearPath = (x, y) => [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].some(([a, b]) => get(x + a, y + b) === PATH);
+  const scatter = (x0, y0, x1, y1, base, t, seed, chance, skip) => {
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++)
+      if (get(x, y) === base && hash(x, y, seed) < chance && !nearPath(x, y) && !skip(x, y)) set(x, y, t);
+  };
+  const inR = (x, y, x0, y0, x1, y1) => x >= x0 && x <= x1 && y >= y0 && y <= y1;
+
+  // ---- Frost pass (east) ----
+  rect(44, 0, 44, 36, SNOW);
+  rect(44, 0, 44, 2, CLIFF); rect(86, 0, 2, 36, CLIFF); rect(44, 34, 44, 2, CLIFF);
+  rect(44, 2, 6, 12, CLIFF); rect(44, 27, 6, 7, CLIFF);           // foot clearing x44..49 y14..26
+  rect(50, 2, 2, 32, CLIFF);                                      // wall with the pass gate
+  rect(44, 20, 6, 1, PATH);
+  puzzles.mtn = {
+    gates: [[50, 20], [51, 20], [50, 21], [51, 21]], plates: [[48, 16], [45, 25]], blocks: [[46, 18], [47, 23]], center: [47, 20],
+  };
+  rect(52, 20, 28, 1, PATH); rect(66, 12, 1, 8, PATH); rect(79, 21, 1, 3, PATH);
+  house(55, 15); set(57, 19, PATH);
+  // frozen lake: slide puzzle, verified solvable
+  rect(61, 3, 11, 9, CLIFF); rect(62, 4, 9, 7, ICE); set(66, 11, PATH);
+  for (const [x, y] of [[0, 4], [1, 0], [2, 5], [3, 6], [4, 1], [4, 5], [5, 5]]) set(62 + x, 4 + y, SROCK);
+  // cliff with the cave mouth
+  rect(74, 24, 12, 10, CLIFF); set(79, 24, CAVE);
+  portals.push({ tx: 79, ty: 24, to: [61, 40] });
+  for (const [x, y] of [[54, 27], [57, 9], [70, 24], [83, 9], [60, 31], [77, 4]]) if (get(x, y) === SNOW) set(x, y, SROCK);
+  scatter(52, 2, 85, 33, SNOW, PINE, 21, .09, (x, y) => inR(x, y, 60, 2, 72, 12) || inR(x, y, 54, 14, 61, 21) || inR(x, y, 72, 21, 86, 33) || inR(x, y, 81, 2, 85, 6));
+
+  // ---- South beach ----
+  rect(0, 36, 58, 28, SAND);
+  for (let x = 0; x < 58; x++) { const shore = 54 + Math.floor(hash(x, 0, 13) * 2); rect(x, shore, 1, H - shore, WATER); }
+  rect(0, 36, 2, 18, PALM);
+  rect(22, 36, 1, 6, PATH);
+  house(16, 37);
+  rect(5, 47, 8, 3, WRECK); set(8, 47, SAND);
+  rect(44, 40, 14, 12, CLIFF); rect(45, 41, 12, 10, SAND);       // hidden cove
+  puzzles.cove = { gates: [[44, 45], [44, 46]], levers: ['lv1', 'lv2', 'lv3'], pattern: [true, false, true] };
+  scatter(2, 37, 57, 52, SAND, PALM, 23, .06, (x, y) => inR(x, y, 14, 36, 26, 44) || inR(x, y, 3, 45, 14, 52) || inR(x, y, 38, 39, 58, 52));
+
+  // ---- Dark cave (south-east), reached through the mountains ----
+  rect(58, 36, 30, 28, CLIFF);
+  rect(60, 38, 8, 6, CFLOOR); set(61, 38, STAIRS);
+  portals.push({ tx: 61, ty: 38, to: [79, 22] });
+  rect(68, 40, 8, 2, CFLOOR); rect(76, 38, 10, 8, CFLOOR);
+  rect(62, 44, 2, 6, CFLOOR); rect(60, 50, 14, 8, CFLOOR);
+  rect(75, 50, 11, 10, CFLOOR); set(65, 55, CLIFF); set(67, 57, CLIFF);
+  puzzles.cave = {
+    gates: [[74, 53], [74, 54]], plates: [[61, 56], [70, 56], [66, 51]], blocks: [[63, 52], [68, 54], [71, 52]], center: [66, 53],
+  };
+  for (const pz of Object.values(puzzles)) {
+    for (const [x, y] of pz.gates) set(x, y, GATE);
+    for (const [x, y] of pz.plates || []) set(x, y, PLATE);
+  }
 
   const ents = [
     { kind: 'npc', id: 'miron', tx: 21, ty: 18, name: 'Мирон' },
+    { kind: 'npc', id: 'efim', tx: 59, ty: 19, name: 'Ефим' },
+    { kind: 'npc', id: 'tikhon', tx: 21, ty: 42, name: 'Тихон' },
+    { kind: 'deco', id: 'lamp', tx: 25, ty: 21 },
+    { kind: 'deco', id: 'lamp', tx: 19, ty: 21 },
+    { kind: 'sign', id: 'gate', tx: 44, ty: 14 },
+    { kind: 'sign', id: 'ice', tx: 65, ty: 13 },
+    { kind: 'sign', id: 'cave', tx: 77, ty: 23 },
+    { kind: 'sign', id: 'cavepuz', tx: 68, ty: 50 },
+    { kind: 'sign', id: 'cove', tx: 40, ty: 41 },
+    { kind: 'lever', id: 'lv1', tx: 41, ty: 43 },
+    { kind: 'lever', id: 'lv2', tx: 41, ty: 46 },
+    { kind: 'lever', id: 'lv3', tx: 41, ty: 49 },
+    { kind: 'chest', id: 'ch_peak', tx: 83, ty: 4, loot: 'coins30' },
+    { kind: 'chest', id: 'ch_wreck', tx: 9, ty: 50, loot: 'heart' },
+    { kind: 'chest', id: 'ch_cove', tx: 55, ty: 42, loot: 'coins30' },
+    { kind: 'chest', id: 'ch_cavehall', tx: 84, ty: 39, loot: 'coins40' },
+    { kind: 'chest', id: 'ch_cave', tx: 84, ty: 58, loot: 'heart' },
+    { kind: 'crystal', id: 'cr6', tx: 64, ty: 6 },
+    { kind: 'crystal', id: 'cr7', tx: 53, ty: 46 },
+    { kind: 'crystal', id: 'cr8', tx: 82, ty: 55 },
     { kind: 'npc', id: 'asya', tx: 24, ty: 13, name: 'Ася' },
     { kind: 'npc', id: 'cat', tx: 13, ty: 21, name: 'Кот' },
     { kind: 'npc', id: 'varya', tx: 28, ty: 21, name: 'Варя' },
@@ -347,18 +432,31 @@ function buildWorld() {
   ];
   const coins = [[9, 9], [9, 12], [6, 10], [12, 7], [14, 11], [24, 7], [23, 10], [30, 15], [35, 14], [32, 7], [34, 8],
     [12, 23], [13, 23], [14, 23], [7, 26], [14, 28], [16, 29], [30, 25], [32, 25], [34, 30], [36, 31], [39, 25],
-    [37, 17], [39, 18], [5, 18], [3, 21], [40, 21], [18, 14], [21, 9], [27, 22]];
+    [37, 17], [39, 18], [5, 18], [3, 21], [40, 21], [18, 14], [21, 9], [27, 22],
+    [53, 24], [57, 30], [62, 26], [69, 16], [74, 8], [78, 5], [84, 12], [81, 17], [72, 26], [55, 6], [46, 22], [48, 14], [63, 7], [68, 9],
+    [4, 42], [14, 44], [28, 40], [33, 50], [40, 52], [47, 43], [55, 49], [19, 51], [8, 52], [36, 45], [50, 48], [52, 42],
+    [65, 39], [73, 41], [82, 44], [63, 46], [72, 57], [77, 51], [80, 58], [61, 53]];
   coins.forEach(([x, y], i) => { if (!SOLID.has(get(x, y))) ents.push({ kind: 'coin', id: 'co' + i, tx: x, ty: y }); });
   const mobs = {
     slime: [[13, 7], [7, 26], [14, 28], [4, 32], [38, 19], [18, 8], [30, 16], [23, 27], [5, 16]],
     bat: [[29, 5], [37, 10], [36, 4], [12, 25], [6, 23]],
     skel: [[31, 25], [37, 25]],
     beetle: [[34, 17], [21, 31], [25, 25]],
+    wolf: [[56, 25], [63, 16], [72, 22], [80, 10], [70, 29], [58, 9], [83, 30]],
+    snowman: [[59, 5], [76, 15], [83, 19], [60, 28]],
+    crab: [[10, 44], [30, 46], [36, 40], [50, 44], [53, 48], [26, 51], [6, 40], [47, 49]],
+    gslime: [[64, 41], [80, 40], [78, 44], [83, 52], [70, 52]],
+    caveskel: [[83, 43], [79, 56], [72, 56]],
+    cavebat: [[70, 40], [80, 42], [66, 55], [78, 57]],
   };
-  for (const type in mobs) for (const [x, y] of mobs[type])
+  for (const key in mobs) for (const [x, y] of mobs[key]) {
+    const type = key === 'caveskel' ? 'skel' : key === 'cavebat' ? 'bat' : key;
     if (type === 'bat' || !SOLID.has(get(x, y))) ents.push({ kind: 'mob', type, tx: x, ty: y });
+  }
+  for (const [g, pz] of Object.entries(puzzles)) (pz.blocks || []).forEach(([x, y], i) => ents.push({ kind: 'block', group: g, i, tx: x, ty: y }));
+  for (const [x, y] of [[67, 38], [60, 57], [73, 50], [85, 38], [85, 59], [75, 50], [60, 43], [76, 45]]) ents.push({ kind: 'deco', id: 'torch', tx: x, ty: y });
   ents.push({ kind: 'mob', type: 'king', id: 'boss', tx: 32, ty: 30 });
-  return { m, ents };
+  return { m, ents, puzzles, portals };
 }
 /*WORLD-END*/
 
@@ -481,6 +579,8 @@ const SPR = {
 };
 SPR.hero.left = SPR.hero.right.map(flip);
 SPR.varya = mk(HERO_DOWN, { r: 'y', u: 'l', b: 'B', y: 'o' });
+SPR.tikhon = mk(HERO_DOWN, { r: 'u', u: 'c', b: 'B', y: 'o' });
+SPR.efim = mk(withRows(HERO_DOWN, 7, ['...kswwwwwwsk', '....kwwwwwwk', '...kkwwwwwwkk']), { r: 'b', u: 'B', b: 'B', y: 'o' });
 SPR.gordey = mk(withRows(HERO_DOWN, 7, ['...ksBBBBBBsk', '....kBBBBBBk']), { r: 'D', u: 'B', b: 'k', y: 'G' });
 
 const POTION = [
@@ -537,14 +637,25 @@ function rot(src, q) {
   x.translate(8, 8); x.rotate(q * Math.PI / 2); x.drawImage(src, -8, -8);
   return c;
 }
+const WOLF = ['', '', '', '...........k.k', '..........kGkGk', '..........kGGGk', '.k.......kGGkGkk', 'kGk......kGGGGGGk',
+  '.kGkkkkkkGGGGkkk', '..kGGGGGGGGGGk', '..kGZZZZZGGGk', '..kGGGGGGGGGk', '..kGkkGGGkkGk', '..kGk.kGk.kGk', '..kk..kk..kk', ''];
+const SNOWMAN = ['', '', '......kkkk', '.....kSSSSk', '....kSkSSkSk', '....kSSooSSk', '.....kSSSSk', '....kkkrrkkk', '...kSSSrSSSk',
+  '..kSSSSkSSSSk', '..kSSSSSSSSSk', '..kSSSSkSSSSk', '..kSSSSSSSSSk', '...kSSSSSSSk', '....kkkkkkk', ''];
+const CRAB = ['', '', '', '', '', '', '..kk......kk', '.krrk....krrk', '.krkk.kk.kkrk', '..kk.kwkwk.kk', '....krrrrrrk',
+  '...krrrrrrrrk', '..kkrRrrrrRrkk', '.k.krrrrrrrrk.k', '...k.k.kk.k.k', ''];
 const beetleSet = rows => { const b = mk(rows); return { down: b, right: rot(b, -1), up: rot(b, 2), left: rot(b, 1) }; };
 Object.assign(SPR, {
+  wolf: { right: mk(WOLF) }, wolfHit: { right: mk(WOLF, WHITE) },
+  snowman: mk(SNOWMAN), snowmanHit: mk(SNOWMAN, { S: 'r', Z: 'R' }),
+  crab: mk(CRAB), crabHit: mk(CRAB, WHITE),
+  gslime: mk(SLIME, { r: 'g', R: 'd' }),
   mini: mk(MINI, { r: 'p' }), miniHit: mk(MINI, WHITE),
   king: mk(SLIME, { r: 'p', R: 'n' }), kingHit: mk(SLIME, WHITE),
   bat: [mk(BAT_A), mk(BAT_B)], batHit: mk(BAT_A, WHITE),
   skel: mk(SKEL), skelHit: mk(SKEL, { w: 'r' }),
   beetle: beetleSet(BEETLE),
 });
+SPR.wolf.left = flip(SPR.wolf.right); SPR.wolfHit.left = flip(SPR.wolfHit.right);
 SPR.beetleHit = { down: mk(BEETLE, WHITE) }; SPR.beetleHit.right = rot(SPR.beetleHit.down, -1); SPR.beetleHit.up = rot(SPR.beetleHit.down, 2); SPR.beetleHit.left = rot(SPR.beetleHit.down, 1);
 
 function mkDraw(fn) { const c = document.createElement('canvas'); c.width = c.height = 16; fn(c.getContext('2d')); return c; }
@@ -566,6 +677,12 @@ ICON.bomb = mkDraw(c => {
   P(c, 5, 7, C.G, 2, 1); P(c, 5, 8, C.G);
   P(c, 8, 3, C.k, 2, 2); P(c, 9, 2, C.b); P(c, 10, 1, C.y); P(c, 11, 0, C.o);
 });
+ICON.lantern = mkDraw(c => {
+  P(c, 6, 1, C.k, 4, 1); P(c, 5, 2, C.k, 1, 2); P(c, 10, 2, C.k, 1, 2);
+  P(c, 4, 4, C.k, 8, 2); P(c, 4, 13, C.k, 8, 2);
+  P(c, 4, 6, C.k, 8, 7); P(c, 5, 6, C.o, 6, 7); P(c, 6, 7, C.y, 4, 5); P(c, 7, 8, C.w, 2, 3);
+  P(c, 5, 4, C.D, 6, 1); P(c, 5, 14, C.D, 6, 1);
+});
 const ICON_URL = {};
 for (const k in ICON) ICON_URL[k] = ICON[k].toDataURL();
 
@@ -574,6 +691,35 @@ let world, worldCv;
 function P(c, x, y, col, w = 1, h = 1) { c.fillStyle = col; c.fillRect(x, y, w, h); }
 const tileAt = (x, y) => (x < 0 || y < 0 || x >= W || y >= H) ? TREE : world.m[y * W + x];
 
+function snowBase(c, X, Y, tx, ty) {
+  P(c, X, Y, C.S, 16, 16);
+  for (let i = 0; i < 5; i++) P(c, X + ((hash(tx, ty, 10 + i) * 16) | 0), Y + ((hash(tx, ty, 20 + i) * 16) | 0), i < 4 ? C.Z : C.w);
+}
+function sandBase(c, X, Y, tx, ty) {
+  P(c, X, Y, C.a, 16, 16);
+  for (let i = 0; i < 6; i++) P(c, X + ((hash(tx, ty, 10 + i) * 16) | 0), Y + ((hash(tx, ty, 20 + i) * 16) | 0), i < 4 ? C.t : C.w);
+}
+function caveBase(c, X, Y, tx, ty) {
+  P(c, X, Y, C.Q, 16, 16);
+  for (let i = 0; i < 6; i++) P(c, X + ((hash(tx, ty, 10 + i) * 16) | 0), Y + ((hash(tx, ty, 20 + i) * 16) | 0), i < 4 ? C.q : C.K, 2, 1);
+}
+function baseTile(c, X, Y, tx, ty) {
+  const z = zoneAt(tx, ty);
+  if (z === 'snow') snowBase(c, X, Y, tx, ty);
+  else if (z === 'beach') sandBase(c, X, Y, tx, ty);
+  else if (z === 'cave') caveBase(c, X, Y, tx, ty);
+  else grassBase(c, X, Y, tx, ty);
+}
+function rockShape(c, X, Y, snowy) {
+  for (let py = 0; py < 16; py++) for (let px = 0; px < 16; px++) {
+    const dx = (px - 7.5) / 6.5, dy = (py - 9.5) / 5.6, dd = dx * dx + dy * dy;
+    if (dd >= 1) continue;
+    let col = dd > .78 ? C.k : (dx + dy > .35 ? C.D : C.G);
+    if (dx < -.25 && dy < -.35 && dd < .45) col = C.w;
+    if (snowy && dy < -.45 && dd <= .78) col = C.S;
+    P(c, X + px, Y + py, col);
+  }
+}
 function grassBase(c, X, Y, tx, ty) {
   P(c, X, Y, C.g, 16, 16);
   for (let i = 0; i < 6; i++) {
@@ -612,14 +758,17 @@ function drawTile(c, t, tx, ty) {
       for (let i = 0; i < 7; i++) P(c, X + ((hash(tx, ty, 80 + i) * 16) | 0), Y + ((hash(tx, ty, 90 + i) * 16) | 0), spec);
       // grassy fringe where the path meets grass
       const fr = (cond, fx) => { if (cond) for (let i = 0; i < 16; i++) if (hash(tx * 16 + i, ty, 99) < .55) fx(i); };
-      fr(!walk(tileAt(tx, ty - 1)) && tileAt(tx, ty - 1) !== WATER, i => P(c, X + i, Y, C.g));
-      fr(!walk(tileAt(tx, ty + 1)) && tileAt(tx, ty + 1) !== WATER, i => P(c, X + i, Y + 15, C.g));
-      fr(!walk(tileAt(tx - 1, ty)) && tileAt(tx - 1, ty) !== WATER, i => P(c, X, Y + i, C.g));
-      fr(!walk(tileAt(tx + 1, ty)) && tileAt(tx + 1, ty) !== WATER, i => P(c, X + 15, Y + i, C.g));
+      const gr = t2 => (t2 === GRASS || t2 === FLOWER || t2 === TALL || t2 === TREE || t2 === ROCK) && zoneAt(tx, ty) === 'field';
+      const sn = t2 => t2 === SNOW || t2 === PINE || t2 === SROCK;
+      const edge = t2 => gr(t2) ? C.g : sn(t2) ? C.S : null;
+      for (const [nx, ny, fx] of [[0, -1, i => [X + i, Y]], [0, 1, i => [X + i, Y + 15]], [-1, 0, i => [X, Y + i]], [1, 0, i => [X + 15, Y + i]]]) {
+        const col = edge(tileAt(tx + nx, ty + ny));
+        fr(!!col, i => { const [px, py] = fx(i); P(c, px, py, col); });
+      }
       break;
     }
     case TREE: {
-      grassBase(c, X, Y, tx, ty);
+      baseTile(c, X, Y, tx, ty);
       P(c, X + 2, Y + 14, C.d, 12, 2);
       P(c, X + 6, Y + 10, C.B, 4, 5); P(c, X + 7, Y + 10, C.b, 1, 4);
       const v = hash(tx, ty, 5);
@@ -646,17 +795,96 @@ function drawTile(c, t, tx, ty) {
       P(c, X + 1, Y, C.B, 1, 16); P(c, X + 14, Y, C.B, 1, 16);
       break;
     case ROCK: {
-      grassBase(c, X, Y, tx, ty);
+      baseTile(c, X, Y, tx, ty);
       P(c, X + 2, Y + 14, C.d, 12, 2);
-      for (let py = 0; py < 16; py++) for (let px = 0; px < 16; px++) {
-        const dx = (px - 7.5) / 6.5, dy = (py - 9.5) / 5.6, dd = dx * dx + dy * dy;
-        if (dd >= 1) continue;
-        let col = dd > .78 ? C.k : (dx + dy > .35 ? C.D : C.G);
-        if (dx < -.25 && dy < -.35 && dd < .45) col = C.w;
-        P(c, X + px, Y + py, col);
+      rockShape(c, X, Y, false);
+      break;
+    }
+    case SROCK: {
+      const onIce = [[0, 1], [0, -1], [1, 0], [-1, 0]].some(([a, b]) => tileAt(tx + a, ty + b) === ICE);
+      if (onIce) P(c, X, Y, C.I, 16, 16); else snowBase(c, X, Y, tx, ty);
+      P(c, X + 2, Y + 14, C.Z, 12, 2);
+      rockShape(c, X, Y, true);
+      break;
+    }
+    case SNOW: snowBase(c, X, Y, tx, ty); break;
+    case CFLOOR: caveBase(c, X, Y, tx, ty); break;
+    case PINE: {
+      snowBase(c, X, Y, tx, ty);
+      P(c, X + 3, Y + 14, C.Z, 10, 2);
+      P(c, X + 7, Y + 12, C.B, 2, 4);
+      for (const [y0, y1, h] of [[1, 5, 3], [4, 9, 5], [7, 12, 7]]) {
+        for (let py = y0; py <= y1; py++) {
+          const hw = Math.round(1 + (py - y0) / (y1 - y0) * (h - 1));
+          P(c, X + 8 - hw - 1, Y + py, C.k, hw * 2 + 2, 1); P(c, X + 8 - hw, Y + py, C.d, hw * 2, 1);
+          P(c, X + 8 - hw, Y + py, C.e, Math.max(1, hw - 1), 1);
+        }
+        P(c, X + 7, Y + y0, C.S, 2, 1); P(c, X + 6, Y + y0 + 1, C.S, 3, 1);
+      }
+      P(c, X + 7, Y, C.k, 2, 1);
+      break;
+    }
+    case ICE:
+      P(c, X, Y, C.I, 16, 16);
+      for (let i = 0; i < 3; i++) {
+        const x = (hash(tx, ty, 170 + i) * 12) | 0, y = (hash(tx, ty, 180 + i) * 15) | 0;
+        P(c, X + x, Y + y, C.w, 3, 1); P(c, X + x + 3, Y + y + 1, C.c, 2, 1);
+      }
+      break;
+    case CLIFF: case CAVE: {
+      const cave = zoneAt(tx, ty) === 'cave';
+      P(c, X, Y, cave ? C.K : C.D, 16, 16);
+      for (let i = 0; i < 5; i++) {
+        const x = (hash(tx, ty, 190 + i) * 13) | 0, y = (hash(tx, ty, 200 + i) * 15) | 0;
+        P(c, X + x, Y + y, cave ? C.Q : C.G, 3, 1); P(c, X + x, Y + y + 1, C.k, 3, 1);
+      }
+      const up = tileAt(tx, ty - 1);
+      if (zoneAt(tx, ty) === 'snow' && up !== CLIFF && up !== CAVE) {
+        P(c, X, Y, C.S, 16, 3);
+        for (let i = 0; i < 16; i++) if (hash(tx * 16 + i, ty, 210) < .5) P(c, X + i, Y + 3, C.S);
+      }
+      if (t === CAVE) {
+        P(c, X + 3, Y + 5, C.k, 10, 11); P(c, X + 4, Y + 4, C.k, 8, 1); P(c, X + 5, Y + 3, C.k, 6, 1);
+        P(c, X + 2, Y + 5, C.G, 1, 11); P(c, X + 13, Y + 5, C.G, 1, 11);
       }
       break;
     }
+    case GATE: case GATEO:
+      baseTile(c, X, Y, tx, ty);
+      for (const bx of [1, 5, 9, 13]) {
+        if (t === GATE) { P(c, X + bx, Y, C.k, 3, 16); P(c, X + bx + 1, Y, C.G, 1, 16); }
+        else { P(c, X + bx, Y + 12, C.k, 3, 4); P(c, X + bx + 1, Y + 12, C.G, 1, 3); }
+      }
+      if (t === GATE) { P(c, X, Y + 3, C.k, 16, 3); P(c, X, Y + 4, C.D, 16, 1); P(c, X, Y + 10, C.k, 16, 3); P(c, X, Y + 11, C.D, 16, 1); }
+      break;
+    case PLATE:
+      baseTile(c, X, Y, tx, ty);
+      P(c, X + 2, Y + 2, C.k, 12, 12); P(c, X + 3, Y + 3, C.D, 10, 10); P(c, X + 4, Y + 4, C.F, 8, 8);
+      P(c, X + 3, Y + 3, C.G, 10, 1); P(c, X + 7, Y + 7, C.o, 2, 2);
+      break;
+    case STAIRS:
+      caveBase(c, X, Y, tx, ty);
+      for (let i = 0; i < 4; i++) { P(c, X + 2, Y + 2 + i * 3, i === 0 ? C.G : C.q, 12, 2); P(c, X + 2, Y + 4 + i * 3, C.k, 12, 1); }
+      P(c, X + 1, Y + 1, C.k, 1, 14); P(c, X + 14, Y + 1, C.k, 1, 14);
+      break;
+    case PALM: {
+      sandBase(c, X, Y, tx, ty);
+      P(c, X + 3, Y + 14, C.t, 10, 2);
+      for (let i = 0; i < 10; i++) { const ox = Math.round(Math.sin(i / 3) * 1.5); P(c, X + 7 + ox, Y + 6 + i, C.k, 3, 1); P(c, X + 7 + ox, Y + 6 + i, C.b, 2, 1); if (i % 3 === 0) P(c, X + 7 + ox, Y + 6 + i, C.B, 2, 1); }
+      for (const a of [-2.8, -2.2, -1.5, -.9, -.3, .3]) for (let j = 1; j < 8; j++) {
+        const px = X + 8 + Math.round(Math.cos(a) * j), py = Y + 5 + Math.round(Math.sin(a) * j * .6) + (j > 4 ? j - 4 : 0);
+        P(c, px, py, j > 5 ? C.l : C.g); P(c, px, py + 1, C.d);
+      }
+      P(c, X + 7, Y + 5, C.B, 2, 2);
+      break;
+    }
+    case WRECK:
+      sandBase(c, X, Y, tx, ty);
+      P(c, X, Y + 1, C.B, 16, 14);
+      for (let r = 0; r < 4; r++) { P(c, X, Y + 1 + r * 4, C.k, 16, 1); P(c, X, Y + 2 + r * 4, C.b, 16, 1); }
+      if (hash(tx, ty, 220) < .4) P(c, X + 5, Y + 6, C.k, 4, 3);
+      P(c, X + ((tx % 2) ? 3 : 11), Y + 1, C.k, 1, 14);
+      break;
     case CRACK: {
       drawTile(c, ROCK, tx, ty);
       for (const [px, py] of [[8, 6], [7, 7], [8, 8], [9, 9], [8, 10], [7, 11], [6, 9], [5, 10], [10, 8], [11, 7]]) P(c, X + px, Y + py, C.k);
@@ -716,6 +944,7 @@ function setTile(tx, ty, t) {
 function resetWorld() {
   world = buildWorld(); renderWorld();
   for (const id of G.taken) if (id.startsWith('brk')) setTile(+id.slice(3) % W, Math.floor(+id.slice(3) / W), GRASS);
+  for (const g in world.puzzles) if (G.taken.has('open_' + g)) for (const [x, y] of world.puzzles[g].gates) setTile(x, y, GATEO);
 }
 function renderWorld() {
   worldCv = document.createElement('canvas'); worldCv.width = W * TS; worldCv.height = H * TS;
@@ -727,12 +956,17 @@ function renderWorld() {
 const TEXT = {
   intro: [
     'Эй, путник! Хорошо, что ты здесь.',
-    'Ночью буря разбросала пять кристаллов Листвянки по всей округе. Без них наш лес засохнет.',
+    'Ночью буря разбросала восемь кристаллов Листвянки по всей округе. Без них наш лес засохнет.',
     'Найди их и принеси мне. Где искать, подскажут таблички. Или спроси меня ещё раз.',
     'И осторожно: слаймы совсем озверели. Жми A, чтобы взмахнуть мечом. Держи B, чтобы бежать.',
     'Монеты неси Варе в лавку и кузнецу Гордею. А всё, что купишь, лежит в сумке: кнопка внизу экрана.',
   ],
   varya: ['Привет! Я Варя. Зелья, оружие, щиты: выбирай, что нравится.', 'Заходи, у меня всё свежее!', 'Монетки звенят? Значит, пора за покупками.'],
+  efim: ['Ох, гость! Я Ефим, живу тут отшельником. В горах злые волки и снеговики, береги голову.',
+    'Кристалл вмёрз в озеро. На льду катишься, пока не упрёшься в камень. Думай, куда едешь!', 'А в пещеру без фонаря не суйся.'],
+  tikhon: ['Я Тихон, рыбак. В бухте за скалами что-то сияет, да ворота заперты.',
+    'Нашёл записку в бутылке: «Крайние рычаги вверх, средний вниз». Не про бухту ли?', 'Крабы нынче злые. Щипаются больно.'],
+  night: { miron: 'Ночь на дворе. Монстры в темноте злее, держись света.', varya: 'Поздно уже, но для тебя открою.' },
   gordey: ['Кузнец Гордей к твоим услугам. Наточу клинок, подгоню кольчугу. Не бесплатно, конечно.', 'Опять ты? Ну, показывай монеты.', 'Хороший клинок любит заботу.'],
   hints: {
     cr1: 'Один лежит в цветочном поле на северо-западе, среди камней.',
@@ -740,20 +974,28 @@ const TEXT = {
     cr3: 'Один спрятан в глубине леса на юго-западе. Держись тропы.',
     cr4: 'Один охраняет Король слаймов в глубине руин на юго-востоке. Возьми зелья.',
     cr5: 'Один упал в рощу на востоке, у края озера.',
+    cr6: 'Один вмёрз в озеро высоко в горах на востоке. Ворота перевала откроются, если положить камни на плиты.',
+    cr7: 'Один спрятан в бухте на южном пляже, за воротами. Рыбак Тихон знает, как их открыть.',
+    cr8: 'Последний лежит в тёмной пещере в горах. Купи у Вари фонарь, без него там ничего не видно.',
   },
-  win: ['Все пять кристаллов! Не верю своим глазам.', 'Листвянка спасена. Спасибо тебе, герой!'],
+  win: ['Все восемь кристаллов! Не верю своим глазам.', 'Листвянка спасена. Спасибо тебе, герой!'],
   asya: ['Мост ведёт на остров. Говорят, там что-то блестит.', 'Я видела, как слаймы ползли к руинам. Брр.', 'Монеты? Собирай, вдруг пригодятся!',
     'Видишь треснувшие камни? Говорят, бомба разносит их в щебень. А за ними тайники!', 'Жуки с рогами непробиваемы спереди. Обходи их сзади или жди, пока врежутся в стену.'],
   cat: ['Мяу.', 'Мр-р-р.', 'Кот смотрит на тебя так, будто знает, где лежит кристалл.'],
   signs: {
-    village: 'ЛИСТВЯНКА\nСевер: алтарь. Северо-восток: озеро.\nЮг: лес. Юго-восток: руины.',
+    village: 'ЛИСТВЯНКА\nСевер: алтарь, озеро. Восток: горы.\nЮг: лес, руины, за ними пляж.',
+    gate: 'Ворота перевала. Поставь камни на обе плиты.\nЗастрял камень? Отойди подальше, он вернётся.',
+    ice: 'Ледяное озеро. На льду не остановиться, пока не упрёшься в камень.',
+    cave: 'Пещера. Без фонаря там ничего не видно.',
+    cavepuz: 'Три плиты, три камня. Дверь откроется, когда все плиты прижаты.',
+    cove: 'Бухта Тихая. Ворота открываются рычагами.',
     meadow: 'Цветочное поле. Не топтать!\n(Ну, разве что чуть-чуть.)',
     forest: 'Старый лес. Не сходи с тропы.',
     ruins: 'Руины древней крепости. В глубине спит Король слаймов. Опасно!',
     shrine: 'Алтарь кристаллов. Пять гнёзд пустуют.',
   },
   doors: { 17: 'Дом Мирона. Заперто, хозяин на площади.', 27: 'Заперто. Изнутри пахнет пирогами.' },
-  chest: { coins10: 'В сундуке 10 монет!', coins15: 'В сундуке 15 монет!', heart: 'В сундуке сердце! Здоровье +1.', coins20: 'Тайник! Внутри 20 монет.', potions: 'Тайник! Внутри два красных зелья.' },
+  chest: { coins30: 'В сундуке 30 монет!', coins40: 'В сундуке 40 монет!', coins10: 'В сундуке 10 монет!', coins15: 'В сундуке 15 монет!', heart: 'В сундуке сердце! Здоровье +1.', coins20: 'Тайник! Внутри 20 монет.', potions: 'Тайник! Внутри два красных зелья.' },
   empty: 'Сундук пуст.',
   faint: 'Ты теряешь сознание… и приходишь в себя уже в деревне.',
 };
@@ -777,22 +1019,20 @@ const POTION_MAX = 9;
 const SHOPS = {
   varya: {
     title: 'Лавка Вари', items: [
-      { id: 'red', kind: 'potion', price: 6 },
-      { id: 'blue', kind: 'potion', price: 8 },
-      { id: 'green', kind: 'potion', price: 12 },
-      { id: 'arrows', kind: 'ammo', ammo: 'arrows', qty: 10, price: 5, icon: 'arrow', name: 'Стрелы ×10', desc: 'Для лука.' },
-      { id: 'bombs', kind: 'ammo', ammo: 'bombs', qty: 3, price: 10, icon: 'bomb', name: 'Бомбы ×3', desc: 'Ломают треснувшие камни. Взрыв ранит и тебя!' },
-      { id: 'spear', kind: 'weapon', price: 20 },
-      { id: 'axe', kind: 'weapon', price: 35 },
-      { id: 'bow', kind: 'weapon', price: 30 },
-      { id: 'shield', kind: 'shield', price: 25, name: 'Щит', desc: 'Держи A, стоя на месте: блокирует удары спереди.' },
+      { id: 'arrows', kind: 'ammo', ammo: 'arrows', qty: 10, price: 10, icon: 'arrow', name: 'Стрелы ×10', desc: 'Для лука.' },
+      { id: 'bombs', kind: 'ammo', ammo: 'bombs', qty: 3, price: 15, icon: 'bomb', name: 'Бомбы ×3', desc: 'Ломают треснувшие камни. Взрыв ранит и тебя!' },
+      { id: 'spear', kind: 'weapon', price: 40 },
+      { id: 'axe', kind: 'weapon', price: 70 },
+      { id: 'bow', kind: 'weapon', price: 50 },
+      { id: 'lantern', kind: 'gear', price: 60, icon: 'lantern', name: 'Фонарь', desc: 'Освещает тёмную пещеру и ночные тропы.' },
+      { id: 'shield', kind: 'shield', price: 45, name: 'Щит', desc: 'Держи A, стоя на месте: блокирует удары спереди.' },
     ],
   },
   gordey: {
     title: 'Кузница Гордея', items: [
-      { id: 'dmg', kind: 'up', icon: 'sword', name: 'Заточка', desc: '+1 к урону любого оружия.', prices: [15, 30, 50] },
-      { id: 'hp', kind: 'up', icon: 'heart', name: 'Кольчуга', desc: '+1 сердце к здоровью.', prices: [20, 40] },
-      { id: 'reach', kind: 'up', icon: 'spear', name: 'Длинная рукоять', desc: 'Любое оружие бьёт дальше.', prices: [25] },
+      { id: 'dmg', kind: 'up', icon: 'sword', name: 'Заточка', desc: '+1 к урону любого оружия.', prices: [30, 70, 120] },
+      { id: 'hp', kind: 'up', icon: 'heart', name: 'Кольчуга', desc: '+1 сердце к здоровью.', prices: [40, 90] },
+      { id: 'reach', kind: 'up', icon: 'spear', name: 'Длинная рукоять', desc: 'Любое оружие бьёт дальше.', prices: [60] },
     ],
   },
 };
@@ -842,6 +1082,9 @@ const sfx = {
   drink: () => [392, 494, 587].forEach((f, i) => tone(f, f * 1.1, .09, 'triangle', .06, i * .06)),
   deny: () => tone(180, 140, .12, 'square', .05),
   bow: () => tone(500, 1400, .08, 'triangle', .05),
+  push: () => tone(150, 110, .12, 'square', .04),
+  lever: () => { tone(600, 300, .06, 'square', .04); tone(900, 900, .05, 'square', .03, .06); },
+  portal: () => [300, 400, 500].forEach((f, i) => tone(f, f * .8, .1, 'triangle', .05, i * .05)),
   fuse: () => tone(2000, 1500, .1, 'sawtooth', .02),
   boom: () => { tone(120, 30, .45, 'sawtooth', .09); tone(80, 20, .5, 'square', .06, .02); },
   throw: () => tone(400, 700, .07, 'triangle', .03),
@@ -940,6 +1183,7 @@ function freshState() {
     inv: { red: 0, blue: 0, green: 0 }, weapons: ['sword'], weapon: 'sword', shield: false,
     up: { dmg: 0, hp: 0, reach: 0 }, buff: { speed: 0, guard: 0 }, met: {},
     ammo: { arrows: 0, bombs: 0 }, diff: 'normal',
+    lantern: false, levers: { lv1: false, lv2: false, lv3: false }, clock: 30, zone: null,
   };
 }
 function spawnEntities() {
@@ -949,6 +1193,11 @@ function spawnEntities() {
     if (s.boss && !G.taken.has('boss')) continue;
     const e = { ...s, x: s.tx * TS, y: s.ty * TS };
     if (s.kind === 'chest') e.open = G.taken.has(s.id);
+    if (s.kind === 'block' && G.taken.has('open_' + s.group)) {
+      const [px, py] = world.puzzles[s.group].plates[s.i]; e.tx = px; e.ty = py; e.x = px * TS; e.y = py * TS;
+    }
+    if (s.kind === 'block') { e.hx = s.tx; e.hy = s.ty; blockers.set(e.ty * W + e.tx, e); ents.push(e); continue; }
+    if (s.kind === 'lever') { blockers.set(s.ty * W + s.tx, e); ents.push(e); continue; }
     if (s.kind === 'mob') { ents.push(makeMob(s)); continue; }
     if (s.kind === 'npc' || s.kind === 'sign' || s.kind === 'chest' || s.kind === 'deco') blockers.set(s.ty * W + s.tx, e);
     ents.push(e);
@@ -960,6 +1209,7 @@ function makeSave() {
   return {
     v: 1, x: G.p.x, y: G.p.y, hp: G.p.hp, maxHp: G.p.maxHp, coins: G.coins, taken: [...G.taken], talked: G.talked, won: G.won, time: G.time, dir: G.p.dir,
     inv: G.inv, weapons: G.weapons, weapon: G.weapon, shield: G.shield, up: G.up, met: G.met, ammo: G.ammo, diff: G.diff,
+    lantern: G.lantern, levers: G.levers, clock: G.clock,
   };
 }
 function persist() { try { localStorage.setItem('lv_save', JSON.stringify(makeSave())); } catch (e) {} }
@@ -976,6 +1226,7 @@ function applySave(s) {
   G.shield = !!s.shield;
   Object.assign(G.ammo, s.ammo || {});
   G.diff = DIFF[s.diff] ? s.diff : 'normal';
+  G.lantern = !!s.lantern; Object.assign(G.levers, s.levers || {}); G.clock = +s.clock || 30;
   if (G.won) { G.p.x = START.x; G.p.y = START.y; }
 }
 
@@ -1064,16 +1315,18 @@ function interact(e) {
     if (e.loot === 'coins15') G.coins += 15;
     if (e.loot === 'heart') { G.p.maxHp++; G.p.hp = G.p.maxHp; }
     if (e.loot === 'coins20') G.coins += 20;
+    if (e.loot === 'coins30') G.coins += 30;
+    if (e.loot === 'coins40') G.coins += 40;
     if (e.loot === 'potions') G.inv.red = Math.min(POTION_MAX, G.inv.red + 2);
     burst(e.x + 8, e.y + 6, C.o, 14);
     say('', TEXT.chest[e.loot]); persist(); return;
   }
   if (e.id === 'miron') {
     const n = crystalCount();
-    if (n >= 5) { say(e.name, TEXT.win, () => { G.won = true; persist(); showWin(); }); sfx.win(); return; }
+    if (n >= TOTAL) { say(e.name, TEXT.win, () => { G.won = true; persist(); showWin(); }); sfx.win(); return; }
     if (!G.talked) { G.talked = true; say(e.name, TEXT.intro); persist(); return; }
-    const missing = ['cr1', 'cr2', 'cr3', 'cr4', 'cr5'].find(id => !G.taken.has(id));
-    say(e.name, ['Кристаллов у тебя: ' + n + ' из 5.', TEXT.hints[missing]]);
+    const missing = ['cr1', 'cr2', 'cr3', 'cr4', 'cr5', 'cr6', 'cr7', 'cr8'].find(id => !G.taken.has(id));
+    say(e.name, [(isNight() ? TEXT.night.miron + ' ' : '') + 'Кристаллов у тебя: ' + n + ' из ' + TOTAL + '.', TEXT.hints[missing]]);
     return;
   }
   if (e.id === 'asya') { say(e.name, TEXT.asya[G.asyaI++ % TEXT.asya.length]); return; }
@@ -1081,10 +1334,18 @@ function interact(e) {
   if (e.id === 'varya' || e.id === 'gordey') {
     const lines = TEXT[e.id], first = !G.met[e.id];
     G.met[e.id] = true;
-    say(e.name, first ? lines[0] : lines[1 + ((Math.random() * (lines.length - 1)) | 0)], () => openPanel(e.id));
+    const line = e.id === 'varya' && isNight() ? TEXT.night.varya : first ? lines[0] : lines[1 + ((Math.random() * (lines.length - 1)) | 0)];
+    say(e.name, line, () => openPanel(e.id));
     return;
   }
-  if (e.kind === 'deco') { swing(); }
+  if (e.id === 'efim' || e.id === 'tikhon') {
+    const lines = TEXT[e.id], first = !G.met[e.id];
+    G.met[e.id] = true;
+    say(e.name, first ? lines.slice(0, 2) : lines[1 + ((Math.random() * (lines.length - 1)) | 0)]);
+    return;
+  }
+  if (e.kind === 'lever') { toggleLever(e); return; }
+  if (e.kind === 'deco' || e.kind === 'block') { swing(); }
 }
 function weaponBox(p) {
   const wp = WEAPONS[G.weapon], f = FACE[p.dir], L = wp.len + (G.up.reach ? 6 : 0), wd = wp.wid;
@@ -1126,21 +1387,81 @@ function swing() {
     if (overlap(b.x, b.y, b.w, b.h, m.x + m.hb.x, m.y + m.hb.y, m.hb.w, m.hb.h)) hitMob(m, dmg, p.x + 8, p.y + 10);
   }
 }
+// ---------- Puzzles, portals, day and night ----------
+const DAY_LEN = 240;
+function nightDark() {
+  const ph = (G.clock % DAY_LEN) / DAY_LEN;
+  if (ph < .55) return 0;
+  if (ph < .63) return (ph - .55) / .08 * .62;
+  if (ph < .92) return .62;
+  return (1 - ph) / .08 * .62;
+}
+const isNight = () => nightDark() > .3;
+const ZONE_NAMES = { field: 'Листвянка', snow: 'Морозный перевал', beach: 'Южный пляж', cave: 'Тёмная пещера' };
+function openGate(g) {
+  if (G.taken.has('open_' + g)) return;
+  G.taken.add('open_' + g);
+  for (const [x, y] of world.puzzles[g].gates) { setTile(x, y, GATEO); burst(x * TS + 8, y * TS + 8, C.G, 8); }
+  sfx.open(); G.shake = .25; toast('Ворота открылись!'); persist();
+}
+function checkPuzzle(g) {
+  const pz = world.puzzles[g];
+  if (G.taken.has('open_' + g) || !pz.plates) return;
+  if (pz.plates.every(([x, y]) => { const b = blockers.get(y * W + x); return b && b.kind === 'block'; })) openGate(g);
+}
+function moveBlock(b, nx, ny) {
+  blockers.delete(b.ty * W + b.tx); b.tx = nx; b.ty = ny; blockers.set(ny * W + nx, b);
+}
+function tryPush(p, ix, iy, dt) {
+  if (!!ix === !!iy) { p.push = 0; return; }
+  const cx = p.x + 8 + ix * 8, cy = p.y + 12 + iy * 5;
+  const tx = Math.floor(cx / TS), ty = Math.floor(cy / TS), b = blockers.get(ty * W + tx);
+  if (!b || b.kind !== 'block' || G.taken.has('open_' + b.group)) { p.push = 0; return; }
+  p.push = (p.push || 0) + dt;
+  if (p.push < .25) return;
+  p.push = 0;
+  const nx = tx + ix, ny = ty + iy, t = tileAt(nx, ny);
+  if (SOLID.has(t) || t === CAVE || t === STAIRS || blockers.has(ny * W + nx)) { sfx.deny(); return; }
+  moveBlock(b, nx, ny); sfx.push();
+  if (tileAt(nx, ny) === PLATE) { sfx.lever(); burst(nx * TS + 8, ny * TS + 8, C.o, 5); }
+  checkPuzzle(b.group);
+}
+function resetFarBlocks(p) {
+  for (const g in world.puzzles) {
+    const pz = world.puzzles[g];
+    if (!pz.blocks || G.taken.has('open_' + g)) continue;
+    if (Math.hypot(pz.center[0] * TS - p.x, pz.center[1] * TS - p.y) < 240) continue;
+    for (const b of ents) if (b.kind === 'block' && b.group === g && (b.tx !== b.hx || b.ty !== b.hy) && !blockers.has(b.hy * W + b.hx)) {
+      moveBlock(b, b.hx, b.hy); b.x = b.hx * TS; b.y = b.hy * TS;
+    }
+  }
+}
+function toggleLever(e) {
+  const pz = world.puzzles.cove;
+  if (G.taken.has('open_cove')) { say('', 'Рычаг больше не двигается. Ворота уже открыты.'); return; }
+  G.levers[e.id] = !G.levers[e.id]; sfx.lever();
+  if (pz.levers.every((id, i) => G.levers[id] === pz.pattern[i])) openGate('cove');
+  persist();
+}
 function hint(key, msg) { if (told.has(key)) return; told.add(key); toast(msg); }
 
 // ---------- Enemies ----------
 const MOBS = {
-  slime: { hp: 2, hb: { x: 2, y: 8, w: 12, h: 7 } },
-  mini: { hp: 1, hb: { x: 4, y: 10, w: 8, h: 5 } },
-  bat: { hp: 1, hb: { x: 3, y: 2, w: 10, h: 8 }, fly: true },
-  skel: { hp: 3, hb: { x: 3, y: 4, w: 10, h: 11 } },
-  beetle: { hp: 2, hb: { x: 2, y: 3, w: 12, h: 11 } },
+  slime: { hp: 3, hb: { x: 2, y: 8, w: 12, h: 7 } },
+  mini: { hp: 2, hb: { x: 4, y: 10, w: 8, h: 5 } },
+  bat: { hp: 2, hb: { x: 3, y: 2, w: 10, h: 8 }, fly: true },
+  skel: { hp: 5, hb: { x: 3, y: 4, w: 10, h: 11 } },
+  beetle: { hp: 4, hb: { x: 2, y: 3, w: 12, h: 11 } },
   king: { hp: 12, hb: { x: 3, y: 12, w: 26, h: 19 } },
+  wolf: { hp: 4, hb: { x: 2, y: 7, w: 12, h: 8 } },
+  snowman: { hp: 5, hb: { x: 3, y: 4, w: 10, h: 11 } },
+  crab: { hp: 5, hb: { x: 2, y: 8, w: 12, h: 7 } },
+  gslime: { hp: 5, hb: { x: 2, y: 8, w: 12, h: 7 } },
 };
 const DIFF = {
-  easy: { name: 'лёгкая', spd: .8, boss: 8, hp: 7 },
-  normal: { name: 'обычная', spd: 1, boss: 12, hp: 5 },
-  hard: { name: 'хардкор', spd: 1.15, boss: 16, hp: 5 },
+  easy: { name: 'лёгкая', spd: .85, boss: 14, hp: 7 },
+  normal: { name: 'обычная', spd: 1.05, boss: 22, hp: 5 },
+  hard: { name: 'хардкор', spd: 1.2, boss: 30, hp: 5 },
 };
 function makeMob(s) {
   const def = MOBS[s.type], hp = s.type === 'king' ? DIFF[G.diff].boss : def.hp;
@@ -1160,13 +1481,13 @@ function wander(m, dt, spd) {
 }
 const dir4 = (dx, dy) => Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up');
 function updateMob(m, dt, p) {
-  const k = DIFF[G.diff].spd, c = mobCenter(m);
+  const k = DIFF[G.diff].spd * (isNight() && zoneAt(m.tx, m.ty) !== 'cave' ? 1.2 : 1), c = mobCenter(m);
   m.ph += dt * 6; m.flash = Math.max(0, m.flash - dt); m.st -= dt;
   const dx = p.x + 8 - c.x, dy = p.y + 10 - c.y, d = Math.hypot(dx, dy) || 1, alive = p.hp > 0;
   let vx = 0, vy = 0;
   switch (m.type) {
-    case 'slime': case 'mini': {
-      const range = m.type === 'mini' ? 90 : 64, chase = m.type === 'mini' ? 40 : 30;
+    case 'slime': case 'mini': case 'gslime': {
+      const range = m.type === 'slime' ? 80 : 90, chase = m.type === 'slime' ? 34 : 40;
       if (alive && d < range) { m.vx = dx / d * chase; m.vy = dy / d * chase; } else wander(m, dt, 18);
       const hop = Math.sin(m.ph) > 0 ? 1 : .25;
       vx = m.vx * hop; vy = m.vy * hop;
@@ -1206,6 +1527,30 @@ function updateMob(m, dt, p) {
       } else if (m.st <= 0) { m.state = 'walk'; m.st = 1; }
       break;
     }
+    case 'wolf':
+      if (alive && d < 100) { vx = dx / d * 50; vy = dy / d * 50; }
+      else { wander(m, dt, 20); vx = m.vx; vy = m.vy; }
+      if (Math.abs(vx) > 1) m.dir = vx > 0 ? 'right' : 'left';
+      break;
+    case 'snowman':
+      if (alive && d < 110) {
+        m.cd -= dt;
+        if (m.cd <= 0) {
+          m.cd = 1.8 / k; sfx.throw();
+          shots.push({ kind: 'snow', enemy: true, x: c.x, y: c.y - 6, vx: dx / d * 80 * k, vy: dy / d * 80 * k, life: 2 });
+        }
+      }
+      break;
+    case 'crab':
+      m.t -= dt;
+      if (m.t <= 0) {
+        if (alive && d < 80) {
+          m.t = .45 + Math.random() * .4;
+          if (Math.random() < .25) m.vx = m.vy = 0; else { m.vx = Math.sign(dx) * 46; m.vy = Math.sign(dy) * 18; }
+        } else { m.t = 1 + Math.random(); m.vx = (Math.random() < .5 ? -1 : 1) * 22; m.vy = 0; }
+      }
+      vx = m.vx; vy = m.vy;
+      break;
     case 'king':
       if (m.state === 'sleep') {
         if (alive && d < 84) wakeKing(m);
@@ -1260,7 +1605,7 @@ function hitMob(m, dmg, sx, sy, pierce) {
     }
   }
   m.hp -= dmg; m.flash = .18; sfx.hit();
-  const dx = c.x - sx, dy = c.y - sy, d = Math.hypot(dx, dy) || 1, kb = m.type === 'king' ? 40 : 140;
+  const dx = c.x - sx, dy = c.y - sy, d = Math.hypot(dx, dy) || 1, kb = m.type === 'king' ? 30 : 95;
   m.kx = dx / d * kb; m.ky = dy / d * kb;
   if (m.type === 'king') {
     if (m.state === 'sleep') wakeKing(m);
@@ -1282,7 +1627,7 @@ function spawnMinis(m, n) {
 function killMob(m) {
   m.dead = true;
   const c = mobCenter(m);
-  burst(c.x, c.y, { slime: C.r, mini: C.p, bat: C.p, skel: C.w, beetle: C.n, king: C.p }[m.type], m.type === 'king' ? 40 : 16);
+  burst(c.x, c.y, { slime: C.r, mini: C.p, bat: C.p, skel: C.w, beetle: C.n, king: C.p, wolf: C.G, snowman: C.S, crab: C.r, gslime: C.g }[m.type], m.type === 'king' ? 40 : 16);
   if (m.type === 'king') {
     G.taken.add('boss'); spawnMinis(m, 4); G.shake = .5; sfx.win();
     const cs = world.ents.find(e => e.id === 'cr4');
@@ -1291,17 +1636,17 @@ function killMob(m) {
     toast('Король слаймов повержен!'); persist();
     return;
   }
-  if (m.type !== 'mini') respawns.push({ type: m.type, tx: m.tx, ty: m.ty, t: 45 });
+  if (m.type !== 'mini') respawns.push({ type: m.type, tx: m.tx, ty: m.ty, t: 35 });
   const r = Math.random(), luck = m.type === 'mini' ? .4 : 1;
   if (r < .1 * luck) for (let i = 0; i < 3; i++) ents.push({ kind: 'coin', id: null, x: c.x - 8 + (i - 1) * 7, y: c.y - 10 + (i % 2) * 4 });
   else if (r < .55 * luck) ents.push({ kind: 'coin', id: null, x: c.x - 8, y: c.y - 10 });
-  else if (r < .72 * luck) ents.push({ kind: 'heart', x: c.x - 8, y: c.y - 10, ttl: 12 });
+  else if (r < .63 * luck) ents.push({ kind: 'heart', x: c.x - 8, y: c.y - 10, ttl: 12 });
 }
 function updateShots(dt, p) {
   for (const s of shots) {
     s.x += s.vx * dt; s.y += s.vy * dt; s.life -= dt;
     const t = tileAt(Math.floor(s.x / TS), Math.floor(s.y / TS));
-    if (SOLID.has(t) && t !== WATER) { s.life = 0; burst(s.x, s.y, s.kind === 'bone' ? C.w : C.b, 3); continue; }
+    if (SOLID.has(t) && t !== WATER) { s.life = 0; burst(s.x, s.y, s.kind === 'arrow' ? C.b : C.w, 3); continue; }
     if (s.enemy) {
       if (overlap(s.x - 2, s.y - 2, 4, 4, p.x + PHB.x, p.y + PHB.y - 4, PHB.w, PHB.h + 4)) { s.life = 0; hurt({ x: s.x - 8, y: s.y - 10 }); }
       continue;
@@ -1361,7 +1706,7 @@ function hurt(from) {
     p.inv = .4; sfx.block(); burst(p.x + 8, p.y + 8, C.l, 6);
     return;
   }
-  p.hp--; p.inv = 1.1; G.shake = .25; sfx.hurt();
+  p.hp--; p.inv = .9; G.shake = .25; sfx.hurt();
   p.kx = dx / d * 150; p.ky = dy / d * 150;
   if (p.hp <= 0 && G.diff === 'hard') {
     say('', 'Ты пал в бою. В хардкоре вторая попытка не положена.', gameOver);
@@ -1369,7 +1714,7 @@ function hurt(from) {
   }
   if (p.hp <= 0) {
     say('', TEXT.faint, () => {
-      Object.assign(p, { x: START.x, y: START.y, hp: p.maxHp, dir: 'down', inv: 1.5, kx: 0, ky: 0 });
+      Object.assign(p, { x: START.x, y: START.y, hp: p.maxHp, dir: 'down', inv: 1.5, kx: 0, ky: 0, slide: null });
       G.buff.speed = G.buff.guard = 0;
       spawnEntities(); persist();
     });
@@ -1386,7 +1731,10 @@ function update(dt) {
   if (dlg) { if (dlg.shown < dlg.pages[dlg.i].length) { const before = Math.floor(dlg.shown); dlg.shown += dt * 45; if (Math.floor(dlg.shown) !== before) { renderDialog(); if (before % 3 === 0) sfx.blip(); } } return; }
   if (G.state !== 'play' || menuOpen || panelKind) return;
 
-  G.time += dt; G.shake = Math.max(0, G.shake - dt);
+  G.time += dt; G.shake = Math.max(0, G.shake - dt); G.fade = Math.max(0, (G.fade || 0) - dt);
+  const wasNight = isNight();
+  G.clock += dt;
+  if (isNight() !== wasNight) toast(wasNight ? 'Рассвет' : 'Наступает ночь. Монстры злее');
   const p = G.p;
   p.inv = Math.max(0, p.inv - dt); p.cd = Math.max(0, p.cd - dt); p.swing = Math.max(0, p.swing - dt);
   G.buff.speed = Math.max(0, G.buff.speed - dt); G.buff.guard = Math.max(0, G.buff.guard - dt);
@@ -1400,10 +1748,42 @@ function update(dt) {
     const keep = (ix && ix === cur[0]) || (iy && iy === cur[1]);
     if (!(ix && iy && keep)) p.dir = ix ? (ix > 0 ? 'right' : 'left') : (iy > 0 ? 'down' : 'up');
   }
-  moveBody(p, (vx + p.kx) * dt, (vy + p.ky) * dt, PHB, !p.kx && !p.ky);
+  const ptx = Math.floor((p.x + 8) / TS), pty = Math.floor((p.y + 12) / TS);
+  if (p.slide) {
+    const f = FACE[p.slide], ox = p.x, oy = p.y;
+    moveBody(p, f[0] * 110 * dt, f[1] * 110 * dt, PHB, false);
+    const ct = tileAt(Math.floor((p.x + 8) / TS), Math.floor((p.y + 12) / TS));
+    if (Math.abs(p.x - ox) + Math.abs(p.y - oy) < .5 || ct !== ICE) {
+      if (ct === ICE) { p.x = Math.floor((p.x + 8) / TS) * TS; p.y = Math.floor((p.y + 12) / TS) * TS - 4; }
+      p.slide = null;
+    }
+    vx = vy = 0;
+  } else if (tileAt(ptx, pty) === ICE && (ix || iy) && !p.kx && !p.ky) {
+    p.slide = Math.abs(ix) >= Math.abs(iy) && ix ? (ix > 0 ? 'right' : 'left') : (iy > 0 ? 'down' : 'up');
+    p.dir = p.slide;
+    if (FACE[p.slide][0]) p.y = pty * TS - 4; else p.x = ptx * TS;
+    vx = vy = 0;
+  }
+  if (!p.slide) moveBody(p, (vx + p.kx) * dt, (vy + p.ky) * dt, PHB, !p.kx && !p.ky);
+  if (!p.slide) tryPush(p, ix, iy, dt);
+  p.portalCd = Math.max(0, (p.portalCd || 0) - dt);
+  {
+    const tx = Math.floor((p.x + 8) / TS), ty = Math.floor((p.y + 12) / TS);
+    const pt = world.portals.find(q => q.tx === tx && q.ty === ty);
+    if (pt && p.portalCd <= 0) {
+      p.x = pt.to[0] * TS; p.y = pt.to[1] * TS - 4; p.dir = 'down'; p.portalCd = .8; p.slide = null;
+      G.fade = .45; sfx.portal(); shots = []; bombs = [];
+    }
+    const z = zoneAt(Math.floor((p.x + 8) / TS), Math.floor((p.y + 12) / TS));
+    if (z !== G.zone) {
+      if (G.zone) toast(ZONE_NAMES[z]);
+      G.zone = z;
+      if (z === 'cave' && !G.lantern) hint('dark', 'Темно! Купи у Вари фонарь');
+    }
+  }
   const decay = Math.max(0, 1 - 9 * dt); p.kx *= decay; p.ky *= decay;
   if (Math.abs(p.kx) < 2) p.kx = 0; if (Math.abs(p.ky) < 2) p.ky = 0;
-  p.moving = !!(ix || iy);
+  p.moving = !!(ix || iy) || !!p.slide;
   p.shield = G.shield && (input.ta || input.ka) && p.swing <= 0 && !p.moving;
   if (G.buff.speed > 0 && p.moving && Math.random() < dt * 20) particles.push({ x: p.x + 4 + Math.random() * 8, y: p.y + 6 + Math.random() * 8, vx: -ix * 20, vy: -iy * 20, life: .25, col: C.c });
   if (G.buff.guard > 0 && Math.random() < dt * 10) { const a = G.t * 6; particles.push({ x: p.x + 8 + Math.cos(a) * 9, y: p.y + 9 + Math.sin(a) * 9, vx: 0, vy: -6, life: .3, col: C.l }); }
@@ -1421,11 +1801,16 @@ function update(dt) {
     if (e.kind === 'heart') { p.hp = Math.min(p.maxHp, p.hp + 1); sfx.coin(); burst(e.x + 8, e.y + 8, C.r, 6); }
     if (e.kind === 'crystal') {
       const n = crystalCount(); sfx.crystal(); burst(e.x + 8, e.y + 8, C.P, 24);
-      toast(n >= 5 ? 'Все кристаллы! Возвращайся к Мирону' : 'Кристалл найден: ' + n + ' из 5');
+      toast(n >= TOTAL ? 'Все кристаллы! Возвращайся к Мирону' : 'Кристалл найден: ' + n + ' из ' + TOTAL);
       persist();
     }
   }
 
+  for (const b of ents) if (b.kind === 'block') {
+    const tx = b.tx * TS, ty = b.ty * TS, st = 160 * dt;
+    b.x += Math.max(-st, Math.min(st, tx - b.x)); b.y += Math.max(-st, Math.min(st, ty - b.y));
+  }
+  resetFarBlocks(p);
   // enemies, projectiles, bombs
   for (const m of ents) if (m.kind === 'mob' && !m.dead) updateMob(m, dt, p);
   updateShots(dt, p);
@@ -1518,7 +1903,10 @@ function drawWeapon(p, ox, oy) {
 function drawMob(m, x, y) {
   const fl = m.flash > 0;
   switch (m.type) {
-    case 'slime': { const sq = Math.sin(m.ph) > .3 ? 1 : 0; ctx.drawImage(fl ? SPR.slimeHit : SPR.slime, 0, 0, 16, 16, x, y + sq, 16, 16 - sq); break; }
+    case 'slime': case 'gslime': { const sq = Math.sin(m.ph) > .3 ? 1 : 0; ctx.drawImage(fl ? SPR.slimeHit : SPR[m.type], 0, 0, 16, 16, x, y + sq, 16, 16 - sq); break; }
+    case 'wolf': ctx.drawImage((fl ? SPR.wolfHit : SPR.wolf)[m.dir === 'left' ? 'left' : 'right'], x, y - (Math.floor(G.t * 8 + m.ph) % 2)); break;
+    case 'snowman': ctx.drawImage(fl ? SPR.snowmanHit : SPR.snowman, x, y); break;
+    case 'crab': ctx.drawImage(fl ? SPR.crabHit : SPR.crab, x + (Math.floor(G.t * 6 + m.ph) % 2), y); break;
     case 'mini': { const sq = Math.sin(m.ph * 1.3) > .3 ? 1 : 0; ctx.drawImage(fl ? SPR.miniHit : SPR.mini, x, y + sq); break; }
     case 'bat':
       P(ctx, x + 5, y + 14, 'rgba(0,0,0,.2)', 6, 1);
@@ -1556,6 +1944,8 @@ function drawShots(ox, oy) {
     if (s.kind === 'arrow') {
       if (s.vx) { const sg = Math.sign(s.vx); P(ctx, x - 4, y, C.b, 8, 1); P(ctx, x + sg * 4 - (sg < 0 ? 1 : 0), y - 1, C.G, 2, 3); P(ctx, x - sg * 5, y - 1, C.w, 1, 3); }
       else { const sg = Math.sign(s.vy); P(ctx, x, y - 4, C.b, 1, 8); P(ctx, x - 1, y + sg * 4 - (sg < 0 ? 1 : 0), C.G, 3, 2); P(ctx, x - 1, y - sg * 5, C.w, 3, 1); }
+    } else if (s.kind === 'snow') {
+      P(ctx, x - 2, y - 2, C.k, 5, 5); P(ctx, x - 1, y - 1, C.S, 3, 3); P(ctx, x - 1, y - 1, C.w);
     } else {
       const h = Math.floor(G.t * 12) % 2;
       P(ctx, x - (h ? 3 : 1), y - (h ? 1 : 3), C.k, h ? 7 : 3, h ? 3 : 7);
@@ -1590,6 +1980,55 @@ function drawAnvil(x, y) {
   P(ctx, x + 1, y + 6, C.k, 2, 2);
   P(ctx, x + 6, y + 10, C.k, 5, 3); P(ctx, x + 7, y + 10, C.D, 3, 3);
   P(ctx, x + 4, y + 13, C.k, 9, 3); P(ctx, x + 5, y + 13, C.D, 7, 2);
+}
+function drawTorch(x, y) {
+  P(ctx, x + 7, y + 7, C.k, 3, 9); P(ctx, x + 8, y + 8, C.B, 1, 8);
+  P(ctx, x + 5, y + 6, C.k, 7, 2); P(ctx, x + 6, y + 6, C.D, 5, 1);
+  const f = Math.floor(G.t * 10 + x) % 3;
+  P(ctx, x + 6, y + 2 - f % 2, C.r, 5, 5 + f % 2); P(ctx, x + 7, y + 3, C.o, 3, 3); P(ctx, x + 8, y + 3 + f % 2, C.y, 1, 2);
+}
+function drawLamp(x, y) {
+  P(ctx, x + 7, y + 4, C.k, 3, 12); P(ctx, x + 8, y + 5, C.D, 1, 11); P(ctx, x + 5, y + 14, C.k, 7, 2);
+  P(ctx, x + 5, y - 2, C.k, 7, 7); P(ctx, x + 6, y - 1, isNight() ? C.y : C.F, 5, 5);
+  if (isNight()) P(ctx, x + 7, y, C.w, 3, 3);
+  P(ctx, x + 6, y - 3, C.k, 5, 1);
+}
+function drawBlock(x, y, lit) {
+  P(ctx, x + 1, y + 2, C.k, 14, 14); P(ctx, x + 2, y + 3, C.D, 12, 12); P(ctx, x + 2, y + 3, C.G, 12, 4);
+  P(ctx, x + 3, y + 4, C.w, 3, 1); P(ctx, x + 2, y + 7, C.k, 12, 1);
+  P(ctx, x + 5, y + 10, C.F, 2, 2); P(ctx, x + 10, y + 11, C.F, 2, 1);
+  if (lit) { P(ctx, x + 1, y + 15, C.o, 14, 1); P(ctx, x + 1, y + 2, C.o, 1, 14); P(ctx, x + 14, y + 2, C.o, 1, 14); }
+}
+function drawLever(x, y, on) {
+  P(ctx, x + 3, y + 11, C.k, 10, 5); P(ctx, x + 4, y + 12, C.D, 8, 3);
+  const dx = on ? 1 : -1;
+  for (let i = 0; i < 7; i++) P(ctx, x + 8 + Math.round(dx * i * .6), y + 11 - i, C.B, 1, 1);
+  P(ctx, x + 7 + Math.round(dx * 4), y + 2, C.k, 4, 4); P(ctx, x + 8 + Math.round(dx * 4), y + 3, C.r, 2, 2);
+  P(ctx, x + 5, y + 13, on ? C.l : C.R, 2, 1);
+}
+const shadeCv = document.createElement('canvas'); shadeCv.width = VW; shadeCv.height = VH;
+const sctx = shadeCv.getContext('2d');
+function drawLighting(camX, camY) {
+  const p = G.p, inCave = G.zone === 'cave';
+  const dark = inCave ? .95 : nightDark();
+  if (dark <= .01) return;
+  sctx.globalCompositeOperation = 'source-over'; sctx.globalAlpha = 1;
+  sctx.clearRect(0, 0, VW, VH);
+  sctx.fillStyle = inCave ? 'rgb(6,5,12)' : 'rgb(14,16,44)';
+  sctx.globalAlpha = dark; sctx.fillRect(0, 0, VW, VH);
+  sctx.globalCompositeOperation = 'destination-out';
+  const lights = [[p.x + 8 - camX, p.y + 9 - camY, inCave ? (G.lantern ? 60 : 16) : (G.lantern ? 58 : 34)]];
+  for (const e of ents) if (e.kind === 'deco' && (e.id === 'torch' || e.id === 'lamp')) lights.push([e.x + 8 - camX, e.y + 2 - camY, e.id === 'torch' ? 40 : 46]);
+  for (const b of blasts) lights.push([b.x - camX, b.y - camY, 50]);
+  for (const [x, y, r0] of lights) {
+    if (x < -70 || y < -70 || x > VW + 70 || y > VH + 70) continue;
+    const r = r0 + Math.sin(G.t * 9 + x) * 1.2;
+    for (let i = 0; i < 4; i++) {
+      sctx.globalAlpha = .3; sctx.beginPath(); sctx.arc(Math.round(x), Math.round(y), Math.max(2, r * (1 - i * .22)), 0, Math.PI * 2); sctx.fill();
+    }
+  }
+  sctx.globalCompositeOperation = 'source-over'; sctx.globalAlpha = 1;
+  ctx.drawImage(shadeCv, 0, HUD);
 }
 function drawStall(x, y) {
   P(ctx, x + 1, y + 6, C.k, 14, 10); P(ctx, x + 2, y + 7, C.b, 12, 8);
@@ -1642,7 +2081,7 @@ function render() {
       case 'npc': {
         const bob = Math.floor(t * 1.5 + e.tx) % 2;
         ctx.drawImage(SPR[e.id], x, y - (e.id === 'cat' ? 0 : bob));
-        if (e.id === 'miron' && (!G.talked || crystalCount() >= 5) && !G.won) {
+        if (e.id === 'miron' && (!G.talked || crystalCount() >= TOTAL) && !G.won) {
           const by = y - 7 + (Math.floor(t * 3) % 2);
           P(ctx, x + 6, by - 1, C.k, 4, 8); P(ctx, x + 7, by, C.o, 2, 4); P(ctx, x + 7, by + 5, C.o, 2, 1);
         }
@@ -1650,7 +2089,14 @@ function render() {
       }
       case 'mob': drawMob(e, x, y); break;
       case 'sign': drawSign(x, y); break;
-      case 'deco': if (e.id === 'anvil') drawAnvil(x, y); else drawStall(x, y); break;
+      case 'deco':
+        if (e.id === 'anvil') drawAnvil(x, y);
+        else if (e.id === 'stall') drawStall(x, y);
+        else if (e.id === 'torch') drawTorch(x, y);
+        else drawLamp(x, y);
+        break;
+      case 'block': drawBlock(x, y, tileAt(e.tx, e.ty) === PLATE && Math.abs(e.x - e.tx * TS) + Math.abs(e.y - e.ty * TS) < 1); break;
+      case 'lever': drawLever(x, y, G.levers[e.id]); break;
       case 'chest': drawChest(x, y, e.open); break;
       case 'coin': drawCoin(x + 4, y + 4 + Math.round(Math.sin(t * 3 + e.x) * 1), t + e.x); break;
       case 'heart': if (e.ttl > 3 || Math.floor(t * 8) % 2) drawHeart(x + 4, y + 5 + Math.round(Math.sin(t * 4) * 1), true); break;
@@ -1663,6 +2109,8 @@ function render() {
   }
   drawShots(camX, camY);
   for (const q of particles) P(ctx, Math.round(q.x - camX), Math.round(q.y - camY + HUD), q.col);
+  drawLighting(camX, camY);
+  if (G.fade > 0) { ctx.globalAlpha = Math.min(1, G.fade * 2.2); P(ctx, 0, HUD, C.k, VW, VH); ctx.globalAlpha = 1; }
   const king = ents.find(e => e.kind === 'mob' && e.type === 'king' && !e.dead && e.state !== 'sleep');
   if (king && Math.hypot(king.x - p.x, king.y - p.y) < 200) {
     P(ctx, 19, CH - 10, C.k, 122, 7); P(ctx, 20, CH - 9, C.D, 120, 5);
@@ -1683,7 +2131,7 @@ function render() {
   }
   const cx = CW - 64;
   ctx.drawImage(SPR.crystal, 3, 2, 10, 12, cx, 2, 10, 12);
-  drawText(crystalCount() + '/5', cx + 11, 6, C.w);
+  drawText(crystalCount() + '/' + TOTAL, cx + 11, 6, C.w);
   drawCoin(CW - 30, 4, 0);
   drawText(G.coins, CW - 20, 6, C.w);
 }
@@ -1702,6 +2150,7 @@ function itemInfo(it) {
     const n = G.ammo[it.ammo];
     return { icon: it.icon, name: it.name, desc: it.desc + ' Есть: ' + n + '.' + (it.ammo === 'arrows' && !G.weapons.includes('bow') ? ' Сначала купи лук.' : ''), price: it.price, label: n >= AMMO_MAX[it.ammo] ? 'Полно' : null };
   }
+  if (it.kind === 'gear') return { icon: it.icon, name: it.name, desc: it.desc, price: it.price, label: G.lantern ? 'Есть' : null };
   if (it.kind === 'shield') return { icon: 'shield', name: it.name, desc: it.desc, price: it.price, label: G.shield ? 'Есть' : null };
   const lvl = G.up[it.id], max = it.prices.length;
   return {
@@ -1721,6 +2170,7 @@ function buy(it) {
     if (it.ammo === 'bombs' && !G.weapons.includes('bomb')) G.weapons.push('bomb');
   }
   if (it.kind === 'shield') G.shield = true;
+  if (it.kind === 'gear') G.lantern = true;
   if (it.kind === 'up') {
     G.up[it.id]++;
     if (it.id === 'hp') { G.p.maxHp++; G.p.hp = G.p.maxHp; }
@@ -1750,7 +2200,7 @@ function renderPanel() {
   let html = '';
   if (panelKind === 'bag') {
     $('pTitle').textContent = 'Сумка';
-    $('pMeta').textContent = 'Кристаллы ' + crystalCount() + '/5 · Монеты ' + G.coins;
+    $('pMeta').textContent = 'Кристаллы ' + crystalCount() + '/' + TOTAL + ' · Монеты ' + G.coins;
     html += '<div class="psec">Оружие</div>';
     for (const id of G.weapons) {
       const w = WEAPONS[id], cur = G.weapon === id;
@@ -1759,14 +2209,15 @@ function renderPanel() {
       html += rowHtml(id, w.name, w.desc + ' Урон ' + dmg + '.' + extra,
         '<button class="rbtn" type="button" data-equip="' + id + '"' + (cur ? ' disabled>В руках' : '>Взять') + '</button>', cur);
     }
-    html += '<div class="psec">Зелья</div>';
-    for (const id of ['red', 'blue', 'green']) {
+    if (G.inv.red + G.inv.blue + G.inv.green > 0) html += '<div class="psec">Зелья</div>';
+    for (const id of ['red', 'blue', 'green'].filter(k => G.inv[k] > 0)) {
       const n = G.inv[id], off = !n || (id === 'red' && G.p.hp >= G.p.maxHp);
       html += rowHtml(id, POTIONS[id].name + ' ×' + n, POTIONS[id].desc,
         '<button class="rbtn" type="button" data-drink="' + id + '"' + (off ? ' disabled' : '') + '>Выпить</button>');
     }
     html += '<div class="psec">Снаряжение</div>';
     let gear = 0;
+    if (G.lantern) { gear++; html += rowHtml('lantern', 'Фонарь', 'Освещает пещеру и ночные тропы.'); }
     if (G.shield) { gear++; html += rowHtml('shield', 'Щит', 'Держи A, стоя на месте: блокирует удары спереди.'); }
     if (G.up.dmg) { gear++; html += rowHtml('sword', 'Заточка ' + ROMAN[G.up.dmg - 1], '+' + G.up.dmg + ' к урону любого оружия.'); }
     if (G.up.hp) { gear++; html += rowHtml('heart', 'Кольчуга ' + ROMAN[G.up.hp - 1], '+' + G.up.hp + ' к сердцам.'); }
@@ -1822,7 +2273,7 @@ function showDiff() {
 function fmtTime(t) { const s = Math.floor(t); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
 function gameOver() {
   G.state = 'over'; clearSave();
-  $('oTime').textContent = fmtTime(G.time); $('oCry').textContent = crystalCount() + '/5';
+  $('oTime').textContent = fmtTime(G.time); $('oCry').textContent = crystalCount() + '/' + TOTAL;
   $('over').hidden = false;
 }
 function startPlay() {
