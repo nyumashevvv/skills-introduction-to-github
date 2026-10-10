@@ -1,0 +1,10 @@
+{
+  "appId": "com.listvyanka.crystals",
+  "appName": "Листвянка",
+  "webDir": "www",
+  "ios": {
+    "contentInset": "never",
+    "backgroundColor": "#1e1b2e",
+    "scrollEnabled": false
+  }
+}

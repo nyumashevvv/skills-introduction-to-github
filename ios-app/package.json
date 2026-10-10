@@ -1,0 +1,18 @@
+{
+  "name": "listvyanka-ios",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Кристаллы Листвянки: iOS wrapper built with Capacitor",
+  "scripts": {
+    "build": "./build-www.sh",
+    "sync": "./build-www.sh && npx cap sync ios",
+    "open": "npx cap open ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "8.5.0",
+    "@capacitor/ios": "8.5.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "8.5.0"
+  }
+}
