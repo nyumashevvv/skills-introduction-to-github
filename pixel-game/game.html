@@ -92,6 +92,7 @@ canvas { display: block; width: 100%; height: 100%; image-rendering: crisp-edges
 .xpbar i { display: block; height: 100%; background: var(--gold); }
 
 .app.lefty { grid-template-areas: "screen screen" "ab dpad" "bar bar"; }
+.app.retro canvas#game { filter: grayscale(1) sepia(1) hue-rotate(45deg) saturate(2.4) brightness(.92) contrast(1.15); }
 .app.lefty .dpad { justify-self: end; }
 .app.lefty .ab { justify-self: start; flex-direction: row-reverse; }
 .cap {
@@ -297,12 +298,12 @@ const GRASS = 0, FLOWER = 1, TALL = 2, PATH = 3, TREE = 4, WATER = 5, BRIDGE = 6
       FLOOR = 8, WALL = 9, ROOF = 10, HWALL = 11, DOOR = 12, SAND = 13, CRACK = 14,
       SNOW = 15, PINE = 16, ICE = 17, CLIFF = 18, GATE = 19, GATEO = 20, PLATE = 21, CAVE = 22, STAIRS = 23,
       CFLOOR = 24, PALM = 25, WRECK = 26, SROCK = 27, SEAL = 28, SKY = 29, CLOUDF = 30, DSTAIRS = 31,
-      WOOD = 32, IWALL = 33, IDOOR = 34;
+      WOOD = 32, IWALL = 33, IDOOR = 34, FAKE = 35;   // FAKE: a tree you can walk into
 const SOLID = new Set([TREE, WATER, ROCK, WALL, ROOF, HWALL, DOOR, CRACK, PINE, CLIFF, GATE, PALM, WRECK, SROCK, SEAL, SKY, IWALL]);
 const HOME = { x: 0, y: 104, w: 18, h: 24 }, ARENA = { x: 18, y: 104, w: 26, h: 12 };
 const DG = { x: 44, y: 64, w: 44, h: 40 };   // dungeon region, regenerated on every visit
 function zoneAt(tx, ty) {
-  if (ty >= IN_Y) return tx < 18 ? 'home' : 'arena';
+  if (ty >= IN_Y) return tx < 18 ? 'home' : tx < 44 ? 'arena' : 'secret';
   if (ty >= OVER_H) return tx < 44 ? 'sky' : 'dungeon';
   if (tx >= 58 && ty >= 36) return 'cave';
   if (tx >= 44 && ty < 36) return 'snow';
@@ -434,6 +435,9 @@ function buildWorld() {
   rect(2, IN_Y + 2, 14, 8, WOOD); rect(8, IN_Y + 10, 2, 2, WOOD); rect(2, IN_Y + 12, 14, 9, WOOD); set(8, IN_Y + 21, IDOOR);
   rect(18, IN_Y, 26, 12, WALL); rect(20, IN_Y + 2, 22, 8, FLOOR); set(30, IN_Y + 10, IDOOR);
   portals.push({ tx: 8, ty: IN_Y + 21, to: [27, 20] }, { tx: 30, ty: IN_Y + 10, to: [16, 20] });
+  // the creators' room, reached through a fake tree on the old forest trail
+  rect(46, IN_Y + 2, 12, 8, WOOD); set(51, IN_Y + 10, IDOOR); set(3, 28, FAKE);
+  portals.push({ tx: 3, ty: 28, to: [51, IN_Y + 9] }, { tx: 51, ty: IN_Y + 10, to: [4, 29] });
 
   for (const pz of Object.values(puzzles)) {
     for (const [x, y] of pz.gates) set(x, y, GATE);
@@ -526,6 +530,18 @@ function buildWorld() {
   for (const [g, pz] of Object.entries(puzzles)) (pz.blocks || []).forEach(([x, y], i) => ents.push({ kind: 'block', group: g, i, tx: x, ty: y }));
   for (const [x, y] of [[67, 38], [60, 57], [73, 50], [85, 38], [85, 59], [75, 50], [60, 43], [76, 45]]) ents.push({ kind: 'deco', id: 'torch', tx: x, ty: y });
   ents.push({ kind: 'board', id: 'board', tx: 26, ty: 22 });
+  // secrets
+  ents.push({ kind: 'chest', id: 'ch_cat', tx: 37, ty: 18, loot: 'cathat', cond: 'catcache' });
+  ents.push({ kind: 'chest', id: 'ch_notes', tx: 5, ty: 18, loot: 'notes', cond: 'notes' });
+  [[3, 16], [5, 16], [7, 16]].forEach(([x, y], n) => ents.push({ kind: 'stone', id: 'st' + n, n, tx: x, ty: y }));
+  ents.push({ kind: 'sign', id: 'stones', tx: 6, ty: 14 });
+  ents.push({ kind: 'well', id: 'well', tx: 23, ty: 16 });
+  ents.push({ kind: 'statue', id: 'statue', tx: 21, ty: 16, cond: 'statue' });
+  ents.push({ kind: 'deco', id: 'xmas', tx: 26, ty: 15, cond: 'ny' });
+  ents.push({ kind: 'xmark', id: 'xmark', tx: 33, ty: 48, cond: 'xmark' });
+  ents.push({ kind: 'chest', id: 'ch_room', tx: 52, ty: IN_Y + 3, loot: 'stick' });
+  ents.push({ kind: 'sign', id: 'creators', tx: 48, ty: IN_Y + 2 });
+  ents.push({ kind: 'deco', id: 'portrait', tx: 55, ty: IN_Y + 2 });
   ents.push({ kind: 'mob', type: 'king', id: 'boss', tx: 32, ty: 30 });
   ents.push({ kind: 'mob', type: 'giant', id: 'boss_giant', tx: 78, ty: 17 });
   ents.push({ kind: 'mob', type: 'bigcrab', id: 'boss_crab', tx: 49, ty: 44 });
@@ -675,6 +691,7 @@ SPR.nura = mk(withRows(HERO_DOWN, 1, ['.....kkkkkk', '....kGGGGGGk', '...kGGGGGG
 SPR.fedya = mk(HERO_DOWN, { r: 'o', u: 'u', b: 'n', y: 'w' });
 SPR.oleg = mk(HERO_DOWN, { r: 'D', u: 'G', b: 'D', y: 'y', w: 'G' });
 SPR.efim = mk(withRows(HERO_DOWN, 7, ['...kswwwwwwsk', '....kwwwwwwk', '...kkwwwwwwkk']), { r: 'b', u: 'B', b: 'B', y: 'o' });
+SPR.ghost = mk(withRows(HERO_DOWN, 1, ['.....kkkkkk', '....kGGGGGGk', '...kGGGGGGGGk', '...kGkkkkkkGk']), { s: 'S', u: 'P', b: 'P', y: 'w', B: 'P' });
 SPR.tit = mk(withRows(HERO_DOWN, 1, ['.....kkkkkk', '....kDDDDDDk', '...kDDDDDDDDk', '...kDDDDDDDDk']), { u: 'p', b: 'D', y: 'o' });
 SPR.gordey = mk(withRows(HERO_DOWN, 7, ['...ksBBBBBBsk', '....kBBBBBBk']), { r: 'D', u: 'B', b: 'k', y: 'G' });
 
@@ -846,15 +863,20 @@ const HATS = {
   horns: { name: 'Рогатый шлем', need: () => G.taken.has('boss_giant'), how: 'победи Ледяного великана', rows: ['.k............k', '.kwk.kkkkkk.kwk', '..kwkGGGGGGkwk', '...kGwGGGGwGk', '...kkkkkkkkkk'] },
   shell: { name: 'Шлем-панцирь', need: () => G.taken.has('boss_crab'), how: 'победи Гигантского краба', rows: ['', '.....kkkkkk', '....koOooOok', '...koooOOoook', '...kkkkkkkkkk'] },
   hood: { name: 'Капюшон Тени', need: () => G.taken.has('boss_shadow'), how: 'победи Тень пещеры', rows: ['.........k', '.......kkKk', '.....kkKKKKk', '...kKKKKpKKKk', '...kKKKKKKKKk'] },
+  cat: { name: 'Кошачьи ушки', tint: true, need: () => !!G.flags.cathat, how: '???', rows: ['....k......k', '...kXkkkkkkXk', '...kHHHHHHHHk', '...kHHHHHHHHk', '...kHHHHHHHHk'] },
+  santa: { name: 'Колпак Деда Мороза', holiday: true, need: () => holiday() === 'ny', how: 'надень на Новый год', rows: ['........kwk', '.....kkrrk', '....krrrrrrk', '...kwwwwwwwwk', '...kHHHHHHHHk'] },
+  pumpkin: { name: 'Тыква', holiday: true, need: () => holiday() === 'hw', how: 'надень на Хэллоуин', rows: ['.......kk', '....kkkdkkk', '...kookooook', '...kokookook', '...koOkkkkOok'] },
   halo: { name: 'Венец бури', need: () => G.taken.has('boss_storm'), how: 'победи Повелителя бури', rows: ['....kyywwyyk', '.....kkkkkk', '....kHHHHHHk', '...kHyHHHHyHk', '...kHHHHHHHHk'] },
 };
 const HAIRS = { short: 'Короткие', long: 'Длинные' };
-const CAPES = ['none', 'red', 'blue', 'green', 'purple', 'gold', 'storm'];
+const CAPES = ['none', 'red', 'blue', 'green', 'purple', 'gold', 'storm', 'wander', 'keeper'];
 const CAPE_INFO = {
   none: { name: 'Без плаща' }, red: { name: 'Красный плащ', col: '#c8463e' }, blue: { name: 'Синий плащ', col: '#2c4f8a' },
   green: { name: 'Зелёный плащ', col: '#36663d' }, purple: { name: 'Лиловый плащ', col: '#8b5cc9' },
   gold: { name: 'Золотой плащ', col: '#f2b23a', need: () => G.won, how: 'спаси Листвянку' },
   storm: { name: 'Плащ бури', col: '#5c5a72', trim: '#e8d17a', need: () => G.stormDone, how: 'победи Повелителя бури' },
+  wander: { name: 'Плащ Странника', col: '#d4b8f5', trim: '#8b5cc9', need: () => !!G.flags.wcape, how: '???' },
+  keeper: { name: 'Плащ хранителя', col: '#8fd0ea', trim: '#f4ecd6', need: () => !!G.flags.keeper, how: '???' },
 };
 const lookFresh = () => ({ hat: 'cap', hatC: 1, hair: 'short', hairC: 0, skin: 0, shirt: 0, pants: 0, cape: 'none' });
 const HAT_IDS = Object.keys(HATS);
@@ -921,6 +943,8 @@ function petSprite() {
   return SPR['pet_' + key];
 }
 ICON.look = mk(HERO_DOWN);
+ICON.stick = mk(['..............kk', '.............kak', '............katk', '...........katk', '..........katk',
+  '.........katk', '........katk', '..k....katk', '..kk..katk', '...kBkatk', '....kBkk', '....kBBk', '...kBkkBk', '..kBk..kk', '.kBk', '.kk']);
 ICON.rune = mk(['', '', '', '.....kkkkk', '....kPPPPPk', '...kPPkPPPPk', '...kPPkkkPPk', '...kPPkPPPPk', '...kPPkPPPPk', '...kpPkPPPpk', '....kpppppk', '.....kkkkk']);
 ICON.scroll = mk(['', '', '..kkkkkkkkkk', '.kakTTTTTTTkk', '.kaktttttttkak', '..kktGGGGGtkak', '...ktttttttkk', '...ktGGGGtk', '...ktttttttk', '...ktGGGGGtk', '..kkttttttkk', '.kaktttttttk', '.kakTTTTTTTk', '..kkkkkkkkk']);
 ICON.cat = mk(CAT); ICON.dog = mk(DOG);
@@ -969,6 +993,7 @@ function grassBase(c, X, Y, tx, ty) {
   }
 }
 function drawTile(c, t, tx, ty) {
+  if (t === FAKE) t = TREE;
   const X = tx * TS, Y = ty * TS;
   const walk = (t2) => t2 === PATH || t2 === BRIDGE || t2 === FLOOR || t2 === SAND;
   switch (t) {
@@ -1249,7 +1274,7 @@ const TEXT = {
   varya: ['Привет! Я Варя. Зелья, оружие, щиты: выбирай, что нравится.', 'Заходи, у меня всё свежее!', 'Монетки звенят? Значит, пора за покупками.'],
   efim: ['Ох, гость! Я Ефим, живу тут отшельником. В горах злые волки и снеговики, береги голову.',
     'Кристалл вмёрз в озеро. На льду катишься, пока не упрёшься в камень. Думай, куда едешь!', 'А в пещеру без фонаря не суйся.'],
-  fedya: ['Я видел треснувший валун в цветочном поле! Бомбой бы его…', 'На пляже красивые ракушки. Тихон говорит, их пятнадцать.',
+  fedya: ['А ты знал, что в старом лесу у тропы есть дерево, которое не дерево? Я в него врезался — и чуть не провалился!', 'Если долго-долго гладить кота, он что-то покажет. Я до девяти досчитал и сдался.', 'Я видел треснувший валун в цветочном поле! Бомбой бы его…', 'На пляже красивые ракушки. Тихон говорит, их пятнадцать.',
     'По всему краю разбросаны страницы чьего-то дневника. Найдёшь, дай почитать!', 'Видел камни с голубыми рунами? Тронешь, и они просыпаются!',
     'Под руинами есть люк вниз. Мама не пускает.', 'Тихон даёт удочку. В море водится золотая рыбка!', 'Гордей устроил арену. Я бы победил всех. Ну, почти.'],
   tikhon: ['Я Тихон, рыбак. В бухте за скалами что-то сияет, да ворота заперты.',
@@ -1289,6 +1314,8 @@ const TEXT = {
   cat: ['Мяу.', 'Мр-р-р.', 'Кот смотрит на тебя так, будто знает, где лежит кристалл.'],
   signs: {
     village: 'ЛИСТВЯНКА\nСевер: алтарь, озеро. Восток: горы.\nЮг: лес, руины, за ними пляж.',
+    stones: 'Старая табличка: «Камни поют вместе с полями Листвянки. Спой их песню, и лес ответит».',
+    creators: 'Комната создателей. Листвянку придумал один человек с телефоном, а код писал Claude. Раз ты это читаешь, ты настоящий исследователь! В сундуке легендарное оружие. Ну… почти.',
     gate: 'Ворота перевала. Поставь камни на обе плиты.\nЗастрял камень? Отойди подальше, он вернётся.',
     ice: 'Ледяное озеро. На льду не остановиться, пока не упрёшься в камень.',
     cave: 'Пещера. Вход сковал лёд Ледяного великана. А внутри без фонаря ничего не видно.',
@@ -1301,9 +1328,13 @@ const TEXT = {
     shrine: 'Алтарь кристаллов. Пять гнёзд пустуют.',
   },
   doors: { 17: 'Дом Мирона. Заперто, хозяин на площади.', 27: 'Дом продаётся. Спроси у Вари в лавке.' },
-  chest: { coins30: 'В сундуке 30 монет!', coins40: 'В сундуке 40 монет!', coins10: 'В сундуке 10 монет!', coins15: 'В сундуке 15 монет!', heart: 'В сундуке сердце! Здоровье +1.', coins20: 'Тайник! Внутри 20 монет.', potions: 'Тайник! Внутри два красных зелья.' },
+  chest: { cathat: 'В сундучке кошачьи ушки! Примерь их: Сумка → Внешность.', notes: 'Камни замолкли, и из-под земли поднялся сундук. Внутри пять рун и свиток!',
+    stick: 'Внутри… деревянный меч. Легендарный! Наверное.', coins30: 'В сундуке 30 монет!', coins40: 'В сундуке 40 монет!', coins10: 'В сундуке 10 монет!', coins15: 'В сундуке 15 монет!', heart: 'В сундуке сердце! Здоровье +1.', coins20: 'Тайник! Внутри 20 монет.', potions: 'Тайник! Внутри два красных зелья.' },
   empty: 'Сундук пуст.',
   tit: ['Тише, тише. Тит торгует только за руны. Монеты оставь наверху.', 'Глубже спустишься, богаче вернёшься. Или не вернёшься. Хе-хе.', 'Свиток на клинок, и любой страж тебе нипочём. Ну, почти.'],
+  ghost: ['Ты видишь меня?.. Значит, луна сегодня полная.', 'Я Странник. Это я хотел забрать силу кристаллов, и это из-за меня поднялась буря.', 'Буря поглотила меня. С тех пор я брожу здесь, но лишь в полнолуние.', 'Ты вернул кристаллы на место. Возьми мой плащ: пусть он хранит тебя лучше, чем меня.'],
+  keeper: ['Погоди-ка… Ты собрал всё? Каждую страницу, каждую ракушку, каждую рыбу?', 'Тогда пора открыть тебе последнюю тайну Листвянки.'],
+  bottle: ['Ого, на крючке бутылка! Внутри записка:', '«Клад зарыт на южном пляже, в двух шагах южнее двух пальм. Ищи крестик. Копать лучше с собакой». Крестик отмечен на карте.'],
   petCat: ['Пушок без тебя бы пропал. А у нашей Мурки родились котята!', 'Возьми одного, а? Он везде за тобой пойдёт и учует, где что спрятано.'],
   petDog: ['Слушай, к посту щенок прибился. Нюх у него что надо: монетки из-под земли достаёт.', 'Мне на службе не до него. Забирай, он к тебе уже привязался.'],
   books: [
@@ -1319,7 +1350,7 @@ const TEXT = {
 
 // ---------- English translation: phrase dictionary applied where text reaches the screen ----------
 const EN = {"Листвянка":"Listvyanka","ЛИСТВЯНКА":"LISTVYANKA","Мирон":"Miron","Ася":"Asya","Кот":"Cat","Варя":"Varya","Гордей":"Gordey","Ефим":"Yefim","Тихон":"Tikhon","Бабушка Нюра":"Granny Nyura","Федя":"Fedya","Стражник Олег":"Guard Oleg","Табличка":"Sign","Кристаллы Листвянки":"Crystals of Listvyanka","Кристаллы Листвянки:":"Crystals of Listvyanka:","Морозный перевал":"Frost Pass","Южный пляж":"South Beach","Тёмная пещера":"Dark Cave","Облачный остров":"Cloud Island","Подземелье":"Dungeon","Свой дом":"Home","Арена Гордея":"Gordey's Arena","Руины":"Ruins","Перевал":"Pass","Пляж":"Beach","Пещера":"Cave","Лавка Вари":"Varya's Shop","Кузница Гордея":"Gordey's Forge","Лодка Тихона":"Tikhon's Boat","Хижина Ефима":"Yefim's Hut","Камни-порталы":"Waystones","Подземелье · этаж":"Dungeon · floor","Дневник Странника · найдено":"Wanderer's diary · found","пиксельная бродилка":"pixel adventure","Буря разбросала восемь кристаллов по округе. Найди их и верни старому Мирону.":"A storm scattered eight crystals across the land. Find them and bring them back to old Miron.","Играть":"Play","Продолжить":"Continue","Новая игра":"New game","Сохранения":"Saves","Достижения":"Achievements","Настройки":"Settings","выбери сложность":"choose difficulty","Лёгкая":"Easy","Обычная":"Normal","Хардкор":"Hardcore","лёгкая":"easy","обычная":"normal","хардкор":"hardcore","Лёгкая: 7 сердец, враги слабее. Хардкор: одна жизнь, враги быстрее, крепче и бьют больнее.":"Easy: 7 hearts, weaker enemies. Hardcore: one life, enemies are faster, tougher and hit harder.","Крестовина: ходить. A: говорить и бить, держать A: круговой удар. B: бег, двойное B: рывок, держать B на месте: щит. ⇄: сменить оружие.":"D-pad: move. A: talk and attack, hold A: spin attack. B: run, double B: dash, hold B standing still: shield. ⇄: switch weapon.","На компьютере: стрелки, Z, X, Q (оружие), I (сумка) и M (карта).":"On a computer: arrows, Z, X, Q (weapon), I (bag) and M (map).","Игра окончена":"Game over","время":"time","кристаллов":"crystals","Начать заново":"Start over","Листвянка спасена!":"Listvyanka is saved!","монет":"coins","конец":"the end","конец ·":"the end ·","Продолжить приключение":"Continue the adventure","Игровой экран":"Game screen","Крестовина":"D-pad","B, бег":"B, run","A, действие":"A, action","бег":"run","действие":"action","Сумка":"Bag","Карта":"Map","Меню":"Menu","Звук: вкл":"Sound: on","Звук: всё":"Sound: all","Звук: эффекты":"Sound: effects","Звук: выкл":"Sound: off","Закрыть":"Close","Уйти":"Leave","Пропустить ›":"Skip ›","Точно? Нажми ещё раз":"Sure? Press again","Точно?":"Sure?","Нажми на цену, чтобы купить.":"Tap a price to buy.","Не хватает монет: нужно":"Not enough coins: you need","Куплено:":"Bought:",". Уже в руках.":". Already in hand.",". В руках, и 10 стрел в подарок.":". In hand, plus 10 free arrows.",". Выбери бомбы в сумке.":". Pick bombs in the bag.","мон.":"c.","Есть":"Owned","Есть:":"Owned:","Полно":"Full","Макс.":"Max","Нужен дом":"Need a house","Взять":"Take","В руках":"In hand","Выпить":"Drink","Надеть":"Wear","Снять":"Remove","Продать":"Sell","Пусто":"Empty","Пусто.":"Empty.","Выбрать":"Select","Текущий":"Current","Стереть":"Erase","Перенестись":"Travel","Здесь":"Here","Спит":"Asleep","На арену":"To the arena","Вкл.":"On","Выкл.":"Off","Монеты:":"Coins:","Монеты":"Coins","Кристаллы":"Crystals","из":"of","Урон":"Damage","Урон +":"Damage +","Стрел:":"Arrows:","Осталось:":"Left:","В сумке:":"In bag:","Уровень":"Level","Опыт:":"XP:","(максимум)":"(max)","сердец":"hearts","Новый уровень!":"Level up!","Выбери одно умение.":"Pick one skill.","Слот":"Slot","уровень":"level","буря побеждена":"storm defeated","Листвянка спасена":"Listvyanka saved","Три отдельные игры. Прогресс сохраняется сам.":"Three separate games. Progress saves itself.","Рекорды:":"Records:","Рекорд:":"Record:","Новый рекорд! Прошлый:":"New record! Previous:","Первый рекорд на этой сложности!":"First record on this difficulty!","Музыка":"Music","Звуки":"Sounds","Громкость:":"Volume:","Размер кнопок":"Button size","Мелкие":"Small","Крупные":"Large","Обычные":"Normal","Режим для левши":"Left-handed mode","Кнопки A и B слева, крестовина справа.":"A and B on the left, D-pad on the right.","Крестовина слева, кнопки A и B справа.":"D-pad on the left, A and B on the right.","Язык / Language":"Language / Язык","Русский":"Русский","English":"English","ты":"you","лавка, кузница":"shop, forge","кристалл":"crystal","поручение, портал":"task, waystone","день":"day","ночь":"night","Главное":"Main","Поручения":"Tasks","Коллекции":"Collections","Улов":"Catch","Зелья":"Potions","Герой":"Hero","Оружие":"Weapons","Снаряжение":"Gear","Одежда и кольца":"Clothes and rings","Подсказка Мирона:":"Miron's hint:","Все кристаллы у тебя. Неси их Мирону!":"You have all the crystals. Bring them to Miron!","Кристаллы на месте, Листвянка спасена.":"The crystals are back, Listvyanka is saved.","Грозовые печати:":"Storm seals:","Алтарь на севере ведёт на остров.":"The northern altar leads to the island.","из 3. Алтарь на севере ведёт на остров.":"of 3. The northern altar leads to the island.","Храм открыт. Одолей Повелителя бури.":"The temple is open. Defeat the Storm Lord.","Повелитель бури повержен.":"The Storm Lord is defeated.","Самый глубокий этаж:":"Deepest floor:","Ракушки:":"Shells:","Страницы дневника:":"Diary pages:","Тихон подарил амулет прилива.":"Tikhon gave you the tide amulet.","Покажи ракушки рыбаку Тихону.":"Show the shells to Tikhon the fisherman.","Разбросаны по южному пляжу и бухте.":"Scattered across the south beach and the cove.","Дневник Странника собран, карта открыта.":"The Wanderer's diary is complete, the map is revealed.","Странник оставил их по всему краю.":"The Wanderer left them all over the land.","Пока поручений нет. Поговори с жителями: Асей, Варей, Гордеем, рыбаком Тихоном.":"No tasks yet. Talk to the villagers: Asya, Varya, Gordey, Tikhon the fisherman.","Выполнено.":"Done.","Пока пусто. Загляни к Варе и кузнецу Гордею у площади.":"Empty so far. Visit Varya and Gordey the smith by the square.","Куда перенестись?":"Where to travel?","Ты здесь.":"You are here.","Камень пробуждён.":"Awakened.","Ещё не пробуждён.":"Not awakened yet.","Мебели:":"Furniture:","из 6. Трофеев:":"of 6. Trophies:","Тихон купит по":"Tikhon pays","Продать рыбу":"Sell fish","Рыбы в сумке:":"Fish in bag:",". Тихон даст":". Tikhon will give","Рыбы пока нет. Лови в озере и в море.":"No fish yet. Fish in the lake and the sea.","Тихон заплатил":"Tikhon paid","Волны врагов одна за другой. Рекорд:":"Waves of enemies, one after another. Record:","волна":"wave","пока нет":"none yet","Волна":"Wave","пройдена! +":"cleared! +","Меч":"Sword","Копьё":"Spear","Топор":"Axe","Лук":"Bow","Бомбы":"Bombs","Удочка":"Fishing rod","Щит":"Shield","Фонарь":"Lantern","Быстрый и надёжный.":"Fast and reliable.","Бьёт далеко вперёд.":"Reaches far ahead.","Медленный, но бьёт вдвое сильнее и по широкой дуге.":"Slow, but hits twice as hard in a wide arc.","Стреляет вперёд издалека.":"Shoots straight ahead from afar.","Взрыв через 1,5 секунды ломает треснувшие камни. Отойди подальше!":"Explodes after 1.5 seconds and breaks cracked rocks. Step back!","Встань у воды и нажми A.":"Stand by the water and press A.","Красное зелье":"Red potion","Синее зелье":"Blue potion","Зелёное зелье":"Green potion","Лечит 3 сердца.":"Heals 3 hearts.","Быстрый шаг на 20 секунд.":"Swift steps for 20 seconds.","15 секунд враги не ранят.":"Enemies cannot hurt you for 15 seconds.","Стрелы ×10":"Arrows ×10","Для лука.":"For the bow.","Бомбы ×3":"Bombs ×3","Ломают треснувшие камни. Взрыв ранит и тебя!":"Break cracked rocks. The blast hurts you too!","Сначала купи лук.":"Buy a bow first.","Освещает тёмную пещеру и ночные тропы.":"Lights up the dark cave and night paths.","Освещает пещеру и ночные тропы.":"Lights up the cave and night paths.","Держи B, стоя на месте: блокирует удары спереди.":"Hold B standing still: blocks hits from the front.","Заточка":"Sharpening","+1 к урону любого оружия.":"+1 damage for any weapon.","Кольчуга":"Chainmail","+1 сердце к здоровью.":"+1 heart of health.","Длинная рукоять":"Long grip","Любое оружие бьёт дальше.":"Every weapon reaches further.","к урону любого оружия.":"damage for any weapon.","к сердцам.":"hearts.","Дом у площади":"House by the square","Свой дом: кровать, мебель и трофеи с боссов.":"Your own home: a bed, furniture and boss trophies.","Кровать":"Bed","Поспать до утра и восстановить здоровье.":"Sleep till morning and restore health.","Камин":"Fireplace","Тепло и уют.":"Warm and cosy.","Книжный шкаф":"Bookcase","Сказки и записки о крае.":"Tales and notes about the land.","Стол":"Table","Всегда накрыт к ужину.":"Always set for supper.","Ковёр":"Rug","Мягкий и красный.":"Soft and red.","Цветок в горшке":"Potted flower","Растёт, даже когда тебя нет.":"Grows even when you are away.","Крючок удачи":"Lucky hook","Рыба клюёт быстрее, а вытащить её проще.":"Fish bite sooner and are easier to land.","Рыба клюёт быстрее.":"Fish bite sooner.","Закалка":"Tempering","+1 к урону от кузнеца Гордея.":"+1 damage from Gordey the smith.","Большая сумка":"Big bag","До 50 стрел и 15 бомб.":"Up to 50 arrows and 15 bombs.","Кожаная куртка":"Leather jacket","Каждый шестой удар не ранит.":"Every sixth hit does no harm.","Кольчужная рубаха":"Mail shirt","Каждый четвёртый удар не ранит, но ходишь чуть медленнее.":"Every fourth hit does no harm, but you walk a bit slower.","Шуба Ефима":"Yefim's fur coat","Метель не замедляет, а лёд и снег чаще не ранят.":"Blizzards do not slow you, and ice and snow often do no harm.","Кольцо жадности":"Ring of greed","Из врагов выпадает больше монет.":"Enemies drop more coins.","Кольцо света":"Ring of light","Светит в темноте не хуже фонаря.":"Shines in the dark like a lantern.","Кольцо жизни":"Ring of life","Восстанавливает сердце раз в 45 секунд.":"Restores a heart every 45 seconds.","Карась":"Carp","Окунь":"Perch","Щука":"Pike","Скумбрия":"Mackerel","Камбала":"Flounder","Золотая рыбка":"Golden fish","Быстрый удар":"Quick strike","Оружие перезаряжается на четверть быстрее.":"Weapons recover a quarter faster.","Острый клинок":"Sharp blade","Крепкая кожа":"Tough skin","+1 сердце.":"+1 heart.","+1 сердце":"+1 heart","Вампиризм":"Vampirism","Каждый пятый побеждённый враг лечит одно сердце.":"Every fifth defeated enemy heals one heart.","Везунчик":"Lucky","Сердца выпадают из врагов вдвое чаще.":"Enemies drop hearts twice as often.","Двойные монеты":"Double coins","Каждая третья монета считается за две.":"Every third coin counts as two.","Меткий стрелок":"Marksman","Стрелы летят быстрее и бьют на 1 сильнее.":"Arrows fly faster and hit 1 harder.","Подрывник":"Demolitionist","Взрыв шире и не ранит тебя.":"Wider blasts that never hurt you.","Ловкач":"Nimble","Рывок перезаряжается вдвое быстрее.":"Dash recovers twice as fast.","Вихрь":"Whirlwind","Круговой удар заряжается почти вдвое быстрее.":"The spin attack charges almost twice as fast.","Совиный глаз":"Owl eye","Ночью и в пещере видно дальше.":"See further at night and in caves.","Скороход":"Swift","Ходишь и бегаешь на 12% быстрее.":"Walk and run 12% faster.","новое умение":"new skill","Новое умение:":"New skill:","+1 к урону":"+1 damage","Первая победа":"First victory","Победи первого врага.":"Defeat your first enemy.","Охотник":"Hunter","Победи 50 врагов за одну игру.":"Defeat 50 enemies in one game.","Гроза монстров":"Monster bane","Победи 150 врагов за одну игру.":"Defeat 150 enemies in one game.","Полуночник":"Night owl","Победи 20 врагов ночью.":"Defeat 20 enemies at night.","Корона пала":"The crown falls","Победи Короля слаймов.":"Defeat the Slime King.","Ураган":"Hurricane","Задень трёх врагов одним круговым ударом.":"Hit three enemies with one spin attack.","Бомбист":"Bomber","Задень трёх врагов одним взрывом.":"Hit three enemies with one blast.","Неуловимый":"Elusive","Сделай 50 рывков.":"Dash 50 times.","Ученик":"Apprentice","Достигни 5 уровня.":"Reach level 5.","Ветеран":"Veteran","Достигни 10 уровня.":"Reach level 10.","Мастер на все руки":"Jack of all trades","Возьми 5 умений.":"Take 5 skills.","Богач":"Rich","Накопи 300 монет.":"Save up 300 coins.","Кладоискатель":"Treasure hunter","Открой оба тайника за треснувшими камнями.":"Open both caches behind cracked rocks.","Сундучник":"Chest opener","Открой все сундуки.":"Open every chest.","Фигурист":"Figure skater","Достань кристалл из ледяного озера.":"Get the crystal from the frozen lake.","Головастик":"Brainy","Открой все ворота с головоломками.":"Open every puzzle gate.","Добрый сосед":"Good neighbour","Выполни все поручения жителей.":"Finish every villager task.","Картограф":"Cartographer","Исследуй половину карты.":"Explore half of the map.","Морской коллекционер":"Shell collector","Собери все 15 ракушек.":"Collect all 15 shells.","Летописец":"Chronicler","Найди все 10 страниц дневника.":"Find all 10 diary pages.","Путешественник":"Traveller","Пробуди все камни-порталы.":"Awaken every waystone.","Охотник на чудищ":"Monster hunter","Победи всех четырёх боссов.":"Defeat all four bosses.","Сильнейший":"Strongest","Победи 5 элитных врагов.":"Defeat 5 elite enemies.","Рыбак":"Angler","Поймай 10 рыб.":"Catch 10 fish.","Поймай золотую рыбку.":"Catch the golden fish.","Хозяин":"Homeowner","Купи дом и обставь его всей мебелью.":"Buy the house and furnish it completely.","Гладиатор":"Gladiator","Пройди 10 волн на арене.":"Clear 10 arena waves.","Небожитель":"Sky dweller","Собери три грозовые печати.":"Collect the three storm seals.","Укротитель бури":"Storm tamer","Победи Повелителя бури.":"Defeat the Storm Lord.","Спелеолог":"Spelunker","Спустись на 5 этаж подземелья.":"Reach dungeon floor 5.","Спаситель Листвянки":"Saviour of Listvyanka","Собери все восемь кристаллов.":"Collect all eight crystals.","Несокрушимый":"Unbreakable","Пройди игру, ни разу не потеряв сознание.":"Finish the game without ever fainting.","Железная воля":"Iron will","Пройди игру на хардкоре.":"Finish the game on hardcore.","Молния":"Lightning","Пройди игру быстрее чем за 40 минут.":"Finish the game in under 40 minutes.","Достижение:":"Achievement:","Потерянный котёнок":"The lost kitten","Синецветы для Вари":"Bluebells for Varya","Руда для кузнеца":"Ore for the smith","Крабы-вредители":"Pesky crabs","Ой, беда! Мой котёнок Пушок убежал к морю, на южный пляж.":"Oh no! My kitten Fluffy ran off to the sea, to the south beach.","Найдёшь его? Я в долгу не останусь.":"Will you find him? I will repay you.","Пушок где-то на южном пляже. Найди его, пожалуйста!":"Fluffy is somewhere on the south beach. Please find him!","Пушок! Нашёлся, мой хороший! Спасибо тебе.":"Fluffy! There you are, sweetie! Thank you.","Вот, возьми 40 монет. Больше у меня нет.":"Here, take 40 coins. That is all I have.","Найди котёнка Пушка на южном пляже.":"Find Fluffy the kitten on the south beach.","Пушок у тебя. Верни его Асе.":"You have Fluffy. Bring him back to Asya.","Награда: 40 монет.":"Reward: 40 coins.","Слушай, мне для красок нужны синецветы. Растут по всему краю: в полях, в горах, на пляже.":"Listen, I need bluebells for my dyes. They grow all over: in the fields, the mountains, on the beach.","Принесёшь шесть штук? Награжу по-царски.":"Bring me six? I will reward you royally.","Синецветов у тебя":"Bluebells you have:","из 6. Ищи голубые цветы.":"of 6. Look for blue flowers.","Какие красивые! Спасибо!":"How pretty! Thank you!","Держи большой колчан и сумку для бомб: теперь влезет 50 стрел и 15 бомб.":"Take this big quiver and bomb bag: now 50 arrows and 15 bombs will fit.","Синецветы:":"Bluebells:","из 6. Растут в полях, в горах и на пляже.":"of 6. They grow in fields, mountains and on the beach.","Неси синецветы Варе.":"Bring the bluebells to Varya.","Награда: колчан на 50 стрел и сумка на 15 бомб.":"Reward: a quiver for 50 arrows and a bag for 15 bombs.","Руда кончилась, а без неё лучший клинок не выкуешь.":"I am out of ore, and you cannot forge a fine blade without it.","Найди четыре куска железной руды. Она блестит в горах и в пещере.":"Find four chunks of iron ore. It glitters in the mountains and the cave.","Руды у тебя":"Ore you have:","из 4. Ищи в горах и в пещере.":"of 4. Search the mountains and the cave.","Вот это руда! Сейчас закалю твоё оружие.":"Now that is ore! Let me temper your weapon.","Готово: +1 к урону любого оружия, сверх заточки.":"Done: +1 damage for any weapon, on top of sharpening.","Железная руда:":"Iron ore:","Неси руду Гордею.":"Bring the ore to Gordey.","Награда: закалка, +1 к урону.":"Reward: tempering, +1 damage.","Крабы совсем распоясались, сети режут.":"The crabs have gone wild, cutting my nets.","Прогони пятерых, а? В долгу не останусь.":"Chase off five of them, will you? I will repay you.","Прогнано крабов:":"Crabs chased off:","Тишина на берегу! Спасибо, выручил.":"The shore is quiet! Thanks, you saved me.","Вот, в сети попался сердечный оберег. Теперь у тебя на одно сердце больше.":"Here, this heart charm got caught in my net. Now you have one more heart.","Прогони крабов на пляже:":"Chase off crabs on the beach:","Вернись к Тихону.":"Go back to Tikhon.","Награда: +1 сердце.":"Reward: +1 heart.","Новое поручение:":"New task:","Крабы:":"Crabs:","Пушок найден! Неси его Асе":"Found Fluffy! Bring him to Asya","Эй, путник! Хорошо, что ты здесь.":"Hey, traveller! Good thing you are here.","Ночью буря разбросала восемь кристаллов Листвянки по всей округе. Без них наш лес засохнет.":"Last night a storm scattered the eight crystals of Listvyanka across the land. Without them our forest will wither.","Найди их и принеси мне. Где искать, подскажут таблички. Или спроси меня ещё раз.":"Find them and bring them to me. The signs will tell you where to look. Or ask me again.","И осторожно: слаймы совсем озверели. Жми A, чтобы взмахнуть мечом, а если держать A, получится круговой удар.":"And careful: the slimes have gone wild. Press A to swing your sword; hold A for a spin attack.","B — бег, двойное нажатие B — рывок. За победы над врагами растёт уровень, а с ним и умения.":"B is run, double B is a dash. Defeating enemies raises your level, and with it your skills.","Монеты неси Варе в лавку и кузнецу Гордею. А всё, что купишь, лежит в сумке: кнопка внизу экрана.":"Spend coins at Varya’s shop and with Gordey the smith. Everything you buy is in the bag: the button below the screen.","Один лежит в цветочном поле на северо-западе, среди камней.":"One lies in the flower meadow to the north-west, among the rocks.","Один сверкает на острове посреди озера. Туда ведёт мост.":"One sparkles on the island in the middle of the lake. A bridge leads there.","Один спрятан в глубине леса на юго-западе. Держись тропы.":"One is hidden deep in the forest to the south-west. Stay on the path.","Один охраняет Король слаймов в глубине руин на юго-востоке. Возьми зелья.":"One is guarded by the Slime King deep in the ruins to the south-east. Bring potions.","Один упал в рощу на востоке, у края озера.":"One fell into the grove to the east, by the edge of the lake.","Один вмёрз в озеро высоко в горах на востоке. Ворота перевала откроются, если положить камни на плиты.":"One is frozen into a lake high in the eastern mountains. The pass gate opens when you put stones on the plates.","Один спрятан в бухте на южном пляже, за воротами. Тихон знает, как их открыть. Говорят, бухту стережёт огромный краб.":"One is hidden in the cove on the south beach, behind a gate. Tikhon knows how to open it. They say a giant crab guards the cove.","Последний лежит в тёмной пещере в горах. Вход сторожит Ледяной великан, а внутри прячется Тень. Купи у Вари фонарь.":"The last one lies in the dark cave in the mountains. The Frost Giant guards the entrance and a Shadow hides inside. Buy a lantern from Varya.","Все восемь кристаллов! Не верю своим глазам.":"All eight crystals! I cannot believe my eyes.","Листвянка спасена. Спасибо тебе, герой!":"Listvyanka is saved. Thank you, hero!","Кристаллов у тебя:":"Crystals you have:","Ночь на дворе. Монстры в темноте злее, держись света.":"It is night. Monsters are fiercer in the dark, stay near the light.","Листвянка ожила! Но небо всё ещё неспокойно.":"Listvyanka has come alive! But the sky is still restless.","Буря не исчезла: она ушла на Облачный остров. Алтарь на севере теперь перенесёт тебя туда.":"The storm did not vanish: it fled to the Cloud Island. The northern altar can now take you there.","Найди три грозовые печати и одолей Повелителя бури. А если заскучаешь, под руинами есть подземелье: каждый раз оно новое.":"Find the three storm seals and defeat the Storm Lord. And if you get bored, there is a dungeon under the ruins: it is different every time.","Небо чистое, как никогда. Спасибо тебе, герой!":"The sky has never been clearer. Thank you, hero!","Если захочешь приключений, спускайся в подземелье под руинами. Говорят, оно бездонное.":"If you want adventure, go down into the dungeon under the ruins. They say it has no bottom.","Повелитель бури рассеялся, и над Облачным островом выглянуло солнце.":"The Storm Lord dissolved, and the sun came out over the Cloud Island.","Буря больше никогда не вернётся в Листвянку. Ты настоящий герой!":"The storm will never return to Listvyanka. You are a true hero!","Пятнадцать ракушек! Да ты настоящий морской волк.":"Fifteen shells! You are a real old salt.","Возьми амулет прилива. С ним раны затягиваются сами: одно сердце каждые полминуты.":"Take the tide amulet. With it wounds heal by themselves: one heart every half minute.","Мост ведёт на остров. Говорят, там что-то блестит.":"The bridge leads to the island. They say something glitters there.","Я видела, как слаймы ползли к руинам. Брр.":"I saw slimes crawling towards the ruins. Brr.","Монеты? Собирай, вдруг пригодятся!":"Coins? Collect them, they may come in handy!","Видишь треснувшие камни? Говорят, бомба разносит их в щебень. А за ними тайники!":"See the cracked rocks? They say a bomb blows them to rubble. And there are caches behind them!","Жуки с рогами непробиваемы спереди. Обходи их сзади или жди, пока врежутся в стену.":"Horned beetles cannot be hurt from the front. Go around them or wait until they hit a wall.","Мяу.":"Meow.","Мр-р-р.":"Purrr.","Кот смотрит на тебя так, будто знает, где лежит кристалл.":"The cat looks at you as if it knows where a crystal lies.","Привет! Я Варя. Зелья, оружие, щиты: выбирай, что нравится.":"Hi! I am Varya. Potions, weapons, shields: pick what you like.","Заходи, у меня всё свежее!":"Come in, everything is fresh!","Монетки звенят? Значит, пора за покупками.":"Coins jingling? Then it is time to shop.","Поздно уже, но для тебя открою.":"It is late, but I will open up for you.","Кузнец Гордей к твоим услугам. Наточу клинок, подгоню кольчугу. Не бесплатно, конечно.":"Gordey the smith at your service. I will sharpen your blade and fit your mail. Not for free, of course.","Опять ты? Ну, показывай монеты.":"You again? Well, show me your coins.","Хороший клинок любит заботу.":"A good blade loves care.","Ох, гость! Я Ефим, живу тут отшельником. В горах злые волки и снеговики, береги голову.":"Oh, a guest! I am Yefim, I live here as a hermit. Wolves and snowmen roam the mountains, mind your head.","Кристалл вмёрз в озеро. На льду катишься, пока не упрёшься в камень. Думай, куда едешь!":"A crystal is frozen into the lake. On ice you slide until you hit a rock. Think where you are going!","А в пещеру без фонаря не суйся.":"And do not go into the cave without a lantern.","Я Тихон, рыбак. В бухте за скалами что-то сияет, да ворота заперты.":"I am Tikhon, a fisherman. Something shines in the cove behind the rocks, but the gate is locked.","Нашёл записку в бутылке: «Крайние рычаги вверх, средний вниз». Не про бухту ли?":"I found a note in a bottle: “Outer levers up, middle one down.” About the cove, perhaps?","Крабы нынче злые. Щипаются больно.":"The crabs are mean these days. Their pinches hurt.","Я видел треснувший валун в цветочном поле! Бомбой бы его…":"I saw a cracked boulder in the flower meadow! A bomb would do it…","На пляже красивые ракушки. Тихон говорит, их пятнадцать.":"There are pretty shells on the beach. Tikhon says there are fifteen.","По всему краю разбросаны страницы чьего-то дневника. Найдёшь, дай почитать!":"Pages of someone’s diary are scattered across the land. If you find them, let me read!","Видел камни с голубыми рунами? Тронешь, и они просыпаются!":"Seen the stones with blue runes? Touch one and it wakes up!","Под руинами есть люк вниз. Мама не пускает.":"There is a hatch under the ruins. Mum will not let me go.","Тихон даёт удочку. В море водится золотая рыбка!":"Tikhon gives out rods. There is a golden fish in the sea!","Гордей устроил арену. Я бы победил всех. Ну, почти.":"Gordey set up an arena. I would beat everyone. Well, almost.","Небо-то какое чистое! Я уж и не помню, когда так было.":"What a clear sky! I cannot remember the last time.","Говорят, буря ушла в небо. Ох, не к добру это, внучек. Сходи-ка ты к алтарю.":"They say the storm went up into the sky. That bodes ill, dear. Go and see the altar.","Пещера, говорят, посветлела. Тень-то ты прогнал!":"They say the cave got brighter. You chased the Shadow away!","Великана одолел? А я в молодости снежки дальше всех кидала!":"You beat the giant? When I was young I threw snowballs further than anyone!","Король слаймов повержен! Внучка не верит, что это ты.":"The Slime King is defeated! My granddaughter cannot believe it was you.","Ночь на дворе, а ты всё бегаешь. Поешь хоть пирожок.":"It is night and you are still running around. At least have a pie.","В руинах по ночам что-то булькает. Слаймы, поди. Будь осторожен.":"Something gurgles in the ruins at night. Slimes, no doubt. Be careful.","Служу тихо, спасибо тебе. Даже волки присмирели.":"It is a quiet watch, thanks to you. Even the wolves calmed down.","Ворота перевала открыты? Ну ты даёшь! Береги себя в горах.":"The pass gate is open? Well done! Take care in the mountains.","Ночью стерегу деревню. Монстры в темноте быстрее, держись света.":"At night I guard the village. Monsters are faster in the dark, stay near the light.","Дальше на восток горы. Там волки, держи меч наготове. А ворота открываются камнями на плитах.":"Further east are the mountains. There are wolves, keep your sword ready. The gate opens with stones on the plates.","ЛИСТВЯНКА\nСевер: алтарь, озеро. Восток: горы.\nЮг: лес, руины, за ними пляж.":"LISTVYANKA\nNorth: altar, lake. East: mountains.\nSouth: forest, ruins, and the beach beyond.","Цветочное поле. Не топтать!\n(Ну, разве что чуть-чуть.)":"Flower meadow. Do not trample!\n(Well, maybe just a little.)","Старый лес. Не сходи с тропы.":"Old forest. Stay on the path.","Руины древней крепости. В глубине спит Король слаймов. Опасно!":"Ruins of an ancient fortress. The Slime King sleeps in the depths. Danger!","Алтарь кристаллов. Пять гнёзд пустуют.":"The crystal altar. Five sockets are empty.","Ворота перевала. Поставь камни на обе плиты.\nЗастрял камень? Отойди подальше, он вернётся.":"The pass gate. Put stones on both plates.\nStone stuck? Walk away and it will come back.","Ледяное озеро. На льду не остановиться, пока не упрёшься в камень.":"Frozen lake. On the ice you cannot stop until you hit a rock.","Пещера. Вход сковал лёд Ледяного великана. А внутри без фонаря ничего не видно.":"The cave. The Frost Giant has sealed the entrance with ice. Inside, you cannot see a thing without a lantern.","Три плиты, три камня. Дверь откроется, когда все плиты прижаты.":"Three plates, three stones. The door opens when every plate is pressed.","Бухта Тихая. Ворота открываются рычагами.":"Quiet Cove. The gate opens with levers.","Спуск в подземелье. Каждый раз оно другое. Чем глубже, тем опаснее и богаче.":"Way down to the dungeon. It is different every time. The deeper, the more dangerous and the richer.","Дом Мирона. Заперто, хозяин на площади.":"Miron's house. Locked, the owner is on the square.","Дом продаётся. Спроси у Вари в лавке.":"House for sale. Ask Varya at the shop.","Заперто.":"Locked.","В сундуке 10 монет!":"10 coins in the chest!","В сундуке 15 монет!":"15 coins in the chest!","В сундуке 30 монет!":"30 coins in the chest!","В сундуке 40 монет!":"40 coins in the chest!","В сундуке сердце! Здоровье +1.":"A heart in the chest! Health +1.","Тайник! Внутри 20 монет.":"A cache! 20 coins inside.","Тайник! Внутри два красных зелья.":"A cache! Two red potions inside.","Тихон даст":"Tikhon will give","Сундук пуст.":"The chest is empty.","В сундуке":"In the chest:","монет!":"coins!","В сундуке 10 стрел и 3 бомбы!":"10 arrows and 3 bombs in the chest!","В сундуке красное зелье! Выпить можно из сумки.":"A red potion in the chest! Drink it from the bag.","Ты теряешь сознание… и приходишь в себя уже в деревне.":"You faint… and wake up back in the village.","Ты пал в бою. В хардкоре вторая попытка не положена.":"You fell in battle. Hardcore allows no second try.","Кристалл найден:":"Crystal found:","Все кристаллы! Возвращайся к Мирону":"All crystals! Go back to Miron","Наступает ночь. Монстры злее":"Night falls. Monsters are fiercer","Рассвет":"Dawn","Отбегай! Взрыв через секунду":"Run! It blows in a second","Стрелы закончились":"Out of arrows","Бомбы закончились":"Out of bombs","Тайник открыт!":"Cache opened!","Панцирь не пробить! Бей сзади":"Cannot pierce the shell! Hit from behind","Ворота открылись!":"The gate opened!","Рычаг больше не двигается. Ворота уже открыты.":"The lever will not move any more. The gate is already open.","Темно! Купи у Вари фонарь":"It is dark! Buy a lantern from Varya","Элитный враг! Он сильнее, но с богатой добычей":"Elite enemy! Stronger, but with rich loot","пробуждается!":"awakens!","повержен!":"is defeated!","Лёд у входа в пещеру треснул!":"The ice at the cave entrance cracked!","Краб оглушён! Бей, пока панцирь не защищает":"The crab is stunned! Hit it while the shell is open","Панцирь краба слишком крепкий. Пусть он врежется в стену!":"The crab’s shell is too hard. Make it crash into a wall!","Король слаймов":"Slime King","Ледяной великан":"Frost Giant","Гигантский краб":"Giant Crab","Тень пещеры":"Cave Shadow","Повелитель бури":"Storm Lord","Пошёл дождь. Скользко!":"It started raining. Slippery!","Началась метель":"A blizzard began","Опустился туман":"Fog rolled in","Прояснилось":"The sky cleared","Метель утихла":"The blizzard died down","Здоровье восстановлено":"Health restored","Быстрый шаг: 20 секунд":"Swift steps: 20 seconds","Защита: 15 секунд":"Protection: 15 seconds","Камень-портал пробуждён:":"Waystone awakened:","Подойди к любому пробуждённому камню, чтобы перенестись сюда.":"Walk up to any awakened stone to travel here.","Пробуди другие камни, и между ними можно будет перемещаться.":"Awaken other stones and you will be able to travel between them.","Камень гудит. Пробуди ещё хотя бы один камень-портал.":"The stone hums. Awaken at least one more waystone.","Ракушка":"Shell","Все ракушки! Покажи их рыбаку Тихону":"All the shells! Show them to Tikhon the fisherman","Дневник собран! Карта открыта полностью":"Diary complete! The whole map is revealed","Грозовая печать:":"Storm seal:","Три печати собраны! Ворота храма открылись":"Three seals collected! The temple gate opened","День 1. Я пришёл в Листвянку искать кристаллы, о которых поют в тавернах. Говорят, их восемь, и они держат лес живым.":"Day 1. I came to Listvyanka looking for the crystals they sing about in taverns. They say there are eight, and they keep the forest alive.","День 3. Старый Мирон стережёт алтарь и смотрит на меня с подозрением. И правильно делает.":"Day 3. Old Miron guards the altar and eyes me with suspicion. Rightly so.","День 5. Я нашёл способ разбудить кристаллы. Если вынуть их из алтаря разом, их сила станет моей.":"Day 5. I found a way to wake the crystals. If I take them all from the altar at once, their power will be mine.","День 6. Король слаймов почуял кристалл и уполз с ним в руины. Жадная слизь.":"Day 6. The Slime King smelled a crystal and crawled off to the ruins with it. Greedy goo.","День 8. Ночью я вынул кристаллы. Поднялась буря. Я не удержал их, они разлетелись по всему краю.":"Day 8. At night I took the crystals. A storm rose. I could not hold them, they scattered across the land.","День 9. Один кристалл упал в горное озеро и вмёрз в лёд. Проснулся великан и замуровал пещеру.":"Day 9. One crystal fell into a mountain lake and froze in. A giant woke up and sealed the cave.","День 11. Огромный краб утащил кристалл в бухту. Рыбак видел сияние, но промолчал. Боится.":"Day 11. A huge crab dragged a crystal into the cove. The fisherman saw the glow but kept quiet. He is afraid.","День 13. В пещере живёт Тень. Она пьёт свет кристалла и растёт.":"Day 13. A Shadow lives in the cave. It drinks the crystal’s light and grows.","День 15. Без кристаллов лес умрёт, а с ним и Листвянка. Это моя вина.":"Day 15. Without the crystals the forest will die, and Listvyanka with it. It is my fault.","Последняя страница. Если ты читаешь это, верни кристаллы Мирону. И прости меня. Странник.":"Last page. If you are reading this, return the crystals to Miron. And forgive me. The Wanderer.","Алтарь гудит.":"The altar hums.","Древний алтарь. Пока кристаллы не вернулись к Мирону, он молчит.":"An ancient altar. Until the crystals return to Miron, it stays silent.","Алтарь вспыхивает и поднимает тебя в небо…":"The altar flares and lifts you into the sky…","Поговори с Мироном: буря ещё не ушла":"Talk to Miron: the storm is not gone yet","Ждём поклёвку…":"Waiting for a bite…","Поймана рыба:":"Fish caught:","Рыба сорвалась":"The fish got away","Не успел подсечь":"Too slow to strike","Рыбалка прервана":"Fishing interrupted","Встань лицом к воде":"Face the water","Дом, милый дом":"Home, sweet home","Арена Гордея! Держись":"Gordey's Arena! Hold on","Ну-ну, полежи. Гордей вытащил тебя с арены. Ты продержался до волны":"There, there, lie down. Gordey dragged you out of the arena. You lasted until wave","Гордей вручил тебе Кольцо жизни!":"Gordey gave you the Ring of life!","Ты сладко выспался. Здоровье восстановлено, на дворе утро.":"You slept soundly. Health restored, it is morning.","Камин потрескивает. Так тепло…":"The fire crackles. So warm…","На полке: «Сказки Листвянки», «Как приручить слайма», дневник Странника.":"On the shelf: “Tales of Listvyanka”, “How to Tame a Slime”, the Wanderer’s diary.","На столе пирожки от бабушки Нюры.":"Pies from Granny Nyura are on the table.","Цветок подрос.":"The flower has grown.","Трофей:":"Trophy:","Корона Короля слаймов":"The Slime King's crown","Осколок льда великана":"A shard of the giant's ice","Клешня гигантского краба":"The giant crab's claw","Маска Тени":"The Shadow's mask","Сердце бури":"Heart of the storm","Давным-давно в Листвянке хранили восемь кристаллов. Их свет берёг лес и людей.":"Long ago, Listvyanka kept eight crystals. Their light protected the forest and its people.","Однажды ночью пришёл Странник. Он хотел забрать силу кристаллов себе.":"One night a Wanderer came. He wanted the crystals’ power for himself.","Поднялась буря. Кристаллы разлетелись по всему краю.":"A storm rose. The crystals scattered across the land.","Наутро в деревню пришёл ты.":"In the morning, you arrived in the village.","Восемь кристаллов снова на алтаре.":"The eight crystals are back on the altar.","Лес ожил, а небо прояснилось.":"The forest came alive and the sky cleared.","Спасибо, что спас Листвянку!":"Thank you for saving Listvyanka!","сердце":"heart","к урону":"damage","Уже в руках.":"Already in hand.","В руках, и 10 стрел в подарок.":"In hand, plus 10 free arrows.","Выбери бомбы в сумке.":"Pick bombs in the bag.","секунд враги не ранят.":"seconds enemies cannot hurt you."};
-Object.assign(EN, {"Самый быстрый. Удар мечом отбивает вражеские снаряды.": "The fastest. A sword swing knocks enemy projectiles away.", "Бьёт далеко вперёд и пробивает панцири жуков и крабов.": "Reaches far ahead and pierces beetle and crab shells.", "Медленный, бьёт по широкой дуге. Крушит камень и лёд, оглушает жуков.": "Slow, swings in a wide arc. Smashes stone and ice, stuns beetles.", "Стреляет издалека. Летучих врагов сбивает вдвое сильнее.": "Shoots from afar. Deals double damage to flying enemies.", "Взрыв через 1,5 секунды ломает треснувшие камни и крушит каменных врагов. Отойди подальше!": "Explodes after 1.5 seconds, breaking cracked rocks and smashing stone enemies. Step back!", "Отбито! Меч сбивает снаряды на лету": "Parried! The sword knocks projectiles out of the air", "Топор оглушил жука! Бей, пока он не опомнился": "The axe stunned the beetle! Strike before it recovers", "Панцирь не пробить! Бей сзади, копьём или оглуши топором": "The shell holds! Hit from behind, use the spear or stun it with the axe", "Сильный удар!": "Strong hit!", "Слизь": "Slime", "Зверь": "Beast", "Кости": "Bones", "Панцирь": "Shell", "Камень и лёд": "Stone and ice", "Летучий": "Flying", "Дух": "Spirit", "Меч и топор режут слизь, копьё вязнет.": "Sword and axe cut slime, the spear gets stuck.", "Любое оружие годится.": "Any weapon will do.", "Топор и бомбы ломают кости, стрелы пролетают сквозь рёбра.": "Axe and bombs break bones, arrows fly through the ribs.", "Копьё пробивает панцирь, меч и стрелы скользят.": "The spear pierces the shell, sword and arrows glance off.", "Нужен топор или бомбы. Меч почти не берёт.": "You need the axe or bombs. The sword barely scratches it.", "Лук сбивает вдвое сильнее.": "The bow deals double damage.", "Стрелы и меч. Топор и бомбы проходят насквозь.": "Arrows and the sword. Axe and bombs pass right through.", "Слайм": "Slime", "Слаймик": "Slimelet", "Летучая мышь": "Bat", "Скелет": "Skeleton", "Жук": "Beetle", "Волк": "Wolf", "Снеговик": "Snowman", "Краб": "Crab", "Зелёный слайм": "Green slime", "Огонёк": "Wisp", "Голем": "Golem", "Прыгает и зовёт слаймиков. Отходи от места приземления и бей мечом или топором.": "Leaps and calls slimelets. Step away from where it lands and strike with the sword or axe.", "Ледяная глыба: нужен топор или бомбы. Ударную волну перепрыгивай рывком.": "A block of ice: you need the axe or bombs. Dash over the shockwave.", "Панцирь держит удар. Пусть краб врежется в стену, тогда бей. Копьё пробивает лучше.": "Its shell takes the blows. Let the crab ram a wall, then strike. The spear pierces better.", "Бей, пока видна. Стрелы и меч, топор проходит насквозь. Мечом отбивай её шары.": "Strike while it is visible. Arrows and the sword; the axe passes through. Parry its orbs with the sword.", "Летучий: лук сбивает вдвое сильнее. Уходи из жёлтых кругов.": "Flying: the bow deals double damage. Get out of the yellow circles.", "Бестиарий": "Bestiary", "Ударь врага, и он появится здесь вместе с подсказкой, чем его лучше бить.": "Hit an enemy and it will appear here with a tip on what to hit it with.", "Сменить оружие": "Switch weapon", "! Сменить можно в сумке → Внешность": "! Switch it in Bag → Looks", "Взять": "Pick up", "Убрать": "Put away", "Сменить": "Change", "Ещё закрыто": "Still locked", "Питомец": "Pet", "Длина": "Length", "Цвет": "Colour", "A: поставить, B: отмена": "A: put down, B: cancel", "«Как приручить слайма», глава первая: «Никак». Глава вторая: «Смотри главу первую».": "\"How to Tame a Slime\", chapter one: \"You can't.\" Chapter two: \"See chapter one.\"", "«Лоция Тихона»: «Крабы бегают боком, потому что стесняются смотреть в глаза».": "\"Tikhon's Sailing Notes\": \"Crabs walk sideways because they are too shy to look you in the eye.\"", "«Сказки Листвянки»: «Жил-был слайм, который хотел стать облаком. Он ел росу и мечтал…» Дальше страницы склеены.": "\"Tales of Listvyanka\": \"Once there was a slime who wanted to become a cloud. It drank dew and dreamed…\" The rest of the pages are stuck together.", "Аквариум пуст. Поймай рыбу, и она поселится здесь.": "The aquarium is empty. Catch a fish and it will live here.", "Аквариум": "Aquarium", "Альбом Вари: зарисовки синецветов и неплохой портрет кота. Кот на портрете недоволен.": "Varya's sketchbook: drawings of bluebells and a decent portrait of the cat. The cat in the portrait looks displeased.", "Бандана": "Bandana", "Без плаща": "No cape", "Без шапки": "No hat", "Белый": "White", "Бледная": "Pale", "Большой и мягкий. По нему можно ходить и ставить сверху мебель.": "Big and soft. You can walk on it and put furniture on top.", "Бордовые": "Maroon", "В гардеробе новый убор: ": "New headwear in the wardrobe: ", "В ней лежат все собранные ракушки.": "Holds every shell you have collected.", "В нём плавают все виды рыб, что ты поймал.": "Every kind of fish you have caught swims here.", "Венец бури": "Storm Circlet", "Венок из синецветов": "Bluebell Wreath", "Витрина ракушек": "Shell Display", "Витрина": "Display", "Вишнёвый": "Cherry", "Внешность": "Looks", "Возьми вещь в руки и выбери новое место.": "Pick it up and choose a new spot.", "Возьми одного, а? Он везде за тобой пойдёт и учует, где что спрятано.": "Take one, will you? It will follow you everywhere and sniff out hidden things.", "Волосы": "Hair", "Всегда накрыт к ужину.": "Always set for dinner.", "Головной убор": "Headwear", "Голубой": "Sky blue", "Длинные": "Long", "Дом, милый дом": "Home, sweet home", "Жёлтый": "Yellow", "Заведи питомца.": "Get a pet.", "Записки Мирона: «Кристаллы поют, когда рядом гроза. Если однажды они замолчат, жди беды».": "Miron's notes: \"The crystals sing when a storm is near. If they ever fall silent, expect trouble.\"", "Зелёные": "Green", "Зелёный плащ": "Green cape", "Зелёный": "Green", "Золотистый": "Golden", "Золотой плащ": "Gold cape", "Камин потрескивает. Так тепло…": "The fire crackles. So warm…", "Камин": "Fireplace", "Капюшон Тени": "Shadow Hood", "Каталог мебели": "Furniture Catalogue", "Каштановые": "Chestnut", "Кепка": "Cap", "Книжный шкаф": "Bookcase", "Ковёр": "Rug", "Кожа": "Skin", "Коричневые": "Brown", "Коричневый": "Brown", "Корона Короля слаймов": "Slime King's Crown", "Короткие": "Short", "Котёнок": "Kitten", "Красный плащ": "Red cape", "Красный": "Red", "Кресло": "Armchair", "Кровать": "Bed", "Купленная вещь сразу окажется у тебя в руках: выбери место и нажми A.": "What you buy goes straight into your hands: pick a spot and press A.", "Лежанка ждёт питомца.": "The pet bed is waiting for a pet.", "Лежанка": "Pet bed", "Лиловые": "Lilac", "Лиловый плащ": "Lilac cape", "Лиловый": "Lilac", "Лучший друг": "Best Friend", "Мебели: ": "Furniture: ", "Медные": "Copper", "Мне на службе не до него. Забирай, он к тебе уже привязался.": "I have no time for him on duty. Take him, he has already taken to you.", "Модник": "Trendsetter", "Мягкий ковёр.": "A soft rug.", "Мягкий свет по вечерам.": "Soft light in the evenings.", "На ней висит всё твоё оружие.": "All your weapons hang on it.", "На стойке: ": "On the rack: ", "На столе пирожки от бабушки Нюры.": "Granny Nyura's pies are on the table.", "Никого, питомцы ждут дома.": "Nobody, the pets are waiting at home.", "Новый друг: ": "New friend: ", "Окрас": "Coat", "Освободить место. Достать можно в каталоге у двери.": "Free up space. Get it back from the catalogue by the door.", "Переодеться и сменить причёску.": "Change clothes and hairstyle.", "Переодеться": "Change clothes", "Переставить": "Move", "Питомец спит на ней, когда ты дома.": "Your pet sleeps on it while you are home.", "Плавают: ": "Swimming: ", "Плащ бури": "Storm cape", "Плащ": "Cape", "Поваренная книга бабушки Нюры. На полях: «Пирожки с черникой — Феде не давать, всё съест».": "Granny Nyura's cookbook. In the margin: \"Blueberry pies — keep away from Fedya, he will eat them all.\"", "Подойди к мебели и нажми A, чтобы переставить её. Новая мебель в каталоге у двери": "Walk up to furniture and press A to move it. New furniture is in the catalogue by the door", "Посидеть у камина.": "Sit by the fire.", "Посидеть": "Sit", "Посмотреть": "Look", "Поспать до утра и восстановить здоровье.": "Sleep until morning and restore health.", "Поспать": "Sleep", "Поставить": "Place", "Почитать": "Read", "Пушок без тебя бы пропал. А у нашей Мурки родились котята!": "Pushok would have been lost without you. And our Murka has had kittens!", "Ракушек в витрине: ": "Shells in the display: ", "Расставлять мебель можно только дома": "You can only arrange furniture at home", "Растёт, даже когда тебя нет.": "It grows even when you are away.", "Рогатый шлем": "Horned Helmet", "Рубаха": "Shirt", "Рыжие": "Red", "Рыжий": "Ginger", "С тобой": "With you", "Светлая": "Fair", "Светлые": "Blond", "Свой дом в две комнаты: мебель расставляешь как хочешь, трофеи с боссов стоят на постаментах.": "Your own two-room house: arrange furniture however you like, boss trophies stand on pedestals.", "Седые": "Grey", "Серые": "Grey", "Серый": "Grey", "Синие": "Blue", "Синий плащ": "Blue cape", "Синий": "Blue", "Сказки и записки о крае.": "Tales and notes about the land.", "Слушай, к посту щенок прибился. Нюх у него что надо: монетки из-под земли достаёт.": "Listen, a puppy turned up at my post. Great nose: he digs coins out of the ground.", "Смени внешность героя.": "Change your hero's looks.", "Смуглая": "Tanned", "Стойка с оружием": "Weapon Rack", "Стол": "Table", "Сюда не встанет": "It will not fit here", "Тепло и уют, огонь пляшет.": "Warm and cosy, the flames dance.", "Торшер мягко светит.": "The floor lamp glows softly.", "Торшер": "Floor Lamp", "Ты сел у огня и немного отдохнул.": "You sat by the fire and rested a little.", "Ты сладко выспался. Здоровье восстановлено, на дворе утро.": "You slept soundly. Health restored, it is morning.", "Тёмная": "Dark", "Убрано в каталог": "Put away in the catalogue", "Убрать в каталог": "Put away", "Цвет убора": "Headwear colour", "Цветок в кадке": "Potted Plant", "Цветок подрос.": "The plant has grown.", "Часто откапывает монетки и чует тайники рядом.": "Often digs up coins and smells nearby secrets.", "Чует тайники, страницы дневника и ракушки издалека.": "Smells secrets, diary pages and shells from far away.", "Чёрные": "Black", "Чёрный": "Black", "Шапки, причёски, цвета, плащи": "Hats, hairstyles, colours, capes", "Шкаф с зеркалом": "Mirror Wardrobe", "Шлем-панцирь": "Shell Helmet", "Шляпа рыбака": "Fisher's Hat", "Штаны": "Trousers", "Щенок": "Puppy", "награда Вари за синецветы": "Varya's reward for the bluebells", "победи Гигантского краба": "defeat the Giant Crab", "победи Короля слаймов": "defeat the Slime King", "победи Ледяного великана": "defeat the Frost Giant", "победи Повелителя бури": "defeat the Storm Lord", "победи Тень пещеры": "defeat the Cave Shadow", "поймай 10 рыб": "catch 10 fish", "спаси Листвянку": "save Listvyanka", "Лежит в каталоге.": "Stored in the catalogue.", "и питомец.": "and pet.", "откопал монетку!": "dug up a coin!", "сворачивается клубком.": "curls up in a ball.", "что-то учуял! Поищи рядом": "smells something! Search nearby", "Трофеев:": "Trophies:", "всего": "total", "Всё": "All", "Наложить": "Apply", "Полно": "Full", "Монеты": "Coins", "Руны": "Runes", "Возьми в руки оружие.": "Take a weapon in hand.", "Зачарование:": "Enchantment:", "Наложится на": "Will go on the", "вместо": "instead of", "У тебя:": "You have:", "мон. и руны.": "coins and runes.", "мон.": "coins", "монет и руны!": "coins and runes!", "монет и": "coins and", "оставил": "left behind", "рун": "runes", "Спуститься": "Descend", "Где-то бродит торговец": "A merchant wanders somewhere", "Здесь страж!": "A guardian is here!", "Награда:": "Reward:", "зачарование": "enchantment", "Руны и свитки": "Runes and scrolls", "Все задания на сегодня выполнены. Приходи завтра!": "All of today's tasks are done. Come back tomorrow!", "Забрать": "Claim", "Наложи его на оружие в сумке": "Apply it to a weapon in the bag", "Наложи его в сумке.": "Apply it in the bag.", "А на дне": "And at the bottom", "Бомбы ×3": "Bombs ×3", "Стрелы ×10": "Arrows ×10", "Буря вернулась, и кристаллы снова разбросаны. Уровень, оружие, дом и питомцы остались с тобой.": "The storm is back and the crystals are scattered again. Your level, weapons, house and pets stay with you.", "В золотом сундуке": "In the golden chest", "В сундуке 50 монет! Сердце отсюда ты уже забрал в прошлый раз.": "50 coins in the chest! You took the heart from here last time.", "Враги крепче и бьют больнее, зато опыта больше, а боссы оставляют свитки зачарований.": "Enemies are tougher and hit harder, but you get more experience and bosses leave enchantment scrolls.", "Все задания дня выполнены!": "All daily tasks done!", "Второй круг": "Second Round", "Выполнено.": "Done.", "Выполни все три задания дня.": "Complete all three daily tasks.", "Глубже некуда": "Rock Bottom", "Глубже спустишься, богаче вернёшься. Или не вернёшься. Хе-хе.": "The deeper you go, the richer you return. Or you don't return. Heh-heh.", "Гроза стражей": "Guardian Bane", "Гроза": "Thunder", "Добудь руны:": "Collect runes:", "Доска объявлений": "Notice Board", "Доска почёта": "Board of Honour", "Есть:": "Have:", "Жажда": "Thirst", "Задания на сегодня": "Today's tasks", "Замедляет врага вдвое на 3 секунды.": "Halves the enemy's speed for 3 seconds.", "Зачарователь": "Enchanter", "Золотой ключ! Ищи золотой сундук на этаже": "Golden key! Look for the golden chest on this floor", "Золотой сундук заперт. Ключ у одного из элитных врагов на этом этаже.": "The golden chest is locked. One of the elite enemies on this floor has the key.", "Каждый пятый удар лечит сердце.": "Every fifth hit heals a heart.", "Кристаллы": "Crystals", "Круг": "Round", "Куплен свиток": "Bought the scroll", "Куплено.": "Bought.", "Мир начнётся заново. Точно?": "The world starts over. Sure?", "Молния перескакивает на двух ближайших врагов.": "Lightning jumps to the two nearest enemies.", "Наложи свиток зачарования на оружие.": "Apply an enchantment scroll to a weapon.", "Начни «Новую игру+».": "Start a \"New Game+\".", "Не хватает рун: нужно": "Not enough runes: need", "Новая игра+": "New Game+", "Новая игра+, круг": "New Game+, round", "Новые задания появляются каждый день. За все три — свиток зачарования.": "New tasks appear every day. Finish all three for an enchantment scroll.", "Оберег греет грудь: +1 сердце.": "The charm warms your chest: +1 heart.", "Откуда начать спуск?": "Where do you start the descent?", "Пламя": "Flame", "Победи врагов ночью:": "Defeat enemies at night:", "Победи врагов:": "Defeat enemies:", "Победи стража подземелья.": "Defeat a dungeon guardian.", "Победи элитных врагов:": "Defeat elite enemies:", "Подбери монет:": "Pick up coins:", "Поджигает врага: он теряет здоровье ещё 3 секунды.": "Sets the enemy on fire: it keeps losing health for 3 seconds.", "Поймай рыбу:": "Catch fish:", "Продержись на арене Гордея волн:": "Survive waves in Gordey's arena:", "Рекорд: этаж": "Record: floor", "Рунный оберег": "Rune Charm", "Руны: +": "Runes: +", "Руны:": "Runes:", "С самого начала.": "From the very beginning.", "Свиток": "Scroll", "Свиток на клинок, и любой страж тебе нипочём. Ну, почти.": "A scroll on your blade and no guardian can stop you. Well, almost.", "Сделано:": "Done:", "Сердце у тебя уже есть: Тихон дал 60 монет": "You already have that heart: Tikhon gave you 60 coins", "Спустись в подземелье до этажа": "Reach dungeon floor", "Спустись на 10 этаж подземелья.": "Reach floor 10 of the dungeon.", "Страж оставил": "The guardian left", "Страж повержен! Лестница вниз открыта. Отсюда можно будет начинать спуск": "Guardian defeated! The stairs down are open. You can start your descent from here", "Стужа": "Frost", "Тише, тише. Тит торгует только за руны. Монеты оставь наверху.": "Hush, hush. Tit trades only for runes. Leave your coins upstairs.", "Торговец Тит в подземелье меняет их на свитки и обереги.": "Tit the merchant in the dungeon trades them for scrolls and charms.", "Торговец Тит": "Tit the Merchant", "Шипы! Следи за мигающими плитами или проскакивай рывком": "Spikes! Watch for flashing plates or dash across", "Этаж": "Floor", "руна": "rune", "руны": "runes", "Сразу за стражем этажа": "Right past the guardian of floor", "сердце навсегда. Куплено": "heart forever. Bought"});
+Object.assign(EN, {"Самый быстрый. Удар мечом отбивает вражеские снаряды.": "The fastest. A sword swing knocks enemy projectiles away.", "Бьёт далеко вперёд и пробивает панцири жуков и крабов.": "Reaches far ahead and pierces beetle and crab shells.", "Медленный, бьёт по широкой дуге. Крушит камень и лёд, оглушает жуков.": "Slow, swings in a wide arc. Smashes stone and ice, stuns beetles.", "Стреляет издалека. Летучих врагов сбивает вдвое сильнее.": "Shoots from afar. Deals double damage to flying enemies.", "Взрыв через 1,5 секунды ломает треснувшие камни и крушит каменных врагов. Отойди подальше!": "Explodes after 1.5 seconds, breaking cracked rocks and smashing stone enemies. Step back!", "Отбито! Меч сбивает снаряды на лету": "Parried! The sword knocks projectiles out of the air", "Топор оглушил жука! Бей, пока он не опомнился": "The axe stunned the beetle! Strike before it recovers", "Панцирь не пробить! Бей сзади, копьём или оглуши топором": "The shell holds! Hit from behind, use the spear or stun it with the axe", "Сильный удар!": "Strong hit!", "Слизь": "Slime", "Зверь": "Beast", "Кости": "Bones", "Панцирь": "Shell", "Камень и лёд": "Stone and ice", "Летучий": "Flying", "Дух": "Spirit", "Меч и топор режут слизь, копьё вязнет.": "Sword and axe cut slime, the spear gets stuck.", "Любое оружие годится.": "Any weapon will do.", "Топор и бомбы ломают кости, стрелы пролетают сквозь рёбра.": "Axe and bombs break bones, arrows fly through the ribs.", "Копьё пробивает панцирь, меч и стрелы скользят.": "The spear pierces the shell, sword and arrows glance off.", "Нужен топор или бомбы. Меч почти не берёт.": "You need the axe or bombs. The sword barely scratches it.", "Лук сбивает вдвое сильнее.": "The bow deals double damage.", "Стрелы и меч. Топор и бомбы проходят насквозь.": "Arrows and the sword. Axe and bombs pass right through.", "Слайм": "Slime", "Слаймик": "Slimelet", "Летучая мышь": "Bat", "Скелет": "Skeleton", "Жук": "Beetle", "Волк": "Wolf", "Снеговик": "Snowman", "Краб": "Crab", "Зелёный слайм": "Green slime", "Огонёк": "Wisp", "Голем": "Golem", "Прыгает и зовёт слаймиков. Отходи от места приземления и бей мечом или топором.": "Leaps and calls slimelets. Step away from where it lands and strike with the sword or axe.", "Ледяная глыба: нужен топор или бомбы. Ударную волну перепрыгивай рывком.": "A block of ice: you need the axe or bombs. Dash over the shockwave.", "Панцирь держит удар. Пусть краб врежется в стену, тогда бей. Копьё пробивает лучше.": "Its shell takes the blows. Let the crab ram a wall, then strike. The spear pierces better.", "Бей, пока видна. Стрелы и меч, топор проходит насквозь. Мечом отбивай её шары.": "Strike while it is visible. Arrows and the sword; the axe passes through. Parry its orbs with the sword.", "Летучий: лук сбивает вдвое сильнее. Уходи из жёлтых кругов.": "Flying: the bow deals double damage. Get out of the yellow circles.", "Бестиарий": "Bestiary", "Ударь врага, и он появится здесь вместе с подсказкой, чем его лучше бить.": "Hit an enemy and it will appear here with a tip on what to hit it with.", "Сменить оружие": "Switch weapon", "! Сменить можно в сумке → Внешность": "! Switch it in Bag → Looks", "Взять": "Pick up", "Убрать": "Put away", "Сменить": "Change", "Ещё закрыто": "Still locked", "Питомец": "Pet", "Длина": "Length", "Цвет": "Colour", "A: поставить, B: отмена": "A: put down, B: cancel", "«Как приручить слайма», глава первая: «Никак». Глава вторая: «Смотри главу первую».": "\"How to Tame a Slime\", chapter one: \"You can't.\" Chapter two: \"See chapter one.\"", "«Лоция Тихона»: «Крабы бегают боком, потому что стесняются смотреть в глаза».": "\"Tikhon's Sailing Notes\": \"Crabs walk sideways because they are too shy to look you in the eye.\"", "«Сказки Листвянки»: «Жил-был слайм, который хотел стать облаком. Он ел росу и мечтал…» Дальше страницы склеены.": "\"Tales of Listvyanka\": \"Once there was a slime who wanted to become a cloud. It drank dew and dreamed…\" The rest of the pages are stuck together.", "Аквариум пуст. Поймай рыбу, и она поселится здесь.": "The aquarium is empty. Catch a fish and it will live here.", "Аквариум": "Aquarium", "Альбом Вари: зарисовки синецветов и неплохой портрет кота. Кот на портрете недоволен.": "Varya's sketchbook: drawings of bluebells and a decent portrait of the cat. The cat in the portrait looks displeased.", "Бандана": "Bandana", "Без плаща": "No cape", "Без шапки": "No hat", "Белый": "White", "Бледная": "Pale", "Большой и мягкий. По нему можно ходить и ставить сверху мебель.": "Big and soft. You can walk on it and put furniture on top.", "Бордовые": "Maroon", "В гардеробе новый убор: ": "New headwear in the wardrobe: ", "В ней лежат все собранные ракушки.": "Holds every shell you have collected.", "В нём плавают все виды рыб, что ты поймал.": "Every kind of fish you have caught swims here.", "Венец бури": "Storm Circlet", "Венок из синецветов": "Bluebell Wreath", "Витрина ракушек": "Shell Display", "Витрина": "Display", "Вишнёвый": "Cherry", "Внешность": "Looks", "Возьми вещь в руки и выбери новое место.": "Pick it up and choose a new spot.", "Возьми одного, а? Он везде за тобой пойдёт и учует, где что спрятано.": "Take one, will you? It will follow you everywhere and sniff out hidden things.", "Волосы": "Hair", "Всегда накрыт к ужину.": "Always set for dinner.", "Головной убор": "Headwear", "Голубой": "Sky blue", "Длинные": "Long", "Дом, милый дом": "Home, sweet home", "Жёлтый": "Yellow", "Заведи питомца.": "Get a pet.", "Записки Мирона: «Кристаллы поют, когда рядом гроза. Если однажды они замолчат, жди беды».": "Miron's notes: \"The crystals sing when a storm is near. If they ever fall silent, expect trouble.\"", "Зелёные": "Green", "Зелёный плащ": "Green cape", "Зелёный": "Green", "Золотистый": "Golden", "Золотой плащ": "Gold cape", "Камин потрескивает. Так тепло…": "The fire crackles. So warm…", "Камин": "Fireplace", "Капюшон Тени": "Shadow Hood", "Каталог мебели": "Furniture Catalogue", "Каштановые": "Chestnut", "Кепка": "Cap", "Книжный шкаф": "Bookcase", "Ковёр": "Rug", "Кожа": "Skin", "Коричневые": "Brown", "Коричневый": "Brown", "Корона Короля слаймов": "Slime King's Crown", "Короткие": "Short", "Котёнок": "Kitten", "Красный плащ": "Red cape", "Красный": "Red", "Кресло": "Armchair", "Кровать": "Bed", "Купленная вещь сразу окажется у тебя в руках: выбери место и нажми A.": "What you buy goes straight into your hands: pick a spot and press A.", "Лежанка ждёт питомца.": "The pet bed is waiting for a pet.", "Лежанка": "Pet bed", "Лиловые": "Lilac", "Лиловый плащ": "Lilac cape", "Лиловый": "Lilac", "Лучший друг": "Best Friend", "Мебели: ": "Furniture: ", "Медные": "Copper", "Мне на службе не до него. Забирай, он к тебе уже привязался.": "I have no time for him on duty. Take him, he has already taken to you.", "Модник": "Trendsetter", "Мягкий ковёр.": "A soft rug.", "Мягкий свет по вечерам.": "Soft light in the evenings.", "На ней висит всё твоё оружие.": "All your weapons hang on it.", "На стойке: ": "On the rack: ", "На столе пирожки от бабушки Нюры.": "Granny Nyura's pies are on the table.", "Никого, питомцы ждут дома.": "Nobody, the pets are waiting at home.", "Новый друг: ": "New friend: ", "Окрас": "Coat", "Освободить место. Достать можно в каталоге у двери.": "Free up space. Get it back from the catalogue by the door.", "Переодеться и сменить причёску.": "Change clothes and hairstyle.", "Переодеться": "Change clothes", "Переставить": "Move", "Питомец спит на ней, когда ты дома.": "Your pet sleeps on it while you are home.", "Плавают: ": "Swimming: ", "Плащ бури": "Storm cape", "Плащ": "Cape", "Поваренная книга бабушки Нюры. На полях: «Пирожки с черникой — Феде не давать, всё съест».": "Granny Nyura's cookbook. In the margin: \"Blueberry pies — keep away from Fedya, he will eat them all.\"", "Подойди к мебели и нажми A, чтобы переставить её. Новая мебель в каталоге у двери": "Walk up to furniture and press A to move it. New furniture is in the catalogue by the door", "Посидеть у камина.": "Sit by the fire.", "Посидеть": "Sit", "Посмотреть": "Look", "Поспать до утра и восстановить здоровье.": "Sleep until morning and restore health.", "Поспать": "Sleep", "Поставить": "Place", "Почитать": "Read", "Пушок без тебя бы пропал. А у нашей Мурки родились котята!": "Pushok would have been lost without you. And our Murka has had kittens!", "Ракушек в витрине: ": "Shells in the display: ", "Расставлять мебель можно только дома": "You can only arrange furniture at home", "Растёт, даже когда тебя нет.": "It grows even when you are away.", "Рогатый шлем": "Horned Helmet", "Рубаха": "Shirt", "Рыжие": "Red", "Рыжий": "Ginger", "С тобой": "With you", "Светлая": "Fair", "Светлые": "Blond", "Свой дом в две комнаты: мебель расставляешь как хочешь, трофеи с боссов стоят на постаментах.": "Your own two-room house: arrange furniture however you like, boss trophies stand on pedestals.", "Седые": "Grey", "Серые": "Grey", "Серый": "Grey", "Синие": "Blue", "Синий плащ": "Blue cape", "Синий": "Blue", "Сказки и записки о крае.": "Tales and notes about the land.", "Слушай, к посту щенок прибился. Нюх у него что надо: монетки из-под земли достаёт.": "Listen, a puppy turned up at my post. Great nose: he digs coins out of the ground.", "Смени внешность героя.": "Change your hero's looks.", "Смуглая": "Tanned", "Стойка с оружием": "Weapon Rack", "Стол": "Table", "Сюда не встанет": "It will not fit here", "Тепло и уют, огонь пляшет.": "Warm and cosy, the flames dance.", "Торшер мягко светит.": "The floor lamp glows softly.", "Торшер": "Floor Lamp", "Ты сел у огня и немного отдохнул.": "You sat by the fire and rested a little.", "Ты сладко выспался. Здоровье восстановлено, на дворе утро.": "You slept soundly. Health restored, it is morning.", "Тёмная": "Dark", "Убрано в каталог": "Put away in the catalogue", "Убрать в каталог": "Put away", "Цвет убора": "Headwear colour", "Цветок в кадке": "Potted Plant", "Цветок подрос.": "The plant has grown.", "Часто откапывает монетки и чует тайники рядом.": "Often digs up coins and smells nearby secrets.", "Чует тайники, страницы дневника и ракушки издалека.": "Smells secrets, diary pages and shells from far away.", "Чёрные": "Black", "Чёрный": "Black", "Шапки, причёски, цвета, плащи": "Hats, hairstyles, colours, capes", "Шкаф с зеркалом": "Mirror Wardrobe", "Шлем-панцирь": "Shell Helmet", "Шляпа рыбака": "Fisher's Hat", "Штаны": "Trousers", "Щенок": "Puppy", "награда Вари за синецветы": "Varya's reward for the bluebells", "победи Гигантского краба": "defeat the Giant Crab", "победи Короля слаймов": "defeat the Slime King", "победи Ледяного великана": "defeat the Frost Giant", "победи Повелителя бури": "defeat the Storm Lord", "победи Тень пещеры": "defeat the Cave Shadow", "поймай 10 рыб": "catch 10 fish", "спаси Листвянку": "save Listvyanka", "Лежит в каталоге.": "Stored in the catalogue.", "и питомец.": "and pet.", "откопал монетку!": "dug up a coin!", "сворачивается клубком.": "curls up in a ball.", "что-то учуял! Поищи рядом": "smells something! Search nearby", "Трофеев:": "Trophies:", "всего": "total", "Всё": "All", "Наложить": "Apply", "Полно": "Full", "Монеты": "Coins", "Руны": "Runes", "Возьми в руки оружие.": "Take a weapon in hand.", "Зачарование:": "Enchantment:", "Наложится на": "Will go on the", "вместо": "instead of", "У тебя:": "You have:", "мон. и руны.": "coins and runes.", "мон.": "coins", "монет и руны!": "coins and runes!", "монет и": "coins and", "оставил": "left behind", "рун": "runes", "Спуститься": "Descend", "Где-то бродит торговец": "A merchant wanders somewhere", "Здесь страж!": "A guardian is here!", "Награда:": "Reward:", "зачарование": "enchantment", "Руны и свитки": "Runes and scrolls", "Все задания на сегодня выполнены. Приходи завтра!": "All of today's tasks are done. Come back tomorrow!", "Забрать": "Claim", "Наложи его на оружие в сумке": "Apply it to a weapon in the bag", "Наложи его в сумке.": "Apply it in the bag.", "А на дне": "And at the bottom", "Бомбы ×3": "Bombs ×3", "Стрелы ×10": "Arrows ×10", "Буря вернулась, и кристаллы снова разбросаны. Уровень, оружие, дом и питомцы остались с тобой.": "The storm is back and the crystals are scattered again. Your level, weapons, house and pets stay with you.", "В золотом сундуке": "In the golden chest", "В сундуке 50 монет! Сердце отсюда ты уже забрал в прошлый раз.": "50 coins in the chest! You took the heart from here last time.", "Враги крепче и бьют больнее, зато опыта больше, а боссы оставляют свитки зачарований.": "Enemies are tougher and hit harder, but you get more experience and bosses leave enchantment scrolls.", "Все задания дня выполнены!": "All daily tasks done!", "Второй круг": "Second Round", "Выполнено.": "Done.", "Выполни все три задания дня.": "Complete all three daily tasks.", "Глубже некуда": "Rock Bottom", "Глубже спустишься, богаче вернёшься. Или не вернёшься. Хе-хе.": "The deeper you go, the richer you return. Or you don't return. Heh-heh.", "Гроза стражей": "Guardian Bane", "Гроза": "Thunder", "Добудь руны:": "Collect runes:", "Доска объявлений": "Notice Board", "Доска почёта": "Board of Honour", "Есть:": "Have:", "Жажда": "Thirst", "Задания на сегодня": "Today's tasks", "Замедляет врага вдвое на 3 секунды.": "Halves the enemy's speed for 3 seconds.", "Зачарователь": "Enchanter", "Золотой ключ! Ищи золотой сундук на этаже": "Golden key! Look for the golden chest on this floor", "Золотой сундук заперт. Ключ у одного из элитных врагов на этом этаже.": "The golden chest is locked. One of the elite enemies on this floor has the key.", "Каждый пятый удар лечит сердце.": "Every fifth hit heals a heart.", "Кристаллы": "Crystals", "Круг": "Round", "Куплен свиток": "Bought the scroll", "Куплено.": "Bought.", "Мир начнётся заново. Точно?": "The world starts over. Sure?", "Молния перескакивает на двух ближайших врагов.": "Lightning jumps to the two nearest enemies.", "Наложи свиток зачарования на оружие.": "Apply an enchantment scroll to a weapon.", "Начни «Новую игру+».": "Start a \"New Game+\".", "Не хватает рун: нужно": "Not enough runes: need", "Новая игра+": "New Game+", "Новая игра+, круг": "New Game+, round", "Новые задания появляются каждый день. За все три — свиток зачарования.": "New tasks appear every day. Finish all three for an enchantment scroll.", "Оберег греет грудь: +1 сердце.": "The charm warms your chest: +1 heart.", "Откуда начать спуск?": "Where do you start the descent?", "Пламя": "Flame", "Победи врагов ночью:": "Defeat enemies at night:", "Победи врагов:": "Defeat enemies:", "Победи стража подземелья.": "Defeat a dungeon guardian.", "Победи элитных врагов:": "Defeat elite enemies:", "Подбери монет:": "Pick up coins:", "Поджигает врага: он теряет здоровье ещё 3 секунды.": "Sets the enemy on fire: it keeps losing health for 3 seconds.", "Поймай рыбу:": "Catch fish:", "Продержись на арене Гордея волн:": "Survive waves in Gordey's arena:", "Рекорд: этаж": "Record: floor", "Рунный оберег": "Rune Charm", "Руны: +": "Runes: +", "Руны:": "Runes:", "С самого начала.": "From the very beginning.", "Свиток": "Scroll", "Свиток на клинок, и любой страж тебе нипочём. Ну, почти.": "A scroll on your blade and no guardian can stop you. Well, almost.", "Сделано:": "Done:", "Сердце у тебя уже есть: Тихон дал 60 монет": "You already have that heart: Tikhon gave you 60 coins", "Спустись в подземелье до этажа": "Reach dungeon floor", "Спустись на 10 этаж подземелья.": "Reach floor 10 of the dungeon.", "Страж оставил": "The guardian left", "Страж повержен! Лестница вниз открыта. Отсюда можно будет начинать спуск": "Guardian defeated! The stairs down are open. You can start your descent from here", "Стужа": "Frost", "Тише, тише. Тит торгует только за руны. Монеты оставь наверху.": "Hush, hush. Tit trades only for runes. Leave your coins upstairs.", "Торговец Тит в подземелье меняет их на свитки и обереги.": "Tit the merchant in the dungeon trades them for scrolls and charms.", "Торговец Тит": "Tit the Merchant", "Шипы! Следи за мигающими плитами или проскакивай рывком": "Spikes! Watch for flashing plates or dash across", "Этаж": "Floor", "руна": "rune", "руны": "runes", "Сразу за стражем этажа": "Right past the guardian of floor", "сердце навсегда. Куплено": "heart forever. Bought", "Бросить": "Throw", "Секреты:": "Secrets:", "Достижения": "Achievements", "«Клад зарыт на южном пляже, в двух шагах южнее двух пальм. Ищи крестик. Копать лучше с собакой». Крестик отмечен на карте.": "\"The treasure is buried on the south beach, two steps south of the two palms. Look for the cross. Best dug with a dog.\" The cross is marked on the map.", "«Кристаллы — не сокровище, а обещание беречь этот край», — было написано там.": "\"The crystals are not a treasure but a promise to protect this land,\" it read.", "А ты знал, что в старом лесу у тропы есть дерево, которое не дерево? Я в него врезался — и чуть не провалился!": "Did you know there is a tree by the old forest trail that is not a tree? I bumped into it and nearly fell through!", "Бросить 10 монет": "Throw 10 coins", "Бросить 100 монет": "Throw 100 coins", "Брось монетку и загадай желание. Говорят, колодец любит щедрых.": "Throw a coin and make a wish. They say the well loves generous people.", "Брошено всего:": "Thrown in total:", "Буря поглотила меня. С тех пор я брожу здесь, но лишь в полнолуние.": "The storm swallowed me. Since then I wander here, but only under the full moon.", "В сундучке кошачьи ушки! Примерь их: Сумка → Внешность.": "Cat ears in the little chest! Try them on: Bag → Looks.", "Вкл.": "On", "Выкл.": "Off", "Внутри… деревянный меч. Легендарный! Наверное.": "Inside… a wooden sword. Legendary! Probably.", "Вода засияла: здоровье восстановлено!": "The water shines: health restored!", "Всевидящий": "All-Seeing", "Где-то в Листвянке…": "Somewhere in Listvyanka…", "Герою снятся овечки.": "The hero dreams of sheep.", "Деревянный меч": "Wooden Sword", "Если долго-долго гладить кота, он что-то покажет. Я до девяти досчитал и сдался.": "If you pet the cat for a long, long time, it shows you something. I counted to nine and gave up.", "Золотая статуя героя. Подпись: «Самому щедрому жителю Листвянки». Очень похоже!": "A golden statue of the hero. The plaque reads: \"To the most generous resident of Listvyanka\". Quite a likeness!", "Золотая статуя": "Golden Statue", "Зубастый сундук": "Toothy Chest", "Из ямы показался старый сундучок: 150 монет и три руны!": "An old chest appears from the hole: 150 coins and three runes!", "Камни замолкли, и из-под земли поднялся сундук. Внутри пять рун и свиток!": "The stones fall silent and a chest rises from the ground. Inside: five runes and a scroll!", "Камни запели хором! Из-под земли поднялся сундук": "The stones sing together! A chest rises from the ground", "Клад под крестиком на пляже.": "Treasure under the cross on the beach.", "Код на титульном экране включает цвета старой консоли.": "A code on the title screen turns on the colours of an old console.", "Колодец желаний": "Wishing Well", "Колодец загудел… На площади выросла золотая статуя героя!": "The well hums… A golden statue of the hero rises on the square!", "Колпак Деда Мороза": "Santa Hat", "Комната создателей": "Creators' Room", "Комната создателей. Листвянку придумал один человек с телефоном, а код писал Claude. Раз ты это читаешь, ты настоящий исследователь! В сундуке легендарное оружие. Ну… почти.": "The creators' room. Listvyanka was dreamed up by one person with a phone, and Claude wrote the code. If you are reading this, you are a true explorer! The chest holds a legendary weapon. Well… almost.", "Кот привёл к сундучку с кошачьими ушками.": "The cat led you to a chest with cat ears.", "Кот сел у сундучка и мурлычет": "The cat sits by a little chest and purrs", "Кошачий тайник": "Cat's Stash", "Кошачьи ушки": "Cat Ears", "Легендарное оружие из комнаты создателей. Урон смешной, зато пищит!": "A legendary weapon from the creators' room. Laughable damage, but it squeaks!", "Листвянка празднует вместе с тобой.": "Listvyanka celebrates with you.", "Мимик проглотил": "The mimic had swallowed", "Мимик": "Mimic", "Мирон открыл старый сундук и достал последнюю страницу дневника Странника.": "Miron opened an old chest and took out the last page of the Wanderer's diary.", "Мрряу! Кот спрыгнул и деловито куда-то побежал. Иди за ним!": "Mrrrow! The cat jumps down and trots off somewhere. Follow it!", "Мур… Кот смотрит на тебя очень внимательно. Ещё чуть-чуть, и он что-то покажет.": "Purr… The cat looks at you very closely. A little more and it will show you something.", "Найди все секреты Листвянки.": "Find all of Listvyanka's secrets.", "Не каждый сундук рад гостям.": "Not every chest is happy to see you.", "Не хватает монет.": "Not enough coins.", "Ноги стали лёгкими: быстрый шаг на 30 секунд!": "Your feet feel light: quick step for 30 seconds!", "Обычные цвета.": "Normal colours.", "Ого, на крючке бутылка! Внутри записка:": "Whoa, a bottle on the hook! There is a note inside:", "Одно дерево в старом лесу ненастоящее.": "One tree in the old forest is not real.", "Песня полей открыла тайник.": "The song of the fields opened a stash.", "Письмо в бутылке": "Message in a Bottle", "Плащ Странника теперь в гардеробе": "The Wanderer's cape is now in your wardrobe", "Плащ Странника": "Wanderer's Cape", "Плащ хранителя теперь в гардеробе": "The Keeper's cape is now in your wardrobe", "Плащ хранителя": "Keeper's Cape", "Плюх. Монетка ушла на дно.": "Plop. The coin sinks to the bottom.", "Погоди-ка… Ты собрал всё? Каждую страницу, каждую ракушку, каждую рыбу?": "Wait… You collected everything? Every page, every shell, every fish?", "Под крестиком твёрдая земля. Вот бы сюда кого-нибудь с крепкими лапами и хорошим нюхом…": "The ground under the cross is hard. If only someone with strong paws and a good nose were here…", "Полнолуние в руинах.": "Full moon in the ruins.", "Полнолуние… В руинах кто-то бродит": "Full moon… Someone is wandering the ruins", "Помнишь песенку наших полей? Ми-соль-до-соль… Её ещё камни на лугу подпевают.": "Remember the song of our fields? Mi-sol-do-sol… The stones in the meadow sing along to it.", "Поющие камни": "Singing Stones", "Праздник": "Holiday", "Призрак Странника": "Wanderer's Ghost", "Ретро-код": "Retro Code", "Ретро-режим включён! Код ещё раз — выключить.": "Retro mode on! Enter the code again to turn it off.", "Ретро-режим выключен.": "Retro mode off.", "Ретро-режим": "Retro mode", "Секрет найден:": "Secret found:", "Скоро полнолуние. В такие ночи в руинах, говорят, бродит призрак… Бабкины сказки, конечно.": "The full moon is coming. On such nights, they say, a ghost walks the ruins… Old wives' tales, of course.", "Сладкий сон": "Sweet Dreams", "Со дна всплыла руна!": "A rune floats up from the bottom!", "Собрано всё, что можно собрать.": "Everything there is to collect, collected.", "Спасибо, что выслушал. Береги кристаллы…": "Thank you for listening. Take care of the crystals…", "Спасибо, что прошёл Листвянку целиком! Плащ хранителя ждёт тебя в гардеробе.": "Thank you for completing all of Listvyanka! The Keeper's cape awaits you in the wardrobe.", "Старая табличка: «Камни поют вместе с полями Листвянки. Спой их песню, и лес ответит».": "An old sign: \"The stones sing along with the fields of Listvyanka. Sing their song and the forest will answer.\"", "Сундук оскалился! Это мимик!": "The chest bares its teeth! It is a mimic!", "Тайная концовка": "Secret Ending", "Тогда пора открыть тебе последнюю тайну Листвянки.": "Then it is time to reveal Listvyanka's last secret.", "Тот, кто нашёл в Листвянке всё до последней ракушки, становится её хранителем.": "Whoever finds everything in Listvyanka, down to the last shell, becomes its keeper.", "Ты вернул кристаллы на место. Возьми мой плащ: пусть он хранит тебя лучше, чем меня.": "You returned the crystals. Take my cape: may it protect you better than it did me.", "Ты видишь меня?.. Значит, луна сегодня полная.": "You can see me?.. Then the moon is full tonight.", "Ты проснулся. Снились овечки…": "You wake up. You dreamed of sheep…", "Тыква": "Pumpkin", "Тысяча монет в колодце желаний.": "A thousand coins in the wishing well.", "Цвета старой консоли.": "Old console colours.", "Щедрое желание сбывается чаще.": "A generous wish comes true more often.", "Щенок радостно залаял и принялся рыть!": "The puppy barks happily and starts digging!", "Эхо: «В полнолуние загляни в руины…»": "Echo: \"Visit the ruins under the full moon…\"", "Эхо: «В старом лесу одно дерево ненастоящее…»": "Echo: \"One tree in the old forest is not real…\"", "Эхо: «Иногда стоит просто постоять и подремать…»": "Echo: \"Sometimes you should just stand still and doze off…\"", "Эхо: «Камни помнят песню полей…»": "Echo: \"The stones remember the song of the fields…\"", "Эхо: «Море иногда приносит письма…»": "Echo: \"The sea sometimes brings letters…\"", "Эхо: «На титульном экране… вверх, вверх, вниз, вниз…»": "Echo: \"On the title screen… up, up, down, down…\"", "Эхо: «Не каждый сундук рад гостям…»": "Echo: \"Not every chest is happy to see you…\"", "Эхо: «Погладь кота. А потом ещё. И ещё…»": "Echo: \"Pet the cat. Then again. And again…\"", "Эхо: «Собери всё, что можно собрать, и поговори с Мироном…»": "Echo: \"Collect everything there is and talk to Miron…\"", "Я Странник. Это я хотел забрать силу кристаллов, и это из-за меня поднялась буря.": "I am the Wanderer. I wanted the crystals' power, and the storm rose because of me.", "надень на Новый год": "wear it on New Year", "надень на Хэллоуин": "wear it on Halloween"});
 const EN_KEYS = Object.keys(EN).sort((a, b) => b.length - a.length);
 const CYR = /[А-Яа-яЁё]/, LETTER = /[А-Яа-яЁёA-Za-z]/, trCache = new Map();
 // exact phrases first; otherwise translate known phrases left to right, keeping numbers and punctuation in place
@@ -1364,6 +1395,7 @@ const WEAPONS = {
   spear: { name: 'Копьё', desc: 'Бьёт далеко вперёд и пробивает панцири жуков и крабов.', dmg: 2, kind: 'pierce', cd: .4, swing: .24, len: 24, wid: 8 },
   axe: { name: 'Топор', desc: 'Медленный, бьёт по широкой дуге. Крушит камень и лёд, оглушает жуков.', dmg: 4, kind: 'crush', cd: .6, swing: .3, len: 14, wid: 26 },
   bow: { name: 'Лук', desc: 'Стреляет издалека. Летучих врагов сбивает вдвое сильнее.', dmg: 2, kind: 'shot', cd: .45, swing: .2 },
+  stick: { name: 'Деревянный меч', desc: 'Легендарное оружие из комнаты создателей. Урон смешной, зато пищит!', dmg: 1, kind: 'cut', cd: .26, swing: .2, len: 14, wid: 16 },
   rod: { name: 'Удочка', desc: 'Встань у воды и нажми A.', dmg: 0, cd: .5, swing: .2 },
   bomb: { name: 'Бомбы', desc: 'Взрыв через 1,5 секунды ломает треснувшие камни и крушит каменных врагов. Отойди подальше!', dmg: 6, kind: 'blast', cd: .5, swing: .15 },
 };
@@ -1416,7 +1448,7 @@ function applyEnch(m, dmg, kind) {
   }
 }
 const xpNeed = l => 20 + (l - 1) * 15;
-const XP = { slime: 3, mini: 1, bat: 3, skel: 6, beetle: 6, wolf: 5, snowman: 6, crab: 5, gslime: 6, king: 60, giant: 80, bigcrab: 80, shadow: 100, storm: 150, wisp: 6, golem: 10 };
+const XP = { mimic: 15, slime: 3, mini: 1, bat: 3, skel: 6, beetle: 6, wolf: 5, snowman: 6, crab: 5, gslime: 6, king: 60, giant: 80, bigcrab: 80, shadow: 100, storm: 150, wisp: 6, golem: 10 };
 const PERKS = {
   quick: { icon: 'sword', name: 'Быстрый удар', desc: 'Оружие перезаряжается на четверть быстрее.' },
   blade: { icon: 'sword', name: 'Острый клинок', desc: '+1 к урону любого оружия.' },
@@ -1469,6 +1501,7 @@ const ACH = [
   ['deep10', 'Глубже некуда', 'Спустись на 10 этаж подземелья.'],
   ['daily', 'Доска почёта', 'Выполни все три задания дня.'],
   ['ng', 'Второй круг', 'Начни «Новую игру+».'],
+  ['secrets', 'Всевидящий', 'Найди все секреты Листвянки.'],
   ['win', 'Спаситель Листвянки', 'Собери все восемь кристаллов.'],
   ['nodeath', 'Несокрушимый', 'Пройди игру, ни разу не потеряв сознание.'],
   ['hard', 'Железная воля', 'Пройди игру на хардкоре.'],
@@ -1482,6 +1515,87 @@ function unlock(id) {
   try { localStorage.setItem('lv_ach', JSON.stringify(achDone)); } catch (e) {}
   const a = ACH.find(x => x[0] === id);
   if (a) { toast('Достижение: ' + a[1]); sfx.ach(); }
+}
+// ---------- Secrets ----------
+const SECRETS = [
+  ['konami', 'Ретро-код', 'Код на титульном экране включает цвета старой консоли.'],
+  ['cat', 'Кошачий тайник', 'Кот привёл к сундучку с кошачьими ушками.'],
+  ['room', 'Комната создателей', 'Одно дерево в старом лесу ненастоящее.'],
+  ['well', 'Золотая статуя', 'Тысяча монет в колодце желаний.'],
+  ['notes', 'Поющие камни', 'Песня полей открыла тайник.'],
+  ['ghost', 'Призрак Странника', 'Полнолуние в руинах.'],
+  ['bottle', 'Письмо в бутылке', 'Клад под крестиком на пляже.'],
+  ['mimic', 'Зубастый сундук', 'Не каждый сундук рад гостям.'],
+  ['holiday', 'Праздник', 'Листвянка празднует вместе с тобой.'],
+  ['sleep', 'Сладкий сон', 'Герою снятся овечки.'],
+  ['ending', 'Тайная концовка', 'Собрано всё, что можно собрать.'],
+];
+function loadSecrets() { try { return JSON.parse(localStorage.getItem('lv_secrets') || '{}') || {}; } catch (e) { return {}; } }
+let secretsDone = loadSecrets();
+function secret(id) {
+  if (secretsDone[id]) return;
+  secretsDone[id] = Date.now();
+  try { localStorage.setItem('lv_secrets', JSON.stringify(secretsDone)); } catch (e) {}
+  const sc = SECRETS.find(x => x[0] === id), n = Object.keys(secretsDone).length;
+  toast('Секрет найден: ' + sc[1] + ' (' + n + ' из ' + SECRETS.length + ')'); sfx.ach();
+  if (n >= SECRETS.length) unlock('secrets');
+}
+const nowDate = () => (window.__fakeDate ? new Date(window.__fakeDate) : new Date());
+function holiday() {
+  const d = nowDate(), m = d.getMonth() + 1, day = d.getDate();
+  if ((m === 12 && day >= 20) || (m === 1 && day <= 10)) return 'ny';
+  if ((m === 10 && day >= 25) || (m === 11 && day <= 2)) return 'hw';
+  if (m === 4 && day === 1) return 'apr';
+  return null;
+}
+// world objects that only exist once something has happened
+const ENT_COND = {
+  catcache: () => !!G.flags.catcache, notes: () => !!G.flags.notes, statue: () => !!G.flags.statue,
+  ny: () => holiday() === 'ny', xmark: () => !!G.flags.map && !G.taken.has('xmark'),
+};
+function addWorldEnt(id) {
+  const s = world.ents.find(e => e.id === id);
+  if (!s || ents.some(e => e.id === id && !e.dead)) return;
+  const e = { ...s, x: s.tx * TS, y: s.ty * TS };
+  if (s.kind === 'chest') e.open = G.taken.has(s.id);
+  ents.push(e); blockers.set(s.ty * W + s.tx, e);
+}
+// ↑↑↓↓←→←→ B A on the title screen
+const KONAMI = 'uuddlrlrba';
+let konamiBuf = '';
+function konami(k) {
+  if (!G || G.state !== 'title') return false;
+  konamiBuf = (konamiBuf + k).slice(-KONAMI.length);
+  if (konamiBuf !== KONAMI) return false;
+  konamiBuf = ''; SET.retro = !SET.retro; saveSettings(); sfx.ach();
+  $('slotInfo').textContent = SET.retro ? 'Ретро-режим включён! Код ещё раз — выключить.' : 'Ретро-режим выключен.';
+  secret('konami');
+  return true;
+}
+const allCollected = () => collCount('page') >= 10 && collCount('shell') >= 15 && Object.keys(FISH).every(f => G.stats.caught && G.stats.caught[f]) &&
+  HAT_IDS.filter(h => !HATS[h].holiday).every(hatOpen);
+const moonNight = () => Math.floor(G.clock / DAY_LEN) % 7 === 6 && isNight();
+const WELL_ECHO = [
+  'Эхо: «В старом лесу одно дерево ненастоящее…»', 'Эхо: «Погладь кота. А потом ещё. И ещё…»', 'Эхо: «В полнолуние загляни в руины…»',
+  'Эхо: «Море иногда приносит письма…»', 'Эхо: «Не каждый сундук рад гостям…»', 'Эхо: «Камни помнят песню полей…»',
+  'Эхо: «На титульном экране… вверх, вверх, вниз, вниз…»', 'Эхо: «Иногда стоит просто постоять и подремать…»',
+  'Эхо: «Собери всё, что можно собрать, и поговори с Мироном…»',
+];
+function throwCoins(n) {
+  if (G.coins < n) { sfx.deny(); $('pNote').textContent = 'Не хватает монет.'; return; }
+  G.coins -= n; G.flags.well = (G.flags.well || 0) + n; sfx.coin();
+  const r = Math.random() + (n >= 100 ? .3 : 0), p = G.p;
+  let msg;
+  if (r < .3) msg = 'Плюх. Монетка ушла на дно.';
+  else if (r < .5) { p.hp = p.maxHp; msg = 'Вода засияла: здоровье восстановлено!'; }
+  else if (r < .65) { G.buff.speed = 30; msg = 'Ноги стали лёгкими: быстрый шаг на 30 секунд!'; }
+  else if (r < .78) { addRunes(1); msg = 'Со дна всплыла руна!'; }
+  else msg = WELL_ECHO[(Math.random() * WELL_ECHO.length) | 0];
+  if (G.flags.well >= 1000 && !G.flags.statue) {
+    G.flags.statue = 1; addWorldEnt('statue'); secret('well');
+    msg = 'Колодец загудел… На площади выросла золотая статуя героя!'; sfx.win();
+  }
+  $('pNote').textContent = msg; persist(); renderPanel();
 }
 function checkAch() {
   const st = G.stats, t = G.taken;
@@ -1514,6 +1628,7 @@ function checkAch() {
   for (const h of HAT_IDS) if (HATS[h].need && !G.unl.includes(h) && HATS[h].need()) G.unl.push(h);
   for (const c of CAPES) if (CAPE_INFO[c].need && !G.unl.includes('cape_' + c) && CAPE_INFO[c].need()) G.unl.push('cape_' + c);
   if ((G.stats.minis || 0) >= 1) unlock('guard');
+  if (holiday() && G.state === 'play') secret('holiday');
   if (G.ng) unlock('ng');
   refreshDaily();
 }
@@ -1710,6 +1825,7 @@ function applySettings() {
   const app = document.getElementById('app');
   app.style.setProperty('--ctl', SET.ctl);
   app.classList.toggle('lefty', !!SET.lefty);
+  app.classList.toggle('retro', !!SET.retro);
   if (mgain) mgain.gain.value = SET.music;
   if (typeof fit === 'function') fit();
 }
@@ -1733,6 +1849,8 @@ const sfx = {
   coin: () => { tone(988, 988, .06); tone(1319, 1319, .12, 'square', .05, .06); },
   crystal: () => [523, 659, 784, 1047].forEach((f, i) => tone(f, f, .14, 'triangle', .07, i * .09)),
   swing: () => tone(700, 180, .08, 'triangle', .05),
+  squeak: () => { tone(1300, 2100, .06, 'square', .05); tone(2100, 1500, .06, 'square', .04, .06); },
+  note: f => { tone(f, f, .35, 'triangle', .09); tone(f * 2, f * 2, .2, 'sine', .03); },
   hit: () => tone(260, 90, .12, 'sawtooth', .05),
   hurt: () => tone(320, 60, .25, 'square', .06),
   block: () => { tone(1200, 900, .05, 'square', .04); tone(500, 400, .08, 'triangle', .05, .03); },
@@ -1846,6 +1964,9 @@ function syncKeys() {
 }
 window.addEventListener('keydown', e => {
   unlockAudio();
+  if (G) G.idleT = 0;
+  const kd = { ArrowUp: 'u', ArrowDown: 'd', ArrowLeft: 'l', ArrowRight: 'r', KeyW: 'u', KeyS: 'd', KeyA: 'l', KeyD: 'r' }[e.code];
+  if (kd && !e.repeat) konami(kd);
   if (panelKind && e.code === 'Escape') { closePanel(); return; }
   if (e.code === 'KeyI' || e.code === 'KeyC') { toggleBag(); return; }
   if (e.code === 'KeyM') { toggleMap(); return; }
@@ -1873,8 +1994,9 @@ function dpadSet(e) {
   const dx = e.clientX - (r.left + r.width / 2), dy = e.clientY - (r.top + r.height / 2);
   if (Math.hypot(dx, dy) < r.width * .1) { input.tx = input.ty = 0; }
   else {
-    const oct = Math.round(Math.atan2(dy, dx) / (Math.PI / 4));
+    const oct = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)), before = input.tx + ',' + input.ty;
     [input.tx, input.ty] = DIRS8[(oct + 8) % 8];
+    if (before !== input.tx + ',' + input.ty && !(input.tx && input.ty)) konami(input.tx > 0 ? 'r' : input.tx < 0 ? 'l' : input.ty > 0 ? 'd' : 'u');
   }
   paintDpad();
 }
@@ -1905,6 +2027,8 @@ function holdButton(el, down, up) {
 holdButton($('btnA'), () => { input.ta = true; pressA(); }, () => { input.ta = false; });
 let lastB = 0;
 function pressB() {
+  if (G) G.idleT = 0;
+  if (konami('b')) return;
   if (G && G.carry && G.state === 'play' && !panelKind && !dlg) { cancelCarry(); sfx.swing(); return; }
   const now = performance.now();
   if (now - lastB < 300) { input.dash = true; lastB = 0; } else lastB = now;
@@ -1944,7 +2068,7 @@ function freshState() {
     fish: {}, hook: false, house: false, furn: [], equip: [], armor: null, ring: null, arenaBest: 0, arena: null, fishing: null, fedyaI: 0,
     seen: new Uint8Array(W * H), hitstop: 0, flash: 0, bestiary: [],
     fpos: {}, stored: [], carry: null, look: lookFresh(), pets: [], pet: null, petCol: {}, petE: null,
-    runes: 0, scrolls: {}, ench: {}, charms: 0, dcheck: 0, dkey: false, daily: null, ng: 0, unl: [],
+    runes: 0, scrolls: {}, ench: {}, charms: 0, dcheck: 0, dkey: false, daily: null, ng: 0, unl: [], flags: {}, idleT: 0,
   };
 }
 function spawnEntities() {
@@ -1954,6 +2078,7 @@ function spawnEntities() {
   ents = []; blockers = new Map(); respawns = []; shots = []; bombs = []; blasts = []; waves = []; strikes = [];
   for (const s of world.ents) {
     if (s.id && G.taken.has(s.id) && s.kind !== 'chest') continue;
+    if (s.cond && !ENT_COND[s.cond]()) continue;
     if (s.boss && !G.taken.has(s.boss)) continue;
     if (s.kind === 'qitem' && G.q[s.quest].s !== 1) continue;
     const e = { ...s, x: s.tx * TS, y: s.ty * TS };
@@ -1964,7 +2089,8 @@ function spawnEntities() {
     if (s.kind === 'block') { e.hx = s.tx; e.hy = s.ty; blockers.set(e.ty * W + e.tx, e); ents.push(e); continue; }
     if (s.kind === 'lever') { blockers.set(s.ty * W + s.tx, e); ents.push(e); continue; }
     if (s.kind === 'mob') { ents.push(makeMob(s)); continue; }
-    if (s.kind === 'npc' || s.kind === 'sign' || s.kind === 'chest' || s.kind === 'deco' || s.kind === 'way' || s.kind === 'altar' || s.kind === 'board') blockers.set(s.ty * W + s.tx, e);
+    if (s.kind === 'npc' || s.kind === 'sign' || s.kind === 'chest' || s.kind === 'deco' || s.kind === 'way' || s.kind === 'altar' || s.kind === 'board' ||
+      s.kind === 'stone' || s.kind === 'well' || s.kind === 'statue' || s.kind === 'xmark') blockers.set(s.ty * W + s.tx, e);
     ents.push(e);
   }
   refreshHome();
@@ -2099,7 +2225,7 @@ function makeSave() {
     v: 1, x: G.p.x, y: G.p.y, hp: G.p.hp, maxHp: G.p.maxHp, coins: G.coins, taken: [...G.taken], talked: G.talked, won: G.won, time: G.time, dir: G.p.dir,
     inv: G.inv, weapons: G.weapons, weapon: G.weapon, shield: G.shield, up: G.up, met: G.met, ammo: G.ammo, diff: G.diff, lvl: G.lvl, xp: G.xp, perks: G.perks, pendingPerks: G.pendingPerks, stats: G.stats, ways: G.ways, amulet: G.amulet, stormDone: G.stormDone, postTold: G.postTold,
     fish: G.fish, hook: G.hook, house: G.house, furn: G.furn, arenaBest: G.arenaBest, equip: G.equip, armor: G.armor, ring: G.ring,
-    runes: G.runes, scrolls: G.scrolls, ench: G.ench, charms: G.charms, dcheck: G.dcheck, daily: G.daily, ng: G.ng, unl: G.unl,
+    flags: G.flags, runes: G.runes, scrolls: G.scrolls, ench: G.ench, charms: G.charms, dcheck: G.dcheck, daily: G.daily, ng: G.ng, unl: G.unl,
     bestiary: G.bestiary, fpos: G.fpos, stored: G.stored, look: G.look, pets: G.pets, pet: G.pet, petCol: G.petCol,
     lantern: G.lantern, levers: G.levers, clock: G.clock, q: G.q, bigBag: G.bigBag, temper: G.temper, seen: packSeen(G.seen),
   };
@@ -2148,6 +2274,7 @@ function applySave(s) {
   if (zoneAt(Math.floor((G.p.x + 8) / TS), Math.floor((G.p.y + 12) / TS)) === 'arena') { G.p.x = 16 * TS; G.p.y = 20 * TS - 4; }
   G.stormDone = !!s.stormDone; G.postTold = !!s.postTold;
   if (Array.isArray(s.bestiary)) G.bestiary = s.bestiary.filter(t => MOBS[t]);
+  if (s.flags && typeof s.flags === 'object') G.flags = { ...s.flags };
   G.runes = +s.runes || 0; G.charms = +s.charms || 0; G.dcheck = +s.dcheck || 0; G.ng = +s.ng || 0;
   for (const k in s.scrolls || {}) if (ENCH[k]) G.scrolls[k] = +s.scrolls[k] || 0;
   for (const w in s.ench || {}) if (WEAPONS[w] && ENCH[s.ench[w]]) G.ench[w] = s.ench[w];
@@ -2201,7 +2328,8 @@ const overlap = (ax, ay, aw, ah, bx, by, bw, bh) => ax < bx + bw && ax + aw > bx
 
 // ---------- Dialog & toast ----------
 function say(name, pages, onEnd) {
-  dlg = { name: tr(name), pages: (Array.isArray(pages) ? pages : [pages]).map(tr), i: 0, shown: 0, onEnd };
+  const flip = name && holiday() === 'apr' ? t => [...t].reverse().join('') : t => t;
+  dlg = { name: tr(name), pages: (Array.isArray(pages) ? pages : [pages]).map(tr).map(flip), i: 0, shown: 0, onEnd };
   $('dialog').hidden = false; renderDialog();
 }
 function renderDialog() {
@@ -2229,6 +2357,8 @@ function toast(msg) {
 
 // ---------- Actions ----------
 function pressA() {
+  if (G) G.idleT = 0;
+  if (konami('a')) return;
   aQueued = true;
 }
 function handleA() {
@@ -2264,6 +2394,13 @@ function interact(e) {
     if (Math.random() < .45) giveScroll(ENCH_IDS[(Math.random() * ENCH_IDS.length) | 0], 'А на дне');
     persist(); return;
   }
+  if (e.kind === 'chest' && e.mimic) {
+    // the chest bites back
+    e.dead = true; blockers.delete(e.ty * W + e.tx);
+    const mm = makeMob({ type: 'mimic', tx: e.tx, ty: e.ty }); mm.dg = true; ents.push(mm);
+    G.shake = .3; sfx.roar(); toast('Сундук оскалился! Это мимик!'); secret('mimic');
+    return;
+  }
   if (e.kind === 'chest' && e.dg) {
     if (e.open) { say('', TEXT.empty); return; }
     e.open = true; sfx.open(); burst(e.x + 8, e.y + 6, C.o, 14);
@@ -2294,11 +2431,18 @@ function interact(e) {
     if (e.loot === 'coins30') G.coins += 30;
     if (e.loot === 'coins40') G.coins += 40;
     if (e.loot === 'potions') G.inv.red = Math.min(POTION_MAX, G.inv.red + 2);
+    if (e.loot === 'cathat') { G.flags.cathat = 1; secret('cat'); }
+    if (e.loot === 'notes') { G.runes += 5; giveScroll(ENCH_IDS[(Math.random() * ENCH_IDS.length) | 0]); secret('notes'); }
+    if (e.loot === 'stick') { if (!G.weapons.includes('stick')) G.weapons.push('stick'); G.weapon = 'stick'; secret('room'); }
     burst(e.x + 8, e.y + 6, C.o, 14);
     say('', TEXT.chest[e.loot]); persist(); return;
   }
   if (e.id === 'miron') {
     const n = crystalCount();
+    if (G.won && !G.flags.keeper && allCollected()) {
+      say(e.name, TEXT.keeper, () => playScene('secret', () => { G.flags.keeper = 1; secret('ending'); toast('Плащ хранителя теперь в гардеробе'); persist(); }));
+      return;
+    }
     if (G.won) { G.postTold = true; say(e.name, G.stormDone ? TEXT.postDone : TEXT.post); persist(); return; }
     if (n >= TOTAL) { say(e.name, TEXT.win, () => { G.won = true; persist(); playScene('finale', showWin); }); sfx.win(); return; }
     if (!G.talked) { G.talked = true; say(e.name, TEXT.intro); persist(); return; }
@@ -2309,7 +2453,24 @@ function interact(e) {
   if (e.id === 'asya' && G.q.kitten.s === 2 && !G.pets.includes('cat') && !questOffer('asya')) { givePet('cat', e.name, TEXT.petCat); return; }
   if (e.id === 'asya') { if (!questTalk(e)) say(e.name, TEXT.asya[G.asyaI++ % TEXT.asya.length]); return; }
   if (e.id === 'oleg' && G.taken.has('boss') && !G.pets.includes('dog')) { givePet('dog', e.name, TEXT.petDog); return; }
-  if (e.id === 'cat') { say(e.name, TEXT.cat[G.catI++ % TEXT.cat.length]); return; }
+  if (e.id === 'cat') {
+    G.flags.catN = (G.flags.catN || 0) + 1;
+    if (G.flags.catN >= 10 && !G.flags.catcache) {
+      G.flags.catcache = 1; addWorldEnt('ch_cat');
+      e.path = [[13, 20], [38, 20], [38, 19]]; blockers.delete(e.ty * W + e.tx);
+      say(e.name, 'Мрряу! Кот спрыгнул и деловито куда-то побежал. Иди за ним!');
+      persist(); return;
+    }
+    say(e.name, G.flags.catN >= 6 && !G.flags.catcache ? 'Мур… Кот смотрит на тебя очень внимательно. Ещё чуть-чуть, и он что-то покажет.' : TEXT.cat[G.catI++ % TEXT.cat.length]); return;
+  }
+  if (e.id === 'ghost') {
+    if (G.flags.wcape) { say(e.name, 'Спасибо, что выслушал. Береги кристаллы…'); return; }
+    say(e.name, TEXT.ghost, () => {
+      G.flags.wcape = 1; secret('ghost'); toast('Плащ Странника теперь в гардеробе'); sfx.win();
+      e.dead = true; blockers.delete(e.ty * W + e.tx); burst(e.x + 8, e.y + 6, C.P, 24); persist();
+    });
+    return;
+  }
   if (e.id === 'varya' || e.id === 'gordey') {
     const lines = TEXT[e.id], first = !G.met[e.id];
     G.met[e.id] = true;
@@ -2333,6 +2494,25 @@ function interact(e) {
   if (e.id === 'nura' || e.id === 'fedya' || e.id === 'oleg') { say(e.name, gossip(e.id)); return; }
   if (e.id === 'tit') { say(e.name, TEXT.tit[(Math.random() * TEXT.tit.length) | 0], () => openPanel('tit')); return; }
   if (e.kind === 'board') { refreshDaily(); openPanel('board'); return; }
+  if (e.kind === 'well') { openPanel('well'); return; }
+  if (e.kind === 'statue') { say('', 'Золотая статуя героя. Подпись: «Самому щедрому жителю Листвянки». Очень похоже!'); return; }
+  if (e.kind === 'stone') {
+    const f = [659, 784, 1047][e.n]; sfx.note(f); e.glow = .6; burst(e.x + 8, e.y + 4, [C.c, C.l, C.y][e.n], 8);
+    G.noteBuf = ((G.noteBuf || '') + e.n).slice(-4);
+    if (G.noteBuf === '0121' && !G.flags.notes) {
+      G.flags.notes = 1; addWorldEnt('ch_notes'); G.shake = .3; burst(5 * TS + 8, 18 * TS + 8, C.y, 20);
+      toast('Камни запели хором! Из-под земли поднялся сундук'); persist();
+    }
+    return;
+  }
+  if (e.kind === 'xmark') {
+    if (G.pet !== 'dog') { say('', 'Под крестиком твёрдая земля. Вот бы сюда кого-нибудь с крепкими лапами и хорошим нюхом…'); return; }
+    say('', ['Щенок радостно залаял и принялся рыть!', 'Из ямы показался старый сундучок: 150 монет и три руны!'], () => {
+      G.coins += 150; addRunes(3); G.taken.add('xmark'); e.dead = true; blockers.delete(e.ty * W + e.tx);
+      secret('bottle'); burst(e.x + 8, e.y + 8, C.y, 20); persist();
+    });
+    return;
+  }
   if (e.kind === 'furn') { G.furnSel = e.id; openPanel('furn'); return; }
   if (e.kind === 'catalog') { openPanel('catalog'); return; }
   if (e.kind === 'trophy') { say('', 'Трофей: ' + TROPHY[e.id] + '.'); return; }
@@ -2381,7 +2561,7 @@ function swing() {
     hint('bomb', 'Отбегай! Взрыв через секунду');
     return;
   }
-  p.swing = wp.swing; p.cd = wp.cd * (hasPerk('quick') ? .75 : 1); sfx.swing();
+  p.swing = wp.swing; p.cd = wp.cd * (hasPerk('quick') ? .75 : 1); G.weapon === 'stick' ? sfx.squeak() : sfx.swing();
   const b = weaponBox(p), dmg = wp.dmg + BD();
   if (G.weapon === 'sword') parry(b.x - 3, b.y - 3, b.w + 6, b.h + 6);
   // cut tall grass
@@ -2419,7 +2599,7 @@ function nightDark() {
   return (1 - ph) / .08 * .62;
 }
 const isNight = () => nightDark() > .3;
-const ZONE_NAMES = { field: 'Листвянка', snow: 'Морозный перевал', beach: 'Южный пляж', cave: 'Тёмная пещера', sky: 'Облачный остров', dungeon: 'Подземелье', home: 'Свой дом', arena: 'Арена Гордея' };
+const ZONE_NAMES = { secret: '???', field: 'Листвянка', snow: 'Морозный перевал', beach: 'Южный пляж', cave: 'Тёмная пещера', sky: 'Облачный остров', dungeon: 'Подземелье', home: 'Свой дом', arena: 'Арена Гордея' };
 function openGate(g) {
   if (G.taken.has('open_' + g)) return;
   G.taken.add('open_' + g);
@@ -2498,6 +2678,10 @@ function fishA() {
     sfx.lever(); return;
   }
   if (F.phase === 'reel') {
+    if (Math.abs(F.m - F.zc) < F.zw / 2 && F.zone === 'sea' && !G.flags.map && Math.random() < .08) {
+      G.flags.map = 1; addWorldEnt('xmark'); G.seen[48 * W + 33] = 1; sfx.crystal(); burst(F.bx, F.by, C.w, 12);
+      G.fishing = null; say('', TEXT.bottle); persist(); return;
+    }
     if (Math.abs(F.m - F.zc) < F.zw / 2) {
       G.fish[F.fish] = (G.fish[F.fish] || 0) + 1; G.stats.fish = (G.stats.fish || 0) + 1; G.stats.caught = G.stats.caught || {}; G.stats.caught[F.fish] = 1;
       sfx.crystal(); burst(F.bx, F.by, C.c, 12); toast('Поймана рыба: ' + FISH[F.fish].name + '!');
@@ -2560,10 +2744,10 @@ function givePet(id, name, lines) {
 function petSecret(px, py, r) {
   for (const e of ents) {
     if (e.dead) continue;
-    const hit = (e.kind === 'coll' || e.kind === 'qitem' || e.kind === 'crystal' || (e.kind === 'chest' && !e.open));
+    const hit = (e.kind === 'coll' || e.kind === 'qitem' || e.kind === 'crystal' || e.kind === 'xmark' || (e.kind === 'chest' && !e.open));
     if (hit && Math.abs(e.x / TS - px) <= r && Math.abs(e.y / TS - py) <= r) return e;
   }
-  for (let y = py - r; y <= py + r; y++) for (let x = px - r; x <= px + r; x++) if (tileAt(x, y) === CRACK) return { x: x * TS, y: y * TS };
+  for (let y = py - r; y <= py + r; y++) for (let x = px - r; x <= px + r; x++) if (tileAt(x, y) === CRACK || tileAt(x, y) === FAKE) return { x: x * TS, y: y * TS };
   return null;
 }
 function updatePet(dt) {
@@ -2616,7 +2800,9 @@ function gossip(id) {
     [t.has('boss_shadow'), 'Пещера, говорят, посветлела. Тень-то ты прогнал!'],
     [t.has('boss_giant'), 'Великана одолел? А я в молодости снежки дальше всех кидала!'],
     [t.has('boss'), 'Король слаймов повержен! Внучка не верит, что это ты.'],
+    [!G.flags.wcape && Math.floor(G.clock / DAY_LEN) % 7 >= 4, 'Скоро полнолуние. В такие ночи в руинах, говорят, бродит призрак… Бабкины сказки, конечно.'],
     [isNight(), 'Ночь на дворе, а ты всё бегаешь. Поешь хоть пирожок.'],
+    [!G.flags.notes && Math.random() < .4, 'Помнишь песенку наших полей? Ми-соль-до-соль… Её ещё камни на лугу подпевают.'],
     [true, 'В руинах по ночам что-то булькает. Слаймы, поди. Будь осторожен.'],
   ] : [
     [G.stormDone, 'Служу тихо, спасибо тебе. Даже волки присмирели.'],
@@ -2694,7 +2880,7 @@ function enterDungeon(floor) {
     }
   });
   const others = rooms.map((_, i) => i).filter(i => i !== start && i !== far), cr = rooms[others[R(others.length)]], cp = spot(cr);
-  if (cp) { const e = { kind: 'chest', dg: true, id: null, tx: cp[0], ty: cp[1], x: cp[0] * TS, y: cp[1] * TS, open: false }; ents.push(e); blockers.set(cp[1] * W + cp[0], e); }
+  if (cp) { const e = { kind: 'chest', dg: true, id: null, tx: cp[0], ty: cp[1], x: cp[0] * TS, y: cp[1] * TS, open: false, mimic: floor >= 2 && Math.random() < .15 }; ents.push(e); blockers.set(cp[1] * W + cp[0], e); }
   const pickRoom = () => rooms[others[R(others.length)]];
   if (bossFloor) {
     // a dungeon guardian blocks the way down: one of the bosses, tougher with depth
@@ -2760,6 +2946,7 @@ const MOBS = {
   snowman: { hp: 10, dmg: 1, mat: 'stone', hb: { x: 3, y: 4, w: 10, h: 11 } },
   crab: { hp: 10, dmg: 1, mat: 'shell', hb: { x: 2, y: 8, w: 12, h: 7 } },
   gslime: { hp: 10, dmg: 2, mat: 'jelly', hb: { x: 2, y: 8, w: 12, h: 7 } },
+  mimic: { hp: 14, dmg: 2, mat: 'flesh', hb: { x: 1, y: 5, w: 14, h: 10 } },
 };
 // damage multipliers: material -> weapon kind
 const RES = {
@@ -2789,7 +2976,7 @@ const BOSS_TIP = {
   storm: 'Летучий: лук сбивает вдвое сильнее. Уходи из жёлтых кругов.',
 };
 const MOB_NAME = { slime: 'Слайм', mini: 'Слаймик', bat: 'Летучая мышь', skel: 'Скелет', beetle: 'Жук', wolf: 'Волк', snowman: 'Снеговик', crab: 'Краб',
-  gslime: 'Зелёный слайм', wisp: 'Огонёк', golem: 'Голем', king: 'Король слаймов', giant: 'Ледяной великан', bigcrab: 'Гигантский краб', shadow: 'Тень пещеры', storm: 'Повелитель бури' };
+  gslime: 'Зелёный слайм', mimic: 'Мимик', wisp: 'Огонёк', golem: 'Голем', king: 'Король слаймов', giant: 'Ледяной великан', bigcrab: 'Гигантский краб', shadow: 'Тень пещеры', storm: 'Повелитель бури' };
 const DIFF = {
   easy: { name: 'лёгкая', spd: .85, bmul: .65, mhp: .8, dmul: .6, hp: 7 },
   normal: { name: 'обычная', spd: 1.05, bmul: 1, mhp: 1, dmul: 1, hp: 5 },
@@ -2854,6 +3041,12 @@ function updateMob(m, dt, p) {
   const dx = p.x + 8 - c.x, dy = p.y + 10 - c.y, d = Math.hypot(dx, dy) || 1, alive = p.hp > 0;
   let vx = 0, vy = 0;
   switch (m.type) {
+    case 'mimic': {
+      if (alive && d < 130) { m.vx = dx / d * 60; m.vy = dy / d * 60; } else { m.vx *= .9; m.vy *= .9; }
+      const hop = Math.sin(m.ph * 1.4) > 0 ? 1 : .15;
+      vx = m.vx * hop; vy = m.vy * hop;
+      break;
+    }
     case 'slime': case 'mini': case 'gslime': {
       const range = m.type === 'slime' ? 80 : 90, chase = m.type === 'slime' ? 34 : 40;
       if (alive && d < range) { m.vx = dx / d * chase; m.vy = dy / d * chase; } else wander(m, dt, 18);
@@ -3116,7 +3309,7 @@ function killMob(m) {
   G.stats.kills++; if (isNight()) G.stats.nightKills++;
   gainXp(XP[m.type] || 2);
   if (hasPerk('vamp') && Math.random() < .2 && G.p.hp < G.p.maxHp) { G.p.hp++; burst(G.p.x + 8, G.p.y + 6, C.r, 8); }
-  burst(c.x, c.y, { slime: C.r, mini: C.p, bat: C.p, skel: C.w, beetle: C.n, king: C.p, wolf: C.G, snowman: C.S, crab: C.r, gslime: C.g,
+  burst(c.x, c.y, { mimic: C.b, slime: C.r, mini: C.p, bat: C.p, skel: C.w, beetle: C.n, king: C.p, wolf: C.G, snowman: C.S, crab: C.r, gslime: C.g,
     giant: C.I, bigcrab: C.o, shadow: C.P }[m.type], BOSS[m.type] ? 40 : 16);
   if (m.mini) {
     // a dungeon guardian: opens the stairs and becomes a checkpoint
@@ -3150,6 +3343,11 @@ function killMob(m) {
     return;
   }
   if (m.key) ents.push({ kind: 'key', dg: true, x: c.x - 8, y: c.y - 10 });
+  if (m.type === 'mimic') {
+    ents.push({ kind: 'rune', dg: true, n: 2, x: c.x - 8, y: c.y - 14 });
+    for (let i = 0; i < 6; i++) ents.push({ kind: 'coin', id: null, dg: true, x: c.x - 16 + (i % 3) * 8, y: c.y - 6 + Math.floor(i / 3) * 7 });
+    if (Math.random() < .35) giveScroll(ENCH_IDS[(Math.random() * ENCH_IDS.length) | 0], 'Мимик проглотил');
+  }
   if (m.elite || (m.dg && Math.random() < .06)) {
     if (Math.random() < (m.dg ? .6 : .25) || !m.elite) ents.push({ kind: 'rune', dg: m.dg, n: 1, x: c.x - 4, y: c.y - 14 });
   }
@@ -3278,7 +3476,7 @@ function update(dt) {
   {
     const kingOn = G.state === 'play' && ents.some(e => e.kind === 'mob' && BOSS[e.type] && !e.dead && e.state !== 'sleep' && Math.hypot(e.x - G.p.x, e.y - G.p.y) < 220);
     const z = G.zone || 'field';
-    setTrack(G.state !== 'play' || menuOpen ? null : kingOn ? 'boss' : z === 'field' && isNight() ? 'night' : z === 'dungeon' ? 'cave' : z === 'home' ? 'night' : z === 'arena' ? 'boss' : z);
+    setTrack(G.state !== 'play' || menuOpen ? null : kingOn ? 'boss' : z === 'field' && isNight() ? 'night' : z === 'dungeon' ? 'cave' : z === 'home' || z === 'secret' ? 'night' : z === 'arena' ? 'boss' : z);
   }
   for (const q of popups) { q.y -= 22 * dt; q.life -= dt; }
   popups = popups.filter(q => q.life > 0);
@@ -3297,6 +3495,18 @@ function update(dt) {
   updateFishing(dt, !!(ix || iy));
   updateArena(dt);
   updatePet(dt);
+  // the cat leads the way to its stash
+  for (const e of ents) if (e.path && e.path.length) {
+    const [gx, gy] = e.path[0], dx = gx * TS - e.x, dy = gy * TS - e.y, d = Math.hypot(dx, dy), st = 55 * dt;
+    if (d <= st) { e.x = gx * TS; e.y = gy * TS; e.path.shift(); if (!e.path.length) { e.tx = gx; e.ty = gy; blockers.set(gy * W + gx, e); toast('Кот сел у сундучка и мурлычет'); } }
+    else { e.x += dx / d * st; e.y += dy / d * st; }
+  }
+  // dozing off: two minutes without touching anything
+  if (ix || iy || input.ta || input.ka || input.tb || input.kb || p.hp < (G.lastHp ?? p.hp)) G.idleT = 0; else G.idleT += dt;
+  G.lastHp = p.hp;
+  const wasAsleep = p.sleeping; p.sleeping = G.idleT > 120;
+  if (p.sleeping && !wasAsleep) secret('sleep');
+  if (!p.sleeping && wasAsleep) toast('Ты проснулся. Снились овечки…');
   const run = input.tb || input.kb;
   const charging = (p.charge || 0) > .1, wh = weatherHere();
   const sp = (run ? 80 : 52) * (G.buff.speed > 0 ? 1.45 : 1) * (hasPerk('swift') ? 1.12 : 1) * (charging ? .55 : 1) * (wh === 'blizzard' && G.armor !== 'fur' ? .85 : 1) * (G.armor === 'mail' ? .95 : 1), len = Math.hypot(ix, iy) || 1;
@@ -3371,7 +3581,7 @@ function update(dt) {
   p.shield = G.shield && run && p.swing <= 0 && !p.moving && !(p.dash > 0);
   // charged spin attack: hold A with a melee weapon, release when ready
   {
-    const aHeld = input.ta || input.ka, melee = G.weapon === 'sword' || G.weapon === 'spear' || G.weapon === 'axe';
+    const aHeld = input.ta || input.ka, melee = G.weapon === 'sword' || G.weapon === 'spear' || G.weapon === 'axe' || G.weapon === 'stick';
     p.spin = Math.max(0, (p.spin || 0) - dt);
     if (aHeld && melee && p.swing <= 0 && !p.slide && !G.carry) {
       const before = p.charge || 0;
@@ -3438,7 +3648,17 @@ function update(dt) {
   }
   resetFarBlocks(p);
   G.achT = (G.achT || 0) + dt;
-  if (G.achT > 1) { G.achT = 0; checkAch(); }
+  if (G.achT > 1) {
+    G.achT = 0; checkAch();
+    // the wanderer's ghost walks the ruins on full-moon nights
+    const ghost = ents.find(e => e.id === 'ghost' && !e.dead), want = moonNight() && !G.flags.wcape;
+    if (want && !ghost) {
+      ents.push({ kind: 'npc', id: 'ghost', name: 'Призрак Странника', ghost: true, tx: 32, ty: 25, x: 32 * TS, y: 25 * TS });
+      blockers.set(25 * W + 32, ents[ents.length - 1]);
+      const night = Math.floor(G.clock / DAY_LEN);
+      if (G.moonTold !== night) { G.moonTold = night; toast('Полнолуние… В руинах кто-то бродит'); }
+    } else if (!want && ghost) { ghost.dead = true; blockers.delete(ghost.ty * W + ghost.tx); }
+  }
   if (G.pendingPerks > 0 && !dlg && !panelKind) offerPerks();
   updateWeather(dt);
   const regen = (G.amulet ? 1 / 30 : 0) + (G.ring === 'ring_life' ? 1 / 45 : 0);
@@ -3528,7 +3748,7 @@ const HAND = { down: [11, 13], up: [3, 3], right: [13, 10], left: [2, 10] };
 function drawWeapon(p, ox, oy) {
   const wp = WEAPONS[G.weapon], x = p.x - ox, y = p.y - oy + HUD, k = 1 - p.swing / wp.swing;
   const f = FACE[p.dir], hx = x + HAND[p.dir][0], hy = y + HAND[p.dir][1], ext = G.up.reach ? 3 : 0;
-  if (G.weapon === 'sword' || G.weapon === 'axe') {
+  if (G.weapon === 'sword' || G.weapon === 'axe' || G.weapon === 'stick') {
     const base = Math.atan2(f[1], f[0]), span = G.weapon === 'axe' ? 1.6 : 1.1, r = 12 + ext;
     ctx.globalAlpha = .75;
     for (let i = 0; i <= 10; i++) {
@@ -3540,6 +3760,9 @@ function drawWeapon(p, ox, oy) {
   if (G.weapon === 'sword') {
     seg(hx, hy, f, 0, 11 + ext, -1, 4, C.k); seg(hx, hy, f, 1, 9 + ext, 0, 2, C.w);
     seg(hx, hy, f, 0, 1, -2, 6, C.o);
+  } else if (G.weapon === 'stick') {
+    seg(hx, hy, f, 0, 11 + ext, -1, 4, C.k); seg(hx, hy, f, 1, 9 + ext, 0, 2, C.t);
+    seg(hx, hy, f, 0, 1, -2, 6, C.B);
   } else if (G.weapon === 'spear') {
     const L = 15 + ext * 2, push = Math.round(Math.sin(Math.min(1, k) * Math.PI) * 6) - 3;
     seg(hx, hy, f, push - 2, L + 1, -1, 4, C.k); seg(hx, hy, f, push - 2, L, 0, 2, C.b);
@@ -3570,9 +3793,23 @@ function drawMob(m, x, y) {
     P(ctx, x + 6, y - 4, C.k, 5, 4); P(ctx, x + 7, y - 3, C.o, 3, 2); P(ctx, x + 8, y - 5, C.y);
   }
   switch (m.type) {
-    case 'slime': case 'gslime': { const sq = Math.sin(m.ph) > .3 ? 1 : 0; ctx.drawImage(fl ? SPR.slimeHit : SPR[m.type], 0, 0, 16, 16, x, y + sq, 16, 16 - sq); break; }
+    case 'slime': case 'gslime': {
+      const sq = Math.sin(m.ph) > .3 ? 1 : 0; ctx.drawImage(fl ? SPR.slimeHit : SPR[m.type], 0, 0, 16, 16, x, y + sq, 16, 16 - sq);
+      if (holiday() === 'hw') { P(ctx, x + 4, y + 1 + sq, C.k, 8, 5); P(ctx, x + 5, y + 2 + sq, C.o, 6, 3); P(ctx, x + 7, y + sq, C.d, 2, 2); }
+      if (holiday() === 'ny') { P(ctx, x + 5, y + 1 + sq, C.r, 6, 3); P(ctx, x + 4, y + 3 + sq, C.w, 8, 2); P(ctx, x + 10, y + sq, C.w, 2, 2); }
+      break;
+    }
     case 'wolf': ctx.drawImage((fl ? SPR.wolfHit : SPR.wolf)[m.dir === 'left' ? 'left' : 'right'], x, y - (Math.floor(G.t * 8 + m.ph) % 2)); break;
     case 'snowman': ctx.drawImage(fl ? SPR.snowmanHit : SPR.snowman, x, y); break;
+    case 'mimic': {
+      const jaw = Math.sin(m.ph * 1.4) > 0 ? 3 : 0, my = y - (jaw ? 2 : 0);
+      P(ctx, x + 1, my + 5 + jaw, C.k, 14, 11 - jaw); P(ctx, x + 2, my + 6 + jaw, fl ? C.w : C.b, 12, 9 - jaw);
+      P(ctx, x + 1, my, C.k, 14, 6); P(ctx, x + 2, my + 1, fl ? C.w : C.B, 12, 4);
+      P(ctx, x + 2, my + 5, C.R, 12, 1 + jaw);
+      for (let i = 0; i < 4; i++) { P(ctx, x + 3 + i * 3, my + 5, C.w, 1, 2); P(ctx, x + 4 + i * 3, my + 5 + jaw, C.w, 1, 2); }
+      P(ctx, x + 4, my + 2, C.y, 2, 2); P(ctx, x + 10, my + 2, C.y, 2, 2); P(ctx, x + 5, my + 3, C.k); P(ctx, x + 11, my + 3, C.k);
+      break;
+    }
     case 'crab': ctx.drawImage(fl ? SPR.crabHit : SPR.crab, x + (Math.floor(G.t * 6 + m.ph) % 2), y); break;
     case 'mini': { const sq = Math.sin(m.ph * 1.3) > .3 ? 1 : 0; ctx.drawImage(fl ? SPR.miniHit : SPR.mini, x, y + sq); break; }
     case 'bat':
@@ -3856,6 +4093,11 @@ function drawTorch(x, y) {
   P(ctx, x + 6, y + 2 - f % 2, C.r, 5, 5 + f % 2); P(ctx, x + 7, y + 3, C.o, 3, 3); P(ctx, x + 8, y + 3 + f % 2, C.y, 1, 2);
 }
 function drawLamp(x, y) {
+  if (holiday() === 'hw') {
+    P(ctx, x + 2, y + 6, C.k, 12, 10); P(ctx, x + 3, y + 7, C.o, 10, 8); P(ctx, x + 7, y + 4, C.d, 2, 3);
+    const lit = isNight() || Math.floor(G.t * 2) % 2; P(ctx, x + 4, y + 9, lit ? C.y : C.k, 2, 2); P(ctx, x + 10, y + 9, lit ? C.y : C.k, 2, 2); P(ctx, x + 5, y + 12, lit ? C.y : C.k, 6, 1);
+    return;
+  }
   P(ctx, x + 7, y + 4, C.k, 3, 12); P(ctx, x + 8, y + 5, C.D, 1, 11); P(ctx, x + 5, y + 14, C.k, 7, 2);
   P(ctx, x + 5, y - 2, C.k, 7, 7); P(ctx, x + 6, y - 1, isNight() ? C.y : C.F, 5, 5);
   if (isNight()) P(ctx, x + 7, y, C.w, 3, 3);
@@ -3878,6 +4120,7 @@ const fogCv = document.createElement('canvas'); fogCv.width = VW; fogCv.height =
 const fctx = fogCv.getContext('2d');
 function drawWeather(camX, camY) {
   const wh = weatherHere(), t = G.t, p = G.p;
+  if (holiday() === 'ny' && G.zone === 'field') for (let i = 0; i < 24; i++) P(ctx, Math.floor((i * 41 + Math.sin(t + i) * 6 + t * 8) % VW), HUD + Math.floor((i * 67 + t * 22) % VH), C.w, 1, 1);
   if (wh === 'clear') return;
   if (wh === 'rain') {
     ctx.globalAlpha = .14; P(ctx, 0, HUD, '#1d2a44', VW, VH);
@@ -3933,7 +4176,7 @@ function drawStall(x, y) {
 }
 function layerOf(px, py) {
   // interiors: frame exactly the 10 rows from the top wall to the door
-  if (py / TS >= IN_Y) return px / TS < 18 ? [HOME.x, IN_Y + 1, HOME.w, 21] : [ARENA.x, IN_Y + 1, ARENA.w, 10];
+  if (py / TS >= IN_Y) return px / TS < 18 ? [HOME.x, IN_Y + 1, HOME.w, 21] : px / TS < 44 ? [ARENA.x, IN_Y + 1, ARENA.w, 10] : [44, IN_Y + 1, 16, 10];
   if (py / TS < OVER_H) return [0, 0, W, OVER_H];
   return px / TS < 44 ? [0, OVER_H, 44, IN_Y - OVER_H] : [DG.x, DG.y, DG.w, DG.h];
 }
@@ -3980,6 +4223,21 @@ function render() {
         P(ctx, x + 4, y + 15, 'rgba(0,0,0,.25)', 8, 1);
         if (p.shield && p.dir === 'up') drawShield(p, camX, camY);
         const cape = SPR.cape && SPR.cape[p.dir], hy = y - (p.moving && f ? 1 : 0);
+        if (p.sleeping) {
+          // curled up on the ground, eyes shut, dreaming of sheep
+          if (SPR.cape) ctx.drawImage(SPR.cape.down, x, y + 2);
+          ctx.drawImage(SPR.hero.down[0], 0, 0, 16, 13, x, y + 3, 16, 13);
+          const sk = LOOK_COL.skin[G.look.skin]; P(ctx, x + 5, y + 9, sk, 1, 1); P(ctx, x + 10, y + 9, sk, 1, 1); P(ctx, x + 5, y + 10, C.k, 1, 1); P(ctx, x + 10, y + 10, C.k, 1, 1);
+          drawZ(x - 12, y + 2);
+          const bx = x + 18, by = y - 26;
+          P(ctx, x + 13, y - 3, C.w, 2, 2); P(ctx, x + 16, y - 8, C.w, 3, 3);
+          P(ctx, bx - 1, by - 1, C.k, 34, 20); P(ctx, bx, by, C.w, 32, 18); P(ctx, bx + 2, by + 13, C.l, 28, 3);
+          P(ctx, bx + 14, by + 9, C.B, 1, 5); P(ctx, bx + 18, by + 9, C.B, 1, 5); P(ctx, bx + 13, by + 10, C.b, 7, 1);
+          const ph = (t * .7) % 1, sx = bx + 2 + ph * 26, sy = by + 10 - Math.sin(ph * Math.PI) * 8;
+          P(ctx, Math.round(sx), Math.round(sy), C.k, 6, 4); P(ctx, Math.round(sx) + 1, Math.round(sy), C.S, 4, 3); P(ctx, Math.round(sx) + 4, Math.round(sy) + 1, C.k, 2, 2);
+          drawText(String(1 + Math.floor(t * .7) % 9), bx + 26, by + 2, C.D);
+          break;
+        }
         if (cape && p.dir !== 'up') ctx.drawImage(cape, x, hy);
         ctx.drawImage(frames[f], x, hy);
         if (cape && p.dir === 'up') ctx.drawImage(cape, x, hy);
@@ -3996,6 +4254,7 @@ function render() {
       }
       case 'npc': {
         const bob = Math.floor(t * 1.5 + e.tx) % 2;
+        if (e.ghost) { ctx.globalAlpha = .45 + Math.sin(t * 3) * .15; ctx.drawImage(SPR.ghost, x, y - 2 + Math.round(Math.sin(t * 2) * 2)); ctx.globalAlpha = 1; break; }
         ctx.drawImage(SPR[e.id], x, y - (e.id === 'cat' ? 0 : bob));
         if ((e.id === 'miron' && ((!G.talked || crystalCount() >= TOTAL) && !G.won || G.won && !G.postTold)) || questOffer(e.id)) {
           const by = y - 7 + (Math.floor(t * 3) % 2);
@@ -4005,6 +4264,31 @@ function render() {
       }
       case 'mob': drawMob(e, x, y); break;
       case 'sign': drawSign(x, y); break;
+      case 'stone': {
+        P(ctx, x + 3, y + 1, C.k, 10, 15); P(ctx, x + 4, y + 2, C.F, 8, 13); P(ctx, x + 4, y + 2, C.G, 8, 2); P(ctx, x + 2, y + 13, C.k, 12, 3);
+        const g = (e.glow = Math.max(0, (e.glow || 0) - 1 / 60)) > 0, col = [C.c, C.l, C.y][e.n];
+        P(ctx, x + 7, y + 5, g ? C.w : col, 2, 1 + e.n * 2); P(ctx, x + 6, y + 6 + e.n * 2, g ? C.w : col, 4, 1);
+        if (g) { ctx.globalAlpha = e.glow; P(ctx, x + 1, y - 1, col, 14, 1); P(ctx, x + 3, y - 4, col, 2, 2); P(ctx, x + 11, y - 3, col, 2, 2); ctx.globalAlpha = 1; }
+        break;
+      }
+      case 'well': {
+        P(ctx, x, y + 4, C.k, 16, 12); P(ctx, x + 1, y + 5, C.F, 14, 10); P(ctx, x + 1, y + 5, C.G, 14, 2); P(ctx, x + 3, y + 7, C.n, 10, 4);
+        if (Math.floor(t * 2) % 3 === 0) P(ctx, x + 5 + Math.floor(t * 3) % 6, y + 8, C.c, 2, 1);
+        P(ctx, x + 1, y - 8, C.k, 2, 13); P(ctx, x + 13, y - 8, C.k, 2, 13); P(ctx, x, y - 10, C.k, 16, 3); P(ctx, x + 1, y - 9, C.r, 14, 1); P(ctx, x + 7, y - 7, C.B, 1, 8);
+        break;
+      }
+      case 'statue': {
+        P(ctx, x, y + 11, C.k, 16, 5); P(ctx, x + 1, y + 12, C.F, 14, 3);
+        if (!SPR.gold) SPR.gold = mkC(HERO_DOWN, { k: '#7a5410', r: '#f2b23a', w: '#fff3c4', s: '#e8d17a', u: '#f2b23a', y: '#fff3c4', b: '#d19a2a', B: '#b9771f' });
+        ctx.drawImage(SPR.gold, x, y - 6);
+        if (Math.floor(t * 3 + x) % 7 === 0) P(ctx, x + 3 + Math.floor(t * 5) % 10, y - 4 + Math.floor(t * 7) % 12, C.w);
+        break;
+      }
+      case 'xmark': {
+        P(ctx, x + 2, y + 9, C.T, 12, 5); P(ctx, x + 4, y + 8, C.t, 8, 2);
+        for (let i = 0; i < 7; i++) { P(ctx, x + 4 + i, y + 5 + i, C.r, 2, 1); P(ctx, x + 10 - i, y + 5 + i, C.r, 2, 1); }
+        break;
+      }
       case 'board': {
         P(ctx, x + 2, y + 8, C.k, 3, 8); P(ctx, x + 11, y + 8, C.k, 3, 8); P(ctx, x + 3, y + 8, C.B, 1, 8); P(ctx, x + 12, y + 8, C.B, 1, 8);
         P(ctx, x, y - 2, C.k, 16, 12); P(ctx, x + 1, y - 1, C.b, 14, 10); P(ctx, x, y - 4, C.k, 16, 3); P(ctx, x + 1, y - 3, C.r, 14, 1);
@@ -4013,7 +4297,15 @@ function render() {
         break;
       }
       case 'deco':
-        if (e.id === 'anvil') drawAnvil(x, y);
+        if (e.id === 'xmas') {
+          P(ctx, x + 6, y + 12, C.B, 4, 4);
+          for (let i = 0; i < 4; i++) { P(ctx, x + 6 - i * 2, y - 10 + i * 5, C.k, 4 + i * 4, 6); P(ctx, x + 7 - i * 2, y - 9 + i * 5, C.d, 2 + i * 4, 4); }
+          P(ctx, x + 7, y - 13, C.y, 2, 3);
+          for (let i = 0; i < 7; i++) if ((i + Math.floor(t * 3)) % 3) P(ctx, x + 3 + (i * 5) % 11, y - 6 + (i * 7) % 16, [C.r, C.y, C.c, C.p][i % 4]);
+        } else if (e.id === 'portrait') {
+          P(ctx, x + 1, y - 6, C.k, 14, 18); P(ctx, x + 2, y - 5, C.o, 12, 16); P(ctx, x + 3, y - 4, C.n, 10, 14);
+          ctx.drawImage(SPR.hero.down[0], 3, 1, 10, 13, x + 3, y - 4, 10, 13);
+        } else if (e.id === 'anvil') drawAnvil(x, y);
         else if (e.id === 'stall') drawStall(x, y);
         else if (e.id === 'torch') drawTorch(x, y);
         else drawLamp(x, y);
@@ -4330,6 +4622,7 @@ function renderPanel() {
       rowHtml('star', 'Размер кнопок', SET.ctl < 1 ? 'Мелкие' : SET.ctl > 1 ? 'Крупные' : 'Обычные', two('ctl-', '−', 'ctl+', '+')) +
       rowHtml('star', 'Режим для левши', SET.lefty ? 'Кнопки A и B слева, крестовина справа.' : 'Крестовина слева, кнопки A и B справа.',
         '<button class="rbtn" type="button" data-set="lefty">' + (SET.lefty ? 'Выкл.' : 'Вкл.') + '</button>') +
+      (secretsDone.konami ? rowHtml('star', 'Ретро-режим', SET.retro ? 'Цвета старой консоли.' : 'Обычные цвета.', '<button class="rbtn" type="button" data-set="retro">' + (SET.retro ? 'Выкл.' : 'Вкл.') + '</button>') : '') +
       rowHtml('star', 'Язык / Language', SET.lang === 'en' ? 'English' : 'Русский',
         '<button class="rbtn" type="button" data-set="lang">' + (SET.lang === 'en' ? 'Русский' : 'English') + '</button>');
     return;
@@ -4379,6 +4672,13 @@ function renderPanel() {
     drawLookPreview();
     return;
   }
+  if (panelKind === 'well') {
+    $('pTitle').textContent = 'Колодец желаний'; $('pMeta').textContent = 'Монеты: ' + G.coins;
+    if (!$('pNote').textContent) $('pNote').textContent = 'Брось монетку и загадай желание. Говорят, колодец любит щедрых.';
+    list.innerHTML = rowHtml('coin', 'Бросить 10 монет', 'Брошено всего: ' + (G.flags.well || 0) + '.', '<button class="rbtn" type="button" data-well="10">Бросить</button>') +
+      rowHtml('coin', 'Бросить 100 монет', 'Щедрое желание сбывается чаще.', '<button class="rbtn" type="button" data-well="100">Бросить</button>');
+    return;
+  }
   if (panelKind === 'board') {
     $('pTitle').textContent = 'Доска объявлений'; $('pMeta').textContent = 'Задания на сегодня';
     if (!$('pNote').textContent) $('pNote').textContent = 'Новые задания появляются каждый день. За все три — свиток зачарования.';
@@ -4421,10 +4721,13 @@ function renderPanel() {
     return;
   }
   if (panelKind === 'ach') {
-    const n = ACH.filter(a => achDone[a[0]]).length;
+    const n = ACH.filter(a => achDone[a[0]]).length, sn = SECRETS.filter(x => secretsDone[x[0]]).length;
     $('pTitle').textContent = 'Достижения';
     $('pMeta').textContent = n + ' из ' + ACH.length;
-    list.innerHTML = ACH.map(([id, name, desc]) => rowHtml(achDone[id] ? 'star' : 'star', name, desc,
+    list.innerHTML = '<div class="psec">Секреты: ' + sn + ' из ' + SECRETS.length + '</div>' +
+      SECRETS.map(([id, name, desc]) => secretsDone[id] ? rowHtml('star', name, desc, '<span class="rec">✓</span>') :
+        rowHtml('star', '???', 'Где-то в Листвянке…').replace('<div class="row"', '<div class="row locked"')).join('') +
+      '<div class="psec">Достижения</div>' + ACH.map(([id, name, desc]) => rowHtml(achDone[id] ? 'star' : 'star', name, desc,
       achDone[id] ? '<span class="rec">✓</span>' : '').replace('<div class="row"', '<div class="row' + (achDone[id] ? '' : ' locked') + '"')).join('');
     return;
   }
@@ -4496,7 +4799,7 @@ function renderPanel() {
   list.innerHTML = html;
 }
 const MAPCOL = {
-  [GRASS]: '#4f8a4b', [FLOWER]: '#4f8a4b', [TALL]: '#4a8346', [PATH]: '#c9a46a', [TREE]: '#2f5a3a', [WATER]: '#3e6fb0',
+  [GRASS]: '#4f8a4b', [FLOWER]: '#4f8a4b', [TALL]: '#4a8346', [PATH]: '#c9a46a', [TREE]: '#2f5a3a', [FAKE]: '#2f5a3a', [WATER]: '#3e6fb0',
   [BRIDGE]: '#a0683f', [ROCK]: '#9a98ad', [FLOOR]: '#6f6c86', [WALL]: '#5c5a72', [ROOF]: '#c8463e', [HWALL]: '#f4ecd6',
   [DOOR]: '#a0683f', [SAND]: '#e4d29a', [CRACK]: '#9a98ad', [SNOW]: '#e8eef6', [PINE]: '#36663d', [ICE]: '#a7d3ee',
   [CLIFF]: '#5c5a72', [GATE]: '#1d1b2c', [GATEO]: '#9a98ad', [PLATE]: '#f2b23a', [CAVE]: '#1d1b2c', [STAIRS]: '#9a98ad',
@@ -4528,6 +4831,10 @@ function drawMap(cv) {
     if (e.kind === 'altar' || e.kind === 'seal') dot(e.tx, e.ty, '#f2b23a', true);
     if (e.kind === 'way') dot(e.tx, e.ty, G.ways.includes(e.id) ? '#8fd0ea' : '#6f6c86', true);
     if (e.kind === 'qitem') dot(Math.floor((e.x + 8) / TS), Math.floor((e.y + 8) / TS), '#8fd0ea');
+  }
+  if (G.flags.map && !G.taken.has('xmark') && ly <= 48 && ly + lh > 48) {
+    const X0 = (33 - lx) * k, Y0 = (48 - ly) * k; c.fillStyle = '#c8463e';
+    for (let i = -3; i <= 3; i++) { c.fillRect(X0 + i + 1, Y0 + i + 1, 2, 2); c.fillRect(X0 - i + 1, Y0 + i + 1, 2, 2); }
   }
   dot(Math.floor((p.x + 8) / TS), Math.floor((p.y + 12) / TS), '#c8463e', true);
 }
@@ -4585,6 +4892,7 @@ function changeSetting(k) {
   if (k === 'ctl-') SET.ctl = Math.max(.85, Math.round((SET.ctl - .15) * 100) / 100);
   if (k === 'ctl+') SET.ctl = Math.min(1.3, Math.round((SET.ctl + .15) * 100) / 100);
   if (k === 'lefty') SET.lefty = !SET.lefty;
+  if (k === 'retro') SET.retro = !SET.retro;
   if (k === 'lang') { SET.lang = SET.lang === 'en' ? 'ru' : 'en'; saveSettings(); if (G.state === 'play') persist(); location.reload(); return; }
   saveSettings(); sfx.blip(); renderPanel();
 }
@@ -4621,6 +4929,7 @@ $('pList').addEventListener('click', e => {
   if (b.dataset.open) openPanel(b.dataset.open);
   if (b.dataset.dfloor) { panelKind = null; $('panel').hidden = true; enterDungeon(+b.dataset.dfloor); }
   if (b.dataset.tit) titBuy(b.dataset.tit);
+  if (b.dataset.well) throwCoins(+b.dataset.well);
   if (b.dataset.claim !== undefined) claimDaily(+b.dataset.claim);
   if (b.dataset.ench) {
     const k = b.dataset.ench;
@@ -4716,6 +5025,26 @@ const SCENES = {
       for (const hx of [20, 100]) { P(ctx, hx, CH - 120, C.r, 40, 14); P(ctx, hx, CH - 106, C.w, 40, 14); P(ctx, hx + 16, CH - 102, C.b, 8, 10); }
       const x = Math.min(CW / 2 - 8, -16 + t * 34), fr = SPR.hero.right[Math.floor(t * 6) % 2];
       ctx.drawImage(fr, Math.round(x), CH - 102);
+    } },
+  ],
+  secret: [
+    { text: 'Мирон открыл старый сундук и достал последнюю страницу дневника Странника.', draw: t => {
+      ctx.drawImage(worldCv, 14 * TS, 13 * TS, CW, CH, 0, 0, CW, CH); ctx.globalAlpha = .3; P(ctx, 0, 0, C.k, CW, CH); ctx.globalAlpha = 1;
+      ctx.drawImage(SPR.miron, CW / 2 - 24, CH / 2 - 20); ctx.drawImage(SPR.hero.down[0], CW / 2 + 8, CH / 2 - 20);
+      P(ctx, CW / 2 - 8, CH / 2 - 38 - Math.round(Math.sin(t * 2) * 2), C.k, 14, 12); P(ctx, CW / 2 - 7, CH / 2 - 37 - Math.round(Math.sin(t * 2) * 2), C.a, 12, 10);
+    } },
+    { text: '«Кристаллы — не сокровище, а обещание беречь этот край», — было написано там.', draw: t => {
+      sky('#1d1b2c', '#2c4f8a'); stars(t); ground(C.d); drawAltar(CW / 2 - 8, CH - 108, true); crystalsAround(CW / 2, CH - 128, 30 + Math.sin(t) * 6, t * 1.5);
+    } },
+    { text: 'Тот, кто нашёл в Листвянке всё до последней ракушки, становится её хранителем.', draw: t => {
+      sky('#2c4f8a', '#8fd0ea'); ground(C.g); crystalsAround(CW / 2, CH - 110, 26, t * 2);
+      ctx.drawImage(SPR.hero.down[0], CW / 2 - 8, CH - 112); for (let i = 0; i < 10; i++) P(ctx, (i * 37 + Math.floor(t * 30)) % CW, (i * 23 + Math.floor(t * 12)) % (CH - 92), C.w);
+    } },
+    { text: 'Спасибо, что прошёл Листвянку целиком! Плащ хранителя ждёт тебя в гардеробе.', draw: t => {
+      sky('#f2b23a', '#86c3ec'); ground(C.g);
+      const pet = G.pet && petSprite();
+      ctx.drawImage(SPR.hero.down[Math.floor(t * 4) % 2], CW / 2 - 8, CH - 108 - (Math.floor(t * 4) % 2) * 2); if (pet) ctx.drawImage(pet.right, CW / 2 + 10, CH - 106);
+      for (let i = 0; i < 5; i++) drawHeart(CW / 2 - 22 + i * 9, CH - 130 - ((t * 14 + i * 7) % 20), true);
     } },
   ],
   finale: [
