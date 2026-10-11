@@ -1,8 +1,8 @@
 {
-  "name": "listvyanka-ios",
+  "name": "tikholesye-ios",
   "version": "1.0.0",
   "private": true,
-  "description": "Кристаллы Листвянки: iOS wrapper built with Capacitor",
+  "description": "Кристаллы Тихолесья: iOS wrapper built with Capacitor",
   "scripts": {
     "build": "./build-www.sh",
     "sync": "./build-www.sh && npx cap sync ios",

@@ -10,7 +10,7 @@ mkdir -p docs
     '<meta name="apple-mobile-web-app-capable" content="yes">' \
     '<meta name="mobile-web-app-capable" content="yes">' \
     '<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">' \
-    '<meta name="apple-mobile-web-app-title" content="Листвянка">' \
+    '<meta name="apple-mobile-web-app-title" content="Тихолесье">' \
     '<meta name="theme-color" content="#1e1b2e">' \
     '<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>' \
     '</head>' '<body>'

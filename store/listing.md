@@ -2,14 +2,14 @@
 
 ## Русский (основной язык)
 
-**Название (до 30 символов):** Кристаллы Листвянки
+**Название (до 30 символов):** Кристаллы Тихолесья
 
 **Подзаголовок (до 30):** Пиксельное приключение
 
-**Рекламный текст (до 170):** Буря разбросала восемь кристаллов. Пройди деревню, горы, пляж и тёмную пещеру, победи пятерых боссов и спаси Листвянку!
+**Рекламный текст (до 170):** Буря разбросала восемь кристаллов. Пройди деревню, горы, пляж и тёмную пещеру, победи пятерых боссов и спаси Тихолесье!
 
 **Описание:**
-Ночью буря разбросала восемь кристаллов Листвянки по всему краю. Без них лес засохнет. Старый Мирон просит тебя о помощи.
+Ночью буря разбросала восемь кристаллов Тихолесья по всему краю. Без них лес засохнет. Старый Мирон просит тебя о помощи.
 
 • Большой мир: деревня, Морозный перевал, Южный пляж, Тёмная пещера и Облачный остров
 • 5 боссов: Король слаймов, Ледяной великан, Гигантский краб, Тень пещеры и Повелитель бури
@@ -37,14 +37,14 @@
 
 ## English
 
-**Name:** Crystals of Listvyanka
+**Name:** Crystals of Tikholesye
 
 **Subtitle:** A pixel adventure
 
-**Promotional text:** A storm scattered eight crystals. Explore the village, mountains, beach and a dark cave, defeat five bosses and save Listvyanka!
+**Promotional text:** A storm scattered eight crystals. Explore the village, mountains, beach and a dark cave, defeat five bosses and save Tikholesye!
 
 **Description:**
-One night a storm scattered the eight crystals of Listvyanka across the land. Without them the forest will wither. Old Miron asks for your help.
+One night a storm scattered the eight crystals of Tikholesye across the land. Without them the forest will wither. Old Miron asks for your help.
 
 • A big world: the village, Frost Pass, South Beach, the Dark Cave and the Cloud Island
 • 5 bosses: Slime King, Frost Giant, Giant Crab, Cave Shadow and the Storm Lord

@@ -1,6 +1,6 @@
 {
-  "appId": "com.listvyanka.crystals",
-  "appName": "Листвянка",
+  "appId": "com.tikholesye.crystals",
+  "appName": "Тихолесье",
   "webDir": "www",
   "ios": {
     "contentInset": "never",
