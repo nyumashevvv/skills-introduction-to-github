@@ -1,0 +1,580 @@
+<title>Сбей с острова</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Manrope:wght@400;600;700&display=swap">
+<style>
+  /* Layout: full-bleed 3D canvas; thin HUD pinned to the corners, a single card for results */
+  :root {
+    --night: #121829;
+    --night-2: #1d2742;
+    --stone: #c9a27a;
+    --ink: #f3eee6;
+    --ink-dim: #a9b0c4;
+    --amber: #ffb547;
+    --target: #e5483c;
+    --guard: #4b93f5;
+    --glass: rgba(18, 24, 41, 0.72);
+    --line: rgba(243, 238, 230, 0.14);
+    --f-display: "Unbounded", "Arial Black", system-ui, sans-serif;
+    --f-body: "Manrope", "Segoe UI", system-ui, sans-serif;
+    color-scheme: dark;
+  }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: var(--night);
+    color: var(--ink);
+    font-family: var(--f-body);
+    font-size: 15px;
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  #scene { position: fixed; inset: 0; display: block; width: 100%; height: 100%; cursor: crosshair; }
+  .hud {
+    position: fixed; inset: 0 0 auto 0;
+    padding-top: calc(14px + env(safe-area-inset-top, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;
+    pointer-events: none;
+  }
+  .panel {
+    background: var(--glass);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px 14px;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    pointer-events: auto;
+    min-width: 0;
+  }
+  .eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); font-weight: 700; }
+  h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(17px, 2.4vw, 22px); margin: 4px 0 4px; text-wrap: balance; }
+  .task { margin: 0; color: var(--ink); max-width: 34ch; line-height: 1.4; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 8px; font-size: 12px; color: var(--ink-dim); }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .shots { display: flex; gap: 6px; align-items: center; }
+  .shot { width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #8d96ad, #2b3146 70%); box-shadow: 0 0 0 1px var(--line); transition: opacity .25s, transform .25s; }
+  .shot.used { opacity: 0.2; transform: scale(0.75); }
+  .row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+  button {
+    font: 700 13px var(--f-body);
+    color: var(--ink);
+    background: var(--night-2);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+  button:hover { border-color: var(--amber); }
+  button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  .lvl { width: 34px; padding: 7px 0; font-variant-numeric: tabular-nums; }
+  .lvl.on { background: var(--amber); color: #2a1a00; border-color: var(--amber); }
+  .lvl .st { display: block; font-size: 8px; letter-spacing: 1px; color: var(--amber); line-height: 1; margin-top: 2px; }
+  .lvl.on .st { color: #2a1a00; }
+  .hint {
+    position: fixed; left: 50%; transform: translateX(-50%);
+    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    font-size: 12px; color: var(--ink-dim);
+    background: var(--glass); border: 1px solid var(--line); border-radius: 999px;
+    padding: 7px 14px; white-space: nowrap; pointer-events: none;
+    max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis;
+  }
+  .toast {
+    position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%);
+    font-family: var(--f-display); font-size: clamp(20px, 4vw, 34px); color: var(--target);
+    text-shadow: 0 2px 18px rgba(0,0,0,.6); pointer-events: none; opacity: 0; transition: opacity .3s;
+  }
+  .toast.show { opacity: 1; }
+  .veil {
+    position: fixed; inset: 0; display: grid; place-items: center;
+    background: rgba(10, 13, 24, 0.55);
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .card {
+    background: var(--night-2); border: 1px solid var(--line); border-radius: 18px;
+    padding: 26px 24px 22px; width: min(360px, 100%); text-align: center;
+    box-shadow: 0 24px 60px rgba(0,0,0,.45);
+  }
+  .card h2 { font-family: var(--f-display); font-size: 24px; margin: 6px 0 8px; text-wrap: balance; }
+  .card p { margin: 0 0 16px; color: var(--ink-dim); line-height: 1.45; }
+  .stars { font-size: 34px; letter-spacing: 6px; color: var(--amber); margin: 4px 0 6px; }
+  .stars .off { color: #3a4360; }
+  .card .row { justify-content: center; }
+  .primary { background: var(--amber); color: #2a1a00; border-color: var(--amber); }
+  @media (max-width: 560px) {
+    .hud { flex-direction: column; align-items: stretch; }
+    .side { flex-direction: row; justify-content: space-between; align-items: center; }
+    .task { max-width: none; }
+    .lvl { width: 30px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .shot, .toast { transition: none; } }
+</style>
+
+<canvas id="scene" aria-label="Игровое поле"></canvas>
+
+<div class="hud">
+  <div class="panel">
+    <div class="eyebrow" id="lvlNum">Остров 1 из 6</div>
+    <h1 id="lvlName">Разминка</h1>
+    <p class="task" id="lvlTask">Сбей красный куб с острова.</p>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--target)"></i>сбить в пропасть</span>
+      <span id="guardLegend"><i class="sw" style="background:var(--guard)"></i>должен остаться</span>
+    </div>
+  </div>
+  <div class="side">
+    <div class="panel shots" id="shots" aria-label="Ядра"></div>
+    <div class="row">
+      <button id="restart" type="button">Заново</button>
+    </div>
+    <div class="row" id="levels"></div>
+  </div>
+</div>
+
+<div class="hint">Тап — выстрел · Тяни — повернуть остров · Колесо — приблизить</div>
+<div class="toast" id="toast"></div>
+
+<div class="veil" id="veil" hidden>
+  <div class="card">
+    <div class="eyebrow" id="resEyebrow">Остров 1</div>
+    <h2 id="resTitle">Остров чист</h2>
+    <div class="stars" id="resStars"></div>
+    <p id="resText"></p>
+    <div class="row">
+      <button id="resRetry" type="button">Ещё раз</button>
+      <button id="resNext" class="primary" type="button">Дальше</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cannon.js/0.6.2/cannon.min.js"></script>
+<script>
+(() => {
+  const ISLAND = 4.5;          // half-size of the island top
+  const FALL_Y = -1.2;         // below this a block counts as knocked off
+  const BALL_SPEED = 26;
+  const G = 9.82;
+
+  // ---------- rendering ----------
+  const canvas = document.getElementById('scene');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputEncoding = THREE.sRGBEncoding;
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x121829);
+  scene.fog = new THREE.Fog(0x121829, 22, 60);
+
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+  const cam = { theta: 0.35, phi: 0.42, r: 15, target: new THREE.Vector3(0, 1.2, 0) };
+  function placeCamera() {
+    const { theta, phi, r, target } = cam;
+    camera.position.set(
+      target.x + r * Math.sin(theta) * Math.cos(phi),
+      target.y + r * Math.sin(phi),
+      target.z + r * Math.cos(theta) * Math.cos(phi)
+    );
+    camera.lookAt(target);
+  }
+
+  scene.add(new THREE.HemisphereLight(0xbfd3ff, 0x3a2a1e, 0.55));
+  const sun = new THREE.DirectionalLight(0xffe2b8, 1.05);
+  sun.position.set(7, 14, 6);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048);
+  Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 });
+  sun.shadow.bias = -0.0005;
+  scene.add(sun);
+  const rim = new THREE.DirectionalLight(0x6f8cff, 0.35);
+  rim.position.set(-8, 5, -9);
+  scene.add(rim);
+
+  function grainTexture(base, dark) {
+    const c = document.createElement('canvas');
+    c.width = c.height = 128;
+    const g = c.getContext('2d');
+    g.fillStyle = base; g.fillRect(0, 0, 128, 128);
+    for (let i = 0; i < 26; i++) {
+      g.strokeStyle = dark; g.globalAlpha = 0.12 + Math.random() * 0.18; g.lineWidth = 1 + Math.random() * 2;
+      const y = Math.random() * 128;
+      g.beginPath(); g.moveTo(0, y);
+      for (let x = 0; x <= 128; x += 16) g.lineTo(x, y + Math.sin(x * 0.05 + i) * 3);
+      g.stroke();
+    }
+    const t = new THREE.CanvasTexture(c);
+    t.encoding = THREE.sRGBEncoding;
+    return t;
+  }
+
+  const MATS = {
+    wood: new THREE.MeshStandardMaterial({ map: grainTexture('#b98150', '#5e3a1c'), roughness: 0.8 }),
+    red: new THREE.MeshStandardMaterial({ color: 0xe5483c, roughness: 0.45, emissive: 0x5a0d08, emissiveIntensity: 0.6 }),
+    blue: new THREE.MeshStandardMaterial({ color: 0x4b93f5, roughness: 0.3, metalness: 0.1, emissive: 0x0b2a5c, emissiveIntensity: 0.6 }),
+    ball: new THREE.MeshStandardMaterial({ color: 0x3a3f4f, roughness: 0.35, metalness: 0.75 }),
+  };
+  const EDGE = new THREE.LineBasicMaterial({ color: 0x1a120b, transparent: true, opacity: 0.35 });
+
+  // island: sandstone slab with a rocky underside
+  const top = new THREE.Mesh(
+    new THREE.BoxGeometry(ISLAND * 2, 1, ISLAND * 2),
+    new THREE.MeshStandardMaterial({ map: grainTexture('#c9a27a', '#8a6646'), roughness: 0.95 })
+  );
+  top.position.y = -0.5; top.receiveShadow = true;
+  scene.add(top);
+  const rock = new THREE.Mesh(
+    new THREE.ConeGeometry(5.6, 7, 7, 1),
+    new THREE.MeshStandardMaterial({ color: 0x4a3a30, roughness: 1, flatShading: true })
+  );
+  rock.rotation.x = Math.PI; rock.rotation.y = 0.3; rock.position.y = -4.5;
+  scene.add(rock);
+  const grass = new THREE.Mesh(
+    new THREE.BoxGeometry(ISLAND * 2 + 0.06, 0.08, ISLAND * 2 + 0.06),
+    new THREE.MeshStandardMaterial({ color: 0x7a8f4a, roughness: 1 })
+  );
+  grass.position.y = -0.03; grass.receiveShadow = true;
+  scene.add(grass);
+
+  // distant floating rocks for depth
+  const pebbleMat = new THREE.MeshStandardMaterial({ color: 0x3b3346, roughness: 1, flatShading: true });
+  const pebbles = [];
+  for (let i = 0; i < 14; i++) {
+    const s = 0.4 + Math.random() * 1.4;
+    const m = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), pebbleMat);
+    const a = Math.random() * Math.PI * 2, d = 14 + Math.random() * 20;
+    m.position.set(Math.cos(a) * d, -6 + Math.random() * 14, Math.sin(a) * d);
+    m.userData = { y: m.position.y, k: Math.random() * 6 };
+    scene.add(m); pebbles.push(m);
+  }
+  const starGeo = new THREE.BufferGeometry();
+  const sp = [];
+  for (let i = 0; i < 500; i++) {
+    const v = new THREE.Vector3().randomDirection ? new THREE.Vector3().randomDirection() : new THREE.Vector3(Math.random() - .5, Math.random() - .5, Math.random() - .5).normalize();
+    v.multiplyScalar(90); if (v.y < -10) v.y = -v.y;
+    sp.push(v.x, v.y, v.z);
+  }
+  starGeo.setAttribute('position', new THREE.Float32BufferAttribute(sp, 3));
+  scene.add(new THREE.Points(starGeo, new THREE.PointsMaterial({ color: 0xcfd8ff, size: 0.35, fog: false })));
+
+  // ---------- physics ----------
+  const world = new CANNON.World();
+  world.gravity.set(0, -G, 0);
+  world.broadphase = new CANNON.SAPBroadphase(world);
+  world.allowSleep = true;
+  world.solver.iterations = 14;
+  world.defaultContactMaterial.friction = 0.45;
+  world.defaultContactMaterial.restitution = 0.05;
+
+  const ground = new CANNON.Body({ mass: 0 });
+  ground.addShape(new CANNON.Box(new CANNON.Vec3(ISLAND, 0.5, ISLAND)));
+  ground.position.set(0, -0.5, 0);
+  world.addBody(ground);
+
+  let objs = [];
+  const geoCache = {};
+  function boxGeo(sx, sy, sz) {
+    const k = sx + 'x' + sy + 'x' + sz;
+    if (!geoCache[k]) { const g = new THREE.BoxGeometry(sx, sy, sz); geoCache[k] = { g, e: new THREE.EdgesGeometry(g) }; }
+    return geoCache[k];
+  }
+
+  // add a block whose bottom face sits at height y
+  function B(kind, x, y, z, sx = 1, sy = 1, sz = 1) {
+    const density = kind === 'blue' ? 1.3 : 1;
+    const body = new CANNON.Body({ mass: sx * sy * sz * density });
+    body.addShape(new CANNON.Box(new CANNON.Vec3(sx / 2, sy / 2, sz / 2)));
+    body.position.set(x, y + sy / 2 + 0.001, z);
+    body.sleepSpeedLimit = 0.15;
+    body.sleepTimeLimit = 0.4;
+    body.linearDamping = 0.02;
+    body.angularDamping = 0.05;
+    world.addBody(body);
+    body.sleep();
+    const { g, e } = boxGeo(sx, sy, sz);
+    const mesh = new THREE.Mesh(g, MATS[kind]);
+    mesh.castShadow = mesh.receiveShadow = true;
+    mesh.add(new THREE.LineSegments(e, EDGE));
+    scene.add(mesh);
+    objs.push({ kind, body, mesh, gone: false, born: 0 });
+  }
+
+  const ballGeo = new THREE.SphereGeometry(0.34, 24, 16);
+  function fireBall(origin, dir) {
+    const body = new CANNON.Body({ mass: 5 });
+    body.addShape(new CANNON.Sphere(0.34));
+    body.position.set(origin.x, origin.y, origin.z);
+    body.velocity.set(dir.x * BALL_SPEED, dir.y * BALL_SPEED, dir.z * BALL_SPEED);
+    body.linearDamping = 0.01;
+    body.allowSleep = false;
+    const o = { kind: 'ball', body, mesh: new THREE.Mesh(ballGeo, MATS.ball), gone: false, born: clock, floating: true };
+    // the ball flies straight until it first touches something, so it lands where you tapped
+    body.addEventListener('collide', () => { o.floating = false; });
+    o.mesh.castShadow = true;
+    world.addBody(body);
+    scene.add(o.mesh);
+    objs.push(o);
+  }
+
+  function clearLevel() {
+    for (const o of objs) { if (!o.gone) world.remove(o.body); scene.remove(o.mesh); }
+    objs = [];
+  }
+
+  // ---------- levels ----------
+  const LEVELS = [
+    {
+      name: 'Разминка', shots: 3, guards: false,
+      task: 'Сбей красный куб с острова. Он стоит на башне из брусков.',
+      build() { for (let i = 0; i < 3; i++) B('wood', 0, i, 0); B('red', 0, 3, 0); },
+    },
+    {
+      name: 'За стеной', shots: 3, guards: false,
+      task: 'Красный куб спрятался за деревянной стеной.',
+      build() {
+        for (let x = -2; x <= 2; x++) for (let y = 0; y < 3; y++) B('wood', x * 1.01, y, 1.2);
+        for (let y = 0; y < 2; y++) B('wood', 0, y, -1.6);
+        B('red', 0, 2, -1.6);
+      },
+    },
+    {
+      name: 'Не задень синего', shots: 3, guards: true,
+      task: 'Сбей оба красных. Синий куб посередине должен остаться на острове.',
+      build() {
+        for (const x of [-2.6, 0, 2.6]) { B('wood', x, 0, 0); B('wood', x, 1, 0); }
+        B('red', -2.6, 2, 0); B('blue', 0, 2, 0); B('red', 2.6, 2, 0);
+      },
+    },
+    {
+      name: 'Пирамида', shots: 2, guards: true,
+      task: 'Красные — в основании пирамиды. Выбей их, а синие пусть стоят.',
+      build() {
+        const s = 1.01;
+        [-1.5, -0.5, 0.5, 1.5].forEach((x, i) => B(i === 0 || i === 3 ? 'red' : 'wood', x * s, 0, 0));
+        [-1, 0, 1].forEach(x => B('wood', x * s, 1, 0));
+        [-0.5, 0.5].forEach(x => B('wood', x * s, 2, 0));
+        B('blue', 0, 3, 0);
+        B('blue', -3.2, 0, 2.6); B('blue', 3.2, 0, 2.6);
+      },
+    },
+    {
+      name: 'Домино', shots: 1, guards: true,
+      task: 'Одно ядро. Красный стоит на самом краю за рядом костяшек.',
+      build() {
+        for (let i = 0; i < 8; i++) B('wood', 0, 0, 3.2 - i * 0.9, 1.2, 1.8, 0.24);
+        B('wood', 0, 0, -3.9, 1, 0.8, 1);
+        B('red', 0, 0.8, -3.9, 0.8, 0.8, 0.8);
+        B('blue', -2.2, 0, 1.5, 0.9, 0.9, 0.9); B('blue', 2.2, 0, 1.5, 0.9, 0.9, 0.9);
+        B('blue', -2.2, 0, -1.5, 0.9, 0.9, 0.9); B('blue', 2.2, 0, -1.5, 0.9, 0.9, 0.9);
+      },
+    },
+    {
+      name: 'Башня', shots: 2, guards: true, camY: 2.6,
+      task: 'Два красных спрятаны внутри башни. Синий на крыше не должен улететь.',
+      build() {
+        for (let i = 0; i < 4; i++) {
+          const y = i * 1.5;
+          B('wood', -0.9, y, 0, 0.5, 1.2, 1); B('wood', 0.9, y, 0, 0.5, 1.2, 1);
+          B('wood', 0, y + 1.2, 0, 2.4, 0.3, 1.2);
+        }
+        B('red', 0, 1.5, 0, 0.75, 0.75, 0.75);
+        B('red', 0, 4.5, 0, 0.75, 0.75, 0.75);
+        B('blue', 0, 6, 0, 0.9, 0.9, 0.9);
+      },
+    },
+  ];
+
+  // ---------- state ----------
+  let best = [];
+  try { best = JSON.parse(localStorage.getItem('knockoff-best') || '[]') || []; } catch (e) { best = []; }
+  function saveBest() { try { localStorage.setItem('knockoff-best', JSON.stringify(best)); } catch (e) {} }
+
+  let cur = 0, shotsLeft = 0, state = 'play', lastShot = -99, winAt = 0, clock = 0;
+  const $ = id => document.getElementById(id);
+
+  function renderLevelButtons() {
+    const wrap = $('levels'); wrap.innerHTML = '';
+    LEVELS.forEach((L, i) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'lvl' + (i === cur ? ' on' : '');
+      b.id = 'lvl-' + i;
+      b.title = L.name;
+      b.innerHTML = (i + 1) + '<span class="st">' + '★'.repeat(best[i] || 0) + '&nbsp;</span>';
+      b.addEventListener('click', () => loadLevel(i));
+      wrap.appendChild(b);
+    });
+  }
+  function renderShots() {
+    const L = LEVELS[cur], wrap = $('shots'); wrap.innerHTML = '';
+    for (let i = 0; i < L.shots; i++) {
+      const d = document.createElement('i');
+      d.className = 'shot' + (i >= shotsLeft ? ' used' : '');
+      wrap.appendChild(d);
+    }
+  }
+
+  function loadLevel(i) {
+    cur = i;
+    const L = LEVELS[i];
+    clearLevel();
+    L.build();
+    shotsLeft = L.shots; state = 'play'; lastShot = -99;
+    cam.target.y = L.camY || 1.2;
+    $('lvlNum').textContent = 'Остров ' + (i + 1) + ' из ' + LEVELS.length;
+    $('lvlName').textContent = L.name;
+    $('lvlTask').textContent = L.task;
+    $('guardLegend').hidden = !L.guards;
+    $('veil').hidden = true;
+    renderShots(); renderLevelButtons();
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove('show'), 1400);
+  }
+
+  function finish(won, reason) {
+    state = 'done';
+    const L = LEVELS[cur];
+    $('resEyebrow').textContent = 'Остров ' + (cur + 1) + ' · ' + L.name;
+    if (won) {
+      const stars = Math.min(3, 1 + shotsLeft);
+      best[cur] = Math.max(best[cur] || 0, stars); saveBest();
+      $('resTitle').textContent = cur === LEVELS.length - 1 ? 'Все острова чисты' : 'Остров чист';
+      $('resStars').innerHTML = '★'.repeat(stars) + '<span class="off">' + '★'.repeat(3 - stars) + '</span>';
+      const used = L.shots - shotsLeft;
+      $('resText').textContent = 'Потрачено ядер: ' + used + ' из ' + L.shots + '.' + (stars < 3 ? ' Попробуй меньшим числом.' : '');
+      $('resNext').hidden = false;
+      $('resNext').textContent = cur === LEVELS.length - 1 ? 'К первому' : 'Дальше';
+    } else {
+      $('resTitle').textContent = 'Не вышло';
+      $('resStars').innerHTML = '';
+      $('resText').textContent = reason;
+      $('resNext').hidden = true;
+    }
+    $('veil').hidden = false;
+    renderLevelButtons();
+    (won ? $('resNext') : $('resRetry')).focus({ preventScroll: true });
+  }
+
+  $('restart').addEventListener('click', () => loadLevel(cur));
+  $('resRetry').addEventListener('click', () => loadLevel(cur));
+  $('resNext').addEventListener('click', () => loadLevel((cur + 1) % LEVELS.length));
+  window.addEventListener('keydown', e => { if (e.key === 'r' || e.key === 'к') loadLevel(cur); });
+
+  // ---------- input ----------
+  const ray = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  function shoot(cx, cy) {
+    if (state !== 'play') return;
+    if (shotsLeft <= 0) { toast('Ядра закончились'); return; }
+    const r = canvas.getBoundingClientRect();
+    ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    const dir = ray.ray.direction.clone().normalize();
+    const origin = camera.position.clone().add(dir.clone().multiplyScalar(1.2));
+    fireBall(origin, dir);
+    shotsLeft--; lastShot = clock;
+    renderShots();
+  }
+
+  let drag = null;
+  canvas.addEventListener('pointerdown', e => {
+    drag = { sx: e.clientX, sy: e.clientY, x: e.clientX, y: e.clientY, moved: false };
+    try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+  });
+  canvas.addEventListener('pointermove', e => {
+    if (!drag) return;
+    if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 7) drag.moved = true;
+    if (drag.moved) {
+      cam.theta -= (e.clientX - drag.x) * 0.0065;
+      cam.phi = Math.min(1.25, Math.max(0.08, cam.phi + (e.clientY - drag.y) * 0.005));
+    }
+    drag.x = e.clientX; drag.y = e.clientY;
+  });
+  canvas.addEventListener('pointerup', e => {
+    if (drag && !drag.moved) shoot(e.clientX, e.clientY);
+    drag = null;
+  });
+  canvas.addEventListener('pointercancel', () => { drag = null; });
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    cam.r = Math.min(26, Math.max(8, cam.r * (1 + Math.sign(e.deltaY) * 0.08)));
+  }, { passive: false });
+
+  function resize() {
+    const w = window.innerWidth, h = window.innerHeight;
+    renderer.setSize(w, h, false);
+    camera.aspect = w / h;
+    camera.fov = w < h ? 62 : 50;
+    camera.updateProjectionMatrix();
+  }
+  window.addEventListener('resize', resize);
+
+  // ---------- loop ----------
+  const STEP = 1 / 60;
+  let acc = 0, prev = performance.now();
+
+  function settled() {
+    return objs.every(o => o.gone || o.body.sleepState === CANNON.Body.SLEEPING ||
+      (o.body.velocity.norm() < 0.12 && o.body.angularVelocity.norm() < 0.2));
+  }
+
+  function judge() {
+    if (state === 'done') return;
+    const live = objs.filter(o => o.kind !== 'ball');
+    const blueDown = live.some(o => o.kind === 'blue' && o.body.position.y < FALL_Y);
+    if (blueDown) { finish(false, 'Синий куб упал с острова. Бей точнее.'); return; }
+    const redsLeft = live.filter(o => o.kind === 'red' && o.body.position.y >= FALL_Y).length;
+    if (state === 'play' && redsLeft === 0) { state = 'checking'; winAt = clock + 1.0; return; }
+    if (state === 'checking') { if (clock >= winAt) finish(true); return; }
+    const since = clock - lastShot;
+    if (shotsLeft === 0 && since > 1.5 && (settled() || since > 8)) {
+      finish(false, 'Ядра закончились, а красных на острове осталось: ' + redsLeft + '.');
+    }
+  }
+
+  function frame(now) {
+    const dt = Math.min(0.1, (now - prev) / 1000); prev = now;
+    acc += dt;
+    while (acc >= STEP) {
+      for (const o of objs) if (o.floating) o.body.force.y += o.body.mass * G;
+      world.step(STEP);
+      clock += STEP;
+      acc -= STEP;
+    }
+    for (const o of objs) {
+      if (o.gone) continue;
+      const p = o.body.position;
+      if (p.y < -40 || (o.kind === 'ball' && clock - o.born > 10)) {
+        world.remove(o.body); o.gone = true; scene.remove(o.mesh); continue;
+      }
+      o.mesh.position.set(p.x, p.y, p.z);
+      o.mesh.quaternion.set(o.body.quaternion.x, o.body.quaternion.y, o.body.quaternion.z, o.body.quaternion.w);
+    }
+    for (const m of pebbles) { m.position.y = m.userData.y + Math.sin(clock * 0.5 + m.userData.k) * 0.4; m.rotation.y += 0.002; }
+    judge();
+    placeCamera();
+    renderer.render(scene, camera);
+    requestAnimationFrame(frame);
+  }
+
+  function start(data) {
+    let lvl = data && Number.isInteger(data.level) ? data.level : 0;
+    if (lvl < 0 || lvl >= LEVELS.length) lvl = 0;
+    if (data && data.cam) Object.assign(cam, { theta: data.cam.theta, phi: data.cam.phi, r: data.cam.r });
+    resize();
+    loadLevel(lvl);
+    requestAnimationFrame(t => { prev = t; frame(t); });
+  }
+  window.claude?.hot?.snapshot?.(() => ({ level: cur, cam: { theta: cam.theta, phi: cam.phi, r: cam.r } }));
+  window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
+})();
+</script>
