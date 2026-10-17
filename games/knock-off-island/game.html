@@ -161,9 +161,9 @@
 <div class="dock">
   <div class="hint" id="hint">Тяни по экрану — наводка · Огонь или пробел — выстрел</div>
   <div class="controls">
-    <button class="turn" id="sideL" type="button" aria-label="Перевезти пушку левее">◀</button>
+    <button class="turn" id="sideL" type="button" aria-label="Сменить сторону влево">◀</button>
     <button class="fire" id="fire" type="button">Огонь</button>
-    <button class="turn" id="sideR" type="button" aria-label="Перевезти пушку правее">▶</button>
+    <button class="turn" id="sideR" type="button" aria-label="Сменить сторону вправо">▶</button>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -278,8 +278,7 @@
   muzzle.position.z = 1.25;
   barrel.add(tube, muzzle);
   barrel.position.y = 0.35;
-  cannon.add(perch, base, barrel);
-  scene.add(cannon);
+  cannon.add(perch, base, barrel);  // kept for aiming math, not shown
 
   // aiming dots: the first fraction of a second of the flight
   const DOTS = 9;
@@ -383,7 +382,7 @@
     },
     {
       name: 'Навесом', par: 1, sides: [0], guards: false,
-      task: 'Пушка стоит только спереди, а красный спрятан за стеной. Стреляй по дуге.',
+      task: 'Стрелять можно только спереди, а красный спрятан за стеной. Стреляй по дуге.',
       build() {
         for (let x = -2; x <= 2; x++) for (let y = 0; y < 3; y++) B('wood', x * 1.01, y, 1.4);
         B('wood', 0, 0, -3.0, 0.8, 1.5, 0.8);
@@ -489,8 +488,8 @@
     const L = LEVELS[cur], many = L.sides.length > 1;
     $('sideL').disabled = $('sideR').disabled = !many;
     $('hint').textContent = many
-      ? 'Тяни по экрану — наводка · ◀ ▶ — перевезти пушку · Огонь или пробел — выстрел'
-      : 'Тяни по экрану — наводка · Огонь или пробел — выстрел · пушка здесь одна';
+      ? 'Тяни по экрану — наводка · ◀ ▶ — сменить сторону · Огонь или пробел — выстрел'
+      : 'Тяни по экрану — наводка · Огонь или пробел — выстрел · стрелять можно только отсюда';
   }
 
   function loadLevel(i) {
