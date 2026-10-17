@@ -3,17 +3,18 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@600;800&family=Manrope:wght@400;600;700&display=swap">
 <style>
-  /* Layout: full-bleed 3D canvas; thin HUD pinned to the corners, a single card for results */
+  /* Layout: full-bleed 3D canvas; thin HUD pinned to the corners, cannon controls at the bottom, a single card for results */
   :root {
     --night: #121829;
     --night-2: #1d2742;
-    --stone: #c9a27a;
     --ink: #f3eee6;
     --ink-dim: #a9b0c4;
     --amber: #ffb547;
+    --amber-ink: #2a1a00;
     --target: #e5483c;
     --guard: #4b93f5;
-    --glass: rgba(18, 24, 41, 0.72);
+    --muted: #3a4360;
+    --glass: rgba(18, 24, 41, 0.74);
     --line: rgba(243, 238, 230, 0.14);
     --f-display: "Unbounded", "Arial Black", system-ui, sans-serif;
     --f-body: "Manrope", "Segoe UI", system-ui, sans-serif;
@@ -30,7 +31,8 @@
     user-select: none;
     -webkit-user-select: none;
   }
-  #scene { position: fixed; inset: 0; display: block; width: 100%; height: 100%; cursor: crosshair; }
+  #scene { position: fixed; inset: 0; display: block; width: 100%; height: 100%; cursor: grab; }
+  #scene:active { cursor: grabbing; }
   .hud {
     position: fixed; inset: 0 0 auto 0;
     padding-top: calc(14px + env(safe-area-inset-top, 0px));
@@ -51,13 +53,15 @@
   }
   .eyebrow { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-dim); font-weight: 700; }
   h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(17px, 2.4vw, 22px); margin: 4px 0 4px; text-wrap: balance; }
-  .task { margin: 0; color: var(--ink); max-width: 34ch; line-height: 1.4; }
+  .task { margin: 0; color: var(--ink); max-width: 36ch; line-height: 1.4; }
+  .par { margin: 6px 0 0; font-size: 13px; color: var(--amber); font-weight: 700; font-variant-numeric: tabular-nums; }
   .legend { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-top: 8px; font-size: 12px; color: var(--ink-dim); }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
   .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
   .side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
   .shots { display: flex; gap: 6px; align-items: center; }
   .shot { width: 16px; height: 16px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #8d96ad, #2b3146 70%); box-shadow: 0 0 0 1px var(--line); transition: opacity .25s, transform .25s; }
+  .shot.spare { box-shadow: 0 0 0 1px var(--line), 0 0 0 3px rgba(255, 181, 71, 0.18); }
   .shot.used { opacity: 0.2; transform: scale(0.75); }
   .row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
   button {
@@ -69,24 +73,40 @@
     padding: 8px 12px;
     cursor: pointer;
   }
-  button:hover { border-color: var(--amber); }
+  button:hover:not(:disabled) { border-color: var(--amber); }
   button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+  button:disabled { cursor: not-allowed; opacity: 0.45; }
   .lvl { width: 34px; padding: 7px 0; font-variant-numeric: tabular-nums; }
-  .lvl.on { background: var(--amber); color: #2a1a00; border-color: var(--amber); }
+  .lvl.on { background: var(--amber); color: var(--amber-ink); border-color: var(--amber); }
   .lvl .st { display: block; font-size: 8px; letter-spacing: 1px; color: var(--amber); line-height: 1; margin-top: 2px; }
-  .lvl.on .st { color: #2a1a00; }
+  .lvl.on .st { color: var(--amber-ink); }
+  .dock {
+    position: fixed; left: 0; right: 0;
+    bottom: 0;
+    padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    pointer-events: none;
+  }
+  .controls { display: flex; gap: 8px; align-items: center; pointer-events: auto; }
+  .controls .turn { width: 46px; height: 46px; padding: 0; font-size: 18px; border-radius: 50%; }
+  .fire {
+    font: 800 15px var(--f-display); letter-spacing: 0.04em;
+    background: var(--target); border-color: var(--target); color: #fff;
+    padding: 13px 26px; border-radius: 999px;
+  }
+  .fire:hover:not(:disabled) { border-color: var(--amber); }
   .hint {
-    position: fixed; left: 50%; transform: translateX(-50%);
-    bottom: calc(14px + env(safe-area-inset-bottom, 0px));
     font-size: 12px; color: var(--ink-dim);
     background: var(--glass); border: 1px solid var(--line); border-radius: 999px;
-    padding: 7px 14px; white-space: nowrap; pointer-events: none;
-    max-width: calc(100% - 32px); overflow: hidden; text-overflow: ellipsis;
+    padding: 6px 14px; text-align: center; max-width: 100%;
   }
   .toast {
-    position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%);
-    font-family: var(--f-display); font-size: clamp(20px, 4vw, 34px); color: var(--target);
+    position: fixed; left: 50%; top: 40%; transform: translate(-50%, -50%);
+    font-family: var(--f-display); font-size: clamp(18px, 4vw, 30px); color: var(--amber);
     text-shadow: 0 2px 18px rgba(0,0,0,.6); pointer-events: none; opacity: 0; transition: opacity .3s;
+    text-align: center; width: max-content; max-width: calc(100% - 32px);
   }
   .toast.show { opacity: 1; }
   .veil {
@@ -97,19 +117,20 @@
   }
   .card {
     background: var(--night-2); border: 1px solid var(--line); border-radius: 18px;
-    padding: 26px 24px 22px; width: min(360px, 100%); text-align: center;
+    padding: 26px 24px 22px; width: min(380px, 100%); text-align: center;
     box-shadow: 0 24px 60px rgba(0,0,0,.45);
   }
   .card h2 { font-family: var(--f-display); font-size: 24px; margin: 6px 0 8px; text-wrap: balance; }
   .card p { margin: 0 0 16px; color: var(--ink-dim); line-height: 1.45; }
   .stars { font-size: 34px; letter-spacing: 6px; color: var(--amber); margin: 4px 0 6px; }
-  .stars .off { color: #3a4360; }
+  .stars .off { color: var(--muted); }
   .card .row { justify-content: center; }
-  .primary { background: var(--amber); color: #2a1a00; border-color: var(--amber); }
+  .primary { background: var(--amber); color: var(--amber-ink); border-color: var(--amber); }
   @media (max-width: 560px) {
     .hud { flex-direction: column; align-items: stretch; }
-    .side { flex-direction: row; justify-content: space-between; align-items: center; }
+    .side { flex-direction: row; justify-content: space-between; align-items: center; flex-wrap: wrap; }
     .task { max-width: none; }
+    .legend { display: none; }
     .lvl { width: 30px; }
   }
   @media (prefers-reduced-motion: reduce) { .shot, .toast { transition: none; } }
@@ -122,6 +143,7 @@
     <div class="eyebrow" id="lvlNum">Остров 1 из 6</div>
     <h1 id="lvlName">Разминка</h1>
     <p class="task" id="lvlTask">Сбей красный куб с острова.</p>
+    <p class="par" id="lvlPar">3★ — за 1 ядро</p>
     <div class="legend">
       <span><i class="sw" style="background:var(--target)"></i>сбить в пропасть</span>
       <span id="guardLegend"><i class="sw" style="background:var(--guard)"></i>должен остаться</span>
@@ -136,7 +158,14 @@
   </div>
 </div>
 
-<div class="hint">Тап — выстрел · Тяни — повернуть остров · Колесо — приблизить</div>
+<div class="dock">
+  <div class="hint" id="hint">Тяни по экрану — наводка · Огонь или пробел — выстрел</div>
+  <div class="controls">
+    <button class="turn" id="sideL" type="button" aria-label="Перевезти пушку левее">◀</button>
+    <button class="fire" id="fire" type="button">Огонь</button>
+    <button class="turn" id="sideR" type="button" aria-label="Перевезти пушку правее">▶</button>
+  </div>
+</div>
 <div class="toast" id="toast"></div>
 
 <div class="veil" id="veil" hidden>
@@ -158,8 +187,12 @@
 (() => {
   const ISLAND = 4.5;          // half-size of the island top
   const FALL_Y = -1.2;         // below this a block counts as knocked off
-  const BALL_SPEED = 26;
+  const BALL_SPEED = 19;
   const G = 9.82;
+  const CANNON_R = 9.5;        // distance from island centre to the cannon
+  const CANNON_Y = 1.1;
+  const PREVIEW_T = 0.3;       // seconds of flight the aiming dots show
+  const NEED_STARS = 2;        // stars needed to open the next island
 
   // ---------- rendering ----------
   const canvas = document.getElementById('scene');
@@ -171,26 +204,16 @@
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x121829);
-  scene.fog = new THREE.Fog(0x121829, 22, 60);
+  scene.fog = new THREE.Fog(0x121829, 24, 64);
 
   const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
-  const cam = { theta: 0.35, phi: 0.42, r: 15, target: new THREE.Vector3(0, 1.2, 0) };
-  function placeCamera() {
-    const { theta, phi, r, target } = cam;
-    camera.position.set(
-      target.x + r * Math.sin(theta) * Math.cos(phi),
-      target.y + r * Math.sin(phi),
-      target.z + r * Math.cos(theta) * Math.cos(phi)
-    );
-    camera.lookAt(target);
-  }
 
   scene.add(new THREE.HemisphereLight(0xbfd3ff, 0x3a2a1e, 0.55));
   const sun = new THREE.DirectionalLight(0xffe2b8, 1.05);
   sun.position.set(7, 14, 6);
   sun.castShadow = true;
   sun.shadow.mapSize.set(2048, 2048);
-  Object.assign(sun.shadow.camera, { left: -9, right: 9, top: 9, bottom: -9, near: 1, far: 40 });
+  Object.assign(sun.shadow.camera, { left: -11, right: 11, top: 11, bottom: -11, near: 1, far: 45 });
   sun.shadow.bias = -0.0005;
   scene.add(sun);
   const rim = new THREE.DirectionalLight(0x6f8cff, 0.35);
@@ -219,6 +242,8 @@
     red: new THREE.MeshStandardMaterial({ color: 0xe5483c, roughness: 0.45, emissive: 0x5a0d08, emissiveIntensity: 0.6 }),
     blue: new THREE.MeshStandardMaterial({ color: 0x4b93f5, roughness: 0.3, metalness: 0.1, emissive: 0x0b2a5c, emissiveIntensity: 0.6 }),
     ball: new THREE.MeshStandardMaterial({ color: 0x3a3f4f, roughness: 0.35, metalness: 0.75 }),
+    iron: new THREE.MeshStandardMaterial({ color: 0x2c303c, roughness: 0.4, metalness: 0.8 }),
+    rock: new THREE.MeshStandardMaterial({ color: 0x4a3a30, roughness: 1, flatShading: true }),
   };
   const EDGE = new THREE.LineBasicMaterial({ color: 0x1a120b, transparent: true, opacity: 0.35 });
 
@@ -229,10 +254,7 @@
   );
   top.position.y = -0.5; top.receiveShadow = true;
   scene.add(top);
-  const rock = new THREE.Mesh(
-    new THREE.ConeGeometry(5.6, 7, 7, 1),
-    new THREE.MeshStandardMaterial({ color: 0x4a3a30, roughness: 1, flatShading: true })
-  );
+  const rock = new THREE.Mesh(new THREE.ConeGeometry(5.6, 7, 7, 1), MATS.rock);
   rock.rotation.x = Math.PI; rock.rotation.y = 0.3; rock.position.y = -4.5;
   scene.add(rock);
   const grass = new THREE.Mesh(
@@ -242,13 +264,37 @@
   grass.position.y = -0.03; grass.receiveShadow = true;
   scene.add(grass);
 
+  // the cannon stands on its own little floating rock and can be moved around the island
+  const cannon = new THREE.Group();
+  const perch = new THREE.Mesh(new THREE.DodecahedronGeometry(1.3, 0), MATS.rock);
+  perch.scale.set(1, 0.55, 1); perch.position.y = -0.75; perch.receiveShadow = true;
+  const base = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.7, 0.35, 16), MATS.iron);
+  base.position.y = -0.05; base.castShadow = true;
+  const barrel = new THREE.Group();
+  const tubeGeo = new THREE.CylinderGeometry(0.26, 0.34, 1.6, 20);
+  tubeGeo.rotateX(Math.PI / 2); tubeGeo.translate(0, 0, 0.45);
+  const tube = new THREE.Mesh(tubeGeo, MATS.iron); tube.castShadow = true;
+  const muzzle = new THREE.Mesh(new THREE.TorusGeometry(0.3, 0.07, 8, 20), MATS.iron);
+  muzzle.position.z = 1.25;
+  barrel.add(tube, muzzle);
+  barrel.position.y = 0.35;
+  cannon.add(perch, base, barrel);
+  scene.add(cannon);
+
+  // aiming dots: the first fraction of a second of the flight
+  const DOTS = 9;
+  const dotGeo = new THREE.SphereGeometry(0.07, 8, 6);
+  const dotMat = new THREE.MeshBasicMaterial({ color: 0xffb547 });
+  const dots = [];
+  for (let i = 0; i < DOTS; i++) { const d = new THREE.Mesh(dotGeo, dotMat); scene.add(d); dots.push(d); }
+
   // distant floating rocks for depth
   const pebbleMat = new THREE.MeshStandardMaterial({ color: 0x3b3346, roughness: 1, flatShading: true });
   const pebbles = [];
   for (let i = 0; i < 14; i++) {
     const s = 0.4 + Math.random() * 1.4;
     const m = new THREE.Mesh(new THREE.DodecahedronGeometry(s, 0), pebbleMat);
-    const a = Math.random() * Math.PI * 2, d = 14 + Math.random() * 20;
+    const a = Math.random() * Math.PI * 2, d = 18 + Math.random() * 20;
     m.position.set(Math.cos(a) * d, -6 + Math.random() * 14, Math.sin(a) * d);
     m.userData = { y: m.position.y, k: Math.random() * 6 };
     scene.add(m); pebbles.push(m);
@@ -256,7 +302,7 @@
   const starGeo = new THREE.BufferGeometry();
   const sp = [];
   for (let i = 0; i < 500; i++) {
-    const v = new THREE.Vector3().randomDirection ? new THREE.Vector3().randomDirection() : new THREE.Vector3(Math.random() - .5, Math.random() - .5, Math.random() - .5).normalize();
+    const v = new THREE.Vector3(Math.random() - .5, Math.random() - .5, Math.random() - .5).normalize();
     v.multiplyScalar(90); if (v.y < -10) v.y = -v.y;
     sp.push(v.x, v.y, v.z);
   }
@@ -305,17 +351,15 @@
     objs.push({ kind, body, mesh, gone: false, born: 0 });
   }
 
-  const ballGeo = new THREE.SphereGeometry(0.34, 24, 16);
+  const ballGeo = new THREE.SphereGeometry(0.32, 24, 16);
   function fireBall(origin, dir) {
     const body = new CANNON.Body({ mass: 5 });
-    body.addShape(new CANNON.Sphere(0.34));
+    body.addShape(new CANNON.Sphere(0.32));
     body.position.set(origin.x, origin.y, origin.z);
     body.velocity.set(dir.x * BALL_SPEED, dir.y * BALL_SPEED, dir.z * BALL_SPEED);
     body.linearDamping = 0.01;
     body.allowSleep = false;
-    const o = { kind: 'ball', body, mesh: new THREE.Mesh(ballGeo, MATS.ball), gone: false, born: clock, floating: true };
-    // the ball flies straight until it first touches something, so it lands where you tapped
-    body.addEventListener('collide', () => { o.floating = false; });
+    const o = { kind: 'ball', body, mesh: new THREE.Mesh(ballGeo, MATS.ball), gone: false, born: clock };
     o.mesh.castShadow = true;
     world.addBody(body);
     scene.add(o.mesh);
@@ -328,23 +372,26 @@
   }
 
   // ---------- levels ----------
+  // par: shots for 3 stars. Every island gives par + 2 shots; 2 stars (at most par + 1) open the next one.
+  // sides: cannon positions allowed, in eighths of a turn; 0 is the front.
+  const ALL = [0, 1, 2, 3, 4, 5, 6, 7];
   const LEVELS = [
     {
-      name: 'Разминка', shots: 3, guards: false,
+      name: 'Разминка', par: 1, sides: ALL, guards: false,
       task: 'Сбей красный куб с острова. Он стоит на башне из брусков.',
       build() { for (let i = 0; i < 3; i++) B('wood', 0, i, 0); B('red', 0, 3, 0); },
     },
     {
-      name: 'За стеной', shots: 3, guards: false,
-      task: 'Красный куб спрятался за деревянной стеной.',
+      name: 'Навесом', par: 1, sides: [0], guards: false,
+      task: 'Пушка стоит только спереди, а красный спрятан за стеной. Стреляй по дуге.',
       build() {
-        for (let x = -2; x <= 2; x++) for (let y = 0; y < 3; y++) B('wood', x * 1.01, y, 1.2);
-        for (let y = 0; y < 2; y++) B('wood', 0, y, -1.6);
-        B('red', 0, 2, -1.6);
+        for (let x = -2; x <= 2; x++) for (let y = 0; y < 3; y++) B('wood', x * 1.01, y, 1.4);
+        B('wood', 0, 0, -3.0, 0.8, 1.5, 0.8);
+        B('red', 0, 1.5, -3.0, 0.8, 0.8, 0.8);
       },
     },
     {
-      name: 'Не задень синего', shots: 3, guards: true,
+      name: 'Не задень синего', par: 2, sides: ALL, guards: true,
       task: 'Сбей оба красных. Синий куб посередине должен остаться на острове.',
       build() {
         for (const x of [-2.6, 0, 2.6]) { B('wood', x, 0, 0); B('wood', x, 1, 0); }
@@ -352,30 +399,31 @@
       },
     },
     {
-      name: 'Пирамида', shots: 2, guards: true,
+      name: 'Пирамида', par: 2, sides: ALL, guards: true,
       task: 'Красные — в основании пирамиды. Выбей их, а синие пусть стоят.',
       build() {
         const s = 1.01;
-        [-1.5, -0.5, 0.5, 1.5].forEach((x, i) => B(i === 0 || i === 3 ? 'red' : 'wood', x * s, 0, 0));
-        [-1, 0, 1].forEach(x => B('wood', x * s, 1, 0));
-        [-0.5, 0.5].forEach(x => B('wood', x * s, 2, 0));
-        B('blue', 0, 3, 0);
+        const z = -2.6;
+        [-1.5, -0.5, 0.5, 1.5].forEach((x, i) => B(i === 0 || i === 3 ? 'red' : 'wood', x * s, 0, z));
+        [-1, 0, 1].forEach(x => B('wood', x * s, 1, z));
+        [-0.5, 0.5].forEach(x => B('wood', x * s, 2, z));
+        B('blue', 0, 3, z);
         B('blue', -3.2, 0, 2.6); B('blue', 3.2, 0, 2.6);
+        B('blue', -3.6, 0, -3.6, 0.7, 0.7, 0.7); B('blue', 3.6, 0, -3.6, 0.7, 0.7, 0.7);
       },
     },
     {
-      name: 'Домино', shots: 1, guards: true,
-      task: 'Одно ядро. Красный стоит на самом краю за рядом костяшек.',
+      name: 'Домино', par: 1, sides: [0], guards: true,
+      task: 'Красный стоит на краю за рядом костяшек. Синие по бокам трогать нельзя.',
       build() {
-        for (let i = 0; i < 8; i++) B('wood', 0, 0, 3.2 - i * 0.9, 1.2, 1.8, 0.24);
+        for (let i = 0; i < 8; i++) B('wood', 0, 0, 3.2 - i * 0.9, 0.9, 1.8, 0.24);
         B('wood', 0, 0, -3.9, 1, 0.8, 1);
         B('red', 0, 0.8, -3.9, 0.8, 0.8, 0.8);
         B('blue', -2.2, 0, 1.5, 0.9, 0.9, 0.9); B('blue', 2.2, 0, 1.5, 0.9, 0.9, 0.9);
-        B('blue', -2.2, 0, -1.5, 0.9, 0.9, 0.9); B('blue', 2.2, 0, -1.5, 0.9, 0.9, 0.9);
       },
     },
     {
-      name: 'Башня', shots: 2, guards: true, camY: 2.6,
+      name: 'Башня', par: 2, sides: [0, 4], guards: true, camY: 2.4,
       task: 'Два красных спрятаны внутри башни. Синий на крыше не должен улететь.',
       build() {
         for (let i = 0; i < 4; i++) {
@@ -389,50 +437,79 @@
       },
     },
   ];
+  const shotsFor = L => L.par + 2;
+  const starsFor = (L, used) => used <= L.par ? 3 : used === L.par + 1 ? 2 : 1;
 
   // ---------- state ----------
   let best = [];
   try { best = JSON.parse(localStorage.getItem('knockoff-best') || '[]') || []; } catch (e) { best = []; }
   function saveBest() { try { localStorage.setItem('knockoff-best', JSON.stringify(best)); } catch (e) {} }
+  const unlocked = i => i === 0 || (best[i - 1] || 0) >= NEED_STARS;
 
   let cur = 0, shotsLeft = 0, state = 'play', lastShot = -99, winAt = 0, clock = 0;
+  const aim = { side: 0, yaw: 0, pitch: 0.18, zoom: 1 };
+  const camPos = new THREE.Vector3(0, 5, 16), camLook = new THREE.Vector3(0, 1, 0);
+  const cannonPos = new THREE.Vector3();
   const $ = id => document.getElementById(id);
+
+  function sideAngle(k) { return k * Math.PI / 4; }
+  function aimDir() {
+    const a = sideAngle(aim.side);
+    const f = new THREE.Vector3(-Math.sin(a), 0, -Math.cos(a));       // toward the island
+    const r = new THREE.Vector3(-f.z, 0, f.x);                           // screen right
+    const h = f.multiplyScalar(Math.cos(aim.yaw)).add(r.multiplyScalar(Math.sin(aim.yaw)));
+    return h.multiplyScalar(Math.cos(aim.pitch)).add(new THREE.Vector3(0, Math.sin(aim.pitch), 0)).normalize();
+  }
+  function muzzlePoint(dir) { return cannonPos.clone().add(new THREE.Vector3(0, 0.35, 0)).add(dir.clone().multiplyScalar(1.4)); }
 
   function renderLevelButtons() {
     const wrap = $('levels'); wrap.innerHTML = '';
     LEVELS.forEach((L, i) => {
       const b = document.createElement('button');
+      const open = unlocked(i);
       b.type = 'button'; b.className = 'lvl' + (i === cur ? ' on' : '');
       b.id = 'lvl-' + i;
-      b.title = L.name;
-      b.innerHTML = (i + 1) + '<span class="st">' + '★'.repeat(best[i] || 0) + '&nbsp;</span>';
+      b.disabled = !open;
+      b.title = open ? L.name : 'Закрыт: нужно ' + NEED_STARS + '★ на острове ' + i;
+      b.innerHTML = (i + 1) + '<span class="st">' + (open ? '★'.repeat(best[i] || 0) : 'закр') + '&nbsp;</span>';
       b.addEventListener('click', () => loadLevel(i));
       wrap.appendChild(b);
     });
   }
   function renderShots() {
-    const L = LEVELS[cur], wrap = $('shots'); wrap.innerHTML = '';
-    for (let i = 0; i < L.shots; i++) {
+    const L = LEVELS[cur], wrap = $('shots'), total = shotsFor(L); wrap.innerHTML = '';
+    for (let i = 0; i < total; i++) {
       const d = document.createElement('i');
-      d.className = 'shot' + (i >= shotsLeft ? ' used' : '');
+      d.className = 'shot' + (i >= L.par ? ' spare' : '') + (i < total - shotsLeft ? ' used' : '');
       wrap.appendChild(d);
     }
+    $('fire').disabled = state !== 'play' || shotsLeft <= 0;
+  }
+  function renderSides() {
+    const L = LEVELS[cur], many = L.sides.length > 1;
+    $('sideL').disabled = $('sideR').disabled = !many;
+    $('hint').textContent = many
+      ? 'Тяни по экрану — наводка · ◀ ▶ — перевезти пушку · Огонь или пробел — выстрел'
+      : 'Тяни по экрану — наводка · Огонь или пробел — выстрел · пушка здесь одна';
   }
 
   function loadLevel(i) {
+    if (!unlocked(i)) return;
     cur = i;
     const L = LEVELS[i];
     clearLevel();
     L.build();
-    shotsLeft = L.shots; state = 'play'; lastShot = -99;
-    cam.target.y = L.camY || 1.2;
+    shotsLeft = shotsFor(L); state = 'play'; lastShot = -99;
+    aim.side = L.sides[0]; aim.yaw = 0; aim.pitch = 0.18;
     $('lvlNum').textContent = 'Остров ' + (i + 1) + ' из ' + LEVELS.length;
     $('lvlName').textContent = L.name;
     $('lvlTask').textContent = L.task;
+    $('lvlPar').textContent = '3★ — за ' + L.par + ' ' + plural(L.par) + ' · ' + NEED_STARS + '★ открывают следующий остров';
     $('guardLegend').hidden = !L.guards;
     $('veil').hidden = true;
-    renderShots(); renderLevelButtons();
+    renderShots(); renderLevelButtons(); renderSides();
   }
+  function plural(n) { return n === 1 ? 'ядро' : n < 5 ? 'ядра' : 'ядер'; }
 
   let toastTimer;
   function toast(msg) {
@@ -443,77 +520,103 @@
   function finish(won, reason) {
     state = 'done';
     const L = LEVELS[cur];
+    const last = cur === LEVELS.length - 1;
     $('resEyebrow').textContent = 'Остров ' + (cur + 1) + ' · ' + L.name;
+    $('resNext').hidden = true;
+    $('resRetry').className = '';
     if (won) {
-      const stars = Math.min(3, 1 + shotsLeft);
+      const used = shotsFor(L) - shotsLeft;
+      const stars = starsFor(L, used);
       best[cur] = Math.max(best[cur] || 0, stars); saveBest();
-      $('resTitle').textContent = cur === LEVELS.length - 1 ? 'Все острова чисты' : 'Остров чист';
       $('resStars').innerHTML = '★'.repeat(stars) + '<span class="off">' + '★'.repeat(3 - stars) + '</span>';
-      const used = L.shots - shotsLeft;
-      $('resText').textContent = 'Потрачено ядер: ' + used + ' из ' + L.shots + '.' + (stars < 3 ? ' Попробуй меньшим числом.' : '');
-      $('resNext').hidden = false;
-      $('resNext').textContent = cur === LEVELS.length - 1 ? 'К первому' : 'Дальше';
+      const passed = best[cur] >= NEED_STARS;
+      if (stars >= NEED_STARS) {
+        $('resTitle').textContent = last ? 'Все острова чисты' : 'Остров чист';
+        $('resText').textContent = 'Ядер потрачено: ' + used + '.' +
+          (stars < 3 ? ' На 3★ хватит ' + L.par + '.' : ' Лучше не бывает.');
+      } else {
+        $('resTitle').textContent = 'Чисто, но расточительно';
+        $('resText').textContent = 'Ядер потрачено: ' + used + '. Для следующего острова нужно ' + NEED_STARS +
+          '★ — уложись в ' + (L.par + 1) + ' ' + plural(L.par + 1) + '.';
+      }
+      if (passed) {
+        $('resNext').hidden = false;
+        $('resNext').textContent = last ? 'К первому' : 'Дальше';
+      } else {
+        $('resRetry').className = 'primary';
+      }
     } else {
       $('resTitle').textContent = 'Не вышло';
       $('resStars').innerHTML = '';
       $('resText').textContent = reason;
-      $('resNext').hidden = true;
+      $('resRetry').className = 'primary';
     }
     $('veil').hidden = false;
-    renderLevelButtons();
-    (won ? $('resNext') : $('resRetry')).focus({ preventScroll: true });
+    renderShots(); renderLevelButtons();
+    ($('resNext').hidden ? $('resRetry') : $('resNext')).focus({ preventScroll: true });
   }
 
+  // ---------- input ----------
+  function shoot() {
+    if (state !== 'play') return;
+    if (shotsLeft <= 0) { toast('Ядра закончились'); return; }
+    const dir = aimDir();
+    fireBall(muzzlePoint(dir), dir);
+    shotsLeft--; lastShot = clock;
+    barrel.position.y = 0.25;  // recoil, eased back in the loop
+    renderShots();
+  }
+  function moveSide(step) {
+    const L = LEVELS[cur];
+    if (L.sides.length < 2 || state === 'done') return;
+    const idx = L.sides.indexOf(aim.side);
+    aim.side = L.sides[(idx + step + L.sides.length) % L.sides.length];
+    aim.yaw = 0;
+  }
+
+  $('fire').addEventListener('click', shoot);
+  $('sideL').addEventListener('click', () => moveSide(-1));
+  $('sideR').addEventListener('click', () => moveSide(1));
   $('restart').addEventListener('click', () => loadLevel(cur));
   $('resRetry').addEventListener('click', () => loadLevel(cur));
   $('resNext').addEventListener('click', () => loadLevel((cur + 1) % LEVELS.length));
-  window.addEventListener('keydown', e => { if (e.key === 'r' || e.key === 'к') loadLevel(cur); });
+  window.addEventListener('keydown', e => {
+    if (e.target.tagName === 'BUTTON' && (e.key === ' ' || e.key === 'Enter')) return;
+    if (e.key === ' ') { e.preventDefault(); shoot(); }
+    else if (e.key === 'r' || e.key === 'к') loadLevel(cur);
+    else if (e.key === 'ArrowLeft') aim.yaw = Math.max(-0.9, aim.yaw - 0.02);
+    else if (e.key === 'ArrowRight') aim.yaw = Math.min(0.9, aim.yaw + 0.02);
+    else if (e.key === 'ArrowUp') aim.pitch = Math.min(1.2, aim.pitch + 0.02);
+    else if (e.key === 'ArrowDown') aim.pitch = Math.max(-0.35, aim.pitch - 0.02);
+    else if (e.key === 'q' || e.key === 'й') moveSide(-1);
+    else if (e.key === 'e' || e.key === 'у') moveSide(1);
+  });
 
-  // ---------- input ----------
-  const ray = new THREE.Raycaster();
-  const ndc = new THREE.Vector2();
-  function shoot(cx, cy) {
-    if (state !== 'play') return;
-    if (shotsLeft <= 0) { toast('Ядра закончились'); return; }
-    const r = canvas.getBoundingClientRect();
-    ndc.set(((cx - r.left) / r.width) * 2 - 1, -((cy - r.top) / r.height) * 2 + 1);
-    ray.setFromCamera(ndc, camera);
-    const dir = ray.ray.direction.clone().normalize();
-    const origin = camera.position.clone().add(dir.clone().multiplyScalar(1.2));
-    fireBall(origin, dir);
-    shotsLeft--; lastShot = clock;
-    renderShots();
-  }
-
+  // drag anywhere to aim: sideways turns the barrel, up and down raise and lower it
   let drag = null;
   canvas.addEventListener('pointerdown', e => {
-    drag = { sx: e.clientX, sy: e.clientY, x: e.clientX, y: e.clientY, moved: false };
+    drag = { x: e.clientX, y: e.clientY };
     try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
   });
   canvas.addEventListener('pointermove', e => {
     if (!drag) return;
-    if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 7) drag.moved = true;
-    if (drag.moved) {
-      cam.theta -= (e.clientX - drag.x) * 0.0065;
-      cam.phi = Math.min(1.25, Math.max(0.08, cam.phi + (e.clientY - drag.y) * 0.005));
-    }
+    const k = e.pointerType === 'touch' ? 0.0045 : 0.003;
+    aim.yaw = Math.min(0.9, Math.max(-0.9, aim.yaw + (e.clientX - drag.x) * k));
+    aim.pitch = Math.min(1.2, Math.max(-0.35, aim.pitch - (e.clientY - drag.y) * k));
     drag.x = e.clientX; drag.y = e.clientY;
   });
-  canvas.addEventListener('pointerup', e => {
-    if (drag && !drag.moved) shoot(e.clientX, e.clientY);
-    drag = null;
-  });
+  canvas.addEventListener('pointerup', () => { drag = null; });
   canvas.addEventListener('pointercancel', () => { drag = null; });
   canvas.addEventListener('wheel', e => {
     e.preventDefault();
-    cam.r = Math.min(26, Math.max(8, cam.r * (1 + Math.sign(e.deltaY) * 0.08)));
+    aim.zoom = Math.min(1.8, Math.max(0.6, aim.zoom * (1 + Math.sign(e.deltaY) * 0.08)));
   }, { passive: false });
 
   function resize() {
     const w = window.innerWidth, h = window.innerHeight;
     renderer.setSize(w, h, false);
     camera.aspect = w / h;
-    camera.fov = w < h ? 62 : 50;
+    camera.fov = w < h ? 66 : 50;
     camera.updateProjectionMatrix();
   }
   window.addEventListener('resize', resize);
@@ -521,6 +624,7 @@
   // ---------- loop ----------
   const STEP = 1 / 60;
   let acc = 0, prev = performance.now();
+  let sideNow = 0;  // smoothly follows aim.side, in radians
 
   function settled() {
     return objs.every(o => o.gone || o.body.sleepState === CANNON.Body.SLEEPING ||
@@ -533,7 +637,7 @@
     const blueDown = live.some(o => o.kind === 'blue' && o.body.position.y < FALL_Y);
     if (blueDown) { finish(false, 'Синий куб упал с острова. Бей точнее.'); return; }
     const redsLeft = live.filter(o => o.kind === 'red' && o.body.position.y >= FALL_Y).length;
-    if (state === 'play' && redsLeft === 0) { state = 'checking'; winAt = clock + 1.0; return; }
+    if (state === 'play' && redsLeft === 0) { state = 'checking'; winAt = clock + 1.0; renderShots(); return; }
     if (state === 'checking') { if (clock >= winAt) finish(true); return; }
     const since = clock - lastShot;
     if (shotsLeft === 0 && since > 1.5 && (settled() || since > 8)) {
@@ -541,11 +645,50 @@
     }
   }
 
+  function updateCannonAndCamera(dt) {
+    const target = sideAngle(aim.side);
+    let d = target - sideNow;
+    d = Math.atan2(Math.sin(d), Math.cos(d));
+    sideNow += d * Math.min(1, dt * 6);
+    cannonPos.set(Math.sin(sideNow) * CANNON_R, CANNON_Y, Math.cos(sideNow) * CANNON_R);
+    cannon.position.copy(cannonPos);
+
+    const dir = aimDir();
+    // while the cannon is still rolling to a new side, aim from where it is now
+    if (Math.abs(d) > 0.01) {
+      const f = new THREE.Vector3(-Math.sin(sideNow), 0, -Math.cos(sideNow));
+      const r = new THREE.Vector3(-f.z, 0, f.x);
+      const h = f.multiplyScalar(Math.cos(aim.yaw)).add(r.multiplyScalar(Math.sin(aim.yaw)));
+      dir.copy(h.multiplyScalar(Math.cos(aim.pitch)).add(new THREE.Vector3(0, Math.sin(aim.pitch), 0)).normalize());
+    }
+    barrel.lookAt(cannonPos.clone().add(new THREE.Vector3(0, 0.35, 0)).add(dir));
+    barrel.position.y += (0.35 - barrel.position.y) * Math.min(1, dt * 8);
+
+    // aiming dots
+    const p0 = muzzlePoint(dir), v = dir.clone().multiplyScalar(BALL_SPEED);
+    const showDots = state === 'play' && shotsLeft > 0;
+    dots.forEach((m, i) => {
+      const t = (i + 1) / DOTS * PREVIEW_T;
+      m.visible = showDots;
+      m.position.set(p0.x + v.x * t, p0.y + v.y * t - 0.5 * G * t * t, p0.z + v.z * t);
+      m.scale.setScalar(1 - i / DOTS * 0.6);
+    });
+
+    // camera sits behind and above the cannon, looking across the island
+    const out = new THREE.Vector3(Math.sin(sideNow), 0, Math.cos(sideNow));
+    const L = LEVELS[cur];
+    const want = cannonPos.clone().add(out.multiplyScalar(5.5 * aim.zoom)).add(new THREE.Vector3(0, 2.6 + 1.6 * aim.zoom, 0));
+    const look = new THREE.Vector3(0, L.camY || 1.0, 0).lerp(cannonPos.clone().add(dir.clone().multiplyScalar(9)), 0.35);
+    const k = Math.min(1, dt * 5);
+    camPos.lerp(want, k); camLook.lerp(look, k);
+    camera.position.copy(camPos);
+    camera.lookAt(camLook);
+  }
+
   function frame(now) {
     const dt = Math.min(0.1, (now - prev) / 1000); prev = now;
     acc += dt;
     while (acc >= STEP) {
-      for (const o of objs) if (o.floating) o.body.force.y += o.body.mass * G;
       world.step(STEP);
       clock += STEP;
       acc -= STEP;
@@ -561,20 +704,20 @@
     }
     for (const m of pebbles) { m.position.y = m.userData.y + Math.sin(clock * 0.5 + m.userData.k) * 0.4; m.rotation.y += 0.002; }
     judge();
-    placeCamera();
+    updateCannonAndCamera(dt);
     renderer.render(scene, camera);
     requestAnimationFrame(frame);
   }
 
   function start(data) {
     let lvl = data && Number.isInteger(data.level) ? data.level : 0;
-    if (lvl < 0 || lvl >= LEVELS.length) lvl = 0;
-    if (data && data.cam) Object.assign(cam, { theta: data.cam.theta, phi: data.cam.phi, r: data.cam.r });
+    if (lvl < 0 || lvl >= LEVELS.length || !unlocked(lvl)) lvl = 0;
     resize();
     loadLevel(lvl);
+    sideNow = sideAngle(aim.side);
     requestAnimationFrame(t => { prev = t; frame(t); });
   }
-  window.claude?.hot?.snapshot?.(() => ({ level: cur, cam: { theta: cam.theta, phi: cam.phi, r: cam.r } }));
+  window.claude?.hot?.snapshot?.(() => ({ level: cur }));
   window.claude?.hot?.ready ? window.claude.hot.ready(start) : start(window.claude?.hot?.data ?? {});
 })();
 </script>
