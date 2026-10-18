@@ -14,3 +14,11 @@ Remember, it's self-paced so feel free to take a break! ☕️
 
 &copy; 2025 GitHub &bull; [Code of Conduct](https://www.contributor-covenant.org/version/2/1/code_of_conduct/code_of_conduct.md) &bull; [MIT License](https://gh.io/mit)
 
+
+## Битва Башен
+
+3D карточная стратегия в духе Clash Royale: `tower-battle/index.html`. Откройте файл в браузере — сборка не нужна (Three.js грузится с CDN).
+
+- 8 карт в колоде, 4 в руке, эликсир до 10, двойной эликсир в последнюю минуту и овертайм.
+- Войска идут по двум линиям через мосты, атакуют ближайшие цели; гигант бьёт только башни, дракончик летает и бьёт по площади.
+- Компьютерный соперник с тремя уровнями сложности.
