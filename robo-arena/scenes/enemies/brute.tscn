@@ -1,0 +1,147 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/enemies/enemy.gd" id="1_enemy"]
+
+[ext_resource type="PackedScene" path="res://scenes/enemies/projectile.tscn" id="2_projectile"]
+
+[ext_resource type="Material" path="res://materials/robot_dark.tres" id="3_robot_dark"]
+
+[ext_resource type="Material" path="res://materials/brute_armor.tres" id="4_brute_armor"]
+
+[ext_resource type="Material" path="res://materials/eye_purple.tres" id="5_eye_purple"]
+
+[ext_resource type="Material" path="res://materials/robot_metal.tres" id="6_robot_metal"]
+
+[ext_resource type="AudioStream" path="res://sounds/enemy_shot.wav" id="7_enemy_shot"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.7
+height = 2.6
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(0.35, 1.1, 0.4)
+material = ExtResource("3_robot_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.35, 1.1, 0.4)
+material = ExtResource("3_robot_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(1.25, 0.95, 0.8)
+material = ExtResource("4_brute_armor")
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(0.4, 0.3, 0.05)
+material = ExtResource("5_eye_purple")
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.55, 0.4, 0.55)
+material = ExtResource("4_brute_armor")
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(0.45, 0.1, 0.05)
+material = ExtResource("5_eye_purple")
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(0.45, 0.35, 0.6)
+material = ExtResource("6_robot_metal")
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(0.45, 0.35, 0.6)
+material = ExtResource("6_robot_metal")
+
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
+size = Vector3(0.3, 0.3, 0.9)
+material = ExtResource("3_robot_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(0.2, 0.2, 0.05)
+material = ExtResource("5_eye_purple")
+
+[node name="Brute" type="CharacterBody3D" groups=["enemies"]]
+collision_layer = 4
+collision_mask = 7
+script = ExtResource("1_enemy")
+max_health = 260
+move_speed = 2.2
+ranged = true
+attack_range = 26.0
+preferred_distance = 14.0
+attack_damage = 12
+attack_cooldown = 2.2
+projectile_scene = ExtResource("2_projectile")
+projectile_speed = 17.0
+projectiles_per_attack = 3
+projectile_spread_deg = 7.0
+aim_error = 0.2
+head_height = 2.15
+score_value = 400
+drop_chance = 0.9
+turn_speed = 4.0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 1.3, 0.0)
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+
+[node name="LegL" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(-0.3, 0.55, 0.0)
+
+[node name="LegR" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.3, 0.55, 0.0)
+
+[node name="Torso" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(0.0, 1.6, 0.0)
+
+[node name="Core" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.0, 1.65, -0.42)
+
+[node name="Head" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_6")
+position = Vector3(0.0, 2.3, 0.0)
+
+[node name="Visor" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(0.0, 2.32, -0.29)
+
+[node name="ShoulderL" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(-0.85, 2.0, 0.0)
+
+[node name="ShoulderR" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_9")
+position = Vector3(0.85, 2.0, 0.0)
+
+[node name="Cannon" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(0.85, 1.5, -0.3)
+
+[node name="CannonTip" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_11")
+position = Vector3(0.85, 1.5, -0.77)
+
+[node name="Muzzle" type="Marker3D" parent="Model"]
+position = Vector3(0.85, 1.5, -0.85)
+
+[node name="EyeLight" type="OmniLight3D" parent="Model"]
+position = Vector3(0.0, 2.32, -0.6)
+light_color = Color(0.75, 0.2, 1.0, 1.0)
+light_energy = 1.5
+omni_range = 2.5
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.8
+target_desired_distance = 1.0
+height = 2.6
+radius = 0.7
+
+[node name="AttackSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("7_enemy_shot")
+position = Vector3(0.0, 1.82, 0.0)
+unit_size = 8.0
+max_polyphony = 3

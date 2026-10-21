@@ -1,0 +1,54 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/pickups/pickup.gd" id="1_pickup"]
+
+[ext_resource type="Material" path="res://materials/medkit_white.tres" id="2_medkit_white"]
+
+[ext_resource type="Material" path="res://materials/medkit_red.tres" id="3_medkit_red"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_1"]
+radius = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(0.55, 0.38, 0.35)
+material = ExtResource("2_medkit_white")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.32, 0.09, 0.37)
+material = ExtResource("3_medkit_red")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.09, 0.3, 0.37)
+material = ExtResource("3_medkit_red")
+
+[node name="HealthPickup" type="Area3D"]
+collision_layer = 16
+collision_mask = 2
+monitorable = false
+script = ExtResource("1_pickup")
+kind = 0
+amount = 35
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.4, 0.0)
+shape = SubResource("SphereShape3D_1")
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Case" type="MeshInstance3D" parent="Visual"]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.4, 0.0)
+
+[node name="CrossH" type="MeshInstance3D" parent="Visual"]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.0, 0.4, 0.0)
+
+[node name="CrossV" type="MeshInstance3D" parent="Visual"]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(0.0, 0.4, 0.0)
+
+[node name="Light" type="OmniLight3D" parent="."]
+position = Vector3(0.0, 0.6, 0.0)
+light_color = Color(1.0, 0.3, 0.3, 1.0)
+light_energy = 1.2
+omni_range = 3.0
