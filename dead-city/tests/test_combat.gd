@@ -72,7 +72,7 @@ func _run() -> void:
 	var w := dummy(WALKER, Vector3(0, 0, -1.4))
 	var far := dummy(WALKER, Vector3(6, 0, -14), false)
 	far.sight_range = 3.0  # can only be alerted by noise
-	await aim_at(w.global_position + Vector3.UP * 1.1)
+	await aim_at(w.global_position + Vector3.UP * 0.8)
 	knife._handle_input(true, true)
 	await get_tree().create_timer(0.5).timeout
 	check(w.health == 70 - 45, "knife hit for 45 (health %d)" % w.health)
@@ -84,12 +84,12 @@ func _run() -> void:
 	# Pistol headshot.
 	var pistol := await equip("pistol")
 	var target := dummy(WALKER, Vector3(0, 0, -7))
-	await aim_at(target.global_position + Vector3.UP * 1.68)
+	await aim_at(target.global_position + Vector3.UP * 1.5)
 	var ammo := pistol.ammo
 	pistol._handle_input(true, true)
 	await frames(2)
 	check(pistol.ammo == ammo - 1, "pistol used one round")
-	check(target.state == Zombie.State.DEAD and not target.head.visible, "pistol headshot kills and removes the head")
+	check(target.state == Zombie.State.DEAD and target._pose.head_hidden, "pistol headshot kills and removes the head")
 	await frames(10)
 	check(far.state == Zombie.State.CHASE, "gunshot alerted the distant walker")
 	far.queue_free()
@@ -97,7 +97,7 @@ func _run() -> void:
 	# Rifle body shots.
 	var rifle := await equip("rifle")
 	target = dummy(WALKER, Vector3(0, 0, -8))
-	await aim_at(target.global_position + Vector3.UP * 1.1)
+	await aim_at(target.global_position + Vector3.UP * 0.8)
 	(rifle as Gun)._cooldown = 0.0
 	rifle._handle_input(true, true)
 	await frames(2)

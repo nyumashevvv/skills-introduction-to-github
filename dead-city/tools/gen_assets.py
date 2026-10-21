@@ -1,4 +1,5 @@
 """Generates materials and every non-level scene of Dead City. Run from the project root."""
+import math
 import zlib, struct
 from tscn import *
 
@@ -93,76 +94,8 @@ def mats():
 
 
 # ------------------------------------------------------------------ weapons
-def hands(s, parent, right, left, right_sleeve, left_sleeve):
-    """Gloved hands at given positions plus sleeves reaching off-screen."""
-    for name, (size, pos, rot) in (('HandR', right), ('HandL', left)):
-        if pos is not None:
-            s.box(name, parent, size, pos, 'glove', rot=rot, cast_shadow=0)
-    for name, (pos, rot) in (('SleeveR', right_sleeve), ('SleeveL', left_sleeve)):
-        if pos is not None:
-            s.box(name, parent, (0.085, 0.085, 0.42), pos, 'sleeve', rot=rot, cast_shadow=0)
-
-
-def flash(s, parent, size=0.18, light=4.0):
-    s.node('Flash', 'Node3D', parent)
-    quad = s.sub_res('QuadMesh', material=s.mat('muzzle_flash'), size=V2(size, size))
-    s.node('Quad', 'MeshInstance3D', parent + '/Flash', mesh=quad, cast_shadow=0)
-    s.node('Quad2', 'MeshInstance3D', parent + '/Flash', mesh=quad, cast_shadow=0, rotation=V3(0, 0, 0.7854))
-    side = s.sub_res('QuadMesh', material=s.mat('muzzle_flash'), size=V2(size * 0.6, size * 1.6))
-    s.node('Side', 'MeshInstance3D', parent + '/Flash', mesh=side, cast_shadow=0, rotation=V3(RX, 0, 0),
-           position=V3(0, 0, -size * 0.5))
-    s.node('Light', 'OmniLight3D', parent + '/Flash', light_color=C(1, 0.7, 0.35), light_energy=light, omni_range=7.0)
-
-
-def save_viewmodel(s, path):
-    """Weapon meshes go on render layer 2: the flashlight skips them, a fill light only lights them."""
-    s.save(path)
-    text = open(path).read().replace('cast_shadow = 0\n', 'cast_shadow = 0\nlayers = 2\n')
-    open(path, 'w').write(text)
-
-
 def weapon_root(s, script, props):
     s.node(props.pop('node_name'), 'Node3D', script=s.ext_res('Script', f'res://scripts/weapons/{script}.gd'), **props)
-
-
-def pistol_parts(s, p):
-    s.box('Slide', p, (0.03, 0.032, 0.19), (0, 0.026, -0.02), 'gun_steel', cast_shadow=0)
-    s.box('SlideSerrations', p, (0.031, 0.02, 0.04), (0, 0.026, 0.05), 'gun_black', cast_shadow=0)
-    s.box('Frame', p, (0.028, 0.022, 0.16), (0, 0.0, -0.01), 'gun_black', cast_shadow=0)
-    s.cyl('BarrelTip', p, 0.007, 0.012, (0, 0.03, -0.116), 'gun_black', rot=(RX, 0, 0), cast_shadow=0)
-    s.box('Grip', p, (0.03, 0.1, 0.045), (0, -0.05, 0.055), 'gun_black', rot=(-0.22, 0, 0), cast_shadow=0)
-    s.box('TriggerGuard', p, (0.008, 0.006, 0.045), (0, -0.026, -0.0), 'gun_black', cast_shadow=0)
-    s.box('SightFront', p, (0.005, 0.008, 0.006), (0, 0.046, -0.105), 'gun_black', cast_shadow=0)
-    s.box('SightRear', p, (0.022, 0.008, 0.008), (0, 0.046, 0.065), 'gun_black', cast_shadow=0)
-
-
-def rifle_parts(s, p):
-    s.box('Receiver', p, (0.048, 0.07, 0.3), (0, 0, 0), 'gun_steel', cast_shadow=0)
-    s.box('DustCover', p, (0.042, 0.022, 0.25), (0, 0.044, 0.015), 'gun_steel', cast_shadow=0)
-    s.cyl('Barrel', p, 0.011, 0.36, (0, 0.012, -0.32), 'gun_black', rot=(RX, 0, 0), cast_shadow=0)
-    s.cyl('GasTube', p, 0.01, 0.2, (0, 0.042, -0.24), 'gun_steel', rot=(RX, 0, 0), cast_shadow=0)
-    s.box('Handguard', p, (0.054, 0.05, 0.17), (0, 0.004, -0.235), 'gun_wood', cast_shadow=0)
-    s.box('UpperGuard', p, (0.04, 0.026, 0.16), (0, 0.045, -0.235), 'gun_wood', cast_shadow=0)
-    s.box('FrontSight', p, (0.012, 0.045, 0.012), (0, 0.04, -0.47), 'gun_black', cast_shadow=0)
-    s.cyl('MuzzleBrake', p, 0.015, 0.045, (0, 0.012, -0.52), 'gun_black', rot=(RX, 0, 0), cast_shadow=0)
-    s.box('RearSight', p, (0.03, 0.018, 0.04), (0, 0.06, -0.1), 'gun_black', cast_shadow=0)
-    s.box('Mag1', p, (0.034, 0.1, 0.065), (0, -0.075, -0.075), 'bakelite', rot=(0.15, 0, 0), cast_shadow=0)
-    s.box('Mag2', p, (0.034, 0.09, 0.062), (0, -0.155, -0.05), 'bakelite', rot=(0.45, 0, 0), cast_shadow=0)
-    s.box('Grip', p, (0.034, 0.09, 0.045), (0, -0.07, 0.085), 'bakelite', rot=(-0.3, 0, 0), cast_shadow=0)
-    s.box('TriggerGuard', p, (0.008, 0.006, 0.06), (0, -0.038, 0.035), 'gun_black', cast_shadow=0)
-    s.box('Stock', p, (0.044, 0.07, 0.2), (0, -0.02, 0.24), 'gun_wood', rot=(0.1, 0, 0), cast_shadow=0)
-
-
-def bazooka_parts(s, p):
-    s.cyl('Tube', p, 0.055, 0.8, (0, 0.05, -0.25), 'olive', rot=(RX, 0, 0), segments=20, cast_shadow=0)
-    s.cyl('RingFront', p, 0.066, 0.05, (0, 0.05, -0.63), 'gun_black', rot=(RX, 0, 0), segments=20, cast_shadow=0)
-    s.cyl('RingMid', p, 0.064, 0.04, (0, 0.05, -0.15), 'gun_black', rot=(RX, 0, 0), segments=20, cast_shadow=0)
-    s.cyl('RearFlare', p, 0.072, 0.1, (0, 0.05, 0.17), 'gun_black', rot=(RX, 0, 0), top=0.058, segments=20, cast_shadow=0)
-    s.box('GripFront', p, (0.032, 0.09, 0.045), (0, -0.04, -0.33), 'gun_black', rot=(0.2, 0, 0), cast_shadow=0)
-    s.box('GripRear', p, (0.032, 0.09, 0.045), (0, -0.04, -0.08), 'gun_black', rot=(-0.2, 0, 0), cast_shadow=0)
-    s.box('SightMount', p, (0.02, 0.05, 0.03), (-0.07, 0.07, -0.3), 'gun_black', cast_shadow=0)
-    s.box('Sight', p, (0.035, 0.035, 0.12), (-0.075, 0.105, -0.3), 'gun_black', cast_shadow=0)
-    s.box('Stripe', p, (0.118, 0.02, 0.05), (0, 0.05, -0.45), 'paint_yellow', cast_shadow=0)
 
 
 def rocket_parts(s, p, z=0.0):
@@ -170,13 +103,20 @@ def rocket_parts(s, p, z=0.0):
     s.cyl('Tip', p, 0.05, 0.12, (0, 0, z - 0.13), 'rocket_red', rot=(-RX, 0, 0), top=0.0, cast_shadow=0)
 
 
-def knife_parts(s, p):
-    s.cyl('Handle', p, 0.017, 0.12, (0, 0, 0.03), 'gun_black', rot=(RX, 0, 0), cast_shadow=0)
-    s.box('Guard', p, (0.06, 0.014, 0.012), (0, 0, -0.035), 'gun_steel', cast_shadow=0)
-    s.box('Blade', p, (0.006, 0.032, 0.16), (0, 0.004, -0.12), 'blade', cast_shadow=0)
-    s.box('Spine', p, (0.008, 0.008, 0.12), (0, 0.022, -0.1), 'gun_steel', cast_shadow=0)
-    s.box('Tip', p, (0.006, 0.022, 0.04), (0, 0.012, -0.21), 'blade', rot=(-0.45, 0, 0), cast_shadow=0)
-    s.cyl('Pommel', p, 0.019, 0.015, (0, 0, 0.095), 'gun_steel', rot=(RX, 0, 0), cast_shadow=0)
+def flash_node(s, parent, size=0.18, light=4.0):
+    """Muzzle flash; the Gun script moves it onto the model's Muzzle marker."""
+    s.node('Flash', 'Node3D', parent)
+    quad = s.sub_res('QuadMesh', material=s.mat('muzzle_flash'), size=V2(size, size))
+    s.node('Quad', 'MeshInstance3D', parent + '/Flash', mesh=quad, cast_shadow=0, layers=2)
+    s.node('Quad2', 'MeshInstance3D', parent + '/Flash', mesh=quad, cast_shadow=0, layers=2, rotation=V3(0, 0, 0.7854))
+    side = s.sub_res('QuadMesh', material=s.mat('muzzle_flash'), size=V2(size * 0.6, size * 1.6))
+    s.node('Side', 'MeshInstance3D', parent + '/Flash', mesh=side, cast_shadow=0, layers=2, rotation=V3(RX, 0, 0),
+           position=V3(0, 0, -size * 0.5))
+    s.node('Light', 'OmniLight3D', parent + '/Flash', light_color=C(1, 0.7, 0.35), light_energy=light, omni_range=7.0)
+
+
+def viewmodel(s, name):
+    s.node('Model', None, '.', instance=s.ext_res('PackedScene', f'res://models/weapons/{name}_fp.glb'))
 
 
 def weapons():
@@ -185,82 +125,58 @@ def weapons():
     weapon_root(s, 'gun', dict(node_name='Pistol', id=S('pistol'), display_name=S('Пистолет'), slot=2,
                 ammo_type=S('pistol'), magazine_size=12, max_reserve=96, reload_time=1.3, noise_radius=28.0,
                 damage=34, headshot_multiplier=3.0, fire_rate=6.0, base_spread_deg=0.25, move_spread_deg=1.8,
-                heat_spread_deg=0.8, recoil=0.018, kick_back=0.06, kick_up=0.12))
-    s.node('Model', 'Node3D', '.', position=V3(0.15, -0.16, -0.36))
-    pistol_parts(s, 'Model')
-    hands(s, 'Model', ((0.05, 0.075, 0.07), (0.004, -0.055, 0.06), (-0.22, 0, 0)),
-          ((0.05, 0.065, 0.075), (-0.03, -0.06, 0.05), (-0.2, 0.3, 0)),
-          ((0.03, -0.12, 0.28), (0.35, 0, 0)), ((-0.12, -0.15, 0.26), (0.35, -0.55, 0)))
-    s.node('Muzzle', 'Marker3D', 'Model', position=V3(0, 0.026, -0.125))
-    flash(s, 'Model/Muzzle', 0.13, 3.0)
+                heat_spread_deg=0.8, recoil=0.018, kick_back=0.05, kick_up=0.12))
+    viewmodel(s, 'pistol')
+    flash_node(s, 'Model', 0.13, 3.0)
     for name, snd, vol in [('ShootSound', 'pistol', -5.0), ('ReloadSound', 'reload_pistol', -4.0), ('EmptySound', 'empty', -4.0)]:
         s.node(name, 'AudioStreamPlayer', '.', stream=s.sound(snd), volume_db=vol, max_polyphony=3)
-    save_viewmodel(s, 'scenes/weapons/pistol.tscn')
+    s.save('scenes/weapons/pistol.tscn')
 
     # Rifle
     s = Scene()
     weapon_root(s, 'gun', dict(node_name='Rifle', id=S('rifle'), display_name=S('Автомат'), slot=3,
                 ammo_type=S('rifle'), magazine_size=30, max_reserve=210, reload_time=2.0, noise_radius=40.0,
                 automatic=True, damage=26, headshot_multiplier=2.5, fire_rate=10.0, base_spread_deg=0.35,
-                move_spread_deg=3.0, heat_spread_deg=1.6, recoil=0.009, kick_back=0.04, kick_up=0.035))
-    s.node('Model', 'Node3D', '.', position=V3(0.16, -0.19, -0.42))
-    rifle_parts(s, 'Model')
-    hands(s, 'Model', ((0.05, 0.075, 0.07), (0.004, -0.07, 0.09), (-0.3, 0, 0)),
-          ((0.065, 0.055, 0.09), (-0.012, -0.02, -0.24), (0, 0, 0.3)),
-          ((0.04, -0.14, 0.33), (0.3, 0, 0)), ((-0.12, -0.13, -0.02), (0.25, -0.5, 0)))
-    s.node('Muzzle', 'Marker3D', 'Model', position=V3(0, 0.012, -0.55))
-    flash(s, 'Model/Muzzle', 0.2, 4.0)
+                move_spread_deg=3.0, heat_spread_deg=1.6, recoil=0.009, kick_back=0.03, kick_up=0.03))
+    viewmodel(s, 'rifle')
+    flash_node(s, 'Model', 0.2, 4.0)
     for name, snd, vol in [('ShootSound', 'rifle', -6.0), ('ReloadSound', 'reload_rifle', -4.0), ('EmptySound', 'empty', -4.0)]:
         s.node(name, 'AudioStreamPlayer', '.', stream=s.sound(snd), volume_db=vol, max_polyphony=6)
-    save_viewmodel(s, 'scenes/weapons/rifle.tscn')
+    s.save('scenes/weapons/rifle.tscn')
 
-    # Bazooka
+    # RPG-7 (slot "bazooka")
     s = Scene()
-    weapon_root(s, 'launcher', dict(node_name='Bazooka', id=S('bazooka'), display_name=S('Базука'), slot=4,
+    weapon_root(s, 'launcher', dict(node_name='Bazooka', id=S('bazooka'), display_name=S('РПГ-7'), slot=4,
                 ammo_type=S('rocket'), magazine_size=1, max_reserve=8, reload_time=2.3, noise_radius=60.0,
                 equip_time=0.6, rocket_scene=s.ext_res('PackedScene', 'res://scenes/weapons/rocket.tscn')))
-    s.node('Model', 'Node3D', '.', position=V3(0.3, -0.25, -0.55))
-    bazooka_parts(s, 'Model')
-    s.node('LoadedRocket', 'Node3D', 'Model', position=V3(0, 0.05, -0.62))
-    rocket_parts(s, 'Model/LoadedRocket')
-    hands(s, 'Model', ((0.05, 0.075, 0.07), (0.004, -0.06, -0.08), (-0.2, 0, 0)),
-          ((0.05, 0.075, 0.07), (0.004, -0.06, -0.33), (0.2, 0, 0)),
-          ((0.03, -0.15, 0.16), (0.45, 0, 0)), ((-0.1, -0.15, -0.12), (0.4, -0.4, 0)))
-    s.node('Muzzle', 'Marker3D', 'Model', position=V3(0, 0.05, -0.72))
+    viewmodel(s, 'rpg')
     for name, snd, vol in [('ShootSound', 'rocket_launch', -2.0), ('ReloadSound', 'reload_rocket', -3.0), ('EmptySound', 'empty', -4.0)]:
         s.node(name, 'AudioStreamPlayer', '.', stream=s.sound(snd), volume_db=vol)
-    save_viewmodel(s, 'scenes/weapons/bazooka.tscn')
+    s.save('scenes/weapons/bazooka.tscn')
 
-    # Knife
+    # Knife (modelled in Blender by tools/blender/build_assets.py)
     s = Scene()
     weapon_root(s, 'melee_weapon', dict(node_name='Knife', id=S('knife'), display_name=S('Нож'), slot=1,
                 equip_time=0.2))
-    s.node('Model', 'Node3D', '.', position=V3(0.22, -0.24, -0.4))
-    s.node('Grip', 'Node3D', 'Model', rotation=V3(0.3, 0.45, -0.25), scale=V3(0.85, 0.85, 0.85))
-    knife_parts(s, 'Model/Grip')
-    hands(s, 'Model/Grip', ((0.055, 0.075, 0.09), (0, -0.005, 0.03), None), ((0, 0, 0), None, None),
-          ((0.02, -0.06, 0.25), (0.5, 0, 0)), (None, None))
+    viewmodel(s, 'knife')
     s.node('SwingSound', 'AudioStreamPlayer', '.', stream=s.sound('knife_swing'), volume_db=-4.0, max_polyphony=2)
     s.node('StabSound', 'AudioStreamPlayer', '.', stream=s.sound('knife_hit'), volume_db=-2.0)
-    save_viewmodel(s, 'scenes/weapons/knife.tscn')
+    s.save('scenes/weapons/knife.tscn')
 
     # Rocket projectile
     s = Scene()
     s.node('Rocket', 'Node3D', script=s.ext_res('Script', 'res://scripts/weapons/rocket.gd'))
-    rocket_parts(s, '.', 0.0)
-    s.cyl('Body', '.', 0.035, 0.3, (0, 0, 0.2), 'olive', rot=(RX, 0, 0))
-    s.box('FinH', '.', (0.16, 0.006, 0.07), (0, 0, 0.33), 'gun_black')
-    s.box('FinV', '.', (0.006, 0.16, 0.07), (0, 0, 0.33), 'gun_black')
+    s.node('Model', None, '.', instance=s.ext_res('PackedScene', 'res://models/weapons/rocket.glb'))
     smoke_mat = s.sub_res('StandardMaterial3D', transparency=1, shading_mode=0, vertex_color_use_as_albedo=True,
-                          billboard_mode=3, particles_anim_h_frames=1, particles_anim_v_frames=1, particles_anim_loop=False)
+                          billboard_mode=3)
     smoke_mesh = s.sub_res('QuadMesh', material=smoke_mat, size=V2(0.4, 0.4))
     ramp = s.sub_res('Gradient', offsets='PackedFloat32Array(0, 0.15, 1)',
                      colors='PackedColorArray(3, 2, 0.8, 1, 0.6, 0.6, 0.6, 0.6, 0.4, 0.4, 0.4, 0)')
     grow = s.sub_res('Curve', _data='[Vector2(0, 0.3), 0.0, 0.0, 0, 0, Vector2(1, 1.5), 0.0, 0.0, 0, 0]', point_count=2)
-    s.node('Smoke', 'CPUParticles3D', '.', position=V3(0, 0, 0.4), amount=60, lifetime=1.2, local_coords=False,
+    s.node('Smoke', 'CPUParticles3D', '.', position=V3(0, 0, 0.5), amount=60, lifetime=1.2, local_coords=False,
            mesh=smoke_mesh, direction=V3(0, 0, 1), spread=10.0, initial_velocity_min=1.0, initial_velocity_max=2.0,
            gravity=V3(0, 0.6, 0), scale_amount_curve=grow, color_ramp=ramp)
-    s.node('Light', 'OmniLight3D', '.', position=V3(0, 0, 0.45), light_color=C(1, 0.6, 0.25), light_energy=3.0, omni_range=5.0)
+    s.node('Light', 'OmniLight3D', '.', position=V3(0, 0, 0.55), light_color=C(1, 0.6, 0.25), light_energy=3.0, omni_range=5.0)
     s.save('scenes/weapons/rocket.tscn')
 
 
@@ -291,79 +207,47 @@ def player():
 
 
 # ------------------------------------------------------------------ zombies
-def zombie(path, root_name, stats, scale=1.0, bulk=1.0, thin=1.0, skin='z_skin', pants='z_pants', eyes='z_eyes',
-           radius=0.35, height=1.8, shirt_colors=None, torn=False):
+def zombie(path, root_name, stats, bodies, radius=0.35, height=1.8, body_scale=0.58, skin=True):
     s = Scene()
     shape = s.sub_res('CapsuleShape3D', radius=radius, height=height)
     props = dict(collision_layer=4, collision_mask=7, script=s.ext_res('Script', 'res://scripts/zombies/zombie.gd'))
     props.update(stats)
-    if shirt_colors:
-        props['shirt_colors'] = 'Array[Color]([' + ', '.join(C(*c) for c in shirt_colors) + '])'
+    props['bodies'] = 'Array[PackedScene]([' + ', '.join(
+        s.ext_res('PackedScene', f'res://models/characters/{b}.glb') for b in bodies) + '])'
+    props['body_scale'] = body_scale
+    if skin:
+        props['skin_colors'] = 'Array[Color]([' + ', '.join(C(*c) for c in ZOMBIE_SKINS) + '])'
     s.node(root_name, 'CharacterBody3D', groups=['zombies'], **props)
     s.node('CollisionShape3D', 'CollisionShape3D', '.', position=V3(0, height / 2, 0), shape=shape)
-    s.node('Model', 'Node3D', '.', scale=V3(scale, scale, scale))
-    w, t = bulk, thin
-    for side, x in (('L', -0.11 * w), ('R', 0.11 * w)):
-        leg = f'Model/Leg{side}'
-        s.node(f'Leg{side}', 'Node3D', 'Model', position=V3(x, 0.92, 0))
-        s.box('Thigh', leg, (0.15 * w * t, 0.46, 0.17 * w), (0, -0.23, 0), pants)
-        s.box('Shin', leg, (0.13 * w * t, 0.42, 0.15 * w), (0, -0.66, 0.02), pants)
-        s.box('Shoe', leg, (0.14 * w, 0.08, 0.26), (0, -0.88, -0.04), 'z_shoes')
-    s.node('Body', 'Node3D', 'Model', position=V3(0, 0.92, 0))
-    s.box('Pelvis', 'Model/Body', (0.36 * w, 0.16, 0.2 * w), (0, 0.04, 0), pants)
-    s.box('ShirtTorso', 'Model/Body', (0.44 * w * t, 0.5, 0.24 * w), (0, 0.37, 0), 'z_shirt')
-    s.box('ShirtCollar', 'Model/Body', (0.3 * w * t, 0.05, 0.2 * w), (0, 0.63, 0), 'z_shirt')
-    s.box('Wound', 'Model/Body', (0.14, 0.12, 0.02), (0.08 * w, 0.3, -0.122 * w), 'z_blood')
-    if torn:
-        s.box('Ribs', 'Model/Body', (0.16, 0.18, 0.02), (-0.09 * w, 0.42, -0.122 * w), skin)
-        s.box('Wound2', 'Model/Body', (0.1, 0.06, 0.02), (-0.09 * w, 0.42, -0.124 * w), 'z_blood')
-    s.box('Neck', 'Model/Body', (0.1 * w, 0.08, 0.1 * w), (0, 0.66, 0), skin)
-    s.node('Head', 'Node3D', 'Model/Body', position=V3(0, 0.68, 0))
-    hp = 'Model/Body/Head'
-    s.box('Skull', hp, (0.25, 0.27, 0.26), (0, 0.15, 0), skin)
-    s.box('Jaw', hp, (0.2, 0.06, 0.2), (0, 0.0, -0.03), 'z_skin_dark', rot=(0.25, 0, 0))
-    s.box('Teeth', hp, (0.14, 0.025, 0.01), (0, 0.05, -0.131), 'z_teeth')
-    s.box('MouthBlood', hp, (0.16, 0.05, 0.012), (0, 0.0, -0.13), 'z_blood')
-    s.box('EyeL', hp, (0.05, 0.03, 0.012), (-0.06, 0.17, -0.131), eyes)
-    s.box('EyeR', hp, (0.05, 0.03, 0.012), (0.06, 0.17, -0.131), eyes)
-    s.box('Brow', hp, (0.22, 0.03, 0.03), (0, 0.205, -0.125), 'z_skin_dark')
-    s.box('Hair', hp, (0.26, 0.06, 0.27), (0, 0.3, 0.01), 'z_hair')
-    s.box('HairBack', hp, (0.26, 0.15, 0.04), (0, 0.22, 0.13), 'z_hair')
-    for side, x in (('L', -0.29 * w * t), ('R', 0.29 * w * t)):
-        arm = f'Model/Body/Arm{side}'
-        s.node(f'Arm{side}', 'Node3D', 'Model/Body', position=V3(x, 0.56, 0))
-        s.box(f'ShirtSleeve{side}', arm, (0.13 * w, 0.28, 0.14 * w), (0, -0.13, 0), 'z_shirt')
-        s.box('Forearm', arm, (0.1 * w, 0.3, 0.11 * w), (0, -0.42, 0), skin)
-        s.box('Hand', arm, (0.09 * w, 0.11, 0.07 * w), (0, -0.62, 0), 'z_skin_dark')
-        s.box('Claws', arm, (0.08 * w, 0.04, 0.06 * w), (0, -0.69, -0.01), 'z_blood')
+    # The character models face +Z; turn them to Godot's forward (-Z).
+    s.node('Model', 'Node3D', '.', rotation=V3(0, math.pi, 0))
     s.node('NavigationAgent3D', 'NavigationAgent3D', '.', path_desired_distance=0.8, target_desired_distance=0.8,
            height=height, radius=radius)
-    for name, snd, vol in [('GroanSound', 'zombie_groan1', 0.0), ('AttackSound', 'zombie_attack', 2.0),
-                           ('DeathSound', 'zombie_death', 0.0)]:
-        s.node(name, 'AudioStreamPlayer3D', '.', stream=s.sound(snd), position=V3(0, 1.6 * scale, 0),
-               volume_db=vol, unit_size=5.0, max_distance=45.0)
+    for name, snd, vol in [('GroanSound', 'zombie/groan1', -8.0), ('AttackSound', 'zombie/attack1', -3.0),
+                           ('DeathSound', 'zombie/death1', -4.0)]:
+        s.node(name, 'AudioStreamPlayer3D', '.', stream=s.ext_res('AudioStream', f'res://sounds/{snd}.ogg'),
+               position=V3(0, 1.6 * body_scale / 0.58, 0), volume_db=vol, unit_size=3.0, max_distance=30.0)
     s.save(path)
 
 
-SHIRTS = [(0.55, 0.12, 0.1), (0.15, 0.25, 0.45), (0.6, 0.58, 0.5), (0.2, 0.35, 0.2), (0.35, 0.3, 0.25), (0.5, 0.45, 0.1)]
+ZOMBIE_SKINS = [(0.42, 0.5, 0.38), (0.5, 0.55, 0.45), (0.36, 0.42, 0.34), (0.55, 0.52, 0.45), (0.45, 0.47, 0.5)]
+
 
 def zombies():
     zombie('scenes/zombies/walker.tscn', 'Walker',
-           dict(max_health=70, chase_speed=2.3, wander_speed=0.45, attack_damage=14, attack_range=1.6,
-                attack_windup=0.55, attack_recovery=0.6, sight_range=18.0, head_height=1.52, stride=0.9),
-           shirt_colors=SHIRTS)
+           dict(max_health=70, chase_speed=1.9, wander_speed=0.45, attack_damage=14, attack_range=1.5,
+                attack_windup=0.55, attack_recovery=0.6, sight_range=18.0),
+           ['zombie_male', 'zombie_female', 'worker', 'doctor', 'chef'])
     zombie('scenes/zombies/runner.tscn', 'Runner',
-           dict(max_health=45, chase_speed=5.6, wander_speed=0.8, turn_speed=10.0, attack_damage=10,
-                attack_range=1.5, attack_windup=0.3, attack_recovery=0.45, sight_range=26.0, head_height=1.5,
-                stride=1.25, voice_pitch=1.25),
-           thin=0.85, skin='z_skin_pale', pants='z_pants_brown', eyes='z_eyes_red', radius=0.3, torn=True,
-           shirt_colors=[(0.3, 0.3, 0.32), (0.5, 0.1, 0.1), (0.25, 0.2, 0.15)])
+           dict(max_health=45, chase_speed=5.4, wander_speed=0.8, turn_speed=10.0, attack_damage=10,
+                attack_range=1.4, attack_windup=0.35, attack_recovery=0.45, sight_range=26.0,
+                chase_animation=S('Run'), voice_pitch=1.15),
+           ['soldier', 'worker', 'zombie_female'], radius=0.3)
     zombie('scenes/zombies/brute.tscn', 'Brute',
-           dict(max_health=1000, chase_speed=2.9, wander_speed=0.4, turn_speed=3.5, attack_damage=34,
-                attack_range=2.6, attack_windup=0.8, attack_recovery=0.9, knockback=7.0, sight_range=30.0,
-                head_height=1.52, stagger_resistance=0.92, stride=0.7, voice_pitch=0.55),
-           scale=1.6, bulk=1.35, skin='z_skin_dark', eyes='z_eyes_red', radius=0.65, height=2.9, torn=True,
-           shirt_colors=[(0.2, 0.22, 0.18)])
+           dict(max_health=1000, chase_speed=2.6, wander_speed=0.4, turn_speed=3.5, attack_damage=34,
+                attack_range=2.4, attack_windup=0.8, attack_recovery=0.9, knockback=7.0, sight_range=30.0,
+                stagger_resistance=0.92, voice_pitch=0.65),
+           ['zombie_male'], radius=0.65, height=2.9, body_scale=0.95)
 
 
 # ------------------------------------------------------------------ pickups
@@ -407,16 +291,15 @@ def pickups():
     pickup('scenes/pickups/ammo_rocket.tscn', 'AmmoRocket',
            dict(kind=1, amount=2, ammo_type=S('rocket'), display_name=S('Ракеты')), rockets, (1, 0.6, 0.3))
 
-    def weapon_visual(parts, scale):
+    def weapon_visual(name, scale):
         def build(s, p):
-            s.node('Model', 'Node3D', p, scale=V3(scale, scale, scale), rotation=V3(0, RX, 0))
-            parts(s, p + '/Model')
+            s.node('Model', None, p, instance=s.ext_res('PackedScene', f'res://models/weapons/{name}_world.glb'),
+                   scale=V3(scale, scale, scale), rotation=V3(0, RX, 0))
         return build
     pickup('scenes/pickups/weapon_rifle.tscn', 'WeaponRifle',
-           dict(kind=2, item_id=S('rifle'), display_name=S('Автомат')), weapon_visual(rifle_parts, 1.6))
+           dict(kind=2, item_id=S('rifle'), display_name=S('Автомат')), weapon_visual('rifle', 1.0))
     pickup('scenes/pickups/weapon_bazooka.tscn', 'WeaponBazooka',
-           dict(kind=2, item_id=S('bazooka'), display_name=S('Базука')),
-           lambda s, p: (weapon_visual(bazooka_parts, 1.2)(s, p),))
+           dict(kind=2, item_id=S('bazooka'), display_name=S('РПГ-7')), weapon_visual('rpg', 0.9))
     def card(s, p):
         s.box('Card', p, (0.2, 0.13, 0.01), (0, 0, 0), 'keycard')
         s.box('Stripe', p, (0.2, 0.025, 0.012), (0, 0.03, 0), 'dark')

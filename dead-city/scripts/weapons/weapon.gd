@@ -44,6 +44,21 @@ var _equip_left := 0.0
 @onready var _model_rest := model.position
 
 
+func _ready() -> void:
+	# First-person meshes live on render layer 2: no shadows, the flashlight skips them
+	# and a dedicated fill light keeps them visible in the dark.
+	for node in model.find_children("*", "MeshInstance3D"):
+		var mesh := node as MeshInstance3D
+		mesh.layers = 2
+		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_setup()
+
+
+## Per-weapon initialisation hook (instead of overriding _ready).
+func _setup() -> void:
+	pass
+
+
 func _process(delta: float) -> void:
 	if not visible:
 		return

@@ -1,7 +1,7 @@
 class_name Zombie
 extends CharacterBody3D
-## Zombie AI with procedural animation. One script for every zombie type;
-## the scenes differ in proportions and exported stats.
+## Zombie AI driving a rigged, animated body. One script for every zombie type;
+## the scenes differ in stats and in which bodies they pick from.
 
 signal died(zombie: Zombie)
 
@@ -11,13 +11,31 @@ const BLOOD_SCENE := preload("res://scenes/effects/blood_burst.tscn")
 const BLOOD_DECAL_SCENE := preload("res://scenes/effects/blood_decal.tscn")
 const FLASH_MATERIAL := preload("res://materials/hit_flash.tres")
 const GROANS: Array[AudioStream] = [
-	preload("res://sounds/zombie_groan1.wav"),
-	preload("res://sounds/zombie_groan2.wav"),
-	preload("res://sounds/zombie_groan3.wav"),
+	preload("res://sounds/zombie/groan1.ogg"), preload("res://sounds/zombie/groan2.ogg"),
+	preload("res://sounds/zombie/groan3.ogg"), preload("res://sounds/zombie/groan4.ogg"),
+	preload("res://sounds/zombie/groan5.ogg"), preload("res://sounds/zombie/groan6.ogg"),
+	preload("res://sounds/zombie/groan7.ogg"), preload("res://sounds/zombie/groan8.ogg"),
 ]
+const ATTACKS: Array[AudioStream] = [
+	preload("res://sounds/zombie/attack1.ogg"), preload("res://sounds/zombie/attack2.ogg"),
+	preload("res://sounds/zombie/attack3.ogg"), preload("res://sounds/zombie/attack4.ogg"),
+	preload("res://sounds/zombie/attack5.ogg"),
+]
+const DEATHS: Array[AudioStream] = [
+	preload("res://sounds/zombie/death1.ogg"), preload("res://sounds/zombie/death2.ogg"),
+	preload("res://sounds/zombie/death3.ogg"), preload("res://sounds/zombie/death4.ogg"),
+]
+const LOOPING_ANIMATIONS: Array[String] = ["Idle", "Walk", "Run"]
 ## Line of sight is blocked by the world and ends on the player.
 const SIGHT_MASK := 1 | 2
 const CORPSE_TIME := 15.0
+## Ground speed (m/s) of the Walk and Run animations at speed_scale 1 and normal body size.
+const WALK_ANIM_SPEED := 1.4
+const RUN_ANIM_SPEED := 4.0
+## Seconds between any two groans across all zombies, so a horde never moans in chorus.
+const GROAN_GAP := 1.2
+
+static var _next_groan_time := 0.0
 
 @export var max_health := 60
 @export var chase_speed := 2.2
@@ -34,12 +52,15 @@ const CORPSE_TIME := 15.0
 @export var sight_range := 20.0
 @export var start_alerted := false
 @export_group("Body")
-## Hits higher than this above the feet (before random scaling) are headshots.
-@export var head_height := 1.45
+## Rigged character models to pick from at random.
+@export var bodies: Array[PackedScene] = []
+@export var body_scale := 0.58
+## Tints the "Skin" material so every body looks dead. Empty keeps the model's own skin.
+@export var skin_colors: Array[Color] = []
+## Animation used while chasing: "Walk" (shambling, arms out) or "Run".
+@export var chase_animation := "Walk"
 @export_range(0.0, 1.0) var stagger_resistance := 0.0
-@export var stride := 1.0
 @export var voice_pitch := 1.0
-@export var shirt_colors: Array[Color] = []
 
 var state := State.IDLE
 var health := 0
@@ -56,19 +77,15 @@ var _attack_hit_done := false
 var _groan_timer := 0.0
 var _stagger := 0.0
 var _flash_timer := 0.0
-var _phase := 0.0
-var _seed := 0.0
-var _head_tilt := 0.0
+var _hit_anim_time := 0.0
 var _meshes: Array[MeshInstance3D] = []
+var _anim: AnimationPlayer
+var _skeleton: Skeleton3D
+var _pose: ZombiePose
+var _neck := -1
 
 @onready var agent: NavigationAgent3D = $NavigationAgent3D
 @onready var model: Node3D = $Model
-@onready var body: Node3D = $Model/Body
-@onready var head: Node3D = $Model/Body/Head
-@onready var arm_l: Node3D = $Model/Body/ArmL
-@onready var arm_r: Node3D = $Model/Body/ArmR
-@onready var leg_l: Node3D = $Model/LegL
-@onready var leg_r: Node3D = $Model/LegR
 @onready var collision: CollisionShape3D = $CollisionShape3D
 @onready var groan_sound: AudioStreamPlayer3D = $GroanSound
 @onready var attack_sound: AudioStreamPlayer3D = $AttackSound
@@ -80,13 +97,8 @@ func _ready() -> void:
 	player = get_tree().get_first_node_in_group("player") as Player
 	_home = global_position
 	_wander_target = global_position
-	_seed = randf() * TAU
-	_phase = _seed
-	_groan_timer = randf_range(1.0, 8.0)
-	_head_tilt = randf_range(-0.3, 0.3)
-	for node in model.find_children("*", "MeshInstance3D"):
-		_meshes.append(node as MeshInstance3D)
-	_randomize_look()
+	_groan_timer = randf_range(3.0, 15.0)
+	_build_body()
 	if start_alerted:
 		alert(false)
 
@@ -96,6 +108,7 @@ func _physics_process(delta: float) -> void:
 		velocity.y -= gravity * delta
 	_update_flash(delta)
 	_stagger = maxf(_stagger - delta, 0.0)
+	_hit_anim_time = maxf(_hit_anim_time - delta, 0.0)
 	_update_groan(delta)
 	match state:
 		State.IDLE:
@@ -109,7 +122,9 @@ func _physics_process(delta: float) -> void:
 
 
 func is_headshot(point: Vector3) -> bool:
-	return point.y - global_position.y >= head_height * model.scale.y
+	if _skeleton == null or _neck < 0:
+		return false
+	return point.y >= (_skeleton.global_transform * _skeleton.get_bone_global_pose(_neck)).origin.y
 
 
 ## Returns true when this hit killed the zombie.
@@ -122,15 +137,18 @@ func take_damage(amount: int, direction: Vector3, hit_point: Vector3, explosive 
 		mesh.material_overlay = FLASH_MATERIAL
 	var flinch := 1.0 - stagger_resistance
 	_stagger = 0.35 * flinch
-	body.rotation.x += 0.4 * flinch
 	var push := Vector3(direction.x, 0.0, direction.z).normalized()
 	velocity += push * flinch * (6.0 if explosive else 1.2)
 	Effects.spawn(BLOOD_SCENE, self, hit_point, -direction)
 	if state == State.IDLE:
 		alert()
 	if health <= 0:
-		_die(direction, is_headshot(hit_point) and not explosive)
+		_die(is_headshot(hit_point) and not explosive)
 		return true
+	if flinch > 0.5 and state != State.ATTACK and _hit_anim_time <= 0.0:
+		_hit_anim_time = 0.35
+		_anim.play("RecieveHit", 0.05)
+		_anim.speed_scale = 1.6
 	return false
 
 
@@ -139,7 +157,7 @@ func alert(spread := true) -> void:
 		return
 	state = State.CHASE
 	_repath_timer = 0.0
-	_play_groan()
+	_play_groan(true)
 	if spread:
 		# Zombies nearby join the hunt.
 		for node in get_tree().get_nodes_in_group("zombies"):
@@ -156,6 +174,40 @@ func activate() -> void:
 func hear_noise(at: Vector3, radius: float) -> void:
 	if state == State.IDLE and global_position.distance_to(at) <= radius:
 		alert()
+
+
+func _build_body() -> void:
+	model.scale = Vector3.ONE * body_scale * randf_range(0.93, 1.07)
+	if bodies.is_empty():
+		return
+	var body := (bodies.pick_random() as PackedScene).instantiate()
+	model.add_child(body)
+	_anim = body.find_children("*", "AnimationPlayer")[0] as AnimationPlayer
+	_skeleton = body.find_children("*", "Skeleton3D")[0] as Skeleton3D
+	_neck = _skeleton.find_bone("Neck")
+	_pose = ZombiePose.new()
+	_skeleton.add_child(_pose)
+	for name in LOOPING_ANIMATIONS:
+		if _anim.has_animation(name):
+			_anim.get_animation(name).loop_mode = Animation.LOOP_LINEAR
+	_anim.play("Idle")
+	_anim.seek(randf() * 3.0, true)
+	var skin: Material = null
+	if not skin_colors.is_empty():
+		var material := StandardMaterial3D.new()
+		material.albedo_color = skin_colors.pick_random()
+		material.roughness = 0.8
+		skin = material
+	for node in body.find_children("*", "MeshInstance3D"):
+		var mesh := node as MeshInstance3D
+		mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+		_meshes.append(mesh)
+		if skin == null:
+			continue
+		for i in mesh.mesh.get_surface_count():
+			var surface := mesh.mesh.surface_get_material(i)
+			if surface != null and surface.resource_name == "Skin":
+				mesh.set_surface_override_material(i, skin)
 
 
 func _process_idle(delta: float) -> void:
@@ -190,12 +242,20 @@ func _process_chase(delta: float) -> void:
 	var vertical := absf(to_player.y)
 	to_player.y = 0.0
 	if to_player.length() <= attack_range and vertical < 1.5:
-		state = State.ATTACK
-		_attack_timer = attack_windup + attack_recovery
-		_attack_hit_done = false
+		_start_attack()
 		return
 	var speed := chase_speed * (0.25 if _stagger > 0.0 else 1.0)
 	_move(_path_direction(), speed, delta)
+
+
+func _start_attack() -> void:
+	state = State.ATTACK
+	_attack_timer = attack_windup + attack_recovery
+	_attack_hit_done = false
+	if _anim != null and _anim.has_animation("Punch"):
+		_anim.play("Punch", 0.1)
+		# Land the punch's swing at the end of the windup.
+		_anim.speed_scale = _anim.get_animation("Punch").length * 0.5 / attack_windup
 
 
 func _process_attack(delta: float) -> void:
@@ -206,6 +266,7 @@ func _process_attack(delta: float) -> void:
 	_attack_timer -= delta
 	if not _attack_hit_done and _attack_timer <= attack_recovery:
 		_attack_hit_done = true
+		attack_sound.stream = ATTACKS.pick_random()
 		attack_sound.pitch_scale = voice_pitch * randf_range(0.9, 1.1)
 		attack_sound.play()
 		if not player.is_dead and to_player.length() <= attack_range + 0.7:
@@ -251,51 +312,38 @@ func _can_see_player() -> bool:
 	# Beyond arm's length it has to be roughly facing the player.
 	if distance > 4.0 and (-global_basis.z).dot(to_player.normalized()) < 0.2:
 		return false
-	var from := global_position + Vector3.UP * head_height
+	var from := global_position + Vector3.UP * 1.5
 	var query := PhysicsRayQueryParameters3D.create(from, player.global_position + Vector3.UP * 1.3, SIGHT_MASK, [get_rid()])
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	return not hit.is_empty() and hit.collider == player
 
 
 func _animate(delta: float) -> void:
-	var speed := Vector2(velocity.x, velocity.z).length()
-	var walk := clampf(speed / maxf(chase_speed, 0.5), 0.0, 1.0)
-	_phase += delta * (1.5 + speed * 2.4) * stride
-	var weight := clampf(delta * 10.0, 0.0, 1.0)
-
-	leg_l.rotation.x = sin(_phase) * 0.6 * walk
-	leg_r.rotation.x = -sin(_phase) * 0.6 * walk
-	model.position.y = absf(sin(_phase)) * 0.05 * walk
-
-	body.rotation.x = lerpf(body.rotation.x, -0.12 - 0.22 * walk, clampf(delta * 6.0, 0.0, 1.0))
-	body.rotation.z = sin(_phase * 0.5 + _seed) * 0.09
-
-	var arms := 0.25
-	if state == State.CHASE:
-		arms = 1.35
-	elif state == State.ATTACK:
-		if _attack_hit_done:
-			arms = 0.6
-		else:
-			var windup := 1.0 - clampf((_attack_timer - attack_recovery) / attack_windup, 0.0, 1.0)
-			arms = 1.35 + 1.1 * windup
-	arm_l.rotation.x = lerpf(arm_l.rotation.x, arms + sin(_phase * 1.3) * 0.12, weight)
-	arm_r.rotation.x = lerpf(arm_r.rotation.x, arms + sin(_phase * 1.3 + 1.7) * 0.12, weight)
-
-	head.rotation.x = sin(_phase * 0.7 + _seed) * 0.12
-	head.rotation.z = _head_tilt + sin(_phase * 0.4) * 0.1
-
-
-func _randomize_look() -> void:
-	model.scale *= randf_range(0.93, 1.07)
-	if shirt_colors.is_empty():
+	if _anim == null:
 		return
-	var material := StandardMaterial3D.new()
-	material.albedo_color = shirt_colors.pick_random() * randf_range(0.75, 1.1)
-	material.roughness = 0.95
-	for mesh in _meshes:
-		if mesh.name.begins_with("Shirt"):
-			mesh.material_override = material
+	var speed := Vector2(velocity.x, velocity.z).length()
+	var size := model.scale.y / 0.58
+	var reaching := 0.0
+	if state == State.ATTACK or _hit_anim_time > 0.0:
+		pass  # Punch / RecieveHit play out on their own.
+	elif state == State.CHASE and speed > 0.3:
+		if chase_animation == "Run":
+			_play("Run", speed / (RUN_ANIM_SPEED * size))
+		else:
+			_play("Walk", speed / (WALK_ANIM_SPEED * size))
+			reaching = 1.0
+	elif speed > 0.2:
+		_play("Walk", speed / (WALK_ANIM_SPEED * size))
+	else:
+		_play("Idle", 1.0)
+		reaching = 0.6 if state == State.CHASE else 0.0
+	_pose.reach = lerpf(_pose.reach, reaching, clampf(delta * 5.0, 0.0, 1.0))
+
+
+func _play(animation: String, speed: float) -> void:
+	if _anim.current_animation != animation:
+		_anim.play(animation, 0.25)
+	_anim.speed_scale = clampf(speed, 0.4, 2.5)
 
 
 func _update_flash(delta: float) -> void:
@@ -310,17 +358,21 @@ func _update_flash(delta: float) -> void:
 func _update_groan(delta: float) -> void:
 	_groan_timer -= delta
 	if _groan_timer <= 0.0:
-		_groan_timer = randf_range(2.5, 5.0) if state != State.IDLE else randf_range(6.0, 14.0)
+		_groan_timer = randf_range(5.0, 10.0) if state != State.IDLE else randf_range(10.0, 22.0)
 		_play_groan()
 
 
-func _play_groan() -> void:
+func _play_groan(urgent := false) -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	if now < _next_groan_time and not urgent:
+		return
+	_next_groan_time = now + GROAN_GAP
 	groan_sound.stream = GROANS.pick_random()
-	groan_sound.pitch_scale = voice_pitch * randf_range(0.85, 1.15)
+	groan_sound.pitch_scale = voice_pitch * randf_range(0.9, 1.1)
 	groan_sound.play()
 
 
-func _die(direction: Vector3, headshot: bool) -> void:
+func _die(headshot: bool) -> void:
 	state = State.DEAD
 	died.emit(self)
 	Game.register_kill()
@@ -329,25 +381,22 @@ func _die(direction: Vector3, headshot: bool) -> void:
 	for mesh in _meshes:
 		mesh.material_overlay = null
 	groan_sound.stop()
+	death_sound.stream = DEATHS.pick_random()
 	death_sound.pitch_scale = voice_pitch * randf_range(0.9, 1.1)
 	death_sound.play()
-
+	if _pose != null:
+		_pose.reach = 0.0
+		_pose.head_hidden = headshot
 	if headshot:
-		head.visible = false
-		var burst := Effects.spawn(BLOOD_SCENE, self, head.global_position + Vector3.UP * 0.1, Vector3.UP)
+		var head := (_skeleton.global_transform * _skeleton.get_bone_global_pose(_neck)).origin
+		var burst := Effects.spawn(BLOOD_SCENE, self, head + Vector3.UP * 0.15, Vector3.UP)
 		burst.scale = Vector3.ONE * 2.0
 	var decal := Effects.spawn(BLOOD_DECAL_SCENE, self, global_position + Vector3.UP * 0.3)
 	decal.rotation = Vector3(0.0, randf() * TAU, 0.0)
-
-	# Fall away from the shot.
-	var shot_from_front := direction.dot(-global_basis.z) < 0.0
-	var fall := PI * 0.48 * (1.0 if shot_from_front else -1.0)
-	var tween := create_tween().set_parallel()
-	tween.tween_property(model, "rotation:x", fall, 0.6).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-	tween.tween_property(model, "position:y", 0.12, 0.6)
-	tween.tween_property(arm_l, "rotation:x", randf_range(-0.5, 2.5), 0.6)
-	tween.tween_property(arm_r, "rotation:x", randf_range(-0.5, 2.5), 0.6)
-	tween.tween_property(body, "rotation:x", 0.0, 0.4)
-	tween.chain().tween_interval(CORPSE_TIME)
-	tween.chain().tween_property(model, "position:y", -1.2, 3.0)
-	tween.chain().tween_callback(queue_free)
+	if _anim != null:
+		_anim.play("Death", 0.1)
+		_anim.speed_scale = randf_range(0.9, 1.2)
+	var tween := create_tween()
+	tween.tween_interval(CORPSE_TIME)
+	tween.tween_property(model, "position:y", -1.2, 3.0)
+	tween.tween_callback(queue_free)

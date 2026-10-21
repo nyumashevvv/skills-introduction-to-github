@@ -5,8 +5,10 @@ Linear zombie shooter in three chapters. GDScript only, Forward+ renderer. UI an
 ## Conventions
 - Static typing everywhere, tabs for indentation; match the comment density of existing scripts.
 - Scenes in `scenes/<area>/`, scripts in `scripts/<area>/`.
-- No imported art: models are built from Box/Cylinder meshes, materials in `materials/*.tres`,
-  textures in `textures/` and sounds in `sounds/` are procedurally generated.
+- Characters and first-person weapons are glTF files in `models/`, built by `tools/blender/build_assets.py`
+  (Blender 4.5, headless) from CC0 packs fetched by `tools/fetch_assets.sh`; see CREDITS.md.
+  Level geometry and props are Box/Cylinder meshes; `materials/`, `textures/` and most of `sounds/` are
+  procedurally generated. Zombie voices in `sounds/zombie/` are processed CC0 recordings.
 - Calling methods on nodes found by NodePath: use `node.call("activate")` (untyped), not direct calls.
 
 ## Architecture
@@ -21,7 +23,12 @@ Linear zombie shooter in three chapters. GDScript only, Forward+ renderer. UI an
 - Player: `Player` → `Head/Camera3D/WeaponHolder` → weapons. `Weapon` base (ammo, reload, equip/idle anim,
   `fire_ray`) with `Gun` (pistol, rifle), `MeleeWeapon` (knife), `Launcher` (bazooka → `Rocket`).
 - `Zombie` (one script, scenes walker / runner / brute): IDLE → CHASE → ATTACK, hears weapon noise
-  (`hear_noise` via the "zombies" group), procedural limb animation, headshots, falls over on death.
+  (`hear_noise` via the "zombies" group). Picks a random body from `bodies` (models/characters/*.glb,
+  Quaternius rig: Idle/Walk/Run/Punch/RecieveHit/Death) and tints its "Skin" material. `ZombiePose`
+  (SkeletonModifier3D) layers arms-forward reaching and headshot head removal over the animation.
+  Headshot = hit above the Neck bone. Groans are rate-limited globally (`GROAN_GAP`).
+- Weapon scenes instance `models/weapons/<name>_fp.glb` as `Model` (gun + posed arms in camera space,
+  plus a `Muzzle` marker); `Weapon._ready` moves their meshes to render layer 2 (viewmodel layer).
 - `Effects` static helpers: spawn one-shot effects, tracers, `apply_blast` for explosions.
 
 ## Physics layers

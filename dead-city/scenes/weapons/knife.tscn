@@ -2,59 +2,11 @@
 
 [ext_resource type="Script" path="res://scripts/weapons/melee_weapon.gd" id="1_melee_weapon"]
 
-[ext_resource type="Material" path="res://materials/gun_black.tres" id="2_gun_black"]
+[ext_resource type="PackedScene" path="res://models/weapons/knife_fp.glb" id="2_knife_fp"]
 
-[ext_resource type="Material" path="res://materials/gun_steel.tres" id="3_gun_steel"]
+[ext_resource type="AudioStream" path="res://sounds/knife_swing.wav" id="3_knife_swing"]
 
-[ext_resource type="Material" path="res://materials/blade.tres" id="4_blade"]
-
-[ext_resource type="Material" path="res://materials/glove.tres" id="5_glove"]
-
-[ext_resource type="Material" path="res://materials/sleeve.tres" id="6_sleeve"]
-
-[ext_resource type="AudioStream" path="res://sounds/knife_swing.wav" id="7_knife_swing"]
-
-[ext_resource type="AudioStream" path="res://sounds/knife_hit.wav" id="8_knife_hit"]
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
-top_radius = 0.017
-bottom_radius = 0.017
-height = 0.12
-radial_segments = 16
-rings = 1
-material = ExtResource("2_gun_black")
-
-[sub_resource type="BoxMesh" id="BoxMesh_2"]
-size = Vector3(0.06, 0.014, 0.012)
-material = ExtResource("3_gun_steel")
-
-[sub_resource type="BoxMesh" id="BoxMesh_3"]
-size = Vector3(0.006, 0.032, 0.16)
-material = ExtResource("4_blade")
-
-[sub_resource type="BoxMesh" id="BoxMesh_4"]
-size = Vector3(0.008, 0.008, 0.12)
-material = ExtResource("3_gun_steel")
-
-[sub_resource type="BoxMesh" id="BoxMesh_5"]
-size = Vector3(0.006, 0.022, 0.04)
-material = ExtResource("4_blade")
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_6"]
-top_radius = 0.019
-bottom_radius = 0.019
-height = 0.015
-radial_segments = 16
-rings = 1
-material = ExtResource("3_gun_steel")
-
-[sub_resource type="BoxMesh" id="BoxMesh_7"]
-size = Vector3(0.055, 0.075, 0.09)
-material = ExtResource("5_glove")
-
-[sub_resource type="BoxMesh" id="BoxMesh_8"]
-size = Vector3(0.085, 0.085, 0.42)
-material = ExtResource("6_sleeve")
+[ext_resource type="AudioStream" path="res://sounds/knife_hit.wav" id="4_knife_hit"]
 
 [node name="Knife" type="Node3D"]
 script = ExtResource("1_melee_weapon")
@@ -63,70 +15,13 @@ display_name = "Нож"
 slot = 1
 equip_time = 0.2
 
-[node name="Model" type="Node3D" parent="."]
-position = Vector3(0.22, -0.24, -0.4)
-
-[node name="Grip" type="Node3D" parent="Model"]
-rotation = Vector3(0.3, 0.45, -0.25)
-scale = Vector3(0.85, 0.85, 0.85)
-
-[node name="Handle" type="MeshInstance3D" parent="Model/Grip"]
-mesh = SubResource("CylinderMesh_1")
-position = Vector3(0.0, 0.0, 0.03)
-rotation = Vector3(1.5708, 0.0, 0.0)
-cast_shadow = 0
-layers = 2
-
-[node name="Guard" type="MeshInstance3D" parent="Model/Grip"]
-mesh = SubResource("BoxMesh_2")
-position = Vector3(0.0, 0.0, -0.035)
-cast_shadow = 0
-layers = 2
-
-[node name="Blade" type="MeshInstance3D" parent="Model/Grip"]
-mesh = SubResource("BoxMesh_3")
-position = Vector3(0.0, 0.004, -0.12)
-cast_shadow = 0
-layers = 2
-
-[node name="Spine" type="MeshInstance3D" parent="Model/Grip"]
-mesh = SubResource("BoxMesh_4")
-position = Vector3(0.0, 0.022, -0.1)
-cast_shadow = 0
-layers = 2
-
-[node name="Tip" type="MeshInstance3D" parent="Model/Grip"]
-mesh = SubResource("BoxMesh_5")
-position = Vector3(0.0, 0.012, -0.21)
-rotation = Vector3(-0.45, 0.0, 0.0)
-cast_shadow = 0
-layers = 2
-
-[node name="Pommel" type="MeshInstance3D" parent="Model/Grip"]
-mesh = SubResource("CylinderMesh_6")
-position = Vector3(0.0, 0.0, 0.095)
-rotation = Vector3(1.5708, 0.0, 0.0)
-cast_shadow = 0
-layers = 2
-
-[node name="HandR" type="MeshInstance3D" parent="Model/Grip"]
-mesh = SubResource("BoxMesh_7")
-position = Vector3(0.0, -0.005, 0.03)
-cast_shadow = 0
-layers = 2
-
-[node name="SleeveR" type="MeshInstance3D" parent="Model/Grip"]
-mesh = SubResource("BoxMesh_8")
-position = Vector3(0.02, -0.06, 0.25)
-rotation = Vector3(0.5, 0.0, 0.0)
-cast_shadow = 0
-layers = 2
+[node name="Model" parent="." instance=ExtResource("2_knife_fp")]
 
 [node name="SwingSound" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("7_knife_swing")
+stream = ExtResource("3_knife_swing")
 volume_db = -4.0
 max_polyphony = 2
 
 [node name="StabSound" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("8_knife_hit")
+stream = ExtResource("4_knife_hit")
 volume_db = -2.0

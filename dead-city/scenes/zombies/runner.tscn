@@ -2,285 +2,47 @@
 
 [ext_resource type="Script" path="res://scripts/zombies/zombie.gd" id="1_zombie"]
 
-[ext_resource type="Material" path="res://materials/z_pants_brown.tres" id="2_z_pants_brown"]
+[ext_resource type="PackedScene" path="res://models/characters/soldier.glb" id="2_soldier"]
 
-[ext_resource type="Material" path="res://materials/z_shoes.tres" id="3_z_shoes"]
+[ext_resource type="PackedScene" path="res://models/characters/worker.glb" id="3_worker"]
 
-[ext_resource type="Material" path="res://materials/z_shirt.tres" id="4_z_shirt"]
+[ext_resource type="PackedScene" path="res://models/characters/zombie_female.glb" id="4_zombie_female"]
 
-[ext_resource type="Material" path="res://materials/z_blood.tres" id="5_z_blood"]
+[ext_resource type="AudioStream" path="res://sounds/zombie/groan1.ogg" id="5_groan1"]
 
-[ext_resource type="Material" path="res://materials/z_skin_pale.tres" id="6_z_skin_pale"]
+[ext_resource type="AudioStream" path="res://sounds/zombie/attack1.ogg" id="6_attack1"]
 
-[ext_resource type="Material" path="res://materials/z_skin_dark.tres" id="7_z_skin_dark"]
-
-[ext_resource type="Material" path="res://materials/z_teeth.tres" id="8_z_teeth"]
-
-[ext_resource type="Material" path="res://materials/z_eyes_red.tres" id="9_z_eyes_red"]
-
-[ext_resource type="Material" path="res://materials/z_hair.tres" id="10_z_hair"]
-
-[ext_resource type="AudioStream" path="res://sounds/zombie_groan1.wav" id="11_zombie_groan1"]
-
-[ext_resource type="AudioStream" path="res://sounds/zombie_attack.wav" id="12_zombie_attack"]
-
-[ext_resource type="AudioStream" path="res://sounds/zombie_death.wav" id="13_zombie_death"]
+[ext_resource type="AudioStream" path="res://sounds/zombie/death1.ogg" id="7_death1"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 radius = 0.3
 height = 1.8
-
-[sub_resource type="BoxMesh" id="BoxMesh_2"]
-size = Vector3(0.1275, 0.46, 0.17)
-material = ExtResource("2_z_pants_brown")
-
-[sub_resource type="BoxMesh" id="BoxMesh_3"]
-size = Vector3(0.1105, 0.42, 0.15)
-material = ExtResource("2_z_pants_brown")
-
-[sub_resource type="BoxMesh" id="BoxMesh_4"]
-size = Vector3(0.14, 0.08, 0.26)
-material = ExtResource("3_z_shoes")
-
-[sub_resource type="BoxMesh" id="BoxMesh_5"]
-size = Vector3(0.36, 0.16, 0.2)
-material = ExtResource("2_z_pants_brown")
-
-[sub_resource type="BoxMesh" id="BoxMesh_6"]
-size = Vector3(0.374, 0.5, 0.24)
-material = ExtResource("4_z_shirt")
-
-[sub_resource type="BoxMesh" id="BoxMesh_7"]
-size = Vector3(0.255, 0.05, 0.2)
-material = ExtResource("4_z_shirt")
-
-[sub_resource type="BoxMesh" id="BoxMesh_8"]
-size = Vector3(0.14, 0.12, 0.02)
-material = ExtResource("5_z_blood")
-
-[sub_resource type="BoxMesh" id="BoxMesh_9"]
-size = Vector3(0.16, 0.18, 0.02)
-material = ExtResource("6_z_skin_pale")
-
-[sub_resource type="BoxMesh" id="BoxMesh_10"]
-size = Vector3(0.1, 0.06, 0.02)
-material = ExtResource("5_z_blood")
-
-[sub_resource type="BoxMesh" id="BoxMesh_11"]
-size = Vector3(0.1, 0.08, 0.1)
-material = ExtResource("6_z_skin_pale")
-
-[sub_resource type="BoxMesh" id="BoxMesh_12"]
-size = Vector3(0.25, 0.27, 0.26)
-material = ExtResource("6_z_skin_pale")
-
-[sub_resource type="BoxMesh" id="BoxMesh_13"]
-size = Vector3(0.2, 0.06, 0.2)
-material = ExtResource("7_z_skin_dark")
-
-[sub_resource type="BoxMesh" id="BoxMesh_14"]
-size = Vector3(0.14, 0.025, 0.01)
-material = ExtResource("8_z_teeth")
-
-[sub_resource type="BoxMesh" id="BoxMesh_15"]
-size = Vector3(0.16, 0.05, 0.012)
-material = ExtResource("5_z_blood")
-
-[sub_resource type="BoxMesh" id="BoxMesh_16"]
-size = Vector3(0.05, 0.03, 0.012)
-material = ExtResource("9_z_eyes_red")
-
-[sub_resource type="BoxMesh" id="BoxMesh_17"]
-size = Vector3(0.22, 0.03, 0.03)
-material = ExtResource("7_z_skin_dark")
-
-[sub_resource type="BoxMesh" id="BoxMesh_18"]
-size = Vector3(0.26, 0.06, 0.27)
-material = ExtResource("10_z_hair")
-
-[sub_resource type="BoxMesh" id="BoxMesh_19"]
-size = Vector3(0.26, 0.15, 0.04)
-material = ExtResource("10_z_hair")
-
-[sub_resource type="BoxMesh" id="BoxMesh_20"]
-size = Vector3(0.13, 0.28, 0.14)
-material = ExtResource("4_z_shirt")
-
-[sub_resource type="BoxMesh" id="BoxMesh_21"]
-size = Vector3(0.1, 0.3, 0.11)
-material = ExtResource("6_z_skin_pale")
-
-[sub_resource type="BoxMesh" id="BoxMesh_22"]
-size = Vector3(0.09, 0.11, 0.07)
-material = ExtResource("7_z_skin_dark")
-
-[sub_resource type="BoxMesh" id="BoxMesh_23"]
-size = Vector3(0.08, 0.04, 0.06)
-material = ExtResource("5_z_blood")
 
 [node name="Runner" type="CharacterBody3D" groups=["zombies"]]
 collision_layer = 4
 collision_mask = 7
 script = ExtResource("1_zombie")
 max_health = 45
-chase_speed = 5.6
+chase_speed = 5.4
 wander_speed = 0.8
 turn_speed = 10.0
 attack_damage = 10
-attack_range = 1.5
-attack_windup = 0.3
+attack_range = 1.4
+attack_windup = 0.35
 attack_recovery = 0.45
 sight_range = 26.0
-head_height = 1.5
-stride = 1.25
-voice_pitch = 1.25
-shirt_colors = Array[Color]([Color(0.3, 0.3, 0.32, 1.0), Color(0.5, 0.1, 0.1, 1.0), Color(0.25, 0.2, 0.15, 1.0)])
+chase_animation = "Run"
+voice_pitch = 1.15
+bodies = Array[PackedScene]([ExtResource("2_soldier"), ExtResource("3_worker"), ExtResource("4_zombie_female")])
+body_scale = 0.58
+skin_colors = Array[Color]([Color(0.42, 0.5, 0.38, 1.0), Color(0.5, 0.55, 0.45, 1.0), Color(0.36, 0.42, 0.34, 1.0), Color(0.55, 0.52, 0.45, 1.0), Color(0.45, 0.47, 0.5, 1.0)])
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 position = Vector3(0.0, 0.9, 0.0)
 shape = SubResource("CapsuleShape3D_1")
 
 [node name="Model" type="Node3D" parent="."]
-scale = Vector3(1.0, 1.0, 1.0)
-
-[node name="LegL" type="Node3D" parent="Model"]
-position = Vector3(-0.11, 0.92, 0.0)
-
-[node name="Thigh" type="MeshInstance3D" parent="Model/LegL"]
-mesh = SubResource("BoxMesh_2")
-position = Vector3(0.0, -0.23, 0.0)
-
-[node name="Shin" type="MeshInstance3D" parent="Model/LegL"]
-mesh = SubResource("BoxMesh_3")
-position = Vector3(0.0, -0.66, 0.02)
-
-[node name="Shoe" type="MeshInstance3D" parent="Model/LegL"]
-mesh = SubResource("BoxMesh_4")
-position = Vector3(0.0, -0.88, -0.04)
-
-[node name="LegR" type="Node3D" parent="Model"]
-position = Vector3(0.11, 0.92, 0.0)
-
-[node name="Thigh" type="MeshInstance3D" parent="Model/LegR"]
-mesh = SubResource("BoxMesh_2")
-position = Vector3(0.0, -0.23, 0.0)
-
-[node name="Shin" type="MeshInstance3D" parent="Model/LegR"]
-mesh = SubResource("BoxMesh_3")
-position = Vector3(0.0, -0.66, 0.02)
-
-[node name="Shoe" type="MeshInstance3D" parent="Model/LegR"]
-mesh = SubResource("BoxMesh_4")
-position = Vector3(0.0, -0.88, -0.04)
-
-[node name="Body" type="Node3D" parent="Model"]
-position = Vector3(0.0, 0.92, 0.0)
-
-[node name="Pelvis" type="MeshInstance3D" parent="Model/Body"]
-mesh = SubResource("BoxMesh_5")
-position = Vector3(0.0, 0.04, 0.0)
-
-[node name="ShirtTorso" type="MeshInstance3D" parent="Model/Body"]
-mesh = SubResource("BoxMesh_6")
-position = Vector3(0.0, 0.37, 0.0)
-
-[node name="ShirtCollar" type="MeshInstance3D" parent="Model/Body"]
-mesh = SubResource("BoxMesh_7")
-position = Vector3(0.0, 0.63, 0.0)
-
-[node name="Wound" type="MeshInstance3D" parent="Model/Body"]
-mesh = SubResource("BoxMesh_8")
-position = Vector3(0.08, 0.3, -0.122)
-
-[node name="Ribs" type="MeshInstance3D" parent="Model/Body"]
-mesh = SubResource("BoxMesh_9")
-position = Vector3(-0.09, 0.42, -0.122)
-
-[node name="Wound2" type="MeshInstance3D" parent="Model/Body"]
-mesh = SubResource("BoxMesh_10")
-position = Vector3(-0.09, 0.42, -0.124)
-
-[node name="Neck" type="MeshInstance3D" parent="Model/Body"]
-mesh = SubResource("BoxMesh_11")
-position = Vector3(0.0, 0.66, 0.0)
-
-[node name="Head" type="Node3D" parent="Model/Body"]
-position = Vector3(0.0, 0.68, 0.0)
-
-[node name="Skull" type="MeshInstance3D" parent="Model/Body/Head"]
-mesh = SubResource("BoxMesh_12")
-position = Vector3(0.0, 0.15, 0.0)
-
-[node name="Jaw" type="MeshInstance3D" parent="Model/Body/Head"]
-mesh = SubResource("BoxMesh_13")
-position = Vector3(0.0, 0.0, -0.03)
-rotation = Vector3(0.25, 0.0, 0.0)
-
-[node name="Teeth" type="MeshInstance3D" parent="Model/Body/Head"]
-mesh = SubResource("BoxMesh_14")
-position = Vector3(0.0, 0.05, -0.131)
-
-[node name="MouthBlood" type="MeshInstance3D" parent="Model/Body/Head"]
-mesh = SubResource("BoxMesh_15")
-position = Vector3(0.0, 0.0, -0.13)
-
-[node name="EyeL" type="MeshInstance3D" parent="Model/Body/Head"]
-mesh = SubResource("BoxMesh_16")
-position = Vector3(-0.06, 0.17, -0.131)
-
-[node name="EyeR" type="MeshInstance3D" parent="Model/Body/Head"]
-mesh = SubResource("BoxMesh_16")
-position = Vector3(0.06, 0.17, -0.131)
-
-[node name="Brow" type="MeshInstance3D" parent="Model/Body/Head"]
-mesh = SubResource("BoxMesh_17")
-position = Vector3(0.0, 0.205, -0.125)
-
-[node name="Hair" type="MeshInstance3D" parent="Model/Body/Head"]
-mesh = SubResource("BoxMesh_18")
-position = Vector3(0.0, 0.3, 0.01)
-
-[node name="HairBack" type="MeshInstance3D" parent="Model/Body/Head"]
-mesh = SubResource("BoxMesh_19")
-position = Vector3(0.0, 0.22, 0.13)
-
-[node name="ArmL" type="Node3D" parent="Model/Body"]
-position = Vector3(-0.2465, 0.56, 0.0)
-
-[node name="ShirtSleeveL" type="MeshInstance3D" parent="Model/Body/ArmL"]
-mesh = SubResource("BoxMesh_20")
-position = Vector3(0.0, -0.13, 0.0)
-
-[node name="Forearm" type="MeshInstance3D" parent="Model/Body/ArmL"]
-mesh = SubResource("BoxMesh_21")
-position = Vector3(0.0, -0.42, 0.0)
-
-[node name="Hand" type="MeshInstance3D" parent="Model/Body/ArmL"]
-mesh = SubResource("BoxMesh_22")
-position = Vector3(0.0, -0.62, 0.0)
-
-[node name="Claws" type="MeshInstance3D" parent="Model/Body/ArmL"]
-mesh = SubResource("BoxMesh_23")
-position = Vector3(0.0, -0.69, -0.01)
-
-[node name="ArmR" type="Node3D" parent="Model/Body"]
-position = Vector3(0.2465, 0.56, 0.0)
-
-[node name="ShirtSleeveR" type="MeshInstance3D" parent="Model/Body/ArmR"]
-mesh = SubResource("BoxMesh_20")
-position = Vector3(0.0, -0.13, 0.0)
-
-[node name="Forearm" type="MeshInstance3D" parent="Model/Body/ArmR"]
-mesh = SubResource("BoxMesh_21")
-position = Vector3(0.0, -0.42, 0.0)
-
-[node name="Hand" type="MeshInstance3D" parent="Model/Body/ArmR"]
-mesh = SubResource("BoxMesh_22")
-position = Vector3(0.0, -0.62, 0.0)
-
-[node name="Claws" type="MeshInstance3D" parent="Model/Body/ArmR"]
-mesh = SubResource("BoxMesh_23")
-position = Vector3(0.0, -0.69, -0.01)
+rotation = Vector3(0.0, 3.1416, 0.0)
 
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
 path_desired_distance = 0.8
@@ -289,22 +51,22 @@ height = 1.8
 radius = 0.3
 
 [node name="GroanSound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("11_zombie_groan1")
+stream = ExtResource("5_groan1")
 position = Vector3(0.0, 1.6, 0.0)
-volume_db = 0.0
-unit_size = 5.0
-max_distance = 45.0
+volume_db = -8.0
+unit_size = 3.0
+max_distance = 30.0
 
 [node name="AttackSound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("12_zombie_attack")
+stream = ExtResource("6_attack1")
 position = Vector3(0.0, 1.6, 0.0)
-volume_db = 2.0
-unit_size = 5.0
-max_distance = 45.0
+volume_db = -3.0
+unit_size = 3.0
+max_distance = 30.0
 
 [node name="DeathSound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("13_zombie_death")
+stream = ExtResource("7_death1")
 position = Vector3(0.0, 1.6, 0.0)
-volume_db = 0.0
-unit_size = 5.0
-max_distance = 45.0
+volume_db = -4.0
+unit_size = 3.0
+max_distance = 30.0

@@ -78,17 +78,7 @@ save('door_locked', mix(tone(lambda t: 160, 0.25, lambda t: 1, 'square'), delay(
 save('radio', mix(scale(highpass(env_noise(0.25, 8), 0.3), 0.5), delay(tone(lambda t: 1000, 0.08, lambda t: 1), 0.05)), 0.4)
 save('alarm', lowpass(tone(lambda t: 650 + 250 * (1 if (t * 2) % 1 < 0.5 else 0), 2.0, lambda t: 1, 'square'), 0.3), 0.35)
 
-# zombies: formant-filtered sawtooth + breath
-def groan(dur, f0, glide, formants=(450, 1000, 2400), vib=5.0, rough=0.4):
-    src = tone(lambda t: f0 * (1 + glide * t / dur) * (1 + 0.04 * math.sin(t * vib * 6.28)) + random.uniform(-6, 6) * rough,
-               dur, lambda t: math.sin(math.pi * min(1, t / dur)) ** 0.6, 'saw')
-    src = mix(src, [noise() * 0.35 * math.sin(math.pi * i / n(dur)) for i in range(n(dur))])
-    return lowpass(mix(*[scale(bandpass(src, f, 5), w) for f, w in zip(formants, (1.0, 0.6, 0.25))]), 0.5)
-save('zombie_groan1', groan(1.4, 95, -0.25), 0.7)
-save('zombie_groan2', groan(1.0, 120, 0.2, (380, 900, 2200), 7), 0.7)
-save('zombie_groan3', groan(1.8, 80, -0.4, (500, 1150, 2500), 3), 0.7)
-save('zombie_attack', mix(groan(0.5, 140, -0.3, (600, 1300, 2600), 18, 1.5), scale(bandpass(env_noise(0.5, 4), 900, 1.5), 0.8)), 0.8)
-save('zombie_death', groan(1.2, 110, -0.6, (420, 950, 2300), 4), 0.7)
+# Zombie voices are real CC0 recordings in sounds/zombie/ (see tools/fetch_assets.sh).
 
 # loops (loop_mode is set in their .import files)
 heli = []

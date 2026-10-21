@@ -4,7 +4,7 @@ extends Node
 
 var out := "user://"
 ## Optional second argument: comma-separated sections to render (menu, street, station, stadium).
-var sections := PackedStringArray(["menu", "street", "station", "stadium"])
+var sections := PackedStringArray(["menu", "gallery", "street", "station", "stadium"])
 
 
 func frames(n: int) -> void:
@@ -81,6 +81,8 @@ func _run() -> void:
 		get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
 		await frames(30)
 		await snap("01_menu")
+	if "gallery" in sections:
+		await _gallery()
 	if "street" in sections:
 		await _street()
 	if "station" in sections:
@@ -146,3 +148,37 @@ func _stadium() -> void:
 	await snap("07_stadium_bazooka")
 	await pose(player, Vector3(0, 0, 68), 0, 2)
 	await snap("08_stadium_tunnel")
+
+
+## Every zombie body in the lit lobby of the station: walking at the camera, one dying.
+func _gallery() -> void:
+	var level := await load_level("res://scenes/levels/level_2_station.tscn")
+	var player := await play(level)
+	for z in get_tree().get_nodes_in_group("zombies"):
+		z.queue_free()
+	await frames(2)
+	var specs := [["walker", Vector3(-3.2, 0, -8.5)], ["walker", Vector3(-1.2, 0, -7.2)], ["runner", Vector3(1.0, 0, -7.8)],
+		["walker", Vector3(3.0, 0, -8.8)], ["brute", Vector3(0.5, 0, -11.5)], ["walker", Vector3(-4.0, 0, -6.0)]]
+	var spawned: Array[Zombie] = []
+	for spec: Array in specs:
+		var zombie := (load("res://scenes/zombies/%s.tscn" % spec[0]) as PackedScene).instantiate() as Zombie
+		zombie.position = spec[1]
+		level.add_child(zombie)
+		zombie.set_physics_process(false)
+		zombie.rotation.y = PI  # face the camera
+		spawned.append(zombie)
+	await frames(5)
+	for i in spawned.size():
+		var zombie := spawned[i]
+		if i == 5:
+			zombie.take_damage(9999, Vector3.BACK, zombie.global_position + Vector3.UP * 0.6)
+		elif i == 2:
+			zombie._play("Run", 1.0)
+		else:
+			zombie._play("Walk", 1.0)
+			zombie._pose.reach = 1.0
+	await pose(player, Vector3(0, 0, -2), 0, -4)
+	await get_tree().create_timer(0.8).timeout
+	await snap("00_gallery")
+	await pose(player, Vector3(-5.5, 0, -7.0), -60, -8)
+	await snap("00_gallery_side")

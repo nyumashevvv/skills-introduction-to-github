@@ -8,8 +8,8 @@ extends Weapon
 @export var blast_radius := 6.5
 @export var recoil := 0.08
 
-@onready var muzzle: Marker3D = $Model/Muzzle
-@onready var loaded_rocket: Node3D = $Model/LoadedRocket
+@onready var muzzle: Node3D = $Model/Muzzle
+@onready var loaded_rocket: Node3D = $Model.find_child("LoadedRocket")
 @onready var shoot_sound: AudioStreamPlayer = $ShootSound
 @onready var empty_sound: AudioStreamPlayer = $EmptySound
 

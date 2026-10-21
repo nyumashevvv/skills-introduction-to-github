@@ -2,109 +2,47 @@
 
 [ext_resource type="Script" path="res://scripts/weapons/rocket.gd" id="1_rocket"]
 
-[ext_resource type="Material" path="res://materials/rocket_red.tres" id="2_rocket_red"]
+[ext_resource type="PackedScene" path="res://models/weapons/rocket.glb" id="2_rocket"]
 
-[ext_resource type="Material" path="res://materials/olive.tres" id="3_olive"]
-
-[ext_resource type="Material" path="res://materials/gun_black.tres" id="4_gun_black"]
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
-top_radius = 0.05
-bottom_radius = 0.05
-height = 0.14
-radial_segments = 16
-rings = 1
-material = ExtResource("2_rocket_red")
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_2"]
-top_radius = 0.0
-bottom_radius = 0.05
-height = 0.12
-radial_segments = 16
-rings = 1
-material = ExtResource("2_rocket_red")
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
-top_radius = 0.035
-bottom_radius = 0.035
-height = 0.3
-radial_segments = 16
-rings = 1
-material = ExtResource("3_olive")
-
-[sub_resource type="BoxMesh" id="BoxMesh_4"]
-size = Vector3(0.16, 0.006, 0.07)
-material = ExtResource("4_gun_black")
-
-[sub_resource type="BoxMesh" id="BoxMesh_5"]
-size = Vector3(0.006, 0.16, 0.07)
-material = ExtResource("4_gun_black")
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6"]
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
 transparency = 1
 shading_mode = 0
 vertex_color_use_as_albedo = true
 billboard_mode = 3
-particles_anim_h_frames = 1
-particles_anim_v_frames = 1
-particles_anim_loop = false
 
-[sub_resource type="QuadMesh" id="QuadMesh_7"]
-material = SubResource("StandardMaterial3D_6")
+[sub_resource type="QuadMesh" id="QuadMesh_2"]
+material = SubResource("StandardMaterial3D_1")
 size = Vector2(0.4, 0.4)
 
-[sub_resource type="Gradient" id="Gradient_8"]
+[sub_resource type="Gradient" id="Gradient_3"]
 offsets = PackedFloat32Array(0, 0.15, 1)
 colors = PackedColorArray(3, 2, 0.8, 1, 0.6, 0.6, 0.6, 0.6, 0.4, 0.4, 0.4, 0)
 
-[sub_resource type="Curve" id="Curve_9"]
+[sub_resource type="Curve" id="Curve_4"]
 _data = [Vector2(0, 0.3), 0.0, 0.0, 0, 0, Vector2(1, 1.5), 0.0, 0.0, 0, 0]
 point_count = 2
 
 [node name="Rocket" type="Node3D"]
 script = ExtResource("1_rocket")
 
-[node name="Warhead" type="MeshInstance3D" parent="."]
-mesh = SubResource("CylinderMesh_1")
-position = Vector3(0.0, 0.0, 0.0)
-rotation = Vector3(1.5708, 0.0, 0.0)
-cast_shadow = 0
-
-[node name="Tip" type="MeshInstance3D" parent="."]
-mesh = SubResource("CylinderMesh_2")
-position = Vector3(0.0, 0.0, -0.13)
-rotation = Vector3(-1.5708, 0.0, 0.0)
-cast_shadow = 0
-
-[node name="Body" type="MeshInstance3D" parent="."]
-mesh = SubResource("CylinderMesh_3")
-position = Vector3(0.0, 0.0, 0.2)
-rotation = Vector3(1.5708, 0.0, 0.0)
-
-[node name="FinH" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_4")
-position = Vector3(0.0, 0.0, 0.33)
-
-[node name="FinV" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_5")
-position = Vector3(0.0, 0.0, 0.33)
+[node name="Model" parent="." instance=ExtResource("2_rocket")]
 
 [node name="Smoke" type="CPUParticles3D" parent="."]
-position = Vector3(0.0, 0.0, 0.4)
+position = Vector3(0.0, 0.0, 0.5)
 amount = 60
 lifetime = 1.2
 local_coords = false
-mesh = SubResource("QuadMesh_7")
+mesh = SubResource("QuadMesh_2")
 direction = Vector3(0.0, 0.0, 1.0)
 spread = 10.0
 initial_velocity_min = 1.0
 initial_velocity_max = 2.0
 gravity = Vector3(0.0, 0.6, 0.0)
-scale_amount_curve = SubResource("Curve_9")
-color_ramp = SubResource("Gradient_8")
+scale_amount_curve = SubResource("Curve_4")
+color_ramp = SubResource("Gradient_3")
 
 [node name="Light" type="OmniLight3D" parent="."]
-position = Vector3(0.0, 0.0, 0.45)
+position = Vector3(0.0, 0.0, 0.55)
 light_color = Color(1.0, 0.6, 0.25, 1.0)
 light_energy = 3.0
 omni_range = 5.0

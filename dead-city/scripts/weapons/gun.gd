@@ -18,13 +18,14 @@ var _cooldown := 0.0
 var _heat := 0.0
 var _flash_left := 0.0
 
-@onready var muzzle: Marker3D = $Model/Muzzle
-@onready var flash: Node3D = $Model/Muzzle/Flash
+@onready var muzzle: Node3D = $Model/Muzzle
+@onready var flash: Node3D = $Model/Flash
 @onready var shoot_sound: AudioStreamPlayer = $ShootSound
 @onready var empty_sound: AudioStreamPlayer = $EmptySound
 
 
-func _ready() -> void:
+func _setup() -> void:
+	flash.position = muzzle.position
 	flash.visible = false
 
 
