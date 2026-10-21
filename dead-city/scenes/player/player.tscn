@@ -1,0 +1,110 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/player/player.gd" id="1_player"]
+
+[ext_resource type="Script" path="res://scripts/player/weapon_holder.gd" id="2_weapon_holder"]
+
+[ext_resource type="PackedScene" path="res://scenes/weapons/knife.tscn" id="3_knife"]
+
+[ext_resource type="PackedScene" path="res://scenes/weapons/pistol.tscn" id="4_pistol"]
+
+[ext_resource type="PackedScene" path="res://scenes/weapons/rifle.tscn" id="5_rifle"]
+
+[ext_resource type="PackedScene" path="res://scenes/weapons/bazooka.tscn" id="6_bazooka"]
+
+[ext_resource type="AudioStream" path="res://sounds/weapon_switch.wav" id="7_weapon_switch"]
+
+[ext_resource type="AudioStream" path="res://sounds/flesh_hit.wav" id="8_flesh_hit"]
+
+[ext_resource type="AudioStream" path="res://sounds/hurt.wav" id="9_hurt"]
+
+[ext_resource type="AudioStream" path="res://sounds/pickup.wav" id="10_pickup"]
+
+[ext_resource type="AudioStream" path="res://sounds/key_pickup.wav" id="11_key_pickup"]
+
+[ext_resource type="AudioStream" path="res://sounds/footstep.wav" id="12_footstep"]
+
+[ext_resource type="AudioStream" path="res://sounds/flashlight.wav" id="13_flashlight"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.4
+height = 1.8
+
+[node name="Player" type="CharacterBody3D" groups=["player"]]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.9, 0.0)
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="Head" type="Node3D" parent="."]
+position = Vector3(0.0, 1.6, 0.0)
+
+[node name="Camera3D" type="Camera3D" parent="Head"]
+fov = 78.0
+near = 0.02
+current = true
+
+[node name="Flashlight" type="SpotLight3D" parent="Head/Camera3D"]
+position = Vector3(-0.15, 0.05, 0.0)
+light_color = Color(1.0, 0.95, 0.85, 1.0)
+light_energy = 3.0
+spot_range = 28.0
+spot_angle = 26.0
+spot_attenuation = 0.8
+shadow_enabled = true
+light_cull_mask = 1048573
+
+[node name="ViewmodelLight" type="OmniLight3D" parent="Head/Camera3D"]
+position = Vector3(-0.1, 0.25, 0.1)
+light_color = Color(0.85, 0.85, 1.0, 1.0)
+light_energy = 0.7
+omni_range = 2.0
+light_cull_mask = 2
+
+[node name="WeaponHolder" type="Node3D" parent="Head/Camera3D"]
+script = ExtResource("2_weapon_holder")
+
+[node name="Knife" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("3_knife")]
+
+[node name="Pistol" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("4_pistol")]
+
+[node name="Rifle" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("5_rifle")]
+
+[node name="Bazooka" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("6_bazooka")]
+
+[node name="SwitchSound" type="AudioStreamPlayer" parent="Head/Camera3D/WeaponHolder"]
+stream = ExtResource("7_weapon_switch")
+volume_db = -6.0
+
+[node name="HitSound" type="AudioStreamPlayer" parent="Head/Camera3D/WeaponHolder"]
+stream = ExtResource("8_flesh_hit")
+volume_db = -6.0
+max_polyphony = 4
+
+[node name="HurtSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("9_hurt")
+volume_db = -2.0
+max_polyphony = 2
+
+[node name="PickupSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("10_pickup")
+volume_db = -4.0
+max_polyphony = 2
+
+[node name="KeySound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("11_key_pickup")
+volume_db = -4.0
+max_polyphony = 2
+
+[node name="FootstepSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("12_footstep")
+volume_db = -10.0
+max_polyphony = 2
+
+[node name="FlashlightSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("13_flashlight")
+volume_db = -6.0
+max_polyphony = 2

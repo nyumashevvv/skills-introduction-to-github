@@ -1,0 +1,66 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/metal.tres" id="1_metal"]
+
+[ext_resource type="Material" path="res://materials/ammo_green.tres" id="2_ammo_green"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.2, 2.2, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(1.2, 0.04, 0.5)
+material = ExtResource("1_metal")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.04, 2.2, 0.5)
+material = ExtResource("1_metal")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.35, 0.28, 0.35)
+material = ExtResource("2_ammo_green")
+
+[node name="Shelf" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 1.1, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Board0" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.1, 0.0)
+
+[node name="Board1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.8, 0.0)
+
+[node name="Board2" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 1.5, 0.0)
+
+[node name="Board3" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 2.15, 0.0)
+
+[node name="PostL" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(-0.58, 1.1, 0.0)
+
+[node name="PostR" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.58, 1.1, 0.0)
+
+[node name="Box0" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(-0.3, 0.95, 0.0)
+
+[node name="Box1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(0.25, 0.95, 0.0)
+
+[node name="Box2" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(0.0, 1.65, 0.0)
+
+[node name="Box3" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(-0.35, 0.25, 0.0)

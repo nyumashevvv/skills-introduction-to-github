@@ -1,0 +1,99 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/pickups/pickup.gd" id="1_pickup"]
+
+[ext_resource type="Material" path="res://materials/rocket_red.tres" id="2_rocket_red"]
+
+[ext_resource type="Material" path="res://materials/olive.tres" id="3_olive"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_1"]
+radius = 0.8
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_2"]
+top_radius = 0.05
+bottom_radius = 0.05
+height = 0.14
+radial_segments = 16
+rings = 1
+material = ExtResource("2_rocket_red")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 0.0
+bottom_radius = 0.05
+height = 0.12
+radial_segments = 16
+rings = 1
+material = ExtResource("2_rocket_red")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_4"]
+top_radius = 0.035
+bottom_radius = 0.035
+height = 0.3
+radial_segments = 16
+rings = 1
+material = ExtResource("3_olive")
+
+[node name="AmmoRocket" type="Area3D"]
+collision_layer = 16
+collision_mask = 2
+monitorable = false
+script = ExtResource("1_pickup")
+kind = 1
+amount = 2
+ammo_type = "rocket"
+display_name = "Ракеты"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.5, 0.0)
+shape = SubResource("SphereShape3D_1")
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Item" type="Node3D" parent="Visual"]
+position = Vector3(0.0, 0.5, 0.0)
+
+[node name="R0" type="Node3D" parent="Visual/Item"]
+position = Vector3(-0.08, 0.0, 0.1)
+
+[node name="Warhead" type="MeshInstance3D" parent="Visual/Item/R0"]
+mesh = SubResource("CylinderMesh_2")
+position = Vector3(0.0, 0.0, 0.0)
+rotation = Vector3(1.5708, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Tip" type="MeshInstance3D" parent="Visual/Item/R0"]
+mesh = SubResource("CylinderMesh_3")
+position = Vector3(0.0, 0.0, -0.13)
+rotation = Vector3(-1.5708, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Body" type="MeshInstance3D" parent="Visual/Item/R0"]
+mesh = SubResource("CylinderMesh_4")
+position = Vector3(0.0, 0.0, 0.2)
+rotation = Vector3(1.5708, 0.0, 0.0)
+
+[node name="R1" type="Node3D" parent="Visual/Item"]
+position = Vector3(0.08, 0.0, 0.1)
+
+[node name="Warhead" type="MeshInstance3D" parent="Visual/Item/R1"]
+mesh = SubResource("CylinderMesh_2")
+position = Vector3(0.0, 0.0, 0.0)
+rotation = Vector3(1.5708, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Tip" type="MeshInstance3D" parent="Visual/Item/R1"]
+mesh = SubResource("CylinderMesh_3")
+position = Vector3(0.0, 0.0, -0.13)
+rotation = Vector3(-1.5708, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Body" type="MeshInstance3D" parent="Visual/Item/R1"]
+mesh = SubResource("CylinderMesh_4")
+position = Vector3(0.0, 0.0, 0.2)
+rotation = Vector3(1.5708, 0.0, 0.0)
+
+[node name="Light" type="OmniLight3D" parent="."]
+position = Vector3(0.0, 0.8, 0.0)
+light_color = Color(1.0, 0.6, 0.3, 1.0)
+light_energy = 0.8
+omni_range = 2.5

@@ -1,0 +1,370 @@
+[gd_scene format=3]
+
+[ext_resource type="Shader" path="res://scenes/ui/vignette.gdshader" id="1_vignette"]
+
+[ext_resource type="Script" path="res://scripts/ui/hud.gd" id="2_hud"]
+
+[ext_resource type="Script" path="res://scripts/ui/crosshair.gd" id="3_crosshair"]
+
+[ext_resource type="Script" path="res://scripts/ui/hit_marker.gd" id="4_hit_marker"]
+
+[ext_resource type="AudioStream" path="res://sounds/radio.wav" id="5_radio"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
+shader = ExtResource("1_vignette")
+shader_parameter/intensity = 0.0
+
+[node name="HUD" type="CanvasLayer"]
+process_mode = 3
+script = ExtResource("2_hud")
+
+[node name="Gameplay" type="Control" parent="."]
+mouse_filter = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Vignette" type="ColorRect" parent="Gameplay"]
+material = SubResource("ShaderMaterial_1")
+mouse_filter = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Crosshair" type="Control" parent="Gameplay"]
+mouse_filter = 2
+script = ExtResource("3_crosshair")
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="HitMarker" type="Control" parent="Gameplay"]
+mouse_filter = 2
+script = ExtResource("4_hit_marker")
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PromptLabel" type="Label" parent="Gameplay"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = 40.0
+offset_right = 300.0
+offset_bottom = 70.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1.0, 0.95, 0.8, 1.0)
+horizontal_alignment = 1
+
+[node name="PickupLabel" type="Label" parent="Gameplay"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = 75.0
+offset_right = 300.0
+offset_bottom = 105.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(0.7, 1.0, 0.6, 1.0)
+horizontal_alignment = 1
+
+[node name="TimerLabel" type="Label" parent="Gameplay"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 16.0
+offset_right = 300.0
+offset_bottom = 60.0
+grow_horizontal = 2
+theme_override_font_sizes/font_size = 34
+theme_override_colors/font_color = Color(1.0, 0.85, 0.5, 1.0)
+horizontal_alignment = 1
+
+[node name="ObjectiveBox" type="VBoxContainer" parent="Gameplay"]
+offset_left = 24.0
+offset_top = 20.0
+offset_right = 520.0
+offset_bottom = 110.0
+mouse_filter = 2
+
+[node name="Header" type="Label" parent="Gameplay/ObjectiveBox"]
+text = "ЦЕЛЬ"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.9, 0.3, 0.2, 1.0)
+
+[node name="ObjectiveLabel" type="Label" parent="Gameplay/ObjectiveBox"]
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 20
+
+[node name="Subtitle" type="PanelContainer" parent="Gameplay"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -380.0
+offset_top = -200.0
+offset_right = 380.0
+offset_bottom = -130.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+
+[node name="Text" type="RichTextLabel" parent="Gameplay/Subtitle"]
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 20
+
+[node name="HealthBox" type="VBoxContainer" parent="Gameplay"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 24.0
+offset_top = -90.0
+offset_right = 300.0
+offset_bottom = -24.0
+grow_vertical = 0
+alignment = 2
+mouse_filter = 2
+
+[node name="HealthLabel" type="Label" parent="Gameplay/HealthBox"]
+text = "+ 100"
+theme_override_font_sizes/font_size = 32
+
+[node name="HealthBar" type="ProgressBar" parent="Gameplay/HealthBox"]
+custom_minimum_size = Vector2(0.0, 12.0)
+value = 100.0
+show_percentage = false
+mouse_filter = 2
+
+[node name="WeaponBox" type="VBoxContainer" parent="Gameplay"]
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -344.0
+offset_top = -130.0
+offset_right = -24.0
+offset_bottom = -24.0
+grow_horizontal = 0
+grow_vertical = 0
+alignment = 2
+mouse_filter = 2
+
+[node name="ReloadLabel" type="Label" parent="Gameplay/WeaponBox"]
+text = "ПЕРЕЗАРЯДКА..."
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(1.0, 0.8, 0.3, 1.0)
+horizontal_alignment = 2
+
+[node name="WeaponLabel" type="Label" parent="Gameplay/WeaponBox"]
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.85, 0.85, 0.8, 1.0)
+horizontal_alignment = 2
+
+[node name="AmmoLabel" type="Label" parent="Gameplay/WeaponBox"]
+theme_override_font_sizes/font_size = 42
+horizontal_alignment = 2
+
+[node name="Slots" type="HBoxContainer" parent="Gameplay"]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -300.0
+offset_top = -44.0
+offset_right = 300.0
+offset_bottom = -16.0
+grow_horizontal = 2
+grow_vertical = 0
+alignment = 1
+mouse_filter = 2
+theme_override_constants/separation = 24
+
+[node name="IntroScreen" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="IntroScreen"]
+color = Color(0.0, 0.0, 0.0, 0.92)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Center" type="CenterContainer" parent="IntroScreen"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="IntroScreen/Center"]
+custom_minimum_size = Vector2(760.0, 0.0)
+theme_override_constants/separation = 14
+
+[node name="Chapter" type="Label" parent="IntroScreen/Center/VBox"]
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.8, 0.2, 0.15, 1.0)
+horizontal_alignment = 1
+
+[node name="Title" type="Label" parent="IntroScreen/Center/VBox"]
+theme_override_constants/outline_size = 10
+theme_override_font_sizes/font_size = 60
+horizontal_alignment = 1
+
+[node name="Story" type="Label" parent="IntroScreen/Center/VBox"]
+autowrap_mode = 3
+theme_override_font_sizes/font_size = 21
+theme_override_colors/font_color = Color(0.85, 0.82, 0.78, 1.0)
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="IntroScreen/Center/VBox"]
+custom_minimum_size = Vector2(0.0, 16.0)
+
+[node name="ContinueButton" type="Button" parent="IntroScreen/Center/VBox"]
+custom_minimum_size = Vector2(300.0, 0.0)
+size_flags_horizontal = 4
+text = "Начать"
+
+[node name="Hint" type="Label" parent="IntroScreen/Center/VBox"]
+text = "WASD — движение · Shift — бег · Пробел — прыжок · ЛКМ — атака · R — перезарядка\n1–4 / колесо — оружие · E — использовать · F — фонарик · Esc — пауза"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.6, 0.6, 0.6, 1.0)
+horizontal_alignment = 1
+
+[node name="PauseMenu" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="PauseMenu"]
+color = Color(0.02, 0.01, 0.01, 0.8)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Center" type="CenterContainer" parent="PauseMenu"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="PauseMenu/Center"]
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="PauseMenu/Center/VBox"]
+theme_override_constants/outline_size = 10
+text = "ПАУЗА"
+theme_override_font_sizes/font_size = 64
+theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1.0)
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="PauseMenu/Center/VBox"]
+custom_minimum_size = Vector2(0.0, 10.0)
+
+[node name="ResumeButton" type="Button" parent="PauseMenu/Center/VBox"]
+custom_minimum_size = Vector2(340.0, 0.0)
+size_flags_horizontal = 4
+text = "Продолжить"
+
+[node name="RestartButton" type="Button" parent="PauseMenu/Center/VBox"]
+custom_minimum_size = Vector2(340.0, 0.0)
+size_flags_horizontal = 4
+text = "Начать главу заново"
+
+[node name="MenuButton" type="Button" parent="PauseMenu/Center/VBox"]
+custom_minimum_size = Vector2(340.0, 0.0)
+size_flags_horizontal = 4
+text = "Главное меню"
+
+[node name="DeathScreen" type="Control" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="DeathScreen"]
+color = Color(0.02, 0.01, 0.01, 0.7)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Center" type="CenterContainer" parent="DeathScreen"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="DeathScreen/Center"]
+theme_override_constants/separation = 14
+
+[node name="Title" type="Label" parent="DeathScreen/Center/VBox"]
+theme_override_constants/outline_size = 10
+text = "ВЫ ПОГИБЛИ"
+theme_override_font_sizes/font_size = 64
+theme_override_colors/font_color = Color(0.75, 0.08, 0.06, 1.0)
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="DeathScreen/Center/VBox"]
+custom_minimum_size = Vector2(0.0, 10.0)
+
+[node name="RestartButton" type="Button" parent="DeathScreen/Center/VBox"]
+custom_minimum_size = Vector2(340.0, 0.0)
+size_flags_horizontal = 4
+text = "Начать главу заново"
+
+[node name="MenuButton" type="Button" parent="DeathScreen/Center/VBox"]
+custom_minimum_size = Vector2(340.0, 0.0)
+size_flags_horizontal = 4
+text = "Главное меню"
+
+[node name="Fade" type="ColorRect" parent="."]
+mouse_filter = 2
+color = Color(0.0, 0.0, 0.0, 0.0)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="RadioSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_radio")
+volume_db = -8.0

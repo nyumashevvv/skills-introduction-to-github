@@ -1,0 +1,54 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/metal.tres" id="1_metal"]
+
+[ext_resource type="Material" path="res://materials/dark.tres" id="2_dark"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.8, 2.0, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(1.8, 2.0, 0.5)
+material = ExtResource("1_metal")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.02, 1.9, 0.01)
+material = ExtResource("2_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.3, 0.15, 0.01)
+material = ExtResource("2_dark")
+
+[node name="Lockers" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 1.0, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 1.0, 0.0)
+
+[node name="Line0" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(-0.6, 1.0, -0.255)
+
+[node name="Vent0" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(-0.6, 1.7, -0.255)
+
+[node name="Line1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.0, 1.0, -0.255)
+
+[node name="Vent1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(0.0, 1.7, -0.255)
+
+[node name="Line2" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.6, 1.0, -0.255)
+
+[node name="Vent2" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(0.6, 1.7, -0.255)

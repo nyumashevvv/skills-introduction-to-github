@@ -1,0 +1,132 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/car_white.tres" id="1_car_white"]
+
+[ext_resource type="Material" path="res://materials/glass.tres" id="2_glass"]
+
+[ext_resource type="Material" path="res://materials/dark.tres" id="3_dark"]
+
+[ext_resource type="Material" path="res://materials/headlight.tres" id="4_headlight"]
+
+[ext_resource type="Material" path="res://materials/taillight.tres" id="5_taillight"]
+
+[ext_resource type="Material" path="res://materials/tire.tres" id="6_tire"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.9, 1.45, 4.4)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(1.85, 0.65, 4.3)
+material = ExtResource("1_car_white")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(1.6, 0.55, 2.2)
+material = ExtResource("1_car_white")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(1.5, 0.48, 0.05)
+material = ExtResource("2_glass")
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(1.5, 0.45, 0.05)
+material = ExtResource("2_glass")
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.02, 0.4, 1.8)
+material = ExtResource("2_glass")
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(1.9, 0.18, 0.12)
+material = ExtResource("3_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(0.35, 0.12, 0.03)
+material = ExtResource("4_headlight")
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(0.3, 0.1, 0.03)
+material = ExtResource("5_taillight")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_10"]
+top_radius = 0.34
+bottom_radius = 0.34
+height = 0.24
+radial_segments = 16
+rings = 1
+material = ExtResource("6_tire")
+
+[node name="CarWhite" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.75, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Body" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.6, 0.0)
+
+[node name="Cabin" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.0, 1.2, 0.2)
+
+[node name="Windshield" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(0.0, 1.2, -0.91)
+rotation = Vector3(-0.35, 0.0, 0.0)
+
+[node name="RearWindow" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.0, 1.2, 1.31)
+rotation = Vector3(0.35, 0.0, 0.0)
+
+[node name="WindowsL" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_6")
+position = Vector3(-0.81, 1.22, 0.2)
+
+[node name="WindowsR" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_6")
+position = Vector3(0.81, 1.22, 0.2)
+
+[node name="BumperF" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(0.0, 0.35, -2.17)
+
+[node name="BumperB" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(0.0, 0.35, 2.17)
+
+[node name="HeadlightL" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(-0.6, 0.7, -2.15)
+
+[node name="HeadlightR" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(0.6, 0.7, -2.15)
+
+[node name="TailL" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_9")
+position = Vector3(-0.65, 0.72, 2.15)
+
+[node name="TailR" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_9")
+position = Vector3(0.65, 0.72, 2.15)
+
+[node name="Wheel0" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_10")
+position = Vector3(-0.85, 0.34, -1.35)
+rotation = Vector3(0.0, 0.0, 1.5708)
+
+[node name="Wheel1" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_10")
+position = Vector3(0.85, 0.34, -1.35)
+rotation = Vector3(0.0, 0.0, 1.5708)
+
+[node name="Wheel2" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_10")
+position = Vector3(-0.85, 0.34, 1.35)
+rotation = Vector3(0.0, 0.0, 1.5708)
+
+[node name="Wheel3" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_10")
+position = Vector3(0.85, 0.34, 1.35)
+rotation = Vector3(0.0, 0.0, 1.5708)

@@ -1,0 +1,81 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/flicker_light.gd" id="1_flicker_light"]
+
+[sub_resource type="Curve" id="Curve_1"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="Curve" id="Curve_2"]
+_data = [Vector2(0, 0.4), 0.0, 0.0, 0, 0, Vector2(1, 1.6), 0.0, 0.0, 0, 0]
+point_count = 2
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3"]
+shading_mode = 0
+vertex_color_use_as_albedo = true
+transparency = 1
+billboard_mode = 3
+
+[sub_resource type="QuadMesh" id="QuadMesh_4"]
+size = Vector2(0.8, 0.8)
+material = SubResource("StandardMaterial3D_3")
+
+[sub_resource type="Gradient" id="Gradient_5"]
+offsets = PackedFloat32Array(0, 0.25, 0.7, 1)
+colors = PackedColorArray(4, 2.6, 0.8, 0, 3.5, 1.2, 0.2, 0.9, 0.6, 0.15, 0.05, 0.5, 0.05, 0.05, 0.05, 0)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_6"]
+shading_mode = 0
+vertex_color_use_as_albedo = true
+transparency = 1
+billboard_mode = 3
+
+[sub_resource type="QuadMesh" id="QuadMesh_7"]
+size = Vector2(1.4, 1.4)
+material = SubResource("StandardMaterial3D_6")
+
+[sub_resource type="Gradient" id="Gradient_8"]
+offsets = PackedFloat32Array(0, 0.3, 1)
+colors = PackedColorArray(0.1, 0.1, 0.1, 0, 0.12, 0.11, 0.1, 0.5, 0.2, 0.2, 0.2, 0)
+
+[node name="Fire" type="Node3D"]
+
+[node name="Flames" type="CPUParticles3D" parent="."]
+amount = 40
+lifetime = 0.8
+mesh = SubResource("QuadMesh_4")
+emission_shape = 3
+emission_box_extents = Vector3(0.6, 0.1, 0.6)
+direction = Vector3(0.0, 1.0, 0.0)
+spread = 15.0
+gravity = Vector3(0.0, 2.5, 0.0)
+initial_velocity_min = 0.5
+initial_velocity_max = 1.5
+scale_amount_min = 0.5
+scale_amount_max = 1.2
+scale_amount_curve = SubResource("Curve_1")
+color_ramp = SubResource("Gradient_5")
+
+[node name="Smoke" type="CPUParticles3D" parent="."]
+position = Vector3(0.0, 1.2, 0.0)
+amount = 20
+lifetime = 4.0
+mesh = SubResource("QuadMesh_7")
+emission_shape = 3
+emission_box_extents = Vector3(0.4, 0.1, 0.4)
+direction = Vector3(0.0, 1.0, 0.0)
+spread = 15.0
+gravity = Vector3(0.3, 0.8, 0.0)
+initial_velocity_min = 0.6
+initial_velocity_max = 1.2
+scale_amount_curve = SubResource("Curve_2")
+color_ramp = SubResource("Gradient_8")
+
+[node name="Light" type="OmniLight3D" parent="."]
+position = Vector3(0.0, 1.0, 0.0)
+light_color = Color(1.0, 0.5, 0.15, 1.0)
+light_energy = 3.0
+omni_range = 9.0
+shadow_enabled = true
+script = ExtResource("1_flicker_light")
+flicker_chance = 0.3

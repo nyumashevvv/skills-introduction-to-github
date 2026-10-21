@@ -1,0 +1,63 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/wood.tres" id="1_wood"]
+
+[ext_resource type="Material" path="res://materials/dark.tres" id="2_dark"]
+
+[ext_resource type="Material" path="res://materials/glass.tres" id="3_glass"]
+
+[ext_resource type="Material" path="res://materials/paint_white.tres" id="4_paint_white"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(2.0, 0.8, 1.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(2.0, 0.06, 1.0)
+material = ExtResource("1_wood")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.06, 0.75, 0.95)
+material = ExtResource("1_wood")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.5, 0.35, 0.05)
+material = ExtResource("2_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(0.44, 0.28, 0.01)
+material = ExtResource("3_glass")
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.3, 0.02, 0.22)
+material = ExtResource("4_paint_white")
+
+[node name="Desk" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.4, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Top" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.78, 0.0)
+
+[node name="SideL" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(-0.95, 0.375, 0.0)
+
+[node name="SideR" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.95, 0.375, 0.0)
+
+[node name="Monitor" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(0.3, 1.05, 0.2)
+
+[node name="Screen" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.3, 1.05, 0.17)
+
+[node name="Papers" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_6")
+position = Vector3(-0.5, 0.82, 0.1)
+rotation = Vector3(0.0, 0.3, 0.0)

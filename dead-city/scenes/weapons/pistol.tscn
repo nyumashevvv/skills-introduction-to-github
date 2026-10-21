@@ -1,0 +1,219 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/gun.gd" id="1_gun"]
+
+[ext_resource type="Material" path="res://materials/gun_steel.tres" id="2_gun_steel"]
+
+[ext_resource type="Material" path="res://materials/gun_black.tres" id="3_gun_black"]
+
+[ext_resource type="Material" path="res://materials/glove.tres" id="4_glove"]
+
+[ext_resource type="Material" path="res://materials/sleeve.tres" id="5_sleeve"]
+
+[ext_resource type="Material" path="res://materials/muzzle_flash.tres" id="6_muzzle_flash"]
+
+[ext_resource type="AudioStream" path="res://sounds/pistol.wav" id="7_pistol"]
+
+[ext_resource type="AudioStream" path="res://sounds/reload_pistol.wav" id="8_reload_pistol"]
+
+[ext_resource type="AudioStream" path="res://sounds/empty.wav" id="9_empty"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+size = Vector3(0.03, 0.032, 0.19)
+material = ExtResource("2_gun_steel")
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(0.031, 0.02, 0.04)
+material = ExtResource("3_gun_black")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.028, 0.022, 0.16)
+material = ExtResource("3_gun_black")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_4"]
+top_radius = 0.007
+bottom_radius = 0.007
+height = 0.012
+radial_segments = 16
+rings = 1
+material = ExtResource("3_gun_black")
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(0.03, 0.1, 0.045)
+material = ExtResource("3_gun_black")
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.008, 0.006, 0.045)
+material = ExtResource("3_gun_black")
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(0.005, 0.008, 0.006)
+material = ExtResource("3_gun_black")
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(0.022, 0.008, 0.008)
+material = ExtResource("3_gun_black")
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(0.05, 0.075, 0.07)
+material = ExtResource("4_glove")
+
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
+size = Vector3(0.05, 0.065, 0.075)
+material = ExtResource("4_glove")
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(0.085, 0.085, 0.42)
+material = ExtResource("5_sleeve")
+
+[sub_resource type="QuadMesh" id="QuadMesh_12"]
+material = ExtResource("6_muzzle_flash")
+size = Vector2(0.13, 0.13)
+
+[sub_resource type="QuadMesh" id="QuadMesh_13"]
+material = ExtResource("6_muzzle_flash")
+size = Vector2(0.078, 0.208)
+
+[node name="Pistol" type="Node3D"]
+script = ExtResource("1_gun")
+id = "pistol"
+display_name = "Пистолет"
+slot = 2
+ammo_type = "pistol"
+magazine_size = 12
+max_reserve = 96
+reload_time = 1.3
+noise_radius = 28.0
+damage = 34
+headshot_multiplier = 3.0
+fire_rate = 6.0
+base_spread_deg = 0.25
+move_spread_deg = 1.8
+heat_spread_deg = 0.8
+recoil = 0.018
+kick_back = 0.06
+kick_up = 0.12
+
+[node name="Model" type="Node3D" parent="."]
+position = Vector3(0.15, -0.16, -0.36)
+
+[node name="Slide" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_1")
+position = Vector3(0.0, 0.026, -0.02)
+cast_shadow = 0
+layers = 2
+
+[node name="SlideSerrations" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.026, 0.05)
+cast_shadow = 0
+layers = 2
+
+[node name="Frame" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.0, 0.0, -0.01)
+cast_shadow = 0
+layers = 2
+
+[node name="BarrelTip" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("CylinderMesh_4")
+position = Vector3(0.0, 0.03, -0.116)
+rotation = Vector3(1.5708, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="Grip" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.0, -0.05, 0.055)
+rotation = Vector3(-0.22, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="TriggerGuard" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_6")
+position = Vector3(0.0, -0.026, -0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="SightFront" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(0.0, 0.046, -0.105)
+cast_shadow = 0
+layers = 2
+
+[node name="SightRear" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(0.0, 0.046, 0.065)
+cast_shadow = 0
+layers = 2
+
+[node name="HandR" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_9")
+position = Vector3(0.004, -0.055, 0.06)
+rotation = Vector3(-0.22, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="HandL" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.03, -0.06, 0.05)
+rotation = Vector3(-0.2, 0.3, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="SleeveR" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_11")
+position = Vector3(0.03, -0.12, 0.28)
+rotation = Vector3(0.35, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="SleeveL" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_11")
+position = Vector3(-0.12, -0.15, 0.26)
+rotation = Vector3(0.35, -0.55, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="Muzzle" type="Marker3D" parent="Model"]
+position = Vector3(0.0, 0.026, -0.125)
+
+[node name="Flash" type="Node3D" parent="Model/Muzzle"]
+
+[node name="Quad" type="MeshInstance3D" parent="Model/Muzzle/Flash"]
+mesh = SubResource("QuadMesh_12")
+cast_shadow = 0
+layers = 2
+
+[node name="Quad2" type="MeshInstance3D" parent="Model/Muzzle/Flash"]
+mesh = SubResource("QuadMesh_12")
+cast_shadow = 0
+layers = 2
+rotation = Vector3(0.0, 0.0, 0.7854)
+
+[node name="Side" type="MeshInstance3D" parent="Model/Muzzle/Flash"]
+mesh = SubResource("QuadMesh_13")
+cast_shadow = 0
+layers = 2
+rotation = Vector3(1.5708, 0.0, 0.0)
+position = Vector3(0.0, 0.0, -0.065)
+
+[node name="Light" type="OmniLight3D" parent="Model/Muzzle/Flash"]
+light_color = Color(1.0, 0.7, 0.35, 1.0)
+light_energy = 3.0
+omni_range = 7.0
+
+[node name="ShootSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("7_pistol")
+volume_db = -5.0
+max_polyphony = 3
+
+[node name="ReloadSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("8_reload_pistol")
+volume_db = -4.0
+max_polyphony = 3
+
+[node name="EmptySound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("9_empty")
+volume_db = -4.0
+max_polyphony = 3

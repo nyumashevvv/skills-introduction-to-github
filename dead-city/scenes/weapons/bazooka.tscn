@@ -1,0 +1,231 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/weapons/rocket.tscn" id="1_rocket"]
+
+[ext_resource type="Script" path="res://scripts/weapons/launcher.gd" id="2_launcher"]
+
+[ext_resource type="Material" path="res://materials/olive.tres" id="3_olive"]
+
+[ext_resource type="Material" path="res://materials/gun_black.tres" id="4_gun_black"]
+
+[ext_resource type="Material" path="res://materials/paint_yellow.tres" id="5_paint_yellow"]
+
+[ext_resource type="Material" path="res://materials/rocket_red.tres" id="6_rocket_red"]
+
+[ext_resource type="Material" path="res://materials/glove.tres" id="7_glove"]
+
+[ext_resource type="Material" path="res://materials/sleeve.tres" id="8_sleeve"]
+
+[ext_resource type="AudioStream" path="res://sounds/rocket_launch.wav" id="9_rocket_launch"]
+
+[ext_resource type="AudioStream" path="res://sounds/reload_rocket.wav" id="10_reload_rocket"]
+
+[ext_resource type="AudioStream" path="res://sounds/empty.wav" id="11_empty"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+top_radius = 0.055
+bottom_radius = 0.055
+height = 0.8
+radial_segments = 20
+rings = 1
+material = ExtResource("3_olive")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_2"]
+top_radius = 0.066
+bottom_radius = 0.066
+height = 0.05
+radial_segments = 20
+rings = 1
+material = ExtResource("4_gun_black")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 0.064
+bottom_radius = 0.064
+height = 0.04
+radial_segments = 20
+rings = 1
+material = ExtResource("4_gun_black")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_4"]
+top_radius = 0.058
+bottom_radius = 0.072
+height = 0.1
+radial_segments = 20
+rings = 1
+material = ExtResource("4_gun_black")
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(0.032, 0.09, 0.045)
+material = ExtResource("4_gun_black")
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.02, 0.05, 0.03)
+material = ExtResource("4_gun_black")
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(0.035, 0.035, 0.12)
+material = ExtResource("4_gun_black")
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(0.118, 0.02, 0.05)
+material = ExtResource("5_paint_yellow")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_9"]
+top_radius = 0.05
+bottom_radius = 0.05
+height = 0.14
+radial_segments = 16
+rings = 1
+material = ExtResource("6_rocket_red")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_10"]
+top_radius = 0.0
+bottom_radius = 0.05
+height = 0.12
+radial_segments = 16
+rings = 1
+material = ExtResource("6_rocket_red")
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(0.05, 0.075, 0.07)
+material = ExtResource("7_glove")
+
+[sub_resource type="BoxMesh" id="BoxMesh_12"]
+size = Vector3(0.085, 0.085, 0.42)
+material = ExtResource("8_sleeve")
+
+[node name="Bazooka" type="Node3D"]
+script = ExtResource("2_launcher")
+id = "bazooka"
+display_name = "Базука"
+slot = 4
+ammo_type = "rocket"
+magazine_size = 1
+max_reserve = 8
+reload_time = 2.3
+noise_radius = 60.0
+equip_time = 0.6
+rocket_scene = ExtResource("1_rocket")
+
+[node name="Model" type="Node3D" parent="."]
+position = Vector3(0.3, -0.25, -0.55)
+
+[node name="Tube" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("CylinderMesh_1")
+position = Vector3(0.0, 0.05, -0.25)
+rotation = Vector3(1.5708, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="RingFront" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("CylinderMesh_2")
+position = Vector3(0.0, 0.05, -0.63)
+rotation = Vector3(1.5708, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="RingMid" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("CylinderMesh_3")
+position = Vector3(0.0, 0.05, -0.15)
+rotation = Vector3(1.5708, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="RearFlare" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("CylinderMesh_4")
+position = Vector3(0.0, 0.05, 0.17)
+rotation = Vector3(1.5708, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="GripFront" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.0, -0.04, -0.33)
+rotation = Vector3(0.2, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="GripRear" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.0, -0.04, -0.08)
+rotation = Vector3(-0.2, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="SightMount" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_6")
+position = Vector3(-0.07, 0.07, -0.3)
+cast_shadow = 0
+layers = 2
+
+[node name="Sight" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(-0.075, 0.105, -0.3)
+cast_shadow = 0
+layers = 2
+
+[node name="Stripe" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(0.0, 0.05, -0.45)
+cast_shadow = 0
+layers = 2
+
+[node name="LoadedRocket" type="Node3D" parent="Model"]
+position = Vector3(0.0, 0.05, -0.62)
+
+[node name="Warhead" type="MeshInstance3D" parent="Model/LoadedRocket"]
+mesh = SubResource("CylinderMesh_9")
+position = Vector3(0.0, 0.0, 0.0)
+rotation = Vector3(1.5708, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="Tip" type="MeshInstance3D" parent="Model/LoadedRocket"]
+mesh = SubResource("CylinderMesh_10")
+position = Vector3(0.0, 0.0, -0.13)
+rotation = Vector3(-1.5708, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="HandR" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_11")
+position = Vector3(0.004, -0.06, -0.08)
+rotation = Vector3(-0.2, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="HandL" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_11")
+position = Vector3(0.004, -0.06, -0.33)
+rotation = Vector3(0.2, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="SleeveR" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_12")
+position = Vector3(0.03, -0.15, 0.16)
+rotation = Vector3(0.45, 0.0, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="SleeveL" type="MeshInstance3D" parent="Model"]
+mesh = SubResource("BoxMesh_12")
+position = Vector3(-0.1, -0.15, -0.12)
+rotation = Vector3(0.4, -0.4, 0.0)
+cast_shadow = 0
+layers = 2
+
+[node name="Muzzle" type="Marker3D" parent="Model"]
+position = Vector3(0.0, 0.05, -0.72)
+
+[node name="ShootSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("9_rocket_launch")
+volume_db = -2.0
+
+[node name="ReloadSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("10_reload_rocket")
+volume_db = -3.0
+
+[node name="EmptySound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("11_empty")
+volume_db = -4.0

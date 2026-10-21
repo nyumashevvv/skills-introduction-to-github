@@ -1,0 +1,64 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/ending.gd" id="1_ending"]
+
+[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="2_ambience"]
+
+[node name="Ending" type="Control"]
+script = ExtResource("1_ending")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="."]
+color = Color(0.01, 0.01, 0.015, 1.0)
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Center" type="CenterContainer" parent="."]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Center"]
+custom_minimum_size = Vector2(800.0, 0.0)
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="Center/VBox"]
+theme_override_constants/outline_size = 10
+text = "ЭВАКУАЦИЯ"
+theme_override_font_sizes/font_size = 64
+theme_override_colors/font_color = Color(0.95, 0.8, 0.5, 1.0)
+horizontal_alignment = 1
+
+[node name="Story" type="Label" parent="Center/VBox"]
+autowrap_mode = 3
+text = "Вертолёт уходит в рассветное небо. Внизу догорает город, который ещё неделю назад был домом.\n\n«Говорит диспетчер. Борт с выжившим принят. Ты справился. Добро пожаловать в Безопасную зону.»\n\nМёртвые остались внизу. Пока что."
+theme_override_font_sizes/font_size = 21
+theme_override_colors/font_color = Color(0.85, 0.82, 0.78, 1.0)
+horizontal_alignment = 1
+
+[node name="Stats" type="Label" parent="Center/VBox"]
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1.0)
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="Center/VBox"]
+custom_minimum_size = Vector2(0.0, 20.0)
+
+[node name="MenuButton" type="Button" parent="Center/VBox"]
+custom_minimum_size = Vector2(340.0, 0.0)
+size_flags_horizontal = 4
+text = "Главное меню"
+
+[node name="Ambience" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("2_ambience")
+autoplay = true
+volume_db = -10.0
