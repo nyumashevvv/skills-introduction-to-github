@@ -14,7 +14,7 @@
 | Светофоры, знаки, столбы, стройограждения | [City Kit (Roads)](https://kenney.nl/assets/city-kit-roads) | Kenney |
 | Палатки, костёр, ящики, заборы, инструменты | [Survival Kit](https://kenney.nl/assets/survival-kit) | Kenney |
 | Звуки перезарядки (пистолет, автомат, РПГ, патрон в дробовик, помпа) | [Handgun Reload](https://opengameart.org/content/handgun-reload-sound-effect), [Gun Reload Sounds](https://opengameart.org/content/gun-reload-sounds), [Gun Reload Sound Effects](https://opengameart.org/content/gun-reload-sound-effects), [2 Gun Reloads](https://opengameart.org/content/2-gun-reloads) | OpenGameArt, CC0 |
-| Русская озвучка (диспетчер, пилот, новости, герой) | голоса [Piper](https://github.com/rhasspy/piper) `ru_RU-denis` и `ru_RU-dmitri` (датасеты CC0), синтез `tools/gen_voice.py` | Open Home Foundation |
+| Английская озвучка (диспетчер, пилот, новости, герой) | голоса [Piper](https://github.com/rhasspy/piper) `en_US-joe` (CC0), `en_US-john`, `en_US-bryce`, `en_US-kristin` (public domain), синтез `tools/gen_voice.py` | Open Home Foundation |
 | Текстуры поверхностей (асфальт, брусчатка, бетон, кирпич, штукатурка, кафель, терраццо, дерево, металл, ржавчина, трава) | [ambientCG](https://ambientcg.com) — Asphalt012, PavingStones070, Concrete044B, Concrete034, Bricks059, Plaster001, PaintedPlaster017, Tiles107, Terrazzo009, Wood049, Metal032, Rust004, Grass004 | ambientCG, CC0 |
 | Шрифты интерфейса | [Russo One](https://fonts.google.com/specimen/Russo+One) (Jovanny Lemonad), [Oswald](https://fonts.google.com/specimen/Oswald) (The Oswald Project Authors) | SIL Open Font License 1.1, тексты лицензий в `fonts/` |
 | Руки от первого лица | [fps arms (rigged only)](https://opengameart.org/content/fps-arms-rigged-only) | para |

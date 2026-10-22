@@ -1203,7 +1203,7 @@ def level_hospital():
                     'сначала запусти генератор, он в техническом крыле, на востоке.')
     L.event('Intro2', delay=9.5, speaker=D, duration=6, message='Свет отключён. Фонарик — F. И лишний раз не шуми.')
     L.event('ShotgunFound', speaker=D, duration=6,
-            message='Дробовик охраны! В тесных коридорах лучше не придумаешь. Клавиша 3.')
+            message='Дробовик охраны! В тесных коридорах лучше не придумаешь. Клавиша 4.')
     L.event('PowerOn', speaker=D, duration=8, objective='Беги к пожарному выходу в западном конце коридора',
             message='Есть питание! Чёрт… сирена подняла всё здание. Пожарная дверь открыта — беги!',
             targets=power + ['Decor/Alarm', 'Doors/FireDoor', 'Story/WardHorde', 'Story/LobbyHorde'] + patients)

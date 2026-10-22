@@ -21,7 +21,8 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
   `Game.complete_level(state)` moves on; the last chapter leads to `ending.tscn`.
 - Menu and intro cutscene share `scenes/ui/backdrop_world.tscn` (street + basement set, camera marks `<Shot>A/B`);
   cutscene text lives in `tools/story_text.py`. Radio lines and the intro are voiced by `tools/gen_voice.py` (Piper,
-  CC0 Russian voices) into `sounds/voice/<md5(text)[:12]>.ogg`; `Hud.voice_line(text)` finds them.
+  CC0 / public-domain English voices; the spoken English for each Russian subtitle is in `tools/voice_en.py`)
+  into `sounds/voice/<md5(russian text)[:12]>.ogg`; `Hud.voice_line(text)` finds them.
 - `Settings` autoload (`scripts/autoload/settings.gd`): volumes on the Master / Music / Voice buses
   (`default_bus_layout.tres`), quality (MSAA, FXAA, shadows, SSAO, glow), window mode, vsync, 3D scale, brightness
   (tonemap exposure), FOV of the player's camera, mouse sensitivity; applied to nodes as they enter the tree.
@@ -77,7 +78,7 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
 - `LevelBuilder.shell` hollows a building's ground floor (walls with door gaps, ceiling, solid storeys above);
   `fancy_door` / `dress_door` give doors the station-entrance look (frame, window, handles, lamp, sign).
 - `tools/gen_levels.py`: chapter scenes are `Level` roots — keep `script` the first property of a node or Godot drops
-  the script's exported values. After changing radio text, rerun `tools/gen_voice.py`.
+  the script's exported values. After changing radio text, update `tools/voice_en.py` and rerun `tools/gen_voice.py`.
 - Tests (must pass before committing):
 
       godot --headless --path . --import

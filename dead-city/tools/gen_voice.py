@@ -1,10 +1,12 @@
-"""Voices every radio message in the chapters and the intro cutscene with Piper TTS (Russian CC0 voices).
+"""Voices every radio message in the chapters and the intro cutscene in English with Piper TTS
+(en_US joe, john, bryce, kristin: CC0 / public domain). Subtitles stay Russian; tools/voice_en.py has what is said.
 
     pip install piper-tts
-    python3 tools/gen_voice.py <dir with ru_RU-denis-medium.onnx and ru_RU-dmitri-medium.onnx>
+    python3 tools/gen_voice.py <dir with en_US-{joe,john,bryce,kristin}-medium.onnx>
 
-Run from the project root after tools/gen_levels.py. Files land in sounds/voice/<md5(text)[:12]>.ogg, which is
-what the game looks up (`text.md5_text().left(12)`); lines that already have a file are skipped.
+Run from the project root after tools/gen_levels.py. Files land in sounds/voice/<md5(russian text)[:12]>.ogg, which
+is what the game looks up (`text.md5_text().left(12)`); lines that already have a file are skipped, files no line
+uses any more are deleted.
 """
 import glob
 import hashlib
@@ -19,20 +21,18 @@ from piper import PiperVoice, SynthesisConfig
 
 sys.path.insert(0, os.path.dirname(__file__))
 from story_text import CUTSCENE  # noqa: E402
+from voice_en import EN  # noqa: E402
 
 OUT = 'sounds/voice'
 # speaker: (voice, length scale, ffmpeg filter)
 RADIO = ('highpass=f=320,lowpass=f=3300,acompressor=threshold=-22dB:ratio=5:attack=5:release=60,'
          'volume=5dB,asoftclip=type=tanh,volume=-2dB')
 VOICES = {
-    'Диспетчер': ('denis', 1.0, RADIO),
-    'Пилот': ('dmitri', 0.95, 'asetrate=22050*0.93,aresample=22050,' + RADIO),
-    'Новости': ('denis', 0.95, 'highpass=f=150,lowpass=f=5000,acompressor=threshold=-20dB:ratio=3,volume=2dB'),
-    '': ('dmitri', 1.12, 'highpass=f=70,aecho=0.8:0.4:35:0.18,volume=1dB'),
+    'Диспетчер': ('joe', 1.0, RADIO),
+    'Пилот': ('bryce', 0.95, 'asetrate=22050*0.95,aresample=22050,' + RADIO),
+    'Новости': ('kristin', 1.0, 'highpass=f=150,lowpass=f=5000,acompressor=threshold=-20dB:ratio=3,volume=2dB'),
+    '': ('john', 1.08, 'highpass=f=70,aecho=0.8:0.4:35:0.18,volume=1dB'),
 }
-# Words the synthesiser would spell out badly.
-SAY = [('РПГ', 'эр-пэ-гэ'), ('клавиша F', 'клавиша эф'), ('Клавиша 3', 'Клавиша три'), ('F.', 'эф.'),
-       ('«', ''), ('»', ''), ('…', ''), ('Борт-двенадцать', 'Борт двенадцать')]
 
 
 def voice_name(text):
@@ -58,6 +58,15 @@ def main():
     os.makedirs(OUT, exist_ok=True)
     loaded = {}
     lines = level_lines() + [(speaker, text) for _, speaker, text in CUTSCENE]
+    missing = [text for _, text in lines if text not in EN]
+    if missing:
+        sys.exit('no English line in tools/voice_en.py for:\n' + '\n'.join(missing))
+    keep = {voice_name(text) + '.ogg' for _, text in lines}
+    for old in os.listdir(OUT):
+        if old.endswith('.ogg') and old not in keep:
+            os.remove(os.path.join(OUT, old))
+            if os.path.exists(os.path.join(OUT, old + '.import')):
+                os.remove(os.path.join(OUT, old + '.import'))
     made = 0
     for speaker, text in lines:
         out = os.path.join(OUT, voice_name(text) + '.ogg')
@@ -65,10 +74,8 @@ def main():
             continue
         name, length, chain = VOICES.get(speaker, VOICES['Диспетчер'])
         if name not in loaded:
-            loaded[name] = PiperVoice.load(os.path.join(models, f'ru_RU-{name}-medium.onnx'))
-        spoken = text
-        for a, b in SAY:
-            spoken = spoken.replace(a, b)
+            loaded[name] = PiperVoice.load(os.path.join(models, f'en_US-{name}-medium.onnx'))
+        spoken = EN[text]
         with tempfile.NamedTemporaryFile(suffix='.wav') as tmp:
             with wave.open(tmp.name, 'wb') as wav:
                 loaded[name].synthesize_wav(spoken, wav, syn_config=SynthesisConfig(length_scale=length))

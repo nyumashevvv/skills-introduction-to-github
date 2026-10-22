@@ -1805,7 +1805,7 @@ message_duration = 6.0
 [node name="ShotgunFound" type="Node" parent="Story"]
 script = ExtResource("111_story_event")
 speaker = "Диспетчер"
-message = "Дробовик охраны! В тесных коридорах лучше не придумаешь. Клавиша 3."
+message = "Дробовик охраны! В тесных коридорах лучше не придумаешь. Клавиша 4."
 message_duration = 6.0
 
 [node name="PowerOn" type="Node" parent="Story"]
