@@ -55,7 +55,7 @@ func _apply(player: Player) -> bool:
 		Kind.HEALTH:
 			return player.heal(amount)
 		Kind.AMMO:
-			return player.holder.add_ammo(ammo_type, amount)
+			return player.holder.add_ammo(ammo_type, maxi(roundi(amount * Game.tuning("ammo")), 1))
 		Kind.WEAPON:
 			return player.holder.give_weapon(item_id)
 		Kind.KEY:

@@ -1,0 +1,170 @@
+[gd_scene format=3]
+
+[ext_resource type="FontFile" path="res://fonts/RussoOne-Regular.ttf" id="1_RussoOne-Regular"]
+
+[ext_resource type="Script" path="res://scripts/ui/cutscene.gd" id="2_cutscene"]
+
+[ext_resource type="PackedScene" path="res://scenes/ui/backdrop_world.tscn" id="3_backdrop_world"]
+
+[ext_resource type="AudioStream" path="res://sounds/tv_static.wav" id="4_tv_static"]
+
+[ext_resource type="AudioStream" path="res://sounds/radio.wav" id="5_radio"]
+
+[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="6_ambience"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0.0, 0.0, 0.0, 0.55)
+content_margin_left = 18.0
+content_margin_right = 18.0
+content_margin_top = 10.0
+content_margin_bottom = 12.0
+
+[node name="IntroCutscene" type="Control"]
+script = ExtResource("2_cutscene")
+shots = PackedStringArray("News", "City", "Street", "Basement", "Radio", "Door")
+speakers = PackedStringArray("Новости", "", "", "", "Диспетчер", "")
+lines = PackedStringArray("Экстренный выпуск. Власти просят жителей не покидать дома и не открывать двери незнакомым. Число заболевших растёт с каждым часом.", "Девять дней назад это передавали по всем каналам. Говорили — новый грипп. Через сутки больницы были переполнены.", "Через двое суток город пал. Мёртвые поднимались и шли за живыми. Армия ушла первой.", "Я спрятался в подвале своего дома. Девять дней тишины, консервы и старая рация. Вчера кончилась еда.", "…если кто-то слышит — эвакуация со стадиона «Динамо» на рассвете. Повторяю: стадион, на рассвете.", "Стадион на другом конце города. Но другого шанса не будет. Пора выходить.")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="World" parent="." instance=ExtResource("3_backdrop_world")]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+current = true
+fov = 55.0
+
+[node name="News" type="Control" parent="."]
+mouse_filter = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="News"]
+color = Color(0.02, 0.02, 0.03, 1.0)
+mouse_filter = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Band" type="ColorRect" parent="News"]
+color = Color(0.6, 0.05, 0.04, 1.0)
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -70.0
+offset_bottom = 40.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="News"]
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = -62.0
+offset_bottom = 30.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("1_RussoOne-Regular")
+text = "ЭКСТРЕННЫЙ ВЫПУСК"
+theme_override_font_sizes/font_size = 64
+horizontal_alignment = 1
+
+[node name="Live" type="Label" parent="News"]
+anchors_preset = 14
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_top = 52.0
+offset_bottom = 86.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "ГОРОДСКОЕ ВЕЩАНИЕ · ПРЯМОЙ ЭФИР"
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.95, 0.35, 0.25, 1.0)
+horizontal_alignment = 1
+
+[node name="BarTop" type="ColorRect" parent="."]
+color = Color(0.0, 0.0, 0.0, 1.0)
+anchor_right = 1.0
+anchor_top = 0.0
+anchor_bottom = 0.11
+mouse_filter = 2
+
+[node name="BarBottom" type="ColorRect" parent="."]
+color = Color(0.0, 0.0, 0.0, 1.0)
+anchor_right = 1.0
+anchor_top = 0.89
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Subtitle" type="PanelContainer" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -460.0
+offset_top = -190.0
+offset_right = 460.0
+offset_bottom = -110.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="Text" type="RichTextLabel" parent="Subtitle"]
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 23
+theme_override_font_sizes/italics_font_size = 23
+
+[node name="SkipHint" type="Label" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -360.0
+offset_top = 22.0
+offset_right = -28.0
+offset_bottom = 48.0
+grow_horizontal = 0
+text = "Любая клавиша — пропустить"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.6, 0.58, 0.55, 1.0)
+horizontal_alignment = 2
+
+[node name="Fade" type="ColorRect" parent="."]
+color = Color(0.0, 0.0, 0.0, 1.0)
+mouse_filter = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Voice" type="AudioStreamPlayer" parent="."]
+volume_db = 0.0
+
+[node name="Static" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_tv_static")
+volume_db = -16.0
+
+[node name="RadioClick" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_radio")
+volume_db = -8.0
+
+[node name="Ambience" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_ambience")
+autoplay = true
+volume_db = -8.0

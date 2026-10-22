@@ -28,11 +28,14 @@ def story_rel(path):
 
 
 class LevelBuilder(Scene):
-    def __init__(self, root_name, props):
+    def __init__(self, root_name, props, script='res://scripts/story/level.gd'):
         super().__init__()
         self.count = {}
         self.rnd = random.Random(root_name)
-        self.node(root_name, 'Node3D', script=self.ext_res('Script', 'res://scripts/story/level.gd'), **props)
+        if script:
+            # The script must come first: Godot drops properties it does not know yet.
+            props = dict(script=self.ext_res('Script', script), **props)
+        self.node(root_name, 'Node3D', **props)
 
     def uid(self, prefix):
         self.count[prefix] = self.count.get(prefix, 0) + 1
@@ -1187,6 +1190,87 @@ def level_subway():
     L.finish((0, 0, -3), ambience_db=-12.0)
     L.save('scenes/levels/level_4_subway.tscn')
 
+# =================================================================== backdrop for the menu and the intro cutscene
+def look(frm, to):
+    """Marker rotation so its -Z looks from `frm` at `to`."""
+    dx, dy, dz = to[0] - frm[0], to[1] - frm[1], to[2] - frm[2]
+    return V3(math.atan2(dy, math.hypot(dx, dz)), math.atan2(-dx, -dz), 0)
+
+
+def backdrop_world():
+    L = LevelBuilder('BackdropWorld', {}, script=None)
+    L.setup(night_env(L, fog=0.03, ambient=0.8), MOON)
+    c = L.clutter
+    # --- the street
+    L.floor('asphalt', -6, 6, 14, -74)
+    L.floor('sidewalk', -9, -6, 14, -74); L.floor('sidewalk', 6, 9, 14, -74)
+    for z in range(10, -72, -6):
+        L.decor((0.15, 0.01, 2.5), (0, 0.005, z), 'paint_white')
+    for side in (-1, 1):
+        for z0, z1, h, mat in [(14, -10, 11, 'brick'), (-10, -30, 14, 'plaster_gray'), (-30, -52, 9, 'brick_dark'),
+                               (-52, -74, 12, 'plaster')]:
+            x0, x1 = (9, 21) if side > 0 else (-21, -9)
+            L.blk(mat, (12, h, z0 - z1), ((x0 + x1) / 2, h / 2, (z0 + z1) / 2))
+            fx = x0 - 0.03 if side > 0 else x1 + 0.03
+            for row in range(int((h - 1.5) // 3.2)):
+                for i in range(int((z0 - z1 - 1) // 3.5)):
+                    lit = L.rnd.random() < 0.08
+                    L.decor((0.06, 1.5, 1.1), (fx, 2.4 + row * 3.2, z1 + 2.2 + i * 3.5), 'window_lit' if lit else 'window_dark',
+                            cast_shadow=0)
+    L.wall_z(-74.5, -21, 21, 'brick_dark', h=14, t=1)
+    for scene, pos, rot in [('sedan_burnt', (-2.6, 0, -6), 0.5), ('police', (3.2, 0, -15), -0.3), ('bus', (-1.2, 0, -30), 1.3),
+                            ('suv_burnt', (3.6, 0, -44), -0.2), ('taxi', (-3.8, 0, -55), 0.15), ('ambulance', (3.0, 0, -62), 2.8)]:
+        L.prop(VEHICLE.format(scene), pos, rot)
+    for pos in [(-2.6, 1.1, -6), (0.0, 3.2, -30), (3.6, 1.0, -44)]:
+        L.fire(pos)
+    for i, z in enumerate(range(8, -70, -16)):
+        side = -1 if i % 2 else 1
+        L.prop(f'res://scenes/world/{"street_lamp_flicker" if i % 2 else "street_lamp"}.tscn', (8.2 * side, 0, z),
+               -math.pi / 2 * side)
+    L.scatter(['trash_bags', 'newspaper', 'suitcase', 'rubble', 'debris_tire', 'papers', 'backpack'], -8.5, 8.5, -68, 6, 26)
+    for pos in [(-8.4, 0, -20), (8.4, 0, -36)]:
+        c('electricity_pole', pos, 0.0)
+    for x, z in [(-3, -13), (2.2, -21), (-0.6, -24), (4.2, -33), (-4.4, -38), (0.4, -48), (2.6, -10), (-2, -58)]:
+        L.zombie('walker', (x, 0, z))
+    L.zombie('runner', (5.0, 0, -26))
+    # --- the basement where the hero hid (far away from the street)
+    B = 300.0
+    L.floor('concrete', B - 3.6, B + 3.6, 3.1, -3.1)
+    L.floor('concrete', B - 3.75, B + 3.75, 3.25, -3.25, top=2.75, thick=0.3)
+    L.wall_z(3.1, B - 3.6, B + 3.6, 'concrete', h=2.6, t=0.3); L.wall_z(-3.1, B - 3.6, B + 3.6, 'concrete', h=2.6, t=0.3)
+    L.wall_x(B - 3.6, 3.1, -3.1, 'brick_dark', h=2.6, t=0.3)
+    L.wall_x(B + 3.6, 3.1, 0.6, 'concrete', h=2.6, t=0.3); L.wall_x(B + 3.6, -0.9, -3.1, 'concrete', h=2.6, t=0.3)
+    L.blk('metal_rust', (0.12, 2.1, 1.5), (B + 3.62, 1.05, -0.15), name='BasementDoor')
+    L.decor((0.05, 0.4, 1.2), (B - 3.43, 2.2, 0.5), 'glass', cast_shadow=0)                 # window slit
+    for z in (-2.2, 1.8):
+        L.decor((7.0, 0.12, 0.12), (B, 2.55, z), 'metal_rust', cast_shadow=0)            # pipes
+    c('bed_single', (B - 2.8, 0, 1.6), math.pi / 2)
+    L.prop('res://scenes/props/table.tscn', (B + 1.4, 0, -2.2), 0.0)
+    c('radio', (B + 1.2, 0.69, -2.25), 0.2); c('table_lamp', (B + 2.0, 0.69, -2.2))
+    L.prop('res://scenes/world/shelf.tscn', (B - 3.2, 0, -1.6), math.pi / 2)
+    for i, (x, z) in enumerate([(B + 0.6, -2.0), (B + 0.75, -2.15), (B - 0.4, 2.6), (B - 0.2, 2.7), (B + 0.1, 2.55)]):
+        L.decor((0.08, 0.11, 0.08), (x, 0.745 if i < 2 else 0.055, z), 'chrome', cast_shadow=0)  # empty tins
+    for kind, pos in [('bottle', (B - 1.5, 0, 2.5)), ('box_open', (B + 2.6, 0, 2.3)), ('crate_large', (B + 2.8, 0, 1.2)),
+                      ('books_floor', (B - 1.2, 0, 0.6)), ('bucket', (B - 2.9, 0, -0.2)), ('rug', (B - 0.6, 0.0, 0.8)),
+                      ('chair', (B + 1.4, 0, -1.3)), ('backpack', (B - 2.2, 0, 2.6))]:
+        c(kind, pos)
+    L.omni((B + 1.6, 1.4, -1.8), (1, 0.75, 0.45), 1.6, 5.5, flicker=True, name='BasementLamp')
+    L.omni((B - 3.0, 2.0, 0.5), (0.45, 0.55, 0.85), 0.6, 4.0)
+    L.omni((B + 1.2, 0.95, -2.0), (0.4, 1.0, 0.5), 0.5, 1.5, name='RadioGlow')
+    L.omni((B + 4.2, 1.6, -0.15), (1, 0.85, 0.6), 0.6, 3.0, name='StairLight')
+    # --- camera marks: <Shot>A -> <Shot>B, used by scripts/ui/cutscene.gd and main_menu.gd
+    L.node('Cams', 'Node3D', '.')
+    for name, frm, to in [('NewsA', (0, 2, 12), (0, 2, 0)), ('NewsB', (0, 2, 12), (0, 2, 0)),
+                          ('CityA', (-6, 30, 26), (0, 0, -30)), ('CityB', (4, 22, 4), (0, 0, -40)),
+                          ('StreetA', (2.0, 1.5, 8), (0, 1.3, -30)), ('StreetB', (0.6, 1.3, 1.5), (-1, 1.2, -30)),
+                          ('BasementA', (B + 3.0, 2.2, 2.6), (B - 2, 0.5, -1)), ('BasementB', (B + 2.0, 1.9, 2.0), (B - 2.5, 0.6, 0.5)),
+                          ('RadioA', (B + 1.0, 1.4, -0.6), (B + 1.2, 0.75, -2.25)), ('RadioB', (B + 1.15, 1.0, -1.25), (B + 1.2, 0.8, -2.25)),
+                          ('DoorA', (B - 1.0, 1.6, 0.5), (B + 3.6, 1.1, -0.15)), ('DoorB', (B + 1.6, 1.6, 0.0), (B + 3.6, 1.1, -0.15)),
+                          ('MenuA', (-3.0, 2.0, 10), (0.5, 1.4, -20)), ('MenuB', (2.5, 1.8, 7), (-1.0, 1.4, -24))]:
+        L.node(name, 'Marker3D', 'Cams', position=V3(*frm), rotation=look(frm, to))
+    L.save('scenes/ui/backdrop_world.tscn')
+
+
 
 if __name__ == '__main__':
     level_1()
@@ -1194,4 +1278,5 @@ if __name__ == '__main__':
     level_hospital()
     level_subway()
     level_3()
+    backdrop_world()
     print('levels ok')

@@ -92,6 +92,7 @@ func _physics_process(delta: float) -> void:
 func take_damage(amount: int) -> void:
 	if is_dead or amount <= 0:
 		return
+	amount = maxi(roundi(amount * Game.tuning("damage")), 1)
 	health = maxi(health - amount, 0)
 	health_changed.emit(health, max_health)
 	damaged.emit()

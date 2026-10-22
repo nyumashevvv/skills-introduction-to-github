@@ -27,6 +27,7 @@ var _holder: WeaponHolder
 var _objective_flash := 0.0
 var _slot_on: StyleBoxFlat
 var _slot_off: StyleBoxFlat
+var _voice: AudioStreamPlayer
 
 @onready var gameplay: Control = $Gameplay
 @onready var vignette: ColorRect = $Gameplay/Vignette
@@ -71,6 +72,9 @@ func _ready() -> void:
 	subtitle_panel.modulate.a = 0.0
 	reload_label.visible = false
 	objective_box.visible = false
+	_voice = AudioStreamPlayer.new()
+	_voice.name = "Voice"
+	add_child(_voice)
 	_slot_on = _slot_style(Color(ACCENT, 0.9))
 	_slot_off = _slot_style(Color(0, 0, 0, 0.45))
 	timer_label.text = ""
@@ -221,6 +225,16 @@ func set_prompt(text: String) -> void:
 	prompt_label.text = text
 
 
+## Knife hint under the crosshair ("ЛКМ — тихое убийство"); empty hides it.
+func set_hint(text: String) -> void:
+	if prompt_label.text == "" or prompt_label.has_meta("hint"):
+		prompt_label.text = text
+		if text == "":
+			prompt_label.remove_meta("hint")
+		else:
+			prompt_label.set_meta("hint", true)
+
+
 func show_pickup(text: String) -> void:
 	pickup_label.text = "+ " + text.to_upper()
 	_pickup_time = 2.5
@@ -283,6 +297,18 @@ func _show_subtitle_now(speaker: String, text: String, duration: float) -> void:
 	_subtitle_time = duration
 	subtitle_panel.modulate.a = 1.0
 	radio_sound.play()
+	# Voiced line (tools/gen_voice.py): the subtitle stays up until it has been said.
+	var voice := voice_line(text)
+	if voice != null:
+		_voice.stream = voice
+		_voice.play()
+		_subtitle_time = maxf(duration, voice.get_length() + 0.8)
+
+
+## The recorded voice for a line of dialogue, or null.
+static func voice_line(text: String) -> AudioStream:
+	var path := "res://sounds/voice/%s.ogg" % text.md5_text().left(12)
+	return load(path) as AudioStream if ResourceLoader.exists(path) else null
 
 
 func _highlight_slot(weapon: Weapon) -> void:

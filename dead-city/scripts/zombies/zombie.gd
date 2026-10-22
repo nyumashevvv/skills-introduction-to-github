@@ -100,6 +100,8 @@ var _neck := -1
 
 
 func _ready() -> void:
+	max_health = roundi(max_health * Game.tuning("health"))
+	chase_speed *= Game.tuning("speed")
 	health = max_health
 	player = get_tree().get_first_node_in_group("player") as Player
 	_home = global_position
@@ -159,6 +161,38 @@ func take_damage(amount: int, direction: Vector3, hit_point: Vector3, explosive 
 		_hit_anim_time = 0.35
 		_anim.play("RecieveHit", 0.05)
 		_anim.speed_scale = 1.6
+	return false
+
+
+## True when a knife can kill it outright: it has not noticed the player, or is struck in the back.
+func can_be_stealth_killed(direction: Vector3) -> bool:
+	if state == State.DEAD:
+		return false
+	return state == State.IDLE or Vector3(direction.x, 0.0, direction.z).normalized().dot(-global_basis.z) > 0.4
+
+
+## A silent knife kill: no groan, no alarm for the neighbours.
+func stealth_kill(direction: Vector3, hit_point: Vector3) -> void:
+	if state == State.DEAD:
+		return
+	health = 0
+	Effects.spawn(BLOOD_SCENE, self, hit_point, -direction)
+	_die(false, true)
+
+
+## A knife hit: hurts and knocks it back off balance far more than a bullet does.
+func melee_hit(amount: int, direction: Vector3, hit_point: Vector3) -> bool:
+	var killed := take_damage(amount, direction, hit_point)
+	if killed or state == State.DEAD:
+		return killed
+	var flinch := 1.0 - stagger_resistance
+	_stagger = maxf(_stagger, 0.8 * flinch)
+	velocity += Vector3(direction.x, 0.0, direction.z).normalized() * 4.0 * flinch
+	if flinch > 0.3 and state != State.SPECIAL and _anim != null:
+		state = State.CHASE if state == State.ATTACK else state
+		_hit_anim_time = 0.6 * flinch
+		_anim.play("RecieveHit", 0.05)
+		_anim.speed_scale = 1.2
 	return false
 
 
@@ -398,7 +432,7 @@ func _play_groan(urgent := false) -> void:
 	groan_sound.play()
 
 
-func _die(headshot: bool) -> void:
+func _die(headshot: bool, silent := false) -> void:
 	state = State.DEAD
 	died.emit(self)
 	Game.register_kill()
@@ -407,9 +441,10 @@ func _die(headshot: bool) -> void:
 	for mesh in _meshes:
 		mesh.material_overlay = null
 	groan_sound.stop()
-	death_sound.stream = DEATHS.pick_random()
-	death_sound.pitch_scale = voice_pitch * randf_range(0.9, 1.1)
-	death_sound.play()
+	if not silent:
+		death_sound.stream = DEATHS.pick_random()
+		death_sound.pitch_scale = voice_pitch * randf_range(0.9, 1.1)
+		death_sound.play()
 	if _pose != null:
 		_pose.reach = 0.0
 		_pose.head_hidden = headshot

@@ -79,8 +79,13 @@ func _run() -> void:
 	get_tree().current_scene = placeholder
 	if "menu" in sections:
 		get_tree().change_scene_to_file("res://scenes/ui/main_menu.tscn")
-		await frames(30)
+		await get_tree().create_timer(3.0).timeout
 		await snap("01_menu")
+		(get_tree().current_scene.get_node("Menu/Buttons/NewGameButton") as Button).pressed.emit()
+		await frames(5)
+		(get_tree().current_scene.get_node("Menu/Difficulty/Level1") as Button).grab_focus()
+		await frames(5)
+		await snap("01_menu_difficulty")
 	if "gallery" in sections:
 		await _gallery()
 	if "bosses" in sections:
@@ -91,6 +96,11 @@ func _run() -> void:
 		await _tour()
 	if "reload" in sections:
 		await _reload()
+	if "cutscene" in sections:
+		get_tree().change_scene_to_file("res://scenes/ui/intro_cutscene.tscn")
+		for i in 9:
+			await get_tree().create_timer(5.5).timeout
+			await snap("cutscene_%d" % i)
 	if "street" in sections:
 		await _street()
 	if "doors" in sections:

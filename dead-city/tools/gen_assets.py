@@ -904,22 +904,88 @@ def hud():
     s.node('RadioSound', 'AudioStreamPlayer', '.', stream=s.sound('radio'), volume_db=-8.0)
     s.save('scenes/ui/hud.tscn')
 
-    # Main menu
+    # Main menu: the burning street behind, the menu on a dark band on the left
     s = Scene()
-    grad = s.sub_res('Gradient', offsets='PackedFloat32Array(0, 1)',
-                     colors='PackedColorArray(0.18, 0.02, 0.02, 1, 0.01, 0.01, 0.01, 1)')
-    tex = s.sub_res('GradientTexture2D', gradient=grad, fill=2, fill_from=V2(0.5, 0.35), fill_to=V2(1.1, 1.1))
+    russo = s.ext_res('FontFile', RUSSO)
+    shade_grad = s.sub_res('Gradient', offsets='PackedFloat32Array(0, 0.45, 1)',
+                           colors='PackedColorArray(0, 0, 0, 0.92, 0, 0, 0, 0.55, 0, 0, 0, 0)')
+    shade = s.sub_res('GradientTexture2D', gradient=shade_grad, fill_from=V2(0, 0.5), fill_to=V2(1, 0.5))
+    plain = s.sub_res('StyleBoxFlat', bg_color=C(0, 0, 0, 0), content_margin_left=16.0, content_margin_top=6.0,
+                      content_margin_bottom=6.0)
+    lit = s.sub_res('StyleBoxFlat', bg_color=C(0.55, 0.06, 0.04, 0.55), border_width_left=5, border_color=C(0.95, 0.25, 0.15),
+                    content_margin_left=22.0, content_margin_top=6.0, content_margin_bottom=6.0)
+    button_style = {'theme_override_fonts/font': russo, 'theme_override_font_sizes/font_size': 26,
+                    'theme_override_styles/normal': plain, 'theme_override_styles/hover': lit,
+                    'theme_override_styles/focus': lit, 'theme_override_styles/pressed': lit,
+                    'theme_override_colors/font_color': C(0.85, 0.82, 0.78), 'alignment': 0,
+                    'custom_minimum_size': V2(420, 0)}
     s.node('MainMenu', 'Control', script=s.ext_res('Script', 'res://scripts/ui/main_menu.gd'), **FULL)
-    s.node('Background', 'TextureRect', '.', texture=tex, expand_mode=1, stretch_mode=0, **FULL)
-    s.node('Center', 'CenterContainer', '.', **FULL)
-    s.node('VBox', 'VBoxContainer', 'Center', **{'theme_override_constants/separation': 14})
-    label(s, 'Title', 'Center/VBox', 'МЁРТВЫЙ ГОРОД', 84, BLOOD, 1, **{'theme_override_constants/outline_size': 14})
-    label(s, 'Subtitle', 'Center/VBox', 'Последний вертолёт улетает на рассвете', 22, C(0.8, 0.75, 0.7), 1)
-    s.node('Spacer', 'Control', 'Center/VBox', custom_minimum_size=V2(0, 30))
+    s.node('World', None, '.', instance=s.ext_res('PackedScene', 'res://scenes/ui/backdrop_world.tscn'))
+    s.node('Camera3D', 'Camera3D', '.', current=True, fov=62.0)
+    s.node('Shade', 'TextureRect', '.', texture=shade, expand_mode=1, stretch_mode=0, mouse_filter=2, **FULL)
+    s.node('Menu', 'VBoxContainer', '.', anchors_preset=4, anchor_top=0.5, anchor_bottom=0.5, offset_left=90.0,
+           offset_top=-270.0, offset_right=760.0, offset_bottom=270.0, grow_vertical=2, alignment=1,
+           **{'theme_override_constants/separation': 6})
+    label(s, 'Title', 'Menu', 'МЁРТВЫЙ ГОРОД', 88, BLOOD, None,
+          **{'theme_override_constants/outline_size': 14, 'theme_override_fonts/font': russo})
+    label(s, 'Subtitle', 'Menu', 'Последний вертолёт улетает на рассвете', 24, C(0.85, 0.78, 0.7))
+    s.node('Spacer', 'Control', 'Menu', custom_minimum_size=V2(0, 34))
+    s.node('Buttons', 'VBoxContainer', 'Menu', **{'theme_override_constants/separation': 4})
     for b, t in [('ContinueButton', 'Продолжить'), ('NewGameButton', 'Новая игра'), ('QuitButton', 'Выход')]:
-        s.node(b, 'Button', 'Center/VBox', custom_minimum_size=V2(340, 0), size_flags_horizontal=4, text=S(t))
-    s.node('Ambience', 'AudioStreamPlayer', '.', stream=s.sound('ambience'), autoplay=True, volume_db=-6.0)
+        s.node(b, 'Button', 'Menu/Buttons', text=S(t.upper()), **button_style)
+    s.node('Difficulty', 'VBoxContainer', 'Menu', visible=False, **{'theme_override_constants/separation': 4})
+    label(s, 'Header', 'Menu/Difficulty', 'СЛОЖНОСТЬ', 16, C(0.95, 0.3, 0.2), None, **{'theme_override_fonts/font': russo})
+    for i, t in enumerate(['Лёгкая', 'Нормальная', 'Сложная']):
+        s.node(f'Level{i}', 'Button', 'Menu/Difficulty', text=S(t.upper()), **button_style)
+    label(s, 'Info', 'Menu/Difficulty', '', 18, C(0.75, 0.72, 0.68), None, autowrap_mode=3,
+          custom_minimum_size=V2(420, 56))
+    s.node('BackButton', 'Button', 'Menu/Difficulty', text=S('НАЗАД'), **dict(button_style, **{
+        'theme_override_font_sizes/font_size': 18}))
+    label(s, 'Footer', '.', 'Пять глав · пять боссов · одна ночь', 15, C(0.6, 0.58, 0.55), None, anchors_preset=2,
+          anchor_top=1.0, anchor_bottom=1.0, offset_left=96.0, offset_top=-48.0, offset_right=600.0, offset_bottom=-20.0,
+          grow_vertical=0)
+    s.node('Ambience', 'AudioStreamPlayer', '.', stream=s.sound('ambience'), autoplay=True, volume_db=-4.0)
     s.save('scenes/ui/main_menu.tscn')
+
+    # Intro cutscene
+    from story_text import CUTSCENE
+    s = Scene()
+    russo = s.ext_res('FontFile', RUSSO)
+    s.node('IntroCutscene', 'Control', script=s.ext_res('Script', 'res://scripts/ui/cutscene.gd'),
+           shots=PSA([c[0] for c in CUTSCENE]), speakers=PSA([c[1] for c in CUTSCENE]), lines=PSA([c[2] for c in CUTSCENE]),
+           **FULL)
+    s.node('World', None, '.', instance=s.ext_res('PackedScene', 'res://scenes/ui/backdrop_world.tscn'))
+    s.node('Camera3D', 'Camera3D', '.', current=True, fov=55.0)
+    s.node('News', 'Control', '.', mouse_filter=2, **FULL)
+    s.node('Background', 'ColorRect', 'News', color=C(0.02, 0.02, 0.03, 1), mouse_filter=2, **FULL)
+    s.node('Band', 'ColorRect', 'News', color=C(0.6, 0.05, 0.04, 1), anchors_preset=14, anchor_top=0.5, anchor_right=1.0,
+           anchor_bottom=0.5, offset_top=-70.0, offset_bottom=40.0, grow_horizontal=2, grow_vertical=2, mouse_filter=2)
+    label(s, 'Title', 'News', 'ЭКСТРЕННЫЙ ВЫПУСК', 64, None, 1, anchors_preset=14, anchor_top=0.5, anchor_right=1.0,
+          anchor_bottom=0.5, offset_top=-62.0, offset_bottom=30.0, grow_horizontal=2, grow_vertical=2,
+          **{'theme_override_fonts/font': russo})
+    label(s, 'Live', 'News', 'ГОРОДСКОЕ ВЕЩАНИЕ · ПРЯМОЙ ЭФИР', 22, C(0.95, 0.35, 0.25), 1, anchors_preset=14,
+          anchor_top=0.5, anchor_right=1.0, anchor_bottom=0.5, offset_top=52.0, offset_bottom=86.0, grow_horizontal=2,
+          grow_vertical=2)
+    for name, top, bottom in (('BarTop', 0.0, 0.11), ('BarBottom', 0.89, 1.0)):
+        s.node(name, 'ColorRect', '.', color=C(0, 0, 0, 1), anchor_right=1.0, anchor_top=top, anchor_bottom=bottom,
+               mouse_filter=2)
+    s.node('Subtitle', 'PanelContainer', '.', anchors_preset=7, anchor_left=0.5, anchor_top=1.0, anchor_right=0.5,
+           anchor_bottom=1.0, offset_left=-460.0, offset_top=-190.0, offset_right=460.0, offset_bottom=-110.0,
+           grow_horizontal=2, grow_vertical=0, mouse_filter=2,
+           **{'theme_override_styles/panel': s.sub_res('StyleBoxFlat', bg_color=C(0, 0, 0, 0.55), content_margin_left=18.0,
+                                                       content_margin_right=18.0, content_margin_top=10.0,
+                                                       content_margin_bottom=12.0)})
+    s.node('Text', 'RichTextLabel', 'Subtitle', bbcode_enabled=True, fit_content=True, scroll_active=False, mouse_filter=2,
+           **{'theme_override_font_sizes/normal_font_size': 23, 'theme_override_font_sizes/italics_font_size': 23})
+    label(s, 'SkipHint', '.', 'Любая клавиша — пропустить', 15, C(0.6, 0.58, 0.55), 2, anchors_preset=1,
+          anchor_left=1.0, anchor_right=1.0, offset_left=-360.0, offset_top=22.0, offset_right=-28.0, offset_bottom=48.0,
+          grow_horizontal=0)
+    s.node('Fade', 'ColorRect', '.', color=C(0, 0, 0, 1), mouse_filter=2, **FULL)
+    s.node('Voice', 'AudioStreamPlayer', '.', volume_db=0.0)
+    s.node('Static', 'AudioStreamPlayer', '.', stream=s.sound('tv_static'), volume_db=-16.0)
+    s.node('RadioClick', 'AudioStreamPlayer', '.', stream=s.sound('radio'), volume_db=-8.0)
+    s.node('Ambience', 'AudioStreamPlayer', '.', stream=s.sound('ambience'), autoplay=True, volume_db=-8.0)
+    s.save('scenes/ui/intro_cutscene.tscn')
 
     # Ending
     s = Scene()

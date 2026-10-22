@@ -1,79 +1,205 @@
 [gd_scene format=3]
 
-[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_main_menu"]
+[ext_resource type="FontFile" path="res://fonts/RussoOne-Regular.ttf" id="1_RussoOne-Regular"]
 
-[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="2_ambience"]
+[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="2_main_menu"]
+
+[ext_resource type="PackedScene" path="res://scenes/ui/backdrop_world.tscn" id="3_backdrop_world"]
+
+[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="4_ambience"]
 
 [sub_resource type="Gradient" id="Gradient_1"]
-offsets = PackedFloat32Array(0, 1)
-colors = PackedColorArray(0.18, 0.02, 0.02, 1, 0.01, 0.01, 0.01, 1)
+offsets = PackedFloat32Array(0, 0.45, 1)
+colors = PackedColorArray(0, 0, 0, 0.92, 0, 0, 0, 0.55, 0, 0, 0, 0)
 
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_2"]
 gradient = SubResource("Gradient_1")
-fill = 2
-fill_from = Vector2(0.5, 0.35)
-fill_to = Vector2(1.1, 1.1)
+fill_from = Vector2(0.0, 0.5)
+fill_to = Vector2(1.0, 0.5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3"]
+bg_color = Color(0.0, 0.0, 0.0, 0.0)
+content_margin_left = 16.0
+content_margin_top = 6.0
+content_margin_bottom = 6.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4"]
+bg_color = Color(0.55, 0.06, 0.04, 0.55)
+border_width_left = 5
+border_color = Color(0.95, 0.25, 0.15, 1.0)
+content_margin_left = 22.0
+content_margin_top = 6.0
+content_margin_bottom = 6.0
 
 [node name="MainMenu" type="Control"]
-script = ExtResource("1_main_menu")
+script = ExtResource("2_main_menu")
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Background" type="TextureRect" parent="."]
+[node name="World" parent="." instance=ExtResource("3_backdrop_world")]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+current = true
+fov = 62.0
+
+[node name="Shade" type="TextureRect" parent="."]
 texture = SubResource("GradientTexture2D_2")
 expand_mode = 1
 stretch_mode = 0
+mouse_filter = 2
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Center" type="CenterContainer" parent="."]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
+[node name="Menu" type="VBoxContainer" parent="."]
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 90.0
+offset_top = -270.0
+offset_right = 760.0
+offset_bottom = 270.0
 grow_vertical = 2
+alignment = 1
+theme_override_constants/separation = 6
 
-[node name="VBox" type="VBoxContainer" parent="Center"]
-theme_override_constants/separation = 14
-
-[node name="Title" type="Label" parent="Center/VBox"]
+[node name="Title" type="Label" parent="Menu"]
 theme_override_constants/outline_size = 14
+theme_override_fonts/font = ExtResource("1_RussoOne-Regular")
 text = "МЁРТВЫЙ ГОРОД"
-theme_override_font_sizes/font_size = 84
+theme_override_font_sizes/font_size = 88
 theme_override_colors/font_color = Color(0.75, 0.08, 0.06, 1.0)
-horizontal_alignment = 1
 
-[node name="Subtitle" type="Label" parent="Center/VBox"]
+[node name="Subtitle" type="Label" parent="Menu"]
 text = "Последний вертолёт улетает на рассвете"
-theme_override_font_sizes/font_size = 22
-theme_override_colors/font_color = Color(0.8, 0.75, 0.7, 1.0)
-horizontal_alignment = 1
+theme_override_font_sizes/font_size = 24
+theme_override_colors/font_color = Color(0.85, 0.78, 0.7, 1.0)
 
-[node name="Spacer" type="Control" parent="Center/VBox"]
-custom_minimum_size = Vector2(0.0, 30.0)
+[node name="Spacer" type="Control" parent="Menu"]
+custom_minimum_size = Vector2(0.0, 34.0)
 
-[node name="ContinueButton" type="Button" parent="Center/VBox"]
-custom_minimum_size = Vector2(340.0, 0.0)
-size_flags_horizontal = 4
-text = "Продолжить"
+[node name="Buttons" type="VBoxContainer" parent="Menu"]
+theme_override_constants/separation = 4
 
-[node name="NewGameButton" type="Button" parent="Center/VBox"]
-custom_minimum_size = Vector2(340.0, 0.0)
-size_flags_horizontal = 4
-text = "Новая игра"
+[node name="ContinueButton" type="Button" parent="Menu/Buttons"]
+text = "ПРОДОЛЖИТЬ"
+theme_override_fonts/font = ExtResource("1_RussoOne-Regular")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("StyleBoxFlat_3")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4")
+theme_override_styles/focus = SubResource("StyleBoxFlat_4")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_4")
+theme_override_colors/font_color = Color(0.85, 0.82, 0.78, 1.0)
+alignment = 0
+custom_minimum_size = Vector2(420.0, 0.0)
 
-[node name="QuitButton" type="Button" parent="Center/VBox"]
-custom_minimum_size = Vector2(340.0, 0.0)
-size_flags_horizontal = 4
-text = "Выход"
+[node name="NewGameButton" type="Button" parent="Menu/Buttons"]
+text = "НОВАЯ ИГРА"
+theme_override_fonts/font = ExtResource("1_RussoOne-Regular")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("StyleBoxFlat_3")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4")
+theme_override_styles/focus = SubResource("StyleBoxFlat_4")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_4")
+theme_override_colors/font_color = Color(0.85, 0.82, 0.78, 1.0)
+alignment = 0
+custom_minimum_size = Vector2(420.0, 0.0)
+
+[node name="QuitButton" type="Button" parent="Menu/Buttons"]
+text = "ВЫХОД"
+theme_override_fonts/font = ExtResource("1_RussoOne-Regular")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("StyleBoxFlat_3")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4")
+theme_override_styles/focus = SubResource("StyleBoxFlat_4")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_4")
+theme_override_colors/font_color = Color(0.85, 0.82, 0.78, 1.0)
+alignment = 0
+custom_minimum_size = Vector2(420.0, 0.0)
+
+[node name="Difficulty" type="VBoxContainer" parent="Menu"]
+visible = false
+theme_override_constants/separation = 4
+
+[node name="Header" type="Label" parent="Menu/Difficulty"]
+theme_override_fonts/font = ExtResource("1_RussoOne-Regular")
+text = "СЛОЖНОСТЬ"
+theme_override_font_sizes/font_size = 16
+theme_override_colors/font_color = Color(0.95, 0.3, 0.2, 1.0)
+
+[node name="Level0" type="Button" parent="Menu/Difficulty"]
+text = "ЛЁГКАЯ"
+theme_override_fonts/font = ExtResource("1_RussoOne-Regular")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("StyleBoxFlat_3")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4")
+theme_override_styles/focus = SubResource("StyleBoxFlat_4")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_4")
+theme_override_colors/font_color = Color(0.85, 0.82, 0.78, 1.0)
+alignment = 0
+custom_minimum_size = Vector2(420.0, 0.0)
+
+[node name="Level1" type="Button" parent="Menu/Difficulty"]
+text = "НОРМАЛЬНАЯ"
+theme_override_fonts/font = ExtResource("1_RussoOne-Regular")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("StyleBoxFlat_3")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4")
+theme_override_styles/focus = SubResource("StyleBoxFlat_4")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_4")
+theme_override_colors/font_color = Color(0.85, 0.82, 0.78, 1.0)
+alignment = 0
+custom_minimum_size = Vector2(420.0, 0.0)
+
+[node name="Level2" type="Button" parent="Menu/Difficulty"]
+text = "СЛОЖНАЯ"
+theme_override_fonts/font = ExtResource("1_RussoOne-Regular")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("StyleBoxFlat_3")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4")
+theme_override_styles/focus = SubResource("StyleBoxFlat_4")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_4")
+theme_override_colors/font_color = Color(0.85, 0.82, 0.78, 1.0)
+alignment = 0
+custom_minimum_size = Vector2(420.0, 0.0)
+
+[node name="Info" type="Label" parent="Menu/Difficulty"]
+autowrap_mode = 3
+custom_minimum_size = Vector2(420.0, 56.0)
+theme_override_font_sizes/font_size = 18
+theme_override_colors/font_color = Color(0.75, 0.72, 0.68, 1.0)
+
+[node name="BackButton" type="Button" parent="Menu/Difficulty"]
+text = "НАЗАД"
+theme_override_fonts/font = ExtResource("1_RussoOne-Regular")
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_3")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4")
+theme_override_styles/focus = SubResource("StyleBoxFlat_4")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_4")
+theme_override_colors/font_color = Color(0.85, 0.82, 0.78, 1.0)
+alignment = 0
+custom_minimum_size = Vector2(420.0, 0.0)
+
+[node name="Footer" type="Label" parent="."]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 96.0
+offset_top = -48.0
+offset_right = 600.0
+offset_bottom = -20.0
+grow_vertical = 0
+text = "Пять глав · пять боссов · одна ночь"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.6, 0.58, 0.55, 1.0)
 
 [node name="Ambience" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("2_ambience")
+stream = ExtResource("4_ambience")
 autoplay = true
-volume_db = -6.0
+volume_db = -4.0

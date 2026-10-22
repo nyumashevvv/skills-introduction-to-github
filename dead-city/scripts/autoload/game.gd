@@ -11,8 +11,19 @@ const LEVELS: Array[String] = [
 const MAIN_MENU := "res://scenes/ui/main_menu.tscn"
 const ENDING := "res://scenes/ui/ending.tscn"
 const SAVE_PATH := "user://progress.cfg"
+const CUTSCENE := "res://scenes/ui/intro_cutscene.tscn"
+
+enum Difficulty { EASY, NORMAL, HARD }
+const DIFFICULTY_NAMES: Array[String] = ["Лёгкая", "Нормальная", "Сложная"]
+## Multipliers per difficulty: zombie health and speed, damage the player takes, ammo in pickups.
+const DIFFICULTY_TUNING: Array[Dictionary] = [
+	{"health": 0.7, "speed": 0.9, "damage": 0.55, "ammo": 1.5},
+	{"health": 1.0, "speed": 1.0, "damage": 1.0, "ammo": 1.0},
+	{"health": 1.35, "speed": 1.12, "damage": 1.5, "ammo": 0.7},
+]
 
 var current_level := 0
+var difficulty := Difficulty.NORMAL
 ## Player loadout captured when the current chapter started. Empty means "use the level's defaults".
 var checkpoint: Dictionary = {}
 var kills := 0
@@ -35,6 +46,10 @@ func level_started() -> void:
 	_kills_at_level_start = kills
 
 
+func tuning(key: String) -> float:
+	return DIFFICULTY_TUNING[difficulty][key]
+
+
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_PATH)
 
@@ -46,11 +61,20 @@ func saved_chapter() -> int:
 	return int(config.get_value("progress", "level", 0)) + 1
 
 
-func new_game() -> void:
+func new_game(level_difficulty := Difficulty.NORMAL, with_cutscene := true) -> void:
+	difficulty = level_difficulty
 	current_level = 0
 	checkpoint = {}
 	kills = 0
 	play_time = 0.0
+	if with_cutscene:
+		_change_scene(CUTSCENE)
+	else:
+		_change_to_level()
+
+
+## Called by the intro cutscene when it ends or is skipped.
+func start_first_chapter() -> void:
 	_change_to_level()
 
 
@@ -60,6 +84,7 @@ func continue_game() -> void:
 		new_game()
 		return
 	current_level = config.get_value("progress", "level", 0)
+	difficulty = config.get_value("progress", "difficulty", Difficulty.NORMAL)
 	checkpoint = config.get_value("progress", "checkpoint", {})
 	kills = config.get_value("progress", "kills", 0)
 	play_time = config.get_value("progress", "time", 0.0)
@@ -100,6 +125,7 @@ func _change_scene(path: String) -> void:
 func _save() -> void:
 	var config := ConfigFile.new()
 	config.set_value("progress", "level", current_level)
+	config.set_value("progress", "difficulty", difficulty)
 	config.set_value("progress", "checkpoint", checkpoint)
 	config.set_value("progress", "kills", kills)
 	config.set_value("progress", "time", play_time)

@@ -72,15 +72,28 @@ func _run() -> void:
 	player.global_position = Vector3(0, 0, 6)
 	await frames(20)
 
-	# Knife: silent, three body hits kill a walker.
+	# Knife: an unaware zombie dies silently in one stab; an alerted one takes three and staggers.
 	var knife := await equip("knife")
-	var w := dummy(WALKER, Vector3(0, 0, -1.4))
 	var far := dummy(WALKER, Vector3(6, 0, -14), false)
 	far.sight_range = 3.0  # can only be alerted by noise
+	var neighbour := dummy(WALKER, Vector3(2.5, 0, -3), false)
+	neighbour.sight_range = 0.5
+	var unaware := dummy(WALKER, Vector3(0, 0, -1.4))
+	await aim_at(unaware.global_position + Vector3.UP * 0.8)
+	await get_tree().create_timer(0.2).timeout
+	check(level.hud.prompt_label.text == MeleeWeapon.STEALTH_HINT, "takedown hint: " + level.hud.prompt_label.text)
+	knife._handle_input(true, true)
+	await get_tree().create_timer(0.5).timeout
+	check(unaware.state == Zombie.State.DEAD, "stealth kill: an unaware walker dies from one stab")
+	check(neighbour.state == Zombie.State.IDLE, "stealth kill is silent: the walker 3 m away did not notice")
+	neighbour.queue_free()
+	var w := dummy(WALKER, Vector3(0, 0, -1.4))
+	w.alert(false)
 	await aim_at(w.global_position + Vector3.UP * 0.8)
 	knife._handle_input(true, true)
 	await get_tree().create_timer(0.5).timeout
-	check(w.health == 120 - 50, "knife hit for 50 (health %d)" % w.health)
+	check(w.health == 120 - 50, "knife hit for 50 on an alerted walker (health %d)" % w.health)
+	check(w._stagger > 0.3, "the knife knocks it off balance")
 	knife._handle_input(true, true)
 	await get_tree().create_timer(0.5).timeout
 	check(w.state != Zombie.State.DEAD, "a walker survives two stabs")

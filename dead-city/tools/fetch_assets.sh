@@ -69,4 +69,17 @@ kenney car-kit 1a312ec241-1775131960
 kenney furniture-kit 440e0608a4-1677580847
 kenney city-kit-roads 74288c9459-1791628607
 kenney survival-kit 4065a8185b-1712149243
+
+# Reload sounds (CC0, OpenGameArt): "Handgun Reload Sound Effect", "Gun Reload Sounds",
+# "Gun Reload Sound Effects", "2 Gun Reloads" (starninjas)
+cd "$SRC/sounds"
+for f in reload.wav assaultriflereload1_0.wav singlebullet1.wav shotguncock_0.wav clipload2.wav; do get "$f" "$f"; done
+get gun_reload_-_starninjas.zip starninjas.zip && unzip -oq starninjas.zip -d starninjas
+rl() { ffmpeg -v error -y -i "$1" -ac 1 -ar 44100 -af "silenceremove=start_periods=1:start_threshold=-50dB,highpass=f=80,volume=$3" \
+  -c:a pcm_s16le "$PROJECT/sounds/$2.wav"; }
+rl reload.wav reload_pistol 0dB; rl assaultriflereload1_0.wav reload_rifle 3dB; rl singlebullet1.wav shell_insert 6dB
+rl shotguncock_0.wav shotgun_pump -4dB
+ffmpeg -v error -y -i starninjas/gun_reload.2.ogg -i clipload2.wav -filter_complex \
+  "[1]adelay=1500|1500,volume=2[b];[0][b]amix=inputs=2:duration=longest:normalize=0,aformat=channel_layouts=mono" \
+  -ar 44100 -c:a pcm_s16le "$PROJECT/sounds/reload_rocket.wav"
 echo "Sources ready in $SRC"

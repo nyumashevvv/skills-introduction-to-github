@@ -59,9 +59,9 @@ sw = [noise() * math.sin(math.pi * min(1, i / n(0.16))) * math.exp(-i / SR * 8) 
 save('knife_swing', bandpass(sw, 1800, 1.2), 0.5)
 save('knife_hit', mix(lowpass(env_noise(0.18, 25), 0.12), tone(lambda t: 90, 0.15, lambda t: math.exp(-t * 30))), 0.7)
 save('flesh_hit', mix(lowpass(env_noise(0.12, 40), 0.18), tone(lambda t: 140, 0.08, lambda t: math.exp(-t * 50))), 0.55)
-save('reload_pistol', mix(delay(click(800), 0.1), delay(click(500, 0.08, 40), 0.55), delay(click(1400), 0.95)), 0.6)
-save('reload_rifle', mix(delay(click(900), 0.1), delay(click(600, 0.1, 40), 0.8), delay(click(1300), 1.4), delay(click(1100), 1.5)), 0.6)
-save('reload_rocket', mix(delay(lowpass(env_noise(0.5, 6), 0.15), 0.2), delay(click(400, 0.12, 30), 1.6), delay(click(900), 2.0)), 0.6)
+_ = mix(delay(click(800), 0.1), delay(click(500, 0.08, 40), 0.55), delay(click(1400), 0.95))  # reload_pistol: now a CC0 recording; still computed so the sounds below keep their noise
+_ = mix(delay(click(900), 0.1), delay(click(600, 0.1, 40), 0.8), delay(click(1300), 1.4), delay(click(1100), 1.5))  # reload_rifle: now a CC0 recording; still computed so the sounds below keep their noise
+_ = mix(delay(lowpass(env_noise(0.5, 6), 0.15), 0.2), delay(click(400, 0.12, 30), 1.6), delay(click(900), 2.0))  # reload_rocket: now a CC0 recording; still computed so the sounds below keep their noise
 save('empty', click(1500, 0.05, 90), 0.4)
 save('weapon_switch', mix(click(700, 0.05, 80), delay(click(1100, 0.04, 90), 0.12)), 0.4)
 save('impact', mix(env_noise(0.08, 60, 0.6), click(2500, 0.03, 120)), 0.35)
@@ -101,8 +101,8 @@ blast = mix(lowpass(env_noise(0.6, 9), 0.3), scale(lowpass(env_noise(0.25, 25), 
             tone(lambda t: 90 * math.exp(-t * 8) + 35, 0.5, lambda t: math.exp(-t * 9)))
 save('shotgun', blast)
 rack = lambda f1, f2: mix(click(f1, 0.07, 45), delay(lowpass(env_noise(0.08, 30), 0.3), 0.02), delay(click(f2, 0.06, 55), 0.12))
-save('shotgun_pump', mix(rack(500, 900), delay(rack(700, 1200), 0.16)), 0.6)
-save('shell_insert', mix(click(1800, 0.04, 90), delay(click(600, 0.07, 50), 0.05)), 0.5)
+_ = mix(rack(500, 900), delay(rack(700, 1200), 0.16))  # shotgun_pump: now a CC0 recording; still computed so the sounds below keep their noise
+_ = mix(click(1800, 0.04, 90), delay(click(600, 0.07, 50), 0.05))  # shell_insert: now a CC0 recording; still computed so the sounds below keep their noise
 
 # bosses (own seed as well)
 random.seed(31)
@@ -112,4 +112,6 @@ save('spit', mix(bandpass(env_noise(0.35, 12), 900, 1.5), scale(lowpass(env_nois
 save('splash', mix(lowpass(env_noise(0.5, 9), 0.2), scale(highpass(env_noise(0.7, 5), 0.5), 0.25)), 0.6)
 save('shield_hit', mix(tone(lambda t: 1250, 0.35, lambda t: math.exp(-t * 14)), scale(tone(lambda t: 1890, 0.3, lambda t: math.exp(-t * 18)), 0.6),
                        scale(env_noise(0.05, 80, 0.6), 0.8)), 0.45)
+random.seed(41)
+save('tv_static', mix(bandpass(env_noise(6.0, 0.0), 2500, 0.8), scale(highpass(env_noise(6.0, 0.0), 0.6), 0.4)), 0.5)
 print('sounds ok')

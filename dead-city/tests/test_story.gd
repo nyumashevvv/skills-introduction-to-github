@@ -78,9 +78,37 @@ func _run() -> void:
 	var placeholder := Node.new()
 	get_tree().root.add_child(placeholder)
 	get_tree().current_scene = placeholder
-	Game.new_game()
-	# ---------------------------------------------------------------- chapter 1
+	# ---------------------------------------------------------------- menu, difficulty, intro cutscene
+	get_tree().change_scene_to_file(Game.MAIN_MENU)
+	for i in 60:
+		await get_tree().process_frame
+	var menu := get_tree().current_scene
+	check(menu != null and menu.name == "MainMenu" and menu.get_tree().get_nodes_in_group("zombies").size() >= 5,
+		"main menu with the burning street behind it")
+	(menu.get_node("Menu/Buttons/NewGameButton") as Button).pressed.emit()
+	check((menu.get_node("Menu/Difficulty") as Control).visible, "new game asks for the difficulty")
+	(menu.get_node("Menu/Difficulty/Level2") as Button).pressed.emit()
+	var cutscene: Node = null
+	for i in 300:
+		await get_tree().process_frame
+		if get_tree().current_scene != null and get_tree().current_scene.name == "IntroCutscene":
+			cutscene = get_tree().current_scene
+			break
+	check(cutscene != null and Game.difficulty == Game.Difficulty.HARD, "hard game starts with the intro cutscene")
+	await get_tree().create_timer(2.5).timeout
+	check((cutscene.get_node("Voice") as AudioStreamPlayer).playing, "the intro is voiced")
+	var key := InputEventKey.new()
+	key.keycode = KEY_SPACE
+	key.pressed = true
+	Input.parse_input_event(key)
 	var level := await wait_scene("Outskirts")
+	check(level != null, "a key skips the intro to chapter 1")
+	var walker := level.get_tree().get_nodes_in_group("zombies").filter(func(z: Zombie) -> bool: return z.name.begins_with("Walker"))[0] as Zombie
+	check(walker.max_health == roundi(120 * 1.35), "hard: walkers are tougher (%d HP)" % walker.max_health)
+
+	Game.new_game(Game.Difficulty.NORMAL, false)
+	# ---------------------------------------------------------------- chapter 1
+	level = await wait_scene("Outskirts")
 	check(level != null, "chapter 1 loaded")
 	check(get_tree().paused and level.hud.intro_screen.visible, "chapter 1 intro card")
 	await start(level)

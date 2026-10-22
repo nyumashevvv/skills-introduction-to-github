@@ -12,6 +12,7 @@ const ROARS: Array[AudioStream] = [
 	preload("res://sounds/zombie/roar1.ogg"), preload("res://sounds/zombie/roar2.ogg"),
 	preload("res://sounds/zombie/roar3.ogg"),
 ]
+const BACKSTAB_DAMAGE := 250
 const CHARGE_WINDUP := 0.8
 const CHARGE_TIME := 1.6
 const STUN_TIME := 1.8
@@ -101,6 +102,11 @@ func alert(spread := true) -> void:
 			level.play_music(music)
 		if not alert_event.is_empty():
 			get_node(alert_event).call("fire")
+
+
+## Bosses are never killed outright by a knife; a stab in the back hurts them three times as much.
+func stealth_kill(direction: Vector3, hit_point: Vector3) -> void:
+	take_damage(BACKSTAB_DAMAGE, direction, hit_point)
 
 
 func roar() -> void:
@@ -328,8 +334,8 @@ func _has_line_of_sight() -> bool:
 	return not hit.is_empty() and hit.collider == player
 
 
-func _die(headshot: bool) -> void:
-	super._die(headshot)
+func _die(headshot: bool, silent := false) -> void:
+	super._die(headshot, silent)
 	ability = Ability.NONE
 	_update_bar()
 	var level := get_tree().current_scene as Level

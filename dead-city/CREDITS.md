@@ -13,6 +13,8 @@
 | Мебель (шкафы, кухня, диваны, лампы, телевизоры, душ, раковины) | [Furniture Kit](https://kenney.nl/assets/furniture-kit) | Kenney |
 | Светофоры, знаки, столбы, стройограждения | [City Kit (Roads)](https://kenney.nl/assets/city-kit-roads) | Kenney |
 | Палатки, костёр, ящики, заборы, инструменты | [Survival Kit](https://kenney.nl/assets/survival-kit) | Kenney |
+| Звуки перезарядки (пистолет, автомат, РПГ, патрон в дробовик, помпа) | [Handgun Reload](https://opengameart.org/content/handgun-reload-sound-effect), [Gun Reload Sounds](https://opengameart.org/content/gun-reload-sounds), [Gun Reload Sound Effects](https://opengameart.org/content/gun-reload-sound-effects), [2 Gun Reloads](https://opengameart.org/content/2-gun-reloads) | OpenGameArt, CC0 |
+| Русская озвучка (диспетчер, пилот, новости, герой) | голоса [Piper](https://github.com/rhasspy/piper) `ru_RU-denis` и `ru_RU-dmitri` (датасеты CC0), синтез `tools/gen_voice.py` | Open Home Foundation |
 | Шрифты интерфейса | [Russo One](https://fonts.google.com/specimen/Russo+One) (Jovanny Lemonad), [Oswald](https://fonts.google.com/specimen/Oswald) (The Oswald Project Authors) | SIL Open Font License 1.1, тексты лицензий в `fonts/` |
 | Руки от первого лица | [fps arms (rigged only)](https://opengameart.org/content/fps-arms-rigged-only) | para |
 | Голоса зомби | [Zombie noises and moans](https://opengameart.org/content/zombie-noises-and-moans) | ianzazz |
