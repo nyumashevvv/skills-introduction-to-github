@@ -14,8 +14,10 @@ import bpy
 import bmesh
 import math
 import os
+import random
 import sys
 from mathutils import Vector, Matrix
+from mathutils.bvhtree import BVHTree
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 SRC, PROJECT = argv[0], argv[1]
@@ -169,11 +171,113 @@ CHARACTERS = {
 }
 
 
+
+def scary_face(objs, seed=0):
+    """Replaces the cartoon eyes and brows with a dead face drawn onto the head: dark sunken sockets, milky eyes
+    with glowing pinprick pupils, brows knitted into a scowl, a torn-open mouth with crooked teeth and blood running
+    from it. Every piece is projected onto the head surface and skinned to the Head bone (so a headshot takes it too)."""
+    rnd = random.Random(seed)
+    mesh = next(o for o in objs if o.type == 'MESH' and o.vertex_groups.get("Head") is not None)
+    arm = next(o for o in objs if o.type == 'ARMATURE')
+    old_pose = arm.data.pose_position
+    arm.data.pose_position = 'REST'
+    bpy.context.view_layer.update()
+    me = mesh.data
+    names = [m.name for m in me.materials]
+    face_slot = names.index("Face") if "Face" in names else -1
+    # The head surface without the old face decals, for projecting onto.
+    tree = BVHTree.FromPolygons([v.co.copy() for v in me.vertices],
+                                [list(p.vertices) for p in me.polygons if p.material_index != face_slot])
+
+    def slot(mat):
+        if mat.name not in [m.name for m in me.materials]:
+            me.materials.append(mat)
+        return [m.name for m in me.materials].index(mat.name)
+    socket = slot(material("FaceSocket", (0.03, 0.006, 0.006), roughness=0.85))
+    eye = slot(emissive("FaceEye", (0.62, 0.6, 0.4), 0.06))
+    pupil = slot(emissive("FacePupil", (1.0, 0.08, 0.02), 3.0))
+    brow = slot(material("FaceBrow", (0.02, 0.012, 0.01), roughness=0.9))
+    mouth = slot(material("FaceMouth", (0.045, 0.0, 0.0), roughness=0.4))
+    teeth = slot(material("FaceTeeth", (0.48, 0.42, 0.26), roughness=0.55))
+    blood = slot(material("FaceBlood", (0.2, 0.0, 0.0), roughness=0.15))
+
+    bm = bmesh.new()
+    bm.from_mesh(me)
+    if face_slot >= 0:
+        bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.material_index == face_slot], context='FACES')
+    deform = bm.verts.layers.deform.verify()
+    head = mesh.vertex_groups["Head"].index
+
+    def on_head(x, z, lift):
+        loc, nor, _, _ = tree.ray_cast(Vector((x, -3.0, z)), Vector((0.0, 1.0, 0.0)))
+        if loc is None:
+            loc, nor = Vector((x, -0.48, z)), Vector((0.0, -1.0, 0.0))
+        v = bm.verts.new(loc + nor * lift)
+        v[deform][head] = 1.0
+        return v
+
+    def shape(points, lift, mat):
+        """A flat polygon (x, z points, drawn as seen from the front) laid on the face, fanned from its centre."""
+        area = sum(points[i][0] * points[(i + 1) % len(points)][1] - points[(i + 1) % len(points)][0] * points[i][1]
+                   for i in range(len(points)))
+        if area < 0:  # counter-clockwise as seen from the front makes the faces point out of the head
+            points = list(reversed(points))
+        ring = [on_head(x, z, lift) for x, z in points]
+        centre = on_head(sum(p[0] for p in points) / len(points), sum(p[1] for p in points) / len(points), lift)
+        for i in range(len(ring)):
+            bm.faces.new((centre, ring[i], ring[(i + 1) % len(ring)])).material_index = mat
+
+    def blob(cx, cz, rx, rz, lift, mat, jag=0.0, n=14, tilt=0.0):
+        pts = []
+        for i in range(n):
+            a = 2 * math.pi * i / n
+            r = 1.0 + rnd.uniform(-jag, jag)
+            x, z = math.cos(a) * rx * r, math.sin(a) * rz * r
+            pts.append((cx + x * math.cos(tilt) - z * math.sin(tilt), cz + x * math.sin(tilt) + z * math.cos(tilt)))
+        shape(pts, lift, mat)
+
+    def strip(x, z0, z1, w, lift, mat):
+        """A drip running down from z0 to z1, thinning out, with a drop at the end."""
+        wob = rnd.uniform(-0.015, 0.015)
+        shape([(x - w / 2, z0), (x + w / 2, z0), (x + w * 0.3 + wob, z1), (x - w * 0.3 + wob, z1)], lift, mat)
+        blob(x + wob, z1, w * 0.45, w * 0.5, lift, mat, n=8)
+
+    look = rnd.uniform(-0.012, 0.012)
+    for s in (-1, 1):
+        ex, ez = s * 0.245, 2.53
+        blob(ex, ez - 0.01, 0.14, 0.125, 0.004, socket, jag=0.12)        # bruised, sunken socket
+        blob(ex, ez, 0.08, 0.06, 0.008, eye, jag=0.08, tilt=s * 0.25)     # milky, slit-like eye
+        blob(ex - s * 0.01 + look, ez + 0.004, 0.027, 0.03, 0.012, pupil, n=8)
+        # brows pulled down to the nose: a scowl
+        shape([(s * 0.09, 2.645), (s * 0.4, 2.76), (s * 0.41, 2.715), (s * 0.1, 2.6)], 0.006, brow)
+    # bloody tear under one eye
+    side = rnd.choice((-1, 1))
+    strip(side * 0.27, 2.43, 2.33, 0.03, 0.006, blood)
+    # a lopsided gaping mouth with broken teeth
+    mx, mz, tilt = rnd.uniform(-0.03, 0.03), 2.315, rnd.uniform(-0.12, 0.12)
+    blob(mx, mz, 0.21, 0.075, 0.005, mouth, jag=0.18, n=18, tilt=tilt)
+    for row, sign in ((7, 1), (6, -1)):
+        for i in range(row):
+            t = (i + 0.5) / row
+            x = mx + (t - 0.5) * 0.32
+            edge = mz + sign * 0.06 * math.sqrt(max(0.0, 1 - ((t - 0.5) * 1.9) ** 2)) + (x - mx) * math.tan(tilt)
+            if rnd.random() < 0.2:
+                continue  # a missing tooth
+            w, h = rnd.uniform(0.028, 0.04), rnd.uniform(0.03, 0.06)
+            shape([(x - w / 2, edge), (x + w / 2, edge), (x + rnd.uniform(-0.008, 0.008), edge - sign * h)], 0.009, teeth)
+    for x in (mx - 0.15, mx + rnd.uniform(-0.05, 0.05), mx + 0.13):
+        strip(x, mz - 0.03, mz - rnd.uniform(0.09, 0.15), rnd.uniform(0.025, 0.04), 0.007, blood)
+    bm.to_mesh(me)
+    bm.free()
+    arm.data.pose_position = old_pose
+
+
 def build_characters():
     for out_name, src in CHARACTERS.items():
         reset()
         objs = append_objects(os.path.join(UACP, src + ".blend"), actions=True)
         fix_flat_materials(objs)
+        scary_face(objs, seed=len(out_name))
         arm = next(o for o in objs if o.type == 'ARMATURE')
         if arm.animation_data is None:
             arm.animation_data_create()
@@ -324,6 +428,7 @@ def build_bosses(only=()):
         reset()
         objs = append_objects(os.path.join(UACP, src + ".blend"), actions=True)
         fix_flat_materials(objs, colors)
+        scary_face(objs, seed=len(out_name) + 7)
         arm = next(o for o in objs if o.type == 'ARMATURE')
         arm.data.pose_position = 'REST'
         bpy.context.view_layer.update()
@@ -870,7 +975,7 @@ def model_knife():
 
 def model_grenade():
     """A frag grenade: ribbed olive body, fuse, spoon and pin ring (centred on the origin, ~10 cm tall)."""
-    olive = material("GrenadeBody", (0.2, 0.25, 0.12), roughness=0.6)
+    olive = material("GrenadeBody", (0.09, 0.11, 0.05), roughness=0.75)
     metal = material("GrenadeFuse", (0.45, 0.45, 0.47), metallic=0.8, roughness=0.35)
     parts = []
     bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=10, radius=0.03, location=(0, 0, 0))
@@ -972,6 +1077,76 @@ def model_smg():
     return k.parts
 
 
+
+def model_revolver():
+    """A six-shot double-action revolver: blued frame, fluted cylinder with chambers, 6" barrel with an underlug,
+    hammer and a wooden grip (y forward, z up, real-life size)."""
+    blued = material("RevolverBlued", (0.1, 0.1, 0.11), metallic=0.85, roughness=0.3)
+    dark = material("RevolverDark", (0.025, 0.025, 0.028), metallic=0.5, roughness=0.5)
+    wood = material("RevolverWood", (0.24, 0.1, 0.035), roughness=0.45)
+    brass = material("RevolverBrass", (0.75, 0.55, 0.2), metallic=0.9, roughness=0.3)
+    k = GunKit()
+    k.prism("Frame", [(0.035, -0.012), (0.1, -0.024), (0.158, -0.02), (0.158, 0.038), (0.098, 0.044),
+                      (0.06, 0.044), (0.038, 0.03)], 0.026, blued)
+    k.prism("Grip", [(0.034, -0.006), (0.078, -0.016), (0.072, -0.118), (0.032, -0.122), (0.018, -0.07),
+                     (0.02, -0.02)], 0.034, wood)
+    k.box("GripCap", (0.03, 0.04, 0.008), (0, 0.053, -0.122), blued, rot=(-0.1, 0, 0))
+    # cylinder: a fat drum with six flutes and the chambers showing at the front
+    cyl = k.tube("Cylinder", 0.021, 0.1, 0.152, 0.013, blued)
+    for i in range(6):
+        a = math.radians(30 + i * 60)
+        k.box(f"Flute{i}", (0.006, 0.03, 0.006), (math.cos(a) * 0.021, 0.126, 0.013 + math.sin(a) * 0.021), dark,
+              rot=(0, -a, 0))
+        k.tube(f"Chamber{i}", 0.0048, 0.1515, 0.1535, 0.013 + math.sin(a + math.radians(30)) * 0.013, dark,
+               x=math.cos(a + math.radians(30)) * 0.013)
+        k.tube(f"Round{i}", 0.0042, 0.0985, 0.1005, 0.013 + math.sin(a + math.radians(30)) * 0.013, brass,
+               x=math.cos(a + math.radians(30)) * 0.013)
+    k.tube("Pin", 0.004, 0.152, 0.158, 0.013, dark)
+    k.tube("Barrel", 0.0085, 0.155, 0.31, 0.024, blued)
+    k.box("Underlug", (0.015, 0.15, 0.016), (0, 0.233, 0.01), blued, bevel=0.004)
+    k.box("Rib", (0.012, 0.155, 0.007), (0, 0.233, 0.034), blued, bevel=0.002)
+    k.box("FrontSight", (0.004, 0.012, 0.012), (0, 0.302, 0.041), dark)
+    k.box("RearSight", (0.012, 0.01, 0.006), (0, 0.095, 0.047), dark)
+    k.box("Hammer", (0.008, 0.022, 0.026), (0, 0.045, 0.045), dark, rot=(-0.5, 0, 0), bevel=0.002)
+    k.box("TriggerGuard", (0.008, 0.05, 0.005), (0, 0.098, -0.052), blued)
+    k.box("GuardFront", (0.008, 0.005, 0.03), (0, 0.122, -0.037), blued)
+    k.box("Trigger", (0.006, 0.006, 0.024), (0, 0.098, -0.036), dark, rot=(0.25, 0, 0))
+    k.box("Latch", (0.004, 0.012, 0.008), (-0.015, 0.088, 0.02), dark)
+    return k.parts
+
+
+def model_shotgun():
+    """A pump-action shotgun (870-like): walnut stock and forend, blued receiver, barrel over the magazine tube."""
+    blued = material("ShotgunBlued", (0.09, 0.09, 0.1), metallic=0.85, roughness=0.32)
+    dark = material("ShotgunDark", (0.025, 0.025, 0.028), metallic=0.4, roughness=0.6)
+    wood = material("ShotgunWood", (0.26, 0.11, 0.04), roughness=0.42)
+    rubber = material("ShotgunPad", (0.04, 0.035, 0.035), roughness=0.9)
+    red = material("ShotgunShell", (0.55, 0.06, 0.04), roughness=0.5)
+    k = GunKit()
+    k.prism("Stock", [(0.012, -0.135), (0.012, 0.012), (0.04, 0.02), (0.27, 0.004), (0.3, -0.018), (0.3, -0.05),
+                      (0.27, -0.065), (0.1, -0.135)], 0.042, wood)
+    k.box("RecoilPad", (0.044, 0.022, 0.15), (0, 0.0, -0.062), rubber, bevel=0.006)
+    k.box("Receiver", (0.046, 0.23, 0.07), (0, 0.41, -0.006), blued, bevel=0.006)
+    k.box("EjectionPort", (0.003, 0.07, 0.024), (0.0235, 0.43, 0.008), dark)
+    k.box("ShellInPort", (0.004, 0.03, 0.014), (0.022, 0.425, 0.008), red)
+    k.box("TriggerGuard", (0.014, 0.08, 0.008), (0, 0.36, -0.052), dark, bevel=0.002)
+    k.box("Trigger", (0.006, 0.008, 0.025), (0, 0.36, -0.038), dark, rot=(0.25, 0, 0))
+    k.box("Safety", (0.034, 0.008, 0.008), (0, 0.33, -0.044), dark)
+    k.tube("Barrel", 0.0125, 0.52, 1.0, 0.012, blued)
+    k.box("Rib", (0.008, 0.48, 0.005), (0, 0.76, 0.026), dark)
+    k.box("Bead", (0.004, 0.004, 0.006), (0, 0.995, 0.031), material("ShotgunBead", (0.9, 0.85, 0.7), metallic=1.0))
+    k.tube("MagTube", 0.012, 0.52, 0.9, -0.018, blued)
+    k.tube("MagCap", 0.0135, 0.9, 0.925, -0.018, dark)
+    k.box("BarrelBand", (0.03, 0.02, 0.048), (0, 0.885, -0.002), blued)
+    # pump forend with grip grooves
+    k.box("Forend", (0.052, 0.2, 0.05), (0, 0.64, -0.02), wood, bevel=0.014)
+    for i in range(7):
+        for sx in (-1, 1):
+            k.box(f"Groove{i}{sx}", (0.003, 0.006, 0.03), (sx * 0.026, 0.57 + i * 0.023, -0.02), dark)
+    k.box("ActionBar", (0.004, 0.13, 0.008), (0.02, 0.55, -0.02), blued)
+    return k.parts
+
+
 def model_ak():
     """An AK-style rifle modelled from scratch (y forward from the butt to the muzzle, z up), real-life size."""
     metal = material("AkMetal", (0.07, 0.07, 0.075), metallic=0.7, roughness=0.4)
@@ -1011,10 +1186,6 @@ def model_ak():
 
 PISTOL_COLORS = {"Metal": (0.16, 0.16, 0.17), "DarkerMetal": (0.06, 0.06, 0.065), "Muzzle": (0.12, 0.12, 0.13),
                  "Wood": (0.32, 0.16, 0.07), "Magazine": (0.09, 0.09, 0.1), "Material.003": (0.2, 0.2, 0.21)}
-SHOTGUN_COLORS = {"Barrels": (0.13, 0.13, 0.14), "Black": (0.035, 0.035, 0.04), "DarkMetal": (0.07, 0.07, 0.075),
-                  "Trigger": (0.1, 0.1, 0.1), "BulletRed": (0.5, 0.05, 0.03), "BulletYellow": (0.7, 0.5, 0.15)}
-REVOLVER_COLORS = {"Metal": (0.18, 0.18, 0.19), "Black": (0.03, 0.03, 0.035), "Wood": (0.3, 0.15, 0.06),
-                   "BulletYellow": (0.7, 0.5, 0.15), "BulletTip": (0.45, 0.25, 0.1)}
 SNIPER_COLORS = {"LightWood": (0.32, 0.17, 0.07), "DarkWood": (0.2, 0.1, 0.04), "Black": (0.03, 0.03, 0.035),
                  "Metal": (0.14, 0.14, 0.15), "Barrels": (0.08, 0.08, 0.09), "Barrel": (0.08, 0.08, 0.09),
                  "Green": (0.12, 0.16, 0.1), "Trigger": (0.1, 0.1, 0.1), "Magazine": (0.06, 0.06, 0.065),
@@ -1028,18 +1199,18 @@ WEAPONS = {
     "rifle": dict(src="model:ak", length=0.72, grip=(0.5, 0.33, 0.45), at=(0.165, 0.4, -0.265), yaw=8,
                   right=((0.5, 0.33, 0.45), (0, 1, -0.3), (-1, 0, 0)),
                   left=((0.5, 0.7, 0.66), (0.6, 0.8, 0), (0, 0, 1)), colors={}),
-    "revolver": dict(src="guns/FPS Pack/Blends/Revolver.blend", length=0.27, grip=(0.5, 0.15, 0.3), at=(0.1, 0.32, -0.17),
-                     yaw=6, right=((0.5, 0.15, 0.3), (0, 1, -0.25), (-1, 0, 0)),
-                     left=((0.0, 0.12, 0.15), (0.3, 0.8, -0.3), (1, 0.2, 0.3)), colors=REVOLVER_COLORS, rest_pose=True),
+    "revolver": dict(src="model:revolver", length=0.3, grip=(0.5, 0.12, 0.36), at=(0.1, 0.32, -0.17),
+                     yaw=6, right=((0.5, 0.12, 0.36), (0, 1, -0.25), (-1, 0, 0)),
+                     left=((0.0, 0.1, 0.2), (0.3, 0.8, -0.3), (1, 0.2, 0.3)), colors={}),
     "smg": dict(src="model:smg", length=0.6, grip=(0.5, 0.37, 0.55), at=(0.14, 0.38, -0.22), yaw=7,
                 right=((0.5, 0.37, 0.55), (0, 1, -0.3), (-1, 0, 0)),
                 left=((0.5, 0.68, 0.72), (0.6, 0.8, 0), (0, 0, 1)), colors={}),
     "sniper": dict(src="guns/FPS Pack/Blends/SniperRifle.blend", length=1.05, grip=(0.5, 0.3, 0.4), at=(0.13, 0.38, -0.23),
                    yaw=8, right=((0.5, 0.3, 0.4), (0, 1, -0.3), (-1, 0, 0)),
                    left=((0.5, 0.6, 0.62), (0.6, 0.8, 0), (0, 0, 1)), colors=SNIPER_COLORS),
-    "shotgun": dict(src="guns/FPS Pack/Blends/Shotgun.blend", length=0.98, grip=(0.5, 0.33, 0.5), at=(0.12, 0.38, -0.21), yaw=9,
-                    right=((0.5, 0.33, 0.5), (0, 1, -0.35), (-1, 0, 0)),
-                    left=((0.5, 0.62, 0.7), (0.6, 0.8, 0), (0, 0, 1)), colors=SHOTGUN_COLORS),
+    "shotgun": dict(src="model:shotgun", length=1.0, grip=(0.5, 0.31, 0.56), at=(0.12, 0.38, -0.21), yaw=9,
+                    right=((0.5, 0.31, 0.56), (0, 1, -0.35), (-1, 0, 0)),
+                    left=((0.5, 0.64, 0.5), (0.6, 0.8, 0), (0, 0, 1)), colors={}),
     "rpg": dict(src="guns/rpg/RPG7.fbx", length=1.0, grip=(0.5, 0.4, 0.1), at=(0.19, 0.36, -0.36), yaw=4,
                 right=((0.5, 0.4, 0.12), (0, 1, -0.2), (-1, 0, 0)),
                 left=((0.5, 0.56, 0.12), (0, 1, -0.2), (1, 0, 0)), colors={}),
@@ -1053,7 +1224,8 @@ def build_viewmodels(only=()):
             continue
         reset()
         if w["src"].startswith("model:"):
-            objs = {"model:ak": model_ak, "model:smg": model_smg}[w["src"]]()
+            objs = {"model:ak": model_ak, "model:smg": model_smg, "model:revolver": model_revolver,
+                    "model:shotgun": model_shotgun}[w["src"]]()
         else:
             objs = import_any(os.path.join(SRC, w["src"]))
             fix_flat_materials(objs, w["colors"], [os.path.dirname(os.path.join(SRC, w["src"])), os.path.join(SRC, "guns")])
@@ -1112,9 +1284,10 @@ def build_viewmodels(only=()):
     bpy.context.scene.collection.objects.link(root)
     for o in parts:
         o.parent = root
-    grip = Vector((0.13, 0.33, -0.19))
-    root.matrix_world = Matrix.Translation(grip) @ Matrix.Rotation(math.radians(20), 4, 'Y')
-    arms = build_real_arms((grip, (0, 1, -0.2), (-1, 0, 0)), None, curl=95.0)
+    # Held up in the open fingers, fuse and ring on top, ready to be thrown overarm.
+    grip = Vector((0.15, 0.36, -0.13))
+    root.matrix_world = Matrix.Translation(grip + Vector((-0.012, 0.0, 0.012))) @ Matrix.Rotation(math.radians(-15), 4, 'Y')
+    arms = build_real_arms((grip, (0, 0.9, 0.3), (-1, 0, 0.15)), None, curl=50.0)
     export_glb(os.path.join(out, "grenade_fp.glb"), parts + [root, arms])
     root.matrix_world = Matrix.Identity(4)
     export_glb(os.path.join(out, "grenade_world.glb"), parts + [root])

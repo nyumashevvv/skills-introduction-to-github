@@ -6,7 +6,7 @@
 | Что | Источник | Автор |
 |---|---|---|
 | Персонажи и их анимации (зомби, рабочий, врач, повар, солдат; боссы — повар, полицейский, гоблин, путеец, викинг) | [Ultimate Animated Character Pack](https://opengameart.org/content/animated-characters-pack) | Quaternius |
-| Пистолет M1911 | [Low Poly Animated Guns](https://opengameart.org/content/low-poly-animated-guns) | Quaternius |
+| Пистолет M1911 и снайперская винтовка | [Low Poly Animated Guns](https://opengameart.org/content/low-poly-animated-guns) | Quaternius |
 | Автомат AK-47 | [Low poly Guns](https://opengameart.org/content/low-poly-guns) | Quaternius |
 | РПГ-7 и выстрел | [Low poly RPG7](https://opengameart.org/content/low-poly-rpg7) | Lucian Pavel |
 | Машины (седаны, внедорожники, такси, полиция, скорая, фургоны, мусоровоз, пожарная) и их обломки | [Car Kit](https://kenney.nl/assets/car-kit) | Kenney |
@@ -14,6 +14,7 @@
 | Светофоры, знаки, столбы, стройограждения | [City Kit (Roads)](https://kenney.nl/assets/city-kit-roads) | Kenney |
 | Палатки, костёр, ящики, заборы, инструменты | [Survival Kit](https://kenney.nl/assets/survival-kit) | Kenney |
 | Звуки перезарядки (пистолет, автомат, РПГ, патрон в дробовик, помпа) | [Handgun Reload](https://opengameart.org/content/handgun-reload-sound-effect), [Gun Reload Sounds](https://opengameart.org/content/gun-reload-sounds), [Gun Reload Sound Effects](https://opengameart.org/content/gun-reload-sound-effects), [2 Gun Reloads](https://opengameart.org/content/2-gun-reloads) | OpenGameArt, CC0 |
+| Выстрелы (пистолет, револьвер, дробовик, ПП-9, автомат, снайперская винтовка) | [The Free Firearm Sound Library](https://opengameart.org/content/the-free-firearm-sound-library) — записи 1911, S&W 642, Winchester Model 12, Carl Gustav M45, AK-47, Mosin Nagant | The Free Firearm Sound Library, CC0 |
 | Английская озвучка (диспетчер, пилот, новости, герой) | голоса [Piper](https://github.com/rhasspy/piper) `en_US-joe` (CC0), `en_US-john`, `en_US-bryce`, `en_US-kristin` (public domain), синтез `tools/gen_voice.py` | Open Home Foundation |
 | Текстуры поверхностей (асфальт, брусчатка, бетон, кирпич, штукатурка, кафель, терраццо, дерево, металл, ржавчина, трава) | [ambientCG](https://ambientcg.com) — Asphalt012, PavingStones070, Concrete044B, Concrete034, Bricks059, Plaster001, PaintedPlaster017, Tiles107, Terrazzo009, Wood049, Metal032, Rust004, Grass004 | ambientCG, CC0 |
 | Шрифты интерфейса | [Russo One](https://fonts.google.com/specimen/Russo+One) (Jovanny Lemonad), [Oswald](https://fonts.google.com/specimen/Oswald) (The Oswald Project Authors) | SIL Open Font License 1.1, тексты лицензий в `fonts/` |
@@ -25,10 +26,11 @@
 | Рёв боссов (те же голоса, понижены и обработаны) | Zombie / Skeleton / Monster Voice Effects | ArcadeParty |
 | Музыка боссов: Мясник, Обходчик | [Boss Battle #9 Metal](https://opengameart.org/content/boss-battle-9-metal) | nene |
 | Музыка боссов: Надзиратель, Пациент Ноль | [Determined Pursuit (Epic Orchestra Loop)](https://opengameart.org/content/determined-pursuit-epic-orchestra-loop) | Emma_MA |
+| Музыка главного меню | [A Lurking Evil (Horror Ambience)](https://opengameart.org/content/a-lurking-evil-horror-ambience) | congusbongus |
 | Музыка боссов: Колосс | [Epic Boss Battle](https://opengameart.org/content/boss-battle-music) | Juhani Junkala |
 
-Нож, автомат АК и снаряжение боссов (тесак, щит и дубинка, кувалда, наросты, костяные шипы) смоделированы скриптом в Blender
+Нож, автомат АК, револьвер, дробовик и снаряжение боссов (тесак, щит и дубинка, кувалда, наросты, костяные шипы) смоделированы скриптом в Blender
 (`tools/blender/build_assets.py`) и прикреплены к костям рук и туловища. Автобус тоже смоделирован там, а модели
-Kenney пропущены через Blender: реальный масштаб, пропорции машин, «грязные» и обгоревшие текстуры. Позы рук, перекраска, сборка
+Kenney пропущены через Blender: реальный масштаб, пропорции машин, «грязные» и обгоревшие текстуры. Лица зомби (впалые глазницы, светящиеся глаза, рот с зубами, кровь) нарисованы скриптом прямо на голове модели. Позы рук, перекраска, сборка
 оружия и экспорт в glTF тоже делаются этим скриптом. Остальная графика, часть текстур и звуки
-(выстрелы, взрывы, окружение) сгенерированы процедурно скриптами из `tools/`.
+(взрывы, окружение) сгенерированы процедурно скриптами из `tools/`.

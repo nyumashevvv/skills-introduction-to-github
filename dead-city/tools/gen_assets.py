@@ -1063,6 +1063,8 @@ def hud():
           anchor_top=1.0, anchor_bottom=1.0, offset_left=96.0, offset_top=-48.0, offset_right=600.0, offset_bottom=-20.0,
           grow_vertical=0)
     s.node('Ambience', 'AudioStreamPlayer', '.', stream=s.sound('ambience'), autoplay=True, volume_db=-4.0)
+    s.node('Music', 'AudioStreamPlayer', '.', stream=s.ext_res('AudioStream', 'res://music/menu_tension.ogg'), bus=S('Music'),
+           volume_db=-40.0)
     s.save('scenes/ui/main_menu.tscn')
 
     # Intro cutscene

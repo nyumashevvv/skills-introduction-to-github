@@ -10,6 +10,8 @@
 
 [ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="5_ambience"]
 
+[ext_resource type="AudioStream" path="res://music/menu_tension.ogg" id="6_menu_tension"]
+
 [sub_resource type="Gradient" id="Gradient_1"]
 offsets = PackedFloat32Array(0, 0.45, 1)
 colors = PackedColorArray(0, 0, 0, 0.92, 0, 0, 0, 0.55, 0, 0, 0, 0)
@@ -220,3 +222,8 @@ theme_override_colors/font_color = Color(0.6, 0.58, 0.55, 1.0)
 stream = ExtResource("5_ambience")
 autoplay = true
 volume_db = -4.0
+
+[node name="Music" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_menu_tension")
+bus = "Music"
+volume_db = -40.0

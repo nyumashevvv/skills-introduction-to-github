@@ -105,9 +105,16 @@ func _run() -> void:
 		var player := await play(level)
 		freeze_zombies()
 		await pose(player, Vector3(0, 0, -51), 0, -6)
-		for id: String in ["revolver", "smg", "sniper", "grenade"]:
+		for id: String in ["revolver", "shotgun", "smg", "sniper", "grenade"]:
 			await equip(player, id)
 			await snap("arsenal_" + id)
+		# the grenade throw: wind-up over the shoulder, then the snap forward
+		Input.action_press("shoot")
+		await get_tree().create_timer(0.18).timeout
+		Input.action_release("shoot")
+		await snap("arsenal_grenade_windup")
+		await get_tree().create_timer(0.2).timeout
+		await snap("arsenal_grenade_throw")
 		Input.action_press("aim")
 		await equip(player, "sniper")
 		await get_tree().create_timer(0.8).timeout
@@ -266,6 +273,11 @@ func _gallery() -> void:
 	await snap("00_gallery")
 	await pose(player, Vector3(-5.5, 0, -7.0), -60, -8)
 	await snap("00_gallery_side")
+	# faces up close
+	for i in [1, 2, 3]:
+		var face := spawned[i].global_position
+		await pose(player, face + Vector3(0, 0, 1.5), 0, -14)
+		await snap("00_gallery_face%d" % i)
 
 
 ## The five chapter bosses side by side in the hospital lobby (power on, no HUD).

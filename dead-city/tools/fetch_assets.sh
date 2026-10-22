@@ -59,6 +59,9 @@ get "Juhani%20Junkala%20-%20Epic%20Boss%20Battle%20%5BSeamlessly%20Looping%5D.wa
 ffmpeg -v error -y -i metal.wav -af volume=-6.3dB -c:a libvorbis -q:a 3 "$MUS/boss_metal.ogg"
 ffmpeg -v error -y -i pursuit.wav -c:a libvorbis -q:a 3 "$MUS/boss_pursuit.ogg"
 ffmpeg -v error -y -i epic.wav -af volume=-6.5dB -c:a libvorbis -q:a 3 "$MUS/boss_epic.ogg"
+# Main menu (CC0): "A Lurking Evil (Horror Ambience)" — heartbeats and a quiet piano
+get evil.ogg evil.ogg
+ffmpeg -v error -y -i evil.ogg -ac 2 -af "loudnorm=I=-20:TP=-2:LRA=11" -c:a libvorbis -q:a 4 "$MUS/menu_tension.ogg"
 
 # Kenney kits (CC0): Car Kit, Furniture Kit, City Kit (Roads), Survival Kit
 cd "$SRC"

@@ -11,7 +11,7 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
   are Kenney CC0 kits run through Blender (part `kenney`: scale, proportions, grime/burnt textures; sizes in
   `models/kenney_sizes.json` feed the collision boxes in `tools/gen_props.py`); the bus is modelled there too.
   Level geometry and the other props are Box/Cylinder meshes; `materials/`, `textures/` and most of `sounds/` are
-  procedurally generated. Zombie voices in `sounds/zombie/` are processed CC0 recordings.
+  procedurally generated. Zombie voices in `sounds/zombie/` and the gunshots are processed CC0 recordings (`tools/fetch_assets.sh`).
 - Calling methods on nodes found by NodePath: use `node.call("activate")` (untyped), not direct calls.
 
 ## Architecture
@@ -19,7 +19,7 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
   save file, kill counter, difficulty (`Game.tuning("health"|"speed"|"damage"|"ammo")`, applied in `Zombie._ready`,
   `Player.take_damage`, `Pickup`). `new_game(difficulty)` plays `intro_cutscene.tscn` first.
   `Game.complete_level(state)` moves on; the last chapter leads to `ending.tscn`.
-- Menu and intro cutscene share `scenes/ui/backdrop_world.tscn` (street + basement set, camera marks `<Shot>A/B`);
+- Main menu plays `music/menu_tension.ogg` (looped). Menu and intro cutscene share `scenes/ui/backdrop_world.tscn` (street + basement set, camera marks `<Shot>A/B`);
   cutscene text lives in `tools/story_text.py`. Radio lines and the intro are voiced by `tools/gen_voice.py` (Piper,
   CC0 / public-domain English voices; the spoken English for each Russian subtitle is in `tools/voice_en.py`)
   into `sounds/voice/<md5(russian text)[:12]>.ogg`; `Hud.voice_line(text)` finds them.
@@ -35,18 +35,20 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
   wires `Player` signals to `Hud`. Expected children: `Player`, `HUD`, `NavigationRegion3D` (baked at runtime
   from static colliders), plus `Decor`, `Lights`, `Doors`, `Zombies`, `Pickups`, `Story`.
 - Story is data-driven: `StoryEvent` (objective + radio message + `targets` with `activate()`),
-  `StoryTrigger` (Area3D), `ZombieSpawner`, `Holdout`, `Door` (`event_unlocks`: an event unlocks instead of
-  opening), `Pickup.event`. Anything with `activate()`
+  `StoryTrigger` (Area3D), `ZombieSpawner`, `Holdout`, `Door` (`swing_degrees`: hinged, swings away from the player,
+  else slides by `open_offset`; `event_unlocks`: an event unlocks instead of opening), `Pickup.event`. Anything with `activate()`
   can be a target (doors, spawners, zombies, flicker lights, `power_light` (dark until powered),
   `sound_trigger`, other events, helicopter).
-- Player: `Player` → `Head/Camera3D/WeaponHolder` → weapons. `Weapon` base (ammo, reload, equip/idle anim,
+- Player: stamina (sprint and jump spend it, `stamina_changed` → HUD strip), crouch ("crouch" action, C / Ctrl: shorter
+  capsule, stays down under low ceilings). `Player` → `Head/Camera3D/WeaponHolder` → weapons. `Weapon` base (ammo, reload, equip/idle anim,
   `fire_ray` with distance falloff) with `Gun` (pistol, rifle, pump shotgun: `pellets`, `pump_delay`,
   `reload_per_round`), `MeleeWeapon` (knife), `Launcher` (RPG-7, id "bazooka" → `Rocket`), `Thrower` (grenades → `Grenade` RigidBody).
   Slots 1–9: knife, pistol, revolver, shotgun, smg, rifle, sniper (`Gun.scope_fov`, "aim" action, HUD scope overlay),
-  bazooka, grenade. SMG and AK are modelled in `build_assets.py` (`GunKit`), revolver/sniper come from the FPS Pack.
+  bazooka, grenade. SMG, AK, revolver and pump shotgun are modelled in `build_assets.py` (`GunKit`), pistol/sniper come from the FPS Pack.
+  `Thrower` swings the arm around `SHOULDER` (overarm, grenade released at `RELEASE_AT`).
 - `Zombie` (one script, scenes walker / runner / brute / soldier (`body_armor`) / bloater (`explode_damage`,
-  bursts on death or on reaching the player); the spitter is a `Boss` with `show_health_bar = false`): IDLE → CHASE → ATTACK, hears weapon noise
-  (`hear_noise` via the "zombies" group). Picks a random body from `bodies` (models/characters/*.glb,
+  bursts on death or on reaching the player); the spitter is a `Boss` with `show_health_bar = false`): IDLE → CHASE → ATTACK (only with a clear line to the player: `_can_reach_player`, so no hits through shut doors), hears weapon noise
+  (`hear_noise` via the "zombies" group). Picks a random body from `bodies` (models/characters/*.glb, faces redrawn by `scary_face` in `build_assets.py`,
   Quaternius rig: Idle/Walk/Run/Punch/RecieveHit/Death) and tints its "Skin" material. `ZombiePose`
   (SkeletonModifier3D) layers arms-forward reaching and headshot head removal over the animation.
   Headshot = hit above the Neck bone. Groans are rate-limited globally (`GROAN_GAP`).

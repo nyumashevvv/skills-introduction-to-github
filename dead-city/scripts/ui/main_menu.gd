@@ -17,6 +17,7 @@ const DIFFICULTY_TEXT: Array[String] = [
 @onready var title: Label = $Menu/Title
 @onready var settings: Control = $Menu/Settings
 @onready var camera: Camera3D = $Camera3D
+@onready var music: AudioStreamPlayer = $Music
 
 
 func _ready() -> void:
@@ -42,6 +43,7 @@ func _ready() -> void:
 		zombie._home = Vector3(randf_range(-4.0, 4.0), 0.0, randf_range(-26.0, -6.0))
 		zombie.wander_speed = 0.55
 	_drift()
+	_start_music()
 
 
 func _process(_delta: float) -> void:
@@ -56,6 +58,13 @@ func _drift() -> void:
 	var tween := create_tween().set_loops()
 	tween.tween_property(camera, "global_transform", b, DRIFT_TIME).set_trans(Tween.TRANS_SINE)
 	tween.tween_property(camera, "global_transform", a, DRIFT_TIME).set_trans(Tween.TRANS_SINE)
+
+
+## Heartbeat and a lone piano, faded in under the street ambience and looped.
+func _start_music() -> void:
+	(music.stream as AudioStreamOggVorbis).loop = true
+	music.play()
+	create_tween().tween_property(music, "volume_db", -3.0, 4.0).set_ease(Tween.EASE_OUT)
 
 
 func _show_main() -> void:
