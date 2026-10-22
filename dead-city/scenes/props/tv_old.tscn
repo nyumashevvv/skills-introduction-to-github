@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/props/tv_old.glb" id="1_tv_old"]
+
+[node name="TvOld" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1_tv_old")]

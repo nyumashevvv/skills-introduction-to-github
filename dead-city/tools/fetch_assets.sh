@@ -59,4 +59,14 @@ get "Juhani%20Junkala%20-%20Epic%20Boss%20Battle%20%5BSeamlessly%20Looping%5D.wa
 ffmpeg -v error -y -i metal.wav -af volume=-6.3dB -c:a libvorbis -q:a 3 "$MUS/boss_metal.ogg"
 ffmpeg -v error -y -i pursuit.wav -c:a libvorbis -q:a 3 "$MUS/boss_pursuit.ogg"
 ffmpeg -v error -y -i epic.wav -af volume=-6.5dB -c:a libvorbis -q:a 3 "$MUS/boss_epic.ogg"
+
+# Kenney kits (CC0): Car Kit, Furniture Kit, City Kit (Roads), Survival Kit
+cd "$SRC"
+mkdir -p kenney
+kenney() { [ -d "kenney/$1" ] || { curl -sSL -o "kenney/$1.zip" "https://kenney.nl/media/pages/assets/$1/$2/kenney_$1.zip" &&
+  unzip -oq "kenney/$1.zip" -d "kenney/$1"; }; }
+kenney car-kit 1a312ec241-1775131960
+kenney furniture-kit 440e0608a4-1677580847
+kenney city-kit-roads 74288c9459-1791628607
+kenney survival-kit 4065a8185b-1712149243
 echo "Sources ready in $SRC"

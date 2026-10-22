@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/props/shovel.glb" id="1_shovel"]
+
+[node name="Shovel" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1_shovel")]

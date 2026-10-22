@@ -587,57 +587,7 @@ def prefabs():
     s.node('LockedSound', 'AudioStreamPlayer3D', '.', stream=s.sound('door_locked'), unit_size=4.0)
     s.save('scenes/world/door.tscn')
 
-    def car(path, name, paint, police=False):
-        s = Scene()
-        shape = s.sub_res('BoxShape3D', size=V3(1.9, 1.45, 4.4))
-        s.node(name, 'StaticBody3D')
-        s.node('CollisionShape3D', 'CollisionShape3D', '.', position=V3(0, 0.75, 0), shape=shape)
-        s.box('Body', '.', (1.85, 0.65, 4.3), (0, 0.6, 0), paint)
-        s.box('Cabin', '.', (1.6, 0.55, 2.2), (0, 1.2, 0.2), paint)
-        s.box('Windshield', '.', (1.5, 0.48, 0.05), (0, 1.2, -0.91), 'glass', rot=(-0.35, 0, 0))
-        s.box('RearWindow', '.', (1.5, 0.45, 0.05), (0, 1.2, 1.31), 'glass', rot=(0.35, 0, 0))
-        s.box('WindowsL', '.', (0.02, 0.4, 1.8), (-0.81, 1.22, 0.2), 'glass')
-        s.box('WindowsR', '.', (0.02, 0.4, 1.8), (0.81, 1.22, 0.2), 'glass')
-        s.box('BumperF', '.', (1.9, 0.18, 0.12), (0, 0.35, -2.17), 'dark')
-        s.box('BumperB', '.', (1.9, 0.18, 0.12), (0, 0.35, 2.17), 'dark')
-        s.box('HeadlightL', '.', (0.35, 0.12, 0.03), (-0.6, 0.7, -2.15), 'headlight')
-        s.box('HeadlightR', '.', (0.35, 0.12, 0.03), (0.6, 0.7, -2.15), 'headlight')
-        s.box('TailL', '.', (0.3, 0.1, 0.03), (-0.65, 0.72, 2.15), 'taillight')
-        s.box('TailR', '.', (0.3, 0.1, 0.03), (0.65, 0.72, 2.15), 'taillight')
-        for i, (x, z) in enumerate([(-0.85, -1.35), (0.85, -1.35), (-0.85, 1.35), (0.85, 1.35)]):
-            s.cyl(f'Wheel{i}', '.', 0.34, 0.24, (x, 0.34, z), 'tire', rot=(0, 0, RX))
-        if police:
-            s.box('Bar', '.', (1.2, 0.1, 0.25), (0, 1.52, 0.2), 'dark')
-            s.box('SirenR', '.', (0.5, 0.1, 0.22), (-0.3, 1.6, 0.2), 'siren_red')
-            s.box('SirenB', '.', (0.5, 0.1, 0.22), (0.3, 1.6, 0.2), 'siren_blue')
-            s.box('DoorStripeL', '.', (0.02, 0.2, 2.0), (-0.935, 0.65, 0.0), 'paint_white')
-            s.box('DoorStripeR', '.', (0.02, 0.2, 2.0), (0.935, 0.65, 0.0), 'paint_white')
-            s.node('SirenLightR', 'OmniLight3D', '.', position=V3(-0.4, 1.9, 0.2), light_color=C(1, 0.1, 0.1),
-                   light_energy=2.0, omni_range=7.0, script=s.ext_res('Script', 'res://scripts/world/flicker_light.gd'),
-                   flicker_chance=0.5)
-            s.node('SirenLightB', 'OmniLight3D', '.', position=V3(0.4, 1.9, 0.2), light_color=C(0.2, 0.3, 1),
-                   light_energy=2.0, omni_range=7.0, script=s.ext_res('Script', 'res://scripts/world/flicker_light.gd'),
-                   flicker_chance=0.5)
-        s.save(path)
-    car('scenes/world/car_red.tscn', 'CarRed', 'car_red')
-    car('scenes/world/car_blue.tscn', 'CarBlue', 'car_blue')
-    car('scenes/world/car_white.tscn', 'CarWhite', 'car_white')
-    car('scenes/world/car_black.tscn', 'CarBlack', 'car_black')
-    car('scenes/world/police_car.tscn', 'PoliceCar', 'police_blue', police=True)
-
-    s = Scene()
-    shape = s.sub_res('BoxShape3D', size=V3(2.6, 3.0, 11.0))
-    s.node('Bus', 'StaticBody3D')
-    s.node('CollisionShape3D', 'CollisionShape3D', '.', position=V3(0, 1.6, 0), shape=shape)
-    s.box('Body', '.', (2.55, 2.4, 10.9), (0, 1.75, 0), 'bus_yellow')
-    s.box('Roof', '.', (2.4, 0.15, 10.6), (0, 3.0, 0), 'car_white')
-    s.box('WindowsL', '.', (0.02, 0.9, 9.0), (-1.28, 2.2, 0.4), 'glass')
-    s.box('WindowsR', '.', (0.02, 0.9, 9.0), (1.28, 2.2, 0.4), 'glass')
-    s.box('Front', '.', (2.3, 1.2, 0.02), (0, 2.0, -5.46), 'glass')
-    s.box('Stripe', '.', (2.57, 0.15, 10.9), (0, 1.3, 0), 'dark')
-    for i, (x, z) in enumerate([(-1.15, -3.8), (1.15, -3.8), (-1.15, 3.6), (1.15, 3.6)]):
-        s.cyl(f'Wheel{i}', '.', 0.5, 0.3, (x, 0.5, z), 'tire', rot=(0, 0, RX))
-    s.save('scenes/world/bus.tscn')
+    # cars and the bus are Blender-built models: see tools/gen_props.py (kenney) and scenes/world/vehicles/
 
     def lamp(path, flicker):
         s = Scene()

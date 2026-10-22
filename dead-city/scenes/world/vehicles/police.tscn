@@ -1,0 +1,32 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/vehicles/police.glb" id="1_police"]
+
+[ext_resource type="Script" path="res://scripts/world/flicker_light.gd" id="2_flicker_light"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.7489, 1.556, 5.0195)
+
+[node name="Police" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.778, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" parent="." instance=ExtResource("1_police")]
+
+[node name="Siren0" type="OmniLight3D" parent="."]
+position = Vector3(-0.4, 1.856, 0.5456)
+light_color = Color(1.0, 0.1, 0.1, 1.0)
+light_energy = 2.0
+omni_range = 7.0
+script = ExtResource("2_flicker_light")
+flicker_chance = 0.5
+
+[node name="Siren1" type="OmniLight3D" parent="."]
+position = Vector3(0.4, 1.856, 0.5456)
+light_color = Color(0.2, 0.3, 1.0, 1.0)
+light_energy = 2.0
+omni_range = 7.0
+script = ExtResource("2_flicker_light")
+flicker_chance = 0.5

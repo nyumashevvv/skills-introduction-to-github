@@ -3,7 +3,8 @@
     blender -b --python tools/blender/build_assets.py -- <sources dir> <project dir> [part ...]
 
 <sources dir> is where tools/fetch_assets.sh unpacked the CC0 source packs.
-Parts: characters, bosses, viewmodels, previews (default: characters bosses viewmodels);
+Parts: characters, bosses, kenney (vehicles, the bus, Kenney props), viewmodels, previews, lineup
+(default: characters bosses kenney viewmodels);
 `boss:<name>` or `vm:<name>` rebuild a single model.
 
 Coordinates for first-person models: the camera sits at the origin looking down +Y with +Z up,
@@ -18,7 +19,7 @@ from mathutils import Vector, Matrix
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 SRC, PROJECT = argv[0], argv[1]
-PARTS = argv[2:] or ["characters", "bosses", "viewmodels"]
+PARTS = argv[2:] or ["characters", "bosses", "kenney", "viewmodels"]
 UACP = os.path.join(SRC, "uacp", "Ultimate Animated Character Pack - Nov 2019", "Blends")
 CHAR_SCALE = 0.58  # Quaternius characters are ~3.06 units tall -> ~1.78 m
 FOV_DEG = 78.0     # Godot camera fov (vertical)
@@ -370,6 +371,253 @@ def render_character(arm, out_pattern, poses=(("Idle", 10), ("Walk", 8), ("Sword
         scene.render.filepath = out_pattern % action
         bpy.ops.render.render(write_still=True)
     arm.animation_data.action = None
+
+
+# ---------------------------------------------------------------- Kenney kits (vehicles, furniture, street, camp)
+KENNEY = os.path.join(SRC, "kenney")
+KITS = {  # kit folder, model subfolder, scale to metres
+    "car": ("car-kit", "Models/GLB format", 1.76),
+    "furniture": ("furniture-kit", "Models/GLTF format", 2.1),
+    "roads": ("city-kit-roads", "Models/GLB format", 8.0),
+    "survival": ("survival-kit", "Models/GLB format", 2.65),
+}
+# width, length, height factors for vehicles (on top of the kit scale)
+VEHICLE_STRETCH = (0.72, 1.0, 0.68)
+# out name: (kit, source, look) — look is 'dirty', 'burnt' (no wheels, charred), 'worn' (furniture) or 'plain'
+VEHICLES = {n: ("car", n.replace("_", "-"), "dirty") for n in
+            ("sedan", "suv", "suv_luxury", "hatchback_sports", "taxi", "police", "ambulance", "van", "delivery",
+             "truck", "garbage_truck", "firetruck")}
+VEHICLES.update({n + "_burnt": ("car", n.replace("_", "-"), "burnt") for n in ("sedan", "suv", "van", "hatchback_sports", "taxi")})
+KENNEY_PROPS = {
+    **{n: ("car", s, "dirty") for n, s in [("debris_door", "debris-door"), ("debris_door_window", "debris-door-window"),
+                                           ("debris_bumper", "debris-bumper"), ("debris_tire", "debris-tire"),
+                                           ("debris_plate", "debris-plate-a"), ("debris_spoiler", "debris-spoiler-a"),
+                                           ("debris_axle", "debris-drivetrain-axle")]},
+    **{n: ("furniture", s, "worn") for n, s in [
+        ("bookcase_open", "bookcaseOpen"), ("bookcase_wide", "bookcaseClosedWide"), ("bookcase_doors", "bookcaseClosedDoors"),
+        ("desk_corner", "deskCorner"), ("desk_chair", "chairDesk"), ("computer_screen", "computerScreen"),
+        ("computer_keyboard", "computerKeyboard"), ("laptop", "laptop"), ("fridge", "kitchenFridgeLarge"),
+        ("kitchen_cabinet", "kitchenCabinet"), ("kitchen_cabinet_drawer", "kitchenCabinetDrawer"), ("kitchen_sink", "kitchenSink"),
+        ("kitchen_stove", "kitchenStove"), ("microwave", "kitchenMicrowave"), ("coffee_machine", "kitchenCoffeeMachine"),
+        ("kitchen_upper", "kitchenCabinetUpperDouble"), ("lounge_sofa", "loungeSofa"), ("lounge_chair", "loungeChair"),
+        ("table_round", "tableRound"), ("table", "table"), ("chair_cushion", "chairCushion"), ("coat_rack", "coatRackStanding"),
+        ("floor_lamp", "lampRoundFloor"), ("table_lamp", "lampSquareTable"), ("tv_old", "televisionVintage"), ("radio", "radio"),
+        ("trashcan_small", "trashcan"), ("sink", "bathroomSink"), ("bed_single", "bedSingle"), ("box_closed", "cardboardBoxClosed"),
+        ("box_open", "cardboardBoxOpen"), ("rug", "rugRectangle"), ("rug_round", "rugRound"), ("plant_tall", "pottedPlant"),
+        ("plant_small", "plantSmall2"), ("books", "books"), ("washer", "washer"), ("side_table", "sideTableDrawers"),
+        ("tv_cabinet", "cabinetTelevision"), ("speaker", "speaker"), ("toaster", "toaster"), ("stool_bar", "stoolBar"),
+        ("kitchen_bar", "kitchenBar"), ("shower", "shower"), ("bathtub", "bathtub")]},
+    **{n: ("roads", s, "dirty") for n, s in [
+        ("traffic_light", "traffic-light"), ("sign_stop", "road-sign-stop"), ("sign_warning", "road-sign-warning"),
+        ("sign_street", "road-sign-street"), ("construction_barrier", "construction-barrier"),
+        ("construction_fence", "construction-fence"), ("construction_light", "construction-light"),
+        ("electricity_pole", "electricity-pole"), ("bridge_pillar", "bridge-pillar")]},
+    **{n: ("survival", s, "dirty") for n, s in [
+        ("barrel_open", "barrel-open"), ("crate_large", "box-large"), ("crate_large_open", "box-large-open"), ("bucket", "bucket"),
+        ("fence_wood", "fence"), ("fence_fortified", "fence-fortified"), ("metal_panel", "metal-panel-screws"),
+        ("tent_small", "tent"), ("tent_canvas", "tent-canvas"), ("bedroll", "bedroll"), ("bedroll_packed", "bedroll-packed"),
+        ("campfire_pit", "campfire-pit"), ("chest", "chest"), ("bottle", "bottle-large"), ("shovel", "tool-shovel"),
+        ("pickaxe", "tool-pickaxe"), ("axe", "tool-axe"), ("camp_workbench", "workbench"), ("signpost", "signpost"),
+        ("canvas_shelter", "structure-canvas"), ("planks", "resource-planks"), ("rock", "rock-a"), ("rock_flat", "rock-flat")]},
+}
+
+
+def grime(objs, look):
+    """Make bright toy colours fit a dead city: images and plain colours are desaturated and darkened;
+    'burnt' chars everything."""
+    import numpy as np
+    done = set()
+
+    def tone(rgb):
+        gray = rgb @ np.array([0.3, 0.59, 0.11])
+        if look == "burnt":
+            return gray[..., None] * 0.14 + np.array([0.045, 0.035, 0.03])
+        amount, dark = (0.45, 0.72) if look == "dirty" else (0.25, 0.85)
+        return (rgb * (1 - amount) + gray[..., None] * amount) * dark + np.array([0.03, 0.025, 0.015])
+
+    for o in objs:
+        if o.type != 'MESH':
+            continue
+        for slot in o.material_slots:
+            m = slot.material
+            if m is None or m.name in done or not m.use_nodes:
+                continue
+            done.add(m.name)
+            bsdf = next((n for n in m.node_tree.nodes if n.type == 'BSDF_PRINCIPLED'), None)
+            if bsdf is None:
+                continue
+            bsdf.inputs["Roughness"].default_value = 0.8
+            if "Metallic" in bsdf.inputs and look == "burnt":
+                bsdf.inputs["Metallic"].default_value = 0.0
+            link = bsdf.inputs["Base Color"].links
+            if link and link[0].from_node.type == 'TEX_IMAGE':
+                tex = link[0].from_node
+                src = tex.image
+                img = src.copy()
+                img.name = f"{src.name}_{look}"
+                px = np.empty(len(img.pixels), dtype=np.float32)
+                img.pixels.foreach_get(px)
+                px = px.reshape(-1, 4)
+                px[:, :3] = np.clip(tone(px[:, :3]), 0, 1)
+                img.pixels.foreach_set(px.ravel())
+                img.update()
+                img.pack()
+                tex.image = img
+            else:
+                c = np.array(bsdf.inputs["Base Color"].default_value[:3])
+                bsdf.inputs["Base Color"].default_value = (*np.clip(tone(c), 0, 1), 1.0)
+
+
+def kenney_model(kit, source, look, out_path):
+    """Imports a Kenney model, scales it to metres, centres it on the floor, gives it a grimy look and exports it.
+    Vehicles are turned to face Blender +Y (Godot -Z). Returns its size (x, y, z in Godot axes)."""
+    folder, sub, scale = KITS[kit]
+    reset()
+    bpy.ops.import_scene.gltf(filepath=os.path.join(KENNEY, folder, sub, source + ".glb"))
+    objs = [o for o in bpy.data.objects]
+    if look == "burnt":
+        for o in [o for o in objs if "wheel" in o.name]:
+            bpy.data.objects.remove(o)
+        objs = list(bpy.data.objects)
+    root = bpy.data.objects.new("Root", None)
+    bpy.context.scene.collection.objects.link(root)
+    for o in objs:
+        if o.parent is None:
+            o.parent = root
+    turn = Matrix.Identity(4)
+    front = [o for o in objs if "wheel-front" in o.name]
+    if (front and front[0].matrix_world.translation.y < 0) or kit == "furniture":
+        turn = Matrix.Rotation(math.pi, 4, 'Z')  # fronts face +Y like every other model here (Godot -Z)
+    if out_path.endswith(".glb") and os.sep + "vehicles" + os.sep in out_path:
+        # Kenney cars are stubby toys: stretch them to real proportions, but keep the wheels round.
+        stretch = Vector(VEHICLE_STRETCH) * scale
+        root.matrix_world = turn @ Matrix.Diagonal((*stretch, 1.0))
+        bpy.context.view_layer.update()
+        for o in objs:
+            if "wheel" in o.name:
+                loc, rot, sca = o.matrix_world.decompose()
+                round_scale = Vector((sca.x, sca.z, sca.z))
+                o.matrix_world = Matrix.LocRotScale(loc, rot, round_scale)
+    else:
+        if kit == "car":  # loose car parts match the (squashed) height of the vehicles
+            scale *= VEHICLE_STRETCH[2]
+        root.matrix_world = turn @ Matrix.Scale(scale, 4)
+    lo, hi = bounds(world_verts(objs))
+    drop = 0.22 if look == "burnt" else 0.0  # wheel-less wrecks sit on their belly
+    root.matrix_world = Matrix.Translation(Vector((-(lo.x + hi.x) / 2, -(lo.y + hi.y) / 2, -lo.z - drop))) @ root.matrix_world
+    grime(objs, look)
+    export_glb(out_path, objs + [root])
+    lo, hi = bounds(world_verts(objs))
+    return [round(hi.x - lo.x, 3), round(hi.z - lo.z, 3), round(hi.y - lo.y, 3)]
+
+
+def build_bus(out_path):
+    """A city bus modelled from scratch: rounded body, window band with pillars, doors, Kenney truck wheels."""
+    reset()
+    paint, trim = material("BusPaint", (0.62, 0.5, 0.22), 0.2, 0.6), material("BusTrim", (0.08, 0.08, 0.09))
+    glass, lights = material("BusGlass", (0.05, 0.07, 0.09), 0.3, 0.1), material("BusLights", (0.85, 0.8, 0.6))
+    rust = material("BusRust", (0.32, 0.17, 0.08))
+    L, W, H = 11.0, 2.5, 2.9
+    parts = []
+
+    def box(size, loc, mat, bevel=0.0):
+        bpy.ops.mesh.primitive_cube_add(size=1.0, location=loc)
+        o = bpy.context.object
+        o.scale = size
+        bpy.ops.object.transform_apply(scale=True)
+        if bevel:
+            md = o.modifiers.new("Bevel", 'BEVEL')
+            md.width, md.segments = bevel, 3
+            bpy.ops.object.modifier_apply(modifier=md.name)
+        o.data.materials.append(mat)
+        parts.append(o)
+        return o
+    box((W, L, H - 0.45), (0, 0, 0.45 + (H - 0.45) / 2), paint, 0.18)               # body (front = +Y)
+    for sx in (-1, 1):
+        box((0.04, L - 1.4, 0.95), (sx * W / 2, -0.2, 1.95), glass)                   # window band
+        for i in range(9):
+            box((0.06, 0.1, 0.95), (sx * (W / 2 + 0.005), -L / 2 + 1.0 + i * 1.12, 1.95), paint)
+        box((0.05, L - 0.3, 0.32), (sx * W / 2, 0, 0.62), trim)                        # skirt
+        for y in (-3.6, 3.4):                                                           # wheel arches
+            box((0.06, 1.3, 0.75), (sx * (W / 2 + 0.01), y, 0.75), trim)
+        for i in range(4):
+            box((0.05, rnd_u(i, 0.3, 0.7), rnd_u(i + 7, 0.1, 0.3)), (sx * (W / 2 + 0.01), -4 + i * 2.6, 0.95), rust)
+    box((0.05, 1.1, 1.85), (W / 2 + 0.02, 3.6, 1.42), glass); box((0.05, 1.1, 1.85), (W / 2 + 0.02, -0.4, 1.42), glass)  # doors
+    box((W - 0.3, 0.05, 1.2), (0, L / 2, 1.85), glass)                                 # windscreen
+    box((W - 0.5, 0.05, 0.7), (0, -L / 2, 2.0), glass)                                 # rear window
+    box((W - 0.6, 0.06, 0.28), (0, L / 2 + 0.01, 2.62), trim)                         # route sign
+    for sx in (-1, 1):
+        box((0.35, 0.05, 0.18), (sx * 0.85, L / 2 + 0.02, 0.85), lights)
+        box((0.25, 0.05, 0.25), (sx * 0.95, -L / 2 - 0.02, 0.9), material("BusTail", (0.5, 0.05, 0.03)))
+    box((W + 0.05, 0.2, 0.3), (0, L / 2 + 0.05, 0.5), trim); box((W + 0.05, 0.2, 0.3), (0, -L / 2 - 0.05, 0.5), trim)
+    box((1.4, 2.0, 0.25), (0, -2.5, H + 0.1), paint, 0.05)                            # roof hatch / AC unit
+    # wheels from the Kenney car kit
+    wheel_path = os.path.join(KENNEY, "car-kit", "Models/GLB format", "wheel-truck.glb")
+    for sx in (-1, 1):
+        for y in (-3.6, 3.4):
+            before = set(bpy.data.objects)
+            bpy.ops.import_scene.gltf(filepath=wheel_path)
+            new = [o for o in bpy.data.objects if o not in before]
+            lo, hi = bounds(world_verts(new))
+            k = 1.0 / max(hi.z - lo.z, 1e-3)
+            for o in new:
+                if o.parent is None:
+                    o.matrix_world = Matrix.Translation(Vector((sx * (W / 2 - 0.15), y, 0.5))) @ \
+                        Matrix.Rotation(0 if sx > 0 else math.pi, 4, 'Z') @ Matrix.Scale(k, 4) @ \
+                        Matrix.Translation(-(lo + hi) / 2) @ o.matrix_world
+            parts += new
+    grime(parts, "dirty")
+    export_glb(out_path, parts)
+    lo, hi = bounds(world_verts(parts))
+    return [round(hi.x - lo.x, 3), round(hi.z - lo.z, 3), round(hi.y - lo.y, 3)]
+
+
+def rnd_u(seed, a, b):
+    return a + (b - a) * ((seed * 9301 + 49297) % 233280) / 233280.0
+
+
+def build_kenney(only=()):
+    import json
+    sizes_path = os.path.join(PROJECT, "models", "kenney_sizes.json")
+    sizes = json.load(open(sizes_path)) if os.path.exists(sizes_path) else {}
+    for out_dir, table in (("vehicles", VEHICLES), ("props", KENNEY_PROPS)):
+        for name, (kit, source, look) in table.items():
+            if only and name not in only:
+                continue
+            sizes[name] = kenney_model(kit, source, look, os.path.join(PROJECT, "models", out_dir, name + ".glb"))
+    if not only or "bus" in only:
+        sizes["bus"] = build_bus(os.path.join(PROJECT, "models", "vehicles", "bus.glb"))
+    json.dump(sizes, open(sizes_path, "w"), indent=1, sort_keys=True)
+
+
+def render_lineup(paths, out_png, spacing=6.0, cam=(0, -22, 9)):
+    """Imports models side by side and renders them (quick look at the Kenney conversions)."""
+    reset()
+    for i, p in enumerate(paths):
+        before = set(bpy.data.objects)
+        bpy.ops.import_scene.gltf(filepath=p)
+        for o in bpy.data.objects:
+            if o not in before and o.parent is None:
+                o.location.x += (i % 6 - 2.5) * spacing
+                o.location.y += (i // 6) * spacing
+    scene = bpy.context.scene
+    c = bpy.data.objects.new("Cam", bpy.data.cameras.new("Cam"))
+    c.location = cam
+    c.rotation_euler = (Vector((0, spacing * 0.5, 0.5)) - Vector(cam)).to_track_quat('-Z', 'Y').to_euler()
+    scene.collection.objects.link(c)
+    scene.camera = c
+    sun = bpy.data.objects.new("Sun", bpy.data.lights.new("Sun", 'SUN'))
+    sun.data.energy = 3.0
+    sun.rotation_euler = (0.7, 0.2, -0.6)
+    scene.collection.objects.link(sun)
+    scene.world = bpy.data.worlds.new("W")
+    scene.world.use_nodes = True
+    scene.world.node_tree.nodes["Background"].inputs[0].default_value = (0.35, 0.37, 0.4, 1)
+    scene.render.engine = 'CYCLES'
+    scene.cycles.samples = 8
+    scene.render.resolution_x, scene.render.resolution_y = 1200, 600
+    scene.render.filepath = out_png
+    bpy.ops.render.render(write_still=True)
 
 
 # ---------------------------------------------------------------- weapons
@@ -792,6 +1040,15 @@ if "viewmodels" in PARTS:
     build_viewmodels()
 if "bosses" in PARTS:
     build_bosses()
+if "kenney" in PARTS:
+    build_kenney()
+KENNEY_ONLY = [p[7:] for p in PARTS if p.startswith("kenney:")]
+if KENNEY_ONLY:
+    build_kenney(KENNEY_ONLY)
+if "lineup" in PARTS:
+    vdir = os.path.join(PROJECT, "models", "vehicles")
+    render_lineup([os.path.join(vdir, n + ".glb") for n in list(VEHICLES) + ["bus"]], os.path.join(SRC, "previews", "vehicles.png"),
+                  spacing=7.0, cam=(0, -30, 14))
 BOSS_ONLY = [p[5:] for p in PARTS if p.startswith("boss:")]
 if BOSS_ONLY:
     build_bosses(BOSS_ONLY)

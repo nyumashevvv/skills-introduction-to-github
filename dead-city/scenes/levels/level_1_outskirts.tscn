@@ -24,7 +24,7 @@
 
 [ext_resource type="Material" path="res://materials/concrete.tres" id="12_concrete"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/bus.tscn" id="13_bus"]
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/bus.tscn" id="13_bus"]
 
 [ext_resource type="PackedScene" path="res://scenes/world/street_lamp.tscn" id="14_street_lamp"]
 
@@ -34,89 +34,139 @@
 
 [ext_resource type="PackedScene" path="res://scenes/world/barrel.tscn" id="17_barrel"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/car_red.tscn" id="18_car_red"]
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/sedan_burnt.tscn" id="18_sedan_burnt"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/car_white.tscn" id="19_car_white"]
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/suv.tscn" id="19_suv"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/car_black.tscn" id="20_car_black"]
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/hatchback_sports.tscn" id="20_hatchback_sports"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/car_blue.tscn" id="21_car_blue"]
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/van.tscn" id="21_van"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/police_car.tscn" id="22_police_car"]
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/taxi.tscn" id="22_taxi"]
 
-[ext_resource type="PackedScene" path="res://scenes/effects/fire.tscn" id="23_fire"]
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/police.tscn" id="23_police"]
 
-[ext_resource type="Material" path="res://materials/dark.tres" id="24_dark"]
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/sedan.tscn" id="24_sedan"]
 
-[ext_resource type="Material" path="res://materials/door_steel.tres" id="25_door_steel"]
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/hatchback_sports_burnt.tscn" id="25_hatchback_sports_burnt"]
 
-[ext_resource type="Material" path="res://materials/lamp_glow.tres" id="26_lamp_glow"]
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/suv_burnt.tscn" id="26_suv_burnt"]
 
-[ext_resource type="Material" path="res://materials/police_blue.tres" id="27_police_blue"]
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/delivery.tscn" id="27_delivery"]
 
-[ext_resource type="Script" path="res://scripts/world/flicker_light.gd" id="28_flicker_light"]
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/ambulance.tscn" id="28_ambulance"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/newspaper.tscn" id="29_newspaper"]
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/taxi_burnt.tscn" id="29_taxi_burnt"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/box_pile.tscn" id="30_box_pile"]
+[ext_resource type="PackedScene" path="res://scenes/effects/fire.tscn" id="30_fire"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/suitcase_open.tscn" id="31_suitcase_open"]
+[ext_resource type="Material" path="res://materials/dark.tres" id="31_dark"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/tyre_flat.tscn" id="32_tyre_flat"]
+[ext_resource type="Material" path="res://materials/door_steel.tres" id="32_door_steel"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/papers.tscn" id="33_papers"]
+[ext_resource type="Material" path="res://materials/lamp_glow.tres" id="33_lamp_glow"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/rubble.tscn" id="34_rubble"]
+[ext_resource type="Material" path="res://materials/police_blue.tres" id="34_police_blue"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/bench.tscn" id="35_bench"]
+[ext_resource type="Script" path="res://scripts/world/flicker_light.gd" id="35_flicker_light"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/trash_can.tscn" id="36_trash_can"]
+[ext_resource type="PackedScene" path="res://scenes/props/newspaper.tscn" id="36_newspaper"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/suitcase.tscn" id="37_suitcase"]
+[ext_resource type="PackedScene" path="res://scenes/props/box_pile.tscn" id="37_box_pile"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/backpack.tscn" id="38_backpack"]
+[ext_resource type="PackedScene" path="res://scenes/props/suitcase_open.tscn" id="38_suitcase_open"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/trash_bags.tscn" id="39_trash_bags"]
+[ext_resource type="PackedScene" path="res://scenes/props/tyre_flat.tscn" id="39_tyre_flat"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/traffic_cone.tscn" id="40_traffic_cone"]
+[ext_resource type="PackedScene" path="res://scenes/props/papers.tscn" id="40_papers"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/barrier.tscn" id="41_barrier"]
+[ext_resource type="PackedScene" path="res://scenes/props/rubble.tscn" id="41_rubble"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/tyre_stack.tscn" id="42_tyre_stack"]
+[ext_resource type="PackedScene" path="res://scenes/props/bench.tscn" id="42_bench"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/pallet.tscn" id="43_pallet"]
+[ext_resource type="PackedScene" path="res://scenes/props/trash_can.tscn" id="43_trash_can"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/door.tscn" id="44_door"]
+[ext_resource type="PackedScene" path="res://scenes/props/suitcase.tscn" id="44_suitcase"]
 
-[ext_resource type="Material" path="res://materials/door_glass_lit.tres" id="45_door_glass_lit"]
+[ext_resource type="PackedScene" path="res://scenes/props/backpack.tscn" id="45_backpack"]
 
-[ext_resource type="Material" path="res://materials/chrome.tres" id="46_chrome"]
+[ext_resource type="PackedScene" path="res://scenes/props/trash_bags.tscn" id="46_trash_bags"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/walker.tscn" id="47_walker"]
+[ext_resource type="PackedScene" path="res://scenes/props/traffic_cone.tscn" id="47_traffic_cone"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/runner.tscn" id="48_runner"]
+[ext_resource type="PackedScene" path="res://scenes/props/barrier.tscn" id="48_barrier"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/butcher.tscn" id="49_butcher"]
+[ext_resource type="PackedScene" path="res://scenes/props/tyre_stack.tscn" id="49_tyre_stack"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_pistol.tscn" id="50_ammo_pistol"]
+[ext_resource type="PackedScene" path="res://scenes/props/pallet.tscn" id="50_pallet"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="51_medkit"]
+[ext_resource type="PackedScene" path="res://scenes/props/electricity_pole.tscn" id="51_electricity_pole"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/weapon_rifle.tscn" id="52_weapon_rifle"]
+[ext_resource type="PackedScene" path="res://scenes/props/traffic_light.tscn" id="52_traffic_light"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rifle.tscn" id="53_ammo_rifle"]
+[ext_resource type="PackedScene" path="res://scenes/props/sign_stop.tscn" id="53_sign_stop"]
 
-[ext_resource type="Script" path="res://scripts/story/story_event.gd" id="54_story_event"]
+[ext_resource type="PackedScene" path="res://scenes/props/sign_warning.tscn" id="54_sign_warning"]
 
-[ext_resource type="Script" path="res://scripts/story/story_trigger.gd" id="55_story_trigger"]
+[ext_resource type="PackedScene" path="res://scenes/props/sign_street.tscn" id="55_sign_street"]
 
-[ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="56_zombie_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/props/construction_barrier.tscn" id="56_construction_barrier"]
 
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="57_player"]
+[ext_resource type="PackedScene" path="res://scenes/props/construction_light.tscn" id="57_construction_light"]
 
-[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="58_hud"]
+[ext_resource type="PackedScene" path="res://scenes/props/construction_fence.tscn" id="58_construction_fence"]
 
-[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="59_ambience"]
+[ext_resource type="PackedScene" path="res://scenes/props/debris_door.tscn" id="59_debris_door"]
+
+[ext_resource type="PackedScene" path="res://scenes/props/debris_tire.tscn" id="60_debris_tire"]
+
+[ext_resource type="PackedScene" path="res://scenes/props/debris_bumper.tscn" id="61_debris_bumper"]
+
+[ext_resource type="PackedScene" path="res://scenes/props/debris_door_window.tscn" id="62_debris_door_window"]
+
+[ext_resource type="PackedScene" path="res://scenes/props/debris_plate.tscn" id="63_debris_plate"]
+
+[ext_resource type="PackedScene" path="res://scenes/props/debris_spoiler.tscn" id="64_debris_spoiler"]
+
+[ext_resource type="PackedScene" path="res://scenes/props/debris_axle.tscn" id="65_debris_axle"]
+
+[ext_resource type="PackedScene" path="res://scenes/props/barrel_open.tscn" id="66_barrel_open"]
+
+[ext_resource type="PackedScene" path="res://scenes/props/crate_large.tscn" id="67_crate_large"]
+
+[ext_resource type="PackedScene" path="res://scenes/props/crate_large_open.tscn" id="68_crate_large_open"]
+
+[ext_resource type="PackedScene" path="res://scenes/world/door.tscn" id="69_door"]
+
+[ext_resource type="Material" path="res://materials/door_glass_lit.tres" id="70_door_glass_lit"]
+
+[ext_resource type="Material" path="res://materials/chrome.tres" id="71_chrome"]
+
+[ext_resource type="PackedScene" path="res://scenes/zombies/walker.tscn" id="72_walker"]
+
+[ext_resource type="PackedScene" path="res://scenes/zombies/runner.tscn" id="73_runner"]
+
+[ext_resource type="PackedScene" path="res://scenes/zombies/butcher.tscn" id="74_butcher"]
+
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_pistol.tscn" id="75_ammo_pistol"]
+
+[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="76_medkit"]
+
+[ext_resource type="PackedScene" path="res://scenes/pickups/weapon_rifle.tscn" id="77_weapon_rifle"]
+
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rifle.tscn" id="78_ammo_rifle"]
+
+[ext_resource type="Script" path="res://scripts/story/story_event.gd" id="79_story_event"]
+
+[ext_resource type="Script" path="res://scripts/story/story_trigger.gd" id="80_story_trigger"]
+
+[ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="81_zombie_spawner"]
+
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="82_player"]
+
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="83_hud"]
+
+[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="84_ambience"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.01, 0.012, 0.03, 1.0)
@@ -167,27 +217,27 @@ material = ExtResource("8_window_lit")
 
 [sub_resource type="BoxMesh" id="BoxMesh_8"]
 size = Vector3(4.0, 3.2, 0.3)
-material = ExtResource("24_dark")
+material = ExtResource("31_dark")
 
 [sub_resource type="BoxMesh" id="BoxMesh_9"]
 size = Vector3(3.8, 0.12, 1.0)
-material = ExtResource("25_door_steel")
+material = ExtResource("32_door_steel")
 
 [sub_resource type="BoxMesh" id="BoxMesh_10"]
 size = Vector3(3.0, 0.03, 0.5)
-material = ExtResource("26_lamp_glow")
+material = ExtResource("33_lamp_glow")
 
 [sub_resource type="BoxMesh" id="BoxMesh_11"]
 size = Vector3(42.2, 0.6, 0.4)
-material = ExtResource("27_police_blue")
+material = ExtResource("34_police_blue")
 
 [sub_resource type="BoxMesh" id="BoxMesh_12"]
 size = Vector3(1.2, 2.3, 0.02)
-material = ExtResource("45_door_glass_lit")
+material = ExtResource("70_door_glass_lit")
 
 [sub_resource type="BoxMesh" id="BoxMesh_13"]
 size = Vector3(0.7, 0.06, 0.06)
-material = ExtResource("46_chrome")
+material = ExtResource("71_chrome")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_14"]
 size = Vector3(18.0, 3.0, 2.0)
@@ -1496,54 +1546,73 @@ position = Vector3(16.0, 0.0, -71.0)
 [node name="Barrel6" parent="NavigationRegion3D" instance=ExtResource("17_barrel")]
 position = Vector3(8.2, 0.0, -110.0)
 
-[node name="CarRed1" parent="NavigationRegion3D" instance=ExtResource("18_car_red")]
+[node name="SedanBurnt1" parent="NavigationRegion3D" instance=ExtResource("18_sedan_burnt")]
 position = Vector3(-3.0, 0.0, -2.0)
 rotation = Vector3(0.0, 0.45, 0.0)
 
-[node name="CarWhite1" parent="NavigationRegion3D" instance=ExtResource("19_car_white")]
+[node name="Suv1" parent="NavigationRegion3D" instance=ExtResource("19_suv")]
 position = Vector3(3.8, 0.0, -16.0)
 rotation = Vector3(0.0, -0.15, 0.0)
 
-[node name="CarBlack1" parent="NavigationRegion3D" instance=ExtResource("20_car_black")]
+[node name="HatchbackSports1" parent="NavigationRegion3D" instance=ExtResource("20_hatchback_sports")]
 position = Vector3(-3.8, 0.0, -27.0)
 rotation = Vector3(0.0, 0.1, 0.0)
 
-[node name="CarBlue1" parent="NavigationRegion3D" instance=ExtResource("21_car_blue")]
-position = Vector3(-1.6, 0.0, -38.0)
+[node name="Van1" parent="NavigationRegion3D" instance=ExtResource("21_van")]
+position = Vector3(-2.0, 0.0, -38.0)
 rotation = Vector3(0.0, 1.45, 0.0)
 
-[node name="CarWhite2" parent="NavigationRegion3D" instance=ExtResource("19_car_white")]
-position = Vector3(3.2, 0.0, -39.5)
+[node name="Taxi1" parent="NavigationRegion3D" instance=ExtResource("22_taxi")]
+position = Vector3(3.4, 0.0, -39.5)
 rotation = Vector3(0.0, 1.3, 0.0)
 
-[node name="PoliceCar1" parent="NavigationRegion3D" instance=ExtResource("22_police_car")]
+[node name="Police1" parent="NavigationRegion3D" instance=ExtResource("23_police")]
 position = Vector3(4.2, 0.0, -55.0)
 rotation = Vector3(0.0, 0.25, 0.0)
 
-[node name="CarRed2" parent="NavigationRegion3D" instance=ExtResource("18_car_red")]
+[node name="Sedan1" parent="NavigationRegion3D" instance=ExtResource("24_sedan")]
+position = Vector3(-4.8, 0.0, -63.5)
+rotation = Vector3(0.0, 0.15, 0.0)
+
+[node name="HatchbackSportsBurnt1" parent="NavigationRegion3D" instance=ExtResource("25_hatchback_sports_burnt")]
+position = Vector3(2.4, 0.0, -70.5)
+rotation = Vector3(0.0, 2.0, 0.0)
+
+[node name="SuvBurnt1" parent="NavigationRegion3D" instance=ExtResource("26_suv_burnt")]
 position = Vector3(-4.2, 0.0, -78.0)
 rotation = Vector3(0.0, -0.3, 0.0)
 
-[node name="CarBlack2" parent="NavigationRegion3D" instance=ExtResource("20_car_black")]
+[node name="Delivery1" parent="NavigationRegion3D" instance=ExtResource("27_delivery")]
 position = Vector3(3.5, 0.0, -100.0)
 rotation = Vector3(0.0, 0.6, 0.0)
 
-[node name="PoliceCar2" parent="NavigationRegion3D" instance=ExtResource("22_police_car")]
+[node name="Ambulance1" parent="NavigationRegion3D" instance=ExtResource("28_ambulance")]
+position = Vector3(-3.6, 0.0, -106.0)
+rotation = Vector3(0.0, -0.3, 0.0)
+
+[node name="Police2" parent="NavigationRegion3D" instance=ExtResource("23_police")]
 position = Vector3(-3.5, 0.0, -122.0)
 rotation = Vector3(0.0, 1.2, 0.0)
 
-[node name="PoliceCar3" parent="NavigationRegion3D" instance=ExtResource("22_police_car")]
+[node name="Police3" parent="NavigationRegion3D" instance=ExtResource("23_police")]
 position = Vector3(4.0, 0.0, -125.0)
 rotation = Vector3(0.0, -1.3, 0.0)
 
-[node name="Fire1" parent="Decor" instance=ExtResource("23_fire")]
-position = Vector3(-3.0, 1.2, -2.0)
+[node name="TaxiBurnt1" parent="NavigationRegion3D" instance=ExtResource("29_taxi_burnt")]
+position = Vector3(4.6, 0.0, -6.5)
+rotation = Vector3(0.0, -2.6, 0.0)
+
+[node name="Fire1" parent="Decor" instance=ExtResource("30_fire")]
+position = Vector3(-3.0, 1.1, -2.0)
+
+[node name="Fire2" parent="Decor" instance=ExtResource("30_fire")]
+position = Vector3(-4.2, 1.0, -78.0)
 
 [node name="Bus2" parent="NavigationRegion3D" instance=ExtResource("13_bus")]
 position = Vector3(0.0, 0.0, -88.0)
 rotation = Vector3(0.0, 1.4, 0.0)
 
-[node name="Fire2" parent="Decor" instance=ExtResource("23_fire")]
+[node name="Fire3" parent="Decor" instance=ExtResource("30_fire")]
 position = Vector3(1.5, 3.2, -88.0)
 
 [node name="Block49" parent="NavigationRegion3D" instance=ExtResource("3_block")]
@@ -1619,7 +1688,7 @@ position = Vector3(0.0, 6.0, -128.0)
 light_color = Color(0.4, 0.6, 1.0, 1.0)
 light_energy = 2.0
 omni_range = 10
-script = ExtResource("28_flicker_light")
+script = ExtResource("35_flicker_light")
 
 [node name="Light2" type="OmniLight3D" parent="Lights"]
 position = Vector3(0.0, 2.9, -128.2)
@@ -1627,179 +1696,179 @@ light_color = Color(1.0, 0.9, 0.7, 1.0)
 light_energy = 3.0
 omni_range = 9
 
-[node name="Newspaper1" parent="Decor" instance=ExtResource("29_newspaper")]
+[node name="Newspaper1" parent="Decor" instance=ExtResource("36_newspaper")]
 position = Vector3(8.1504, 0.0, 7.0227)
 rotation = Vector3(0.0, -1.3646, 0.0)
 
-[node name="BoxPile1" parent="NavigationRegion3D" instance=ExtResource("30_box_pile")]
+[node name="BoxPile1" parent="NavigationRegion3D" instance=ExtResource("37_box_pile")]
 position = Vector3(-8.4, 0.0, 3.5)
 rotation = Vector3(0.0, -1.5708, 0.0)
 
-[node name="SuitcaseOpen1" parent="Decor" instance=ExtResource("31_suitcase_open")]
+[node name="SuitcaseOpen1" parent="Decor" instance=ExtResource("38_suitcase_open")]
 position = Vector3(-7.3918, 0.0, 0.1828)
 rotation = Vector3(0.0, 1.1365, 0.0)
 
-[node name="TyreFlat1" parent="Decor" instance=ExtResource("32_tyre_flat")]
+[node name="TyreFlat1" parent="Decor" instance=ExtResource("39_tyre_flat")]
 position = Vector3(1.219, 0.0, 1.0)
 rotation = Vector3(0.0, -0.5743, 0.0)
 
-[node name="Papers1" parent="Decor" instance=ExtResource("33_papers")]
+[node name="Papers1" parent="Decor" instance=ExtResource("40_papers")]
 position = Vector3(8.1736, 0.0, -7.3277)
 rotation = Vector3(0.0, -2.8478, 0.0)
 
-[node name="Rubble1" parent="Decor" instance=ExtResource("34_rubble")]
+[node name="Rubble1" parent="Decor" instance=ExtResource("41_rubble")]
 position = Vector3(-8.1709, 0.0, -11.7211)
 rotation = Vector3(0.0, -1.6865, 0.0)
 
-[node name="BoxPile2" parent="NavigationRegion3D" instance=ExtResource("30_box_pile")]
+[node name="BoxPile2" parent="NavigationRegion3D" instance=ExtResource("37_box_pile")]
 position = Vector3(8.4, 0.0, -14.5)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
-[node name="Papers2" parent="Decor" instance=ExtResource("33_papers")]
+[node name="Papers2" parent="Decor" instance=ExtResource("40_papers")]
 position = Vector3(8.2925, 0.0, -17.3978)
 rotation = Vector3(0.0, 1.8542, 0.0)
 
-[node name="SuitcaseOpen2" parent="Decor" instance=ExtResource("31_suitcase_open")]
+[node name="SuitcaseOpen2" parent="Decor" instance=ExtResource("38_suitcase_open")]
 position = Vector3(-6.9863, 0.0, -25.9261)
 rotation = Vector3(0.0, 1.2252, 0.0)
 
-[node name="Rubble2" parent="Decor" instance=ExtResource("34_rubble")]
+[node name="Rubble2" parent="Decor" instance=ExtResource("41_rubble")]
 position = Vector3(2.4189, 0.0, -23.0)
 rotation = Vector3(0.0, -0.9054, 0.0)
 
-[node name="SuitcaseOpen3" parent="Decor" instance=ExtResource("31_suitcase_open")]
+[node name="SuitcaseOpen3" parent="Decor" instance=ExtResource("38_suitcase_open")]
 position = Vector3(8.1568, 0.0, -30.4538)
 rotation = Vector3(0.0, -2.2234, 0.0)
 
-[node name="Bench1" parent="NavigationRegion3D" instance=ExtResource("35_bench")]
+[node name="Bench1" parent="NavigationRegion3D" instance=ExtResource("42_bench")]
 position = Vector3(-8.4, 0.0, -32.5)
 rotation = Vector3(0.0, -1.5708, 0.0)
 
-[node name="Rubble3" parent="Decor" instance=ExtResource("34_rubble")]
+[node name="Rubble3" parent="Decor" instance=ExtResource("41_rubble")]
 position = Vector3(-7.8446, 0.0, -36.7602)
 rotation = Vector3(0.0, -1.996, 0.0)
 
-[node name="Rubble4" parent="Decor" instance=ExtResource("34_rubble")]
+[node name="Rubble4" parent="Decor" instance=ExtResource("41_rubble")]
 position = Vector3(7.2254, 0.0, -42.2349)
 rotation = Vector3(0.0, -0.2689, 0.0)
 
-[node name="Rubble5" parent="Decor" instance=ExtResource("34_rubble")]
+[node name="Rubble5" parent="Decor" instance=ExtResource("41_rubble")]
 position = Vector3(-8.104, 0.0, -49.9126)
 rotation = Vector3(0.0, 1.0971, 0.0)
 
-[node name="TrashCan1" parent="NavigationRegion3D" instance=ExtResource("36_trash_can")]
+[node name="TrashCan1" parent="NavigationRegion3D" instance=ExtResource("43_trash_can")]
 position = Vector3(8.4, 0.0, -50.5)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
-[node name="TyreFlat2" parent="Decor" instance=ExtResource("32_tyre_flat")]
+[node name="TyreFlat2" parent="Decor" instance=ExtResource("39_tyre_flat")]
 position = Vector3(4.0214, 0.0, -47.0)
 rotation = Vector3(0.0, 2.8203, 0.0)
 
-[node name="Suitcase1" parent="Decor" instance=ExtResource("37_suitcase")]
+[node name="Suitcase1" parent="Decor" instance=ExtResource("44_suitcase")]
 position = Vector3(7.5587, 0.0, -54.881)
 rotation = Vector3(0.0, -1.7185, 0.0)
 
-[node name="Newspaper2" parent="Decor" instance=ExtResource("29_newspaper")]
+[node name="Newspaper2" parent="Decor" instance=ExtResource("36_newspaper")]
 position = Vector3(-7.9035, 0.0, -59.5114)
 rotation = Vector3(0.0, 0.077, 0.0)
 
-[node name="Rubble6" parent="Decor" instance=ExtResource("34_rubble")]
+[node name="Rubble6" parent="Decor" instance=ExtResource("41_rubble")]
 position = Vector3(6.8997, 0.0, -65.6061)
 rotation = Vector3(0.0, -2.3246, 0.0)
 
-[node name="BoxPile3" parent="NavigationRegion3D" instance=ExtResource("30_box_pile")]
+[node name="BoxPile3" parent="NavigationRegion3D" instance=ExtResource("37_box_pile")]
 position = Vector3(-8.4, 0.0, -68.5)
 rotation = Vector3(0.0, -1.5708, 0.0)
 
-[node name="Backpack1" parent="Decor" instance=ExtResource("38_backpack")]
+[node name="Backpack1" parent="Decor" instance=ExtResource("45_backpack")]
 position = Vector3(-7.3839, 0.0, -70.3685)
 rotation = Vector3(0.0, -1.3189, 0.0)
 
-[node name="Rubble7" parent="Decor" instance=ExtResource("34_rubble")]
+[node name="Rubble7" parent="Decor" instance=ExtResource("41_rubble")]
 position = Vector3(2.2876, 0.0, -71.0)
 rotation = Vector3(0.0, -1.1403, 0.0)
 
-[node name="SuitcaseOpen4" parent="Decor" instance=ExtResource("31_suitcase_open")]
+[node name="SuitcaseOpen4" parent="Decor" instance=ExtResource("38_suitcase_open")]
 position = Vector3(7.142, 0.0, -79.4487)
 rotation = Vector3(0.0, 1.8924, 0.0)
 
-[node name="TrashBags1" parent="Decor" instance=ExtResource("39_trash_bags")]
+[node name="TrashBags1" parent="Decor" instance=ExtResource("46_trash_bags")]
 position = Vector3(-7.532, 0.0, -85.6587)
 rotation = Vector3(0.0, -2.534, 0.0)
 
-[node name="BoxPile4" parent="NavigationRegion3D" instance=ExtResource("30_box_pile")]
+[node name="BoxPile4" parent="NavigationRegion3D" instance=ExtResource("37_box_pile")]
 position = Vector3(8.4, 0.0, -86.5)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
-[node name="TrashBags2" parent="Decor" instance=ExtResource("39_trash_bags")]
+[node name="TrashBags2" parent="Decor" instance=ExtResource("46_trash_bags")]
 position = Vector3(7.5158, 0.0, -88.7069)
 rotation = Vector3(0.0, 0.8004, 0.0)
 
-[node name="TyreFlat3" parent="Decor" instance=ExtResource("32_tyre_flat")]
+[node name="TyreFlat3" parent="Decor" instance=ExtResource("39_tyre_flat")]
 position = Vector3(-8.224, 0.0, -97.7084)
 rotation = Vector3(0.0, 1.4176, 0.0)
 
-[node name="Rubble8" parent="Decor" instance=ExtResource("34_rubble")]
+[node name="Rubble8" parent="Decor" instance=ExtResource("41_rubble")]
 position = Vector3(4.4781, 0.0, -95.0)
 rotation = Vector3(0.0, 1.5806, 0.0)
 
-[node name="Suitcase2" parent="Decor" instance=ExtResource("37_suitcase")]
+[node name="Suitcase2" parent="Decor" instance=ExtResource("44_suitcase")]
 position = Vector3(7.4028, 0.0, -102.7842)
 rotation = Vector3(0.0, -2.2699, 0.0)
 
-[node name="BoxPile5" parent="NavigationRegion3D" instance=ExtResource("30_box_pile")]
+[node name="BoxPile5" parent="NavigationRegion3D" instance=ExtResource("37_box_pile")]
 position = Vector3(-8.4, 0.0, -104.5)
 rotation = Vector3(0.0, -1.5708, 0.0)
 
-[node name="Suitcase3" parent="Decor" instance=ExtResource("37_suitcase")]
+[node name="Suitcase3" parent="Decor" instance=ExtResource("44_suitcase")]
 position = Vector3(-6.9596, 0.0, -106.1832)
 rotation = Vector3(0.0, -1.0854, 0.0)
 
-[node name="TyreFlat4" parent="Decor" instance=ExtResource("32_tyre_flat")]
+[node name="TyreFlat4" parent="Decor" instance=ExtResource("39_tyre_flat")]
 position = Vector3(7.9176, 0.0, -115.1493)
 rotation = Vector3(0.0, -0.9003, 0.0)
 
-[node name="SuitcaseOpen5" parent="Decor" instance=ExtResource("31_suitcase_open")]
+[node name="SuitcaseOpen5" parent="Decor" instance=ExtResource("38_suitcase_open")]
 position = Vector3(-6.9222, 0.0, -119.3986)
 rotation = Vector3(0.0, -3.0528, 0.0)
 
-[node name="Bench2" parent="NavigationRegion3D" instance=ExtResource("35_bench")]
+[node name="Bench2" parent="NavigationRegion3D" instance=ExtResource("42_bench")]
 position = Vector3(8.4, 0.0, -122.5)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
-[node name="Papers3" parent="Decor" instance=ExtResource("33_papers")]
+[node name="Papers3" parent="Decor" instance=ExtResource("40_papers")]
 position = Vector3(-2.6502, 0.0, -119.0)
 rotation = Vector3(0.0, -1.5694, 0.0)
 
-[node name="TrafficCone1" parent="Decor" instance=ExtResource("40_traffic_cone")]
+[node name="TrafficCone1" parent="Decor" instance=ExtResource("47_traffic_cone")]
 position = Vector3(-4.5, 0.0, -114.2)
 rotation = Vector3(0.0, 1.9767, 0.0)
 
-[node name="TrafficCone2" parent="Decor" instance=ExtResource("40_traffic_cone")]
+[node name="TrafficCone2" parent="Decor" instance=ExtResource("47_traffic_cone")]
 position = Vector3(4.6, 0.0, -114.4)
 rotation = Vector3(0.0, -0.1627, 0.0)
 
-[node name="TrafficCone3" parent="Decor" instance=ExtResource("40_traffic_cone")]
+[node name="TrafficCone3" parent="Decor" instance=ExtResource("47_traffic_cone")]
 position = Vector3(-6.3, 0.0, -117.0)
 rotation = Vector3(0.0, -1.0138, 0.0)
 
-[node name="TrafficCone4" parent="Decor" instance=ExtResource("40_traffic_cone")]
+[node name="TrafficCone4" parent="Decor" instance=ExtResource("47_traffic_cone")]
 position = Vector3(6.4, 0.0, -116.8)
 rotation = Vector3(0.0, -0.3819, 0.0)
 
-[node name="TrafficCone5" parent="Decor" instance=ExtResource("40_traffic_cone")]
+[node name="TrafficCone5" parent="Decor" instance=ExtResource("47_traffic_cone")]
 position = Vector3(3.6, 0.0, -42.0)
 rotation = Vector3(0.0, 1.2749, 0.0)
 
-[node name="TrafficCone6" parent="Decor" instance=ExtResource("40_traffic_cone")]
+[node name="TrafficCone6" parent="Decor" instance=ExtResource("47_traffic_cone")]
 position = Vector3(5.2, 0.0, -41.0)
 rotation = Vector3(0.0, -0.7131, 0.0)
 
-[node name="Barrier1" parent="NavigationRegion3D" instance=ExtResource("41_barrier")]
+[node name="Barrier1" parent="NavigationRegion3D" instance=ExtResource("48_barrier")]
 position = Vector3(-2.2, 0.0, -110.0)
 rotation = Vector3(0.0, 0.15, 0.0)
 
-[node name="Barrier2" parent="NavigationRegion3D" instance=ExtResource("41_barrier")]
+[node name="Barrier2" parent="NavigationRegion3D" instance=ExtResource("48_barrier")]
 position = Vector3(2.4, 0.0, -110.4)
 rotation = Vector3(0.0, -0.2, 0.0)
 
@@ -1810,38 +1879,147 @@ position = Vector3(11.0, 0.0, -67.2)
 position = Vector3(-11.2, 0.0, -72.8)
 rotation = Vector3(0.0, 3.1416, 0.0)
 
-[node name="TrashBags3" parent="Decor" instance=ExtResource("39_trash_bags")]
+[node name="TrashBags3" parent="Decor" instance=ExtResource("46_trash_bags")]
 position = Vector3(13.0, 0.0, -67.0)
 rotation = Vector3(0.0, -0.7816, 0.0)
 
-[node name="TrashBags4" parent="Decor" instance=ExtResource("39_trash_bags")]
+[node name="TrashBags4" parent="Decor" instance=ExtResource("46_trash_bags")]
 position = Vector3(-13.4, 0.0, -73.0)
 rotation = Vector3(0.0, 2.3799, 0.0)
 
-[node name="TrashBags5" parent="Decor" instance=ExtResource("39_trash_bags")]
+[node name="TrashBags5" parent="Decor" instance=ExtResource("46_trash_bags")]
 position = Vector3(15.0, 0.0, -73.0)
 rotation = Vector3(0.0, 2.7282, 0.0)
 
-[node name="TrashBags6" parent="Decor" instance=ExtResource("39_trash_bags")]
+[node name="TrashBags6" parent="Decor" instance=ExtResource("46_trash_bags")]
 position = Vector3(-15.5, 0.0, -67.5)
 rotation = Vector3(0.0, 2.7068, 0.0)
 
-[node name="BoxPile6" parent="NavigationRegion3D" instance=ExtResource("30_box_pile")]
+[node name="BoxPile6" parent="NavigationRegion3D" instance=ExtResource("37_box_pile")]
 position = Vector3(12.6, 0.0, -73.2)
 rotation = Vector3(0.0, 0.8789, 0.0)
 
-[node name="TyreStack1" parent="NavigationRegion3D" instance=ExtResource("42_tyre_stack")]
+[node name="TyreStack1" parent="NavigationRegion3D" instance=ExtResource("49_tyre_stack")]
 position = Vector3(-12.8, 0.0, -67.2)
 rotation = Vector3(0.0, -0.0083, 0.0)
 
-[node name="Pallet1" parent="Decor" instance=ExtResource("43_pallet")]
+[node name="Pallet1" parent="Decor" instance=ExtResource("50_pallet")]
 position = Vector3(16.5, 0.0, -67.4)
 rotation = Vector3(0.0, 0.1, 0.0)
 
-[node name="StationDoor" parent="Doors" instance=ExtResource("44_door")]
+[node name="ElectricityPole1" parent="NavigationRegion3D" instance=ExtResource("51_electricity_pole")]
+position = Vector3(8.4, 0.0, -2.0)
+
+[node name="ElectricityPole2" parent="NavigationRegion3D" instance=ExtResource("51_electricity_pole")]
+position = Vector3(8.4, 0.0, -38.0)
+
+[node name="ElectricityPole3" parent="NavigationRegion3D" instance=ExtResource("51_electricity_pole")]
+position = Vector3(8.4, 0.0, -110.0)
+
+[node name="ElectricityPole4" parent="NavigationRegion3D" instance=ExtResource("51_electricity_pole")]
+position = Vector3(-8.4, 0.0, -20.0)
+
+[node name="ElectricityPole5" parent="NavigationRegion3D" instance=ExtResource("51_electricity_pole")]
+position = Vector3(-8.4, 0.0, -56.0)
+
+[node name="ElectricityPole6" parent="NavigationRegion3D" instance=ExtResource("51_electricity_pole")]
+position = Vector3(-8.4, 0.0, -92.0)
+
+[node name="TrafficLight1" parent="NavigationRegion3D" instance=ExtResource("52_traffic_light")]
+position = Vector3(6.6, 0.0, -65.2)
+rotation = Vector3(0.0, 1.5708, 0.0)
+
+[node name="TrafficLight2" parent="NavigationRegion3D" instance=ExtResource("52_traffic_light")]
+position = Vector3(-6.6, 0.0, -74.8)
+rotation = Vector3(0.0, -1.5708, 0.0)
+
+[node name="SignStop1" parent="NavigationRegion3D" instance=ExtResource("53_sign_stop")]
+position = Vector3(8.5, 0.0, -75.5)
+rotation = Vector3(0.0, 1.5708, 0.0)
+
+[node name="SignWarning1" parent="NavigationRegion3D" instance=ExtResource("54_sign_warning")]
+position = Vector3(-8.5, 0.0, -44.0)
+rotation = Vector3(0.0, -1.5708, 0.0)
+
+[node name="SignStreet1" parent="NavigationRegion3D" instance=ExtResource("55_sign_street")]
+position = Vector3(8.5, 0.0, -64.5)
+
+[node name="SignWarning2" parent="NavigationRegion3D" instance=ExtResource("54_sign_warning")]
+position = Vector3(8.4, 0.0, -112.0)
+rotation = Vector3(0.0, 1.5708, 0.0)
+
+[node name="ConstructionBarrier1" parent="NavigationRegion3D" instance=ExtResource("56_construction_barrier")]
+position = Vector3(5.6, 0.0, -36.2)
+rotation = Vector3(0.0, 0.2, 0.0)
+
+[node name="ConstructionLight1" parent="NavigationRegion3D" instance=ExtResource("57_construction_light")]
+position = Vector3(6.2, 0.0, -41.6)
+rotation = Vector3(0.0, 1.4404, 0.0)
+
+[node name="ConstructionFence1" parent="NavigationRegion3D" instance=ExtResource("58_construction_fence")]
+position = Vector3(-7.6, 0.0, -114.6)
+rotation = Vector3(0.0, 1.5708, 0.0)
+
+[node name="ConstructionLight2" parent="NavigationRegion3D" instance=ExtResource("57_construction_light")]
+position = Vector3(-6.4, 0.0, -112.4)
+rotation = Vector3(0.0, -1.773, 0.0)
+
+[node name="DebrisDoor1" parent="Decor" instance=ExtResource("59_debris_door")]
+position = Vector3(-1.2, 0.0, -4.2)
+rotation = Vector3(0.0, -2.6256, 0.0)
+
+[node name="DebrisTire1" parent="Decor" instance=ExtResource("60_debris_tire")]
+position = Vector3(-5.2, 0.0, -0.4)
+rotation = Vector3(0.0, -1.2617, 0.0)
+
+[node name="DebrisBumper1" parent="Decor" instance=ExtResource("61_debris_bumper")]
+position = Vector3(-2.2, 0.0, -81.0)
+rotation = Vector3(0.0, -0.4375, 0.0)
+
+[node name="DebrisDoorWindow1" parent="Decor" instance=ExtResource("62_debris_door_window")]
+position = Vector3(-6.4, 0.0, -75.6)
+rotation = Vector3(0.0, -1.2285, 0.0)
+
+[node name="DebrisPlate1" parent="Decor" instance=ExtResource("63_debris_plate")]
+position = Vector3(4.2, 0.0, -73.0)
+rotation = Vector3(0.0, -2.7661, 0.0)
+
+[node name="DebrisSpoiler1" parent="Decor" instance=ExtResource("64_debris_spoiler")]
+position = Vector3(0.6, 0.0, -68.6)
+rotation = Vector3(0.0, -0.7647, 0.0)
+
+[node name="DebrisTire2" parent="Decor" instance=ExtResource("60_debris_tire")]
+position = Vector3(6.4, 0.0, -9.5)
+rotation = Vector3(0.0, 1.9022, 0.0)
+
+[node name="DebrisAxle1" parent="Decor" instance=ExtResource("65_debris_axle")]
+position = Vector3(1.6, 0.0, -73.6)
+rotation = Vector3(0.0, -2.5234, 0.0)
+
+[node name="DebrisPlate2" parent="Decor" instance=ExtResource("63_debris_plate")]
+position = Vector3(-1.5, 0.0, -90.5)
+rotation = Vector3(0.0, 2.3574, 0.0)
+
+[node name="BarrelOpen1" parent="NavigationRegion3D" instance=ExtResource("66_barrel_open")]
+position = Vector3(-12.4, 0.0, -69.6)
+rotation = Vector3(0.0, -2.0063, 0.0)
+
+[node name="BarrelOpen2" parent="NavigationRegion3D" instance=ExtResource("66_barrel_open")]
+position = Vector3(13.4, 0.0, -70.2)
+rotation = Vector3(0.0, 1.2857, 0.0)
+
+[node name="CrateLarge1" parent="NavigationRegion3D" instance=ExtResource("67_crate_large")]
+position = Vector3(14.6, 0.0, -73.0)
+rotation = Vector3(0.0, 0.2, 0.0)
+
+[node name="CrateLargeOpen1" parent="NavigationRegion3D" instance=ExtResource("68_crate_large_open")]
+position = Vector3(-14.4, 0.0, -73.2)
+rotation = Vector3(0.0, -0.3, 0.0)
+
+[node name="StationDoor" parent="Doors" instance=ExtResource("69_door")]
 position = Vector3(0.0, 1.5, -129.6)
 size = Vector3(3.0, 3.0, 0.2)
-material = ExtResource("27_police_blue")
+material = ExtResource("34_police_blue")
 prompt = "Войти в участок"
 open_offset = "Vector3(0.0, 0.0, -0.01)"
 open_time = 0.1
@@ -1868,114 +2046,114 @@ cast_shadow = 0
 mesh = SubResource("BoxMesh_13")
 position = Vector3(0.72, -0.15, 0.16)
 
-[node name="Walker1" parent="Zombies" instance=ExtResource("47_walker")]
+[node name="Walker1" parent="Zombies" instance=ExtResource("72_walker")]
 position = Vector3(-2.0, 0.0, -14.0)
-rotation = Vector3(0.0, 1.4404, 0.0)
-
-[node name="Walker2" parent="Zombies" instance=ExtResource("47_walker")]
-position = Vector3(2.5, 0.0, -22.0)
-rotation = Vector3(0.0, -1.773, 0.0)
-
-[node name="Walker3" parent="Zombies" instance=ExtResource("47_walker")]
-position = Vector3(-4.5, 0.0, -31.0)
-rotation = Vector3(0.0, -2.6256, 0.0)
-
-[node name="Walker4" parent="Zombies" instance=ExtResource("47_walker")]
-position = Vector3(0.0, 0.0, -44.0)
-rotation = Vector3(0.0, -1.2617, 0.0)
-
-[node name="Walker5" parent="Zombies" instance=ExtResource("47_walker")]
-position = Vector3(-5.0, 0.0, -47.0)
-rotation = Vector3(0.0, -0.4375, 0.0)
-
-[node name="Runner1" parent="Zombies" instance=ExtResource("48_runner")]
-position = Vector3(4.5, 0.0, -46.0)
-rotation = Vector3(0.0, -1.2285, 0.0)
-
-[node name="Walker6" parent="Zombies" instance=ExtResource("47_walker")]
-position = Vector3(1.5, 0.0, -60.0)
-rotation = Vector3(0.0, -2.7661, 0.0)
-
-[node name="Walker7" parent="Zombies" instance=ExtResource("47_walker")]
-position = Vector3(-6.5, 0.0, -58.0)
-rotation = Vector3(0.0, -0.7647, 0.0)
-
-[node name="Walker8" parent="Zombies" instance=ExtResource("47_walker")]
-position = Vector3(-1.0, 0.0, -80.0)
-rotation = Vector3(0.0, 1.9022, 0.0)
-
-[node name="Walker9" parent="Zombies" instance=ExtResource("47_walker")]
-position = Vector3(5.0, 0.0, -82.0)
-rotation = Vector3(0.0, -2.5234, 0.0)
-
-[node name="Runner2" parent="Zombies" instance=ExtResource("48_runner")]
-position = Vector3(-6.0, 0.0, -84.0)
-rotation = Vector3(0.0, 2.3574, 0.0)
-
-[node name="Walker10" parent="Zombies" instance=ExtResource("47_walker")]
-position = Vector3(4.0, 0.0, -96.0)
-rotation = Vector3(0.0, -2.0063, 0.0)
-
-[node name="Walker11" parent="Zombies" instance=ExtResource("47_walker")]
-position = Vector3(-3.0, 0.0, -98.0)
-rotation = Vector3(0.0, 1.2857, 0.0)
-
-[node name="Walker12" parent="Zombies" instance=ExtResource("47_walker")]
-position = Vector3(0.0, 0.0, -110.0)
 rotation = Vector3(0.0, -0.9128, 0.0)
 
-[node name="Walker13" parent="Zombies" instance=ExtResource("47_walker")]
-position = Vector3(6.0, 0.0, -119.0)
+[node name="Walker2" parent="Zombies" instance=ExtResource("72_walker")]
+position = Vector3(2.5, 0.0, -22.0)
 rotation = Vector3(0.0, 0.9289, 0.0)
 
-[node name="Walker14" parent="Zombies" instance=ExtResource("47_walker")]
-position = Vector3(-6.5, 0.0, -125.0)
+[node name="Walker3" parent="Zombies" instance=ExtResource("72_walker")]
+position = Vector3(-4.5, 0.0, -31.0)
 rotation = Vector3(0.0, -1.6578, 0.0)
 
-[node name="Butcher" parent="Zombies" instance=ExtResource("49_butcher")]
+[node name="Walker4" parent="Zombies" instance=ExtResource("72_walker")]
+position = Vector3(0.0, 0.0, -44.0)
+rotation = Vector3(0.0, 2.5557, 0.0)
+
+[node name="Walker5" parent="Zombies" instance=ExtResource("72_walker")]
+position = Vector3(-5.0, 0.0, -47.0)
+rotation = Vector3(0.0, 1.5895, 0.0)
+
+[node name="Runner1" parent="Zombies" instance=ExtResource("73_runner")]
+position = Vector3(4.5, 0.0, -46.0)
+rotation = Vector3(0.0, 1.6754, 0.0)
+
+[node name="Walker6" parent="Zombies" instance=ExtResource("72_walker")]
+position = Vector3(1.5, 0.0, -60.0)
+rotation = Vector3(0.0, 2.3926, 0.0)
+
+[node name="Walker7" parent="Zombies" instance=ExtResource("72_walker")]
+position = Vector3(-6.5, 0.0, -58.0)
+rotation = Vector3(0.0, 1.4794, 0.0)
+
+[node name="Walker8" parent="Zombies" instance=ExtResource("72_walker")]
+position = Vector3(-1.0, 0.0, -80.0)
+rotation = Vector3(0.0, -0.3201, 0.0)
+
+[node name="Walker9" parent="Zombies" instance=ExtResource("72_walker")]
+position = Vector3(5.0, 0.0, -82.0)
+rotation = Vector3(0.0, -1.4797, 0.0)
+
+[node name="Runner2" parent="Zombies" instance=ExtResource("73_runner")]
+position = Vector3(-6.0, 0.0, -84.0)
+rotation = Vector3(0.0, -2.2196, 0.0)
+
+[node name="Walker10" parent="Zombies" instance=ExtResource("72_walker")]
+position = Vector3(4.0, 0.0, -96.0)
+rotation = Vector3(0.0, -2.7515, 0.0)
+
+[node name="Walker11" parent="Zombies" instance=ExtResource("72_walker")]
+position = Vector3(-3.0, 0.0, -98.0)
+rotation = Vector3(0.0, 2.7241, 0.0)
+
+[node name="Walker12" parent="Zombies" instance=ExtResource("72_walker")]
+position = Vector3(0.0, 0.0, -110.0)
+rotation = Vector3(0.0, -2.0959, 0.0)
+
+[node name="Walker13" parent="Zombies" instance=ExtResource("72_walker")]
+position = Vector3(6.0, 0.0, -119.0)
+rotation = Vector3(0.0, 1.5406, 0.0)
+
+[node name="Walker14" parent="Zombies" instance=ExtResource("72_walker")]
+position = Vector3(-6.5, 0.0, -125.0)
+rotation = Vector3(0.0, 3.0675, 0.0)
+
+[node name="Butcher" parent="Zombies" instance=ExtResource("74_butcher")]
 position = Vector3(0.0, 0.0, -125.0)
 rotation = Vector3(0.0, 3.1416, 0.0)
 sight_range = 14.0
 alert_event = NodePath("../../Story/ButcherAppears")
 death_event = NodePath("../../Story/ButcherDead")
 
-[node name="AmmoPistol1" parent="Pickups" instance=ExtResource("50_ammo_pistol")]
+[node name="AmmoPistol1" parent="Pickups" instance=ExtResource("75_ammo_pistol")]
 position = Vector3(7.0, 0.0, -12.0)
 
-[node name="Medkit1" parent="Pickups" instance=ExtResource("51_medkit")]
+[node name="Medkit1" parent="Pickups" instance=ExtResource("76_medkit")]
 position = Vector3(-7.5, 0.0, -50.0)
 
-[node name="WeaponRifle1" parent="Pickups" instance=ExtResource("52_weapon_rifle")]
+[node name="WeaponRifle1" parent="Pickups" instance=ExtResource("77_weapon_rifle")]
 position = Vector3(2.0, 0.0, -54.5)
 event = NodePath("../../Story/RifleFound")
 
-[node name="AmmoRifle1" parent="Pickups" instance=ExtResource("53_ammo_rifle")]
+[node name="AmmoRifle1" parent="Pickups" instance=ExtResource("78_ammo_rifle")]
 position = Vector3(-13.0, 0.0, -71.0)
 
-[node name="AmmoPistol2" parent="Pickups" instance=ExtResource("50_ammo_pistol")]
+[node name="AmmoPistol2" parent="Pickups" instance=ExtResource("75_ammo_pistol")]
 position = Vector3(-7.2, 0.0, -90.0)
 
-[node name="Medkit2" parent="Pickups" instance=ExtResource("51_medkit")]
+[node name="Medkit2" parent="Pickups" instance=ExtResource("76_medkit")]
 position = Vector3(7.3, 0.0, -104.0)
 
-[node name="AmmoRifle2" parent="Pickups" instance=ExtResource("53_ammo_rifle")]
+[node name="AmmoRifle2" parent="Pickups" instance=ExtResource("78_ammo_rifle")]
 position = Vector3(0.5, 0.0, -120.0)
 
-[node name="AmmoPistol3" parent="Pickups" instance=ExtResource("50_ammo_pistol")]
+[node name="AmmoPistol3" parent="Pickups" instance=ExtResource("75_ammo_pistol")]
 position = Vector3(-7.6, 0.0, -121.0)
 
-[node name="AmmoRifle3" parent="Pickups" instance=ExtResource("53_ammo_rifle")]
+[node name="AmmoRifle3" parent="Pickups" instance=ExtResource("78_ammo_rifle")]
 position = Vector3(7.6, 0.0, -112.0)
 
 [node name="Intro" type="Node" parent="Story"]
-script = ExtResource("54_story_event")
+script = ExtResource("79_story_event")
 speaker = "Диспетчер"
 message = "…если кто-то слышит — эвакуация со стадиона «Динамо» на рассвете. Повторяю: стадион, на рассвете."
 message_duration = 7.0
 targets = Array[NodePath]([NodePath("../Intro2")])
 
 [node name="Intro2" type="Node" parent="Story"]
-script = ExtResource("54_story_event")
+script = ExtResource("79_story_event")
 delay = 7.5
 speaker = "Диспетчер"
 message = "Ты меня слышишь? Хорошо. Через центр не пройти — иди по Садовой к полицейскому участку. Там оружейная, она тебе понадобится."
@@ -1986,20 +2164,20 @@ position = Vector3(0.0, 1.5, -9.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("55_story_trigger")
+script = ExtResource("80_story_trigger")
 event = NodePath("../KnifeHint")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/KnifeHintTrigger"]
 shape = SubResource("BoxShape3D_14")
 
 [node name="KnifeHint" type="Node" parent="Story"]
-script = ExtResource("54_story_event")
+script = ExtResource("79_story_event")
 speaker = "Диспетчер"
 message = "Совет: нож бьёт бесшумно. Выстрелы слышно на весь квартал — мертвецы сбегутся."
 message_duration = 7.0
 
 [node name="RifleFound" type="Node" parent="Story"]
-script = ExtResource("54_story_event")
+script = ExtResource("79_story_event")
 objective = "Отбейся от толпы из переулков"
 speaker = "Диспетчер"
 message = "Автомат? Отличная находка. Только… слышишь? Они лезут из переулков!"
@@ -2007,8 +2185,8 @@ message_duration = 7.0
 targets = Array[NodePath]([NodePath("../AlleyLeft"), NodePath("../AlleyRight")])
 
 [node name="AlleyLeft" type="Node3D" parent="Story"]
-script = ExtResource("56_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("47_walker"), ExtResource("47_walker"), ExtResource("48_runner")])
+script = ExtResource("81_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("72_walker"), ExtResource("72_walker"), ExtResource("73_runner")])
 count = 6
 interval = 1.0
 max_alive = 10
@@ -2020,8 +2198,8 @@ position = Vector3(-17.0, 0.0, -70.0)
 position = Vector3(-19.0, 0.0, -68.0)
 
 [node name="AlleyRight" type="Node3D" parent="Story"]
-script = ExtResource("56_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("47_walker"), ExtResource("47_walker"), ExtResource("48_runner")])
+script = ExtResource("81_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("72_walker"), ExtResource("72_walker"), ExtResource("73_runner")])
 count = 6
 interval = 1.1
 max_alive = 10
@@ -2034,7 +2212,7 @@ position = Vector3(17.0, 0.0, -70.0)
 position = Vector3(19.0, 0.0, -72.0)
 
 [node name="AlleyCleared" type="Node" parent="Story"]
-script = ExtResource("54_story_event")
+script = ExtResource("79_story_event")
 objective = "Доберись до полицейского участка"
 speaker = "Диспетчер"
 message = "Тихо? Двигай дальше, участок сразу за автобусом."
@@ -2045,14 +2223,14 @@ position = Vector3(0.0, 1.5, -104.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("55_story_trigger")
+script = ExtResource("80_story_trigger")
 event = NodePath("../Ambush")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/AmbushTrigger"]
 shape = SubResource("BoxShape3D_15")
 
 [node name="Ambush" type="Node" parent="Story"]
-script = ExtResource("54_story_event")
+script = ExtResource("79_story_event")
 objective = "Беги к полицейскому участку"
 speaker = "Диспетчер"
 message = "Сзади! Целая толпа — беги к участку!"
@@ -2060,8 +2238,8 @@ message_duration = 6.0
 targets = Array[NodePath]([NodePath("../Horde")])
 
 [node name="Horde" type="Node3D" parent="Story"]
-script = ExtResource("56_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("48_runner"), ExtResource("47_walker"), ExtResource("47_walker")])
+script = ExtResource("81_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("73_runner"), ExtResource("72_walker"), ExtResource("72_walker")])
 count = 6
 interval = 0.9
 max_alive = 10
@@ -2080,25 +2258,25 @@ position = Vector3(0.0, 1.5, -112.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("55_story_trigger")
+script = ExtResource("80_story_trigger")
 event = NodePath("../WakeButcher")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/ButcherTrigger"]
 shape = SubResource("BoxShape3D_16")
 
 [node name="WakeButcher" type="Node" parent="Story"]
-script = ExtResource("54_story_event")
+script = ExtResource("79_story_event")
 targets = Array[NodePath]([NodePath("../../Zombies/Butcher")])
 
 [node name="ButcherAppears" type="Node" parent="Story"]
-script = ExtResource("54_story_event")
+script = ExtResource("79_story_event")
 objective = "Убей Мясника"
 speaker = "Диспетчер"
 message = "У входа в участок… повар с тесаком? Он не человек уже. Осторожно, он бросается с разбега — отходи в сторону, а если врежется в стену, бей!"
 message_duration = 8.0
 
 [node name="ButcherDead" type="Node" parent="Story"]
-script = ExtResource("54_story_event")
+script = ExtResource("79_story_event")
 objective = "Войди в полицейский участок"
 speaker = "Диспетчер"
 message = "Готов! Заходи в участок, пока толпа не догнала."
@@ -2106,16 +2284,16 @@ message_duration = 6.0
 targets = Array[NodePath]([NodePath("../../Doors/StationDoor")])
 
 [node name="Exit" type="Node" parent="Story"]
-script = ExtResource("54_story_event")
+script = ExtResource("79_story_event")
 complete_level = true
 
-[node name="Player" parent="." instance=ExtResource("57_player")]
+[node name="Player" parent="." instance=ExtResource("82_player")]
 position = Vector3(0.0, 0.0, 8.0)
 rotation = Vector3(0.0, 0.0, 0.0)
 
-[node name="HUD" parent="." instance=ExtResource("58_hud")]
+[node name="HUD" parent="." instance=ExtResource("83_hud")]
 
 [node name="Ambience" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("59_ambience")
+stream = ExtResource("84_ambience")
 autoplay = true
 volume_db = -8.0

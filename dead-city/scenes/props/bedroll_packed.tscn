@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/props/bedroll_packed.glb" id="1_bedroll_packed"]
+
+[node name="BedrollPacked" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1_bedroll_packed")]

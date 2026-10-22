@@ -58,37 +58,49 @@
 
 [ext_resource type="PackedScene" path="res://scenes/props/barrier.tscn" id="29_barrier"]
 
-[ext_resource type="Material" path="res://materials/lamp_glow.tres" id="30_lamp_glow"]
+[ext_resource type="PackedScene" path="res://scenes/props/construction_light.tscn" id="30_construction_light"]
 
-[ext_resource type="Script" path="res://scripts/world/flicker_light.gd" id="31_flicker_light"]
+[ext_resource type="PackedScene" path="res://scenes/props/construction_fence.tscn" id="31_construction_fence"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/walker.tscn" id="32_walker"]
+[ext_resource type="PackedScene" path="res://scenes/props/metal_panel.tscn" id="32_metal_panel"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/runner.tscn" id="33_runner"]
+[ext_resource type="PackedScene" path="res://scenes/props/crate_large.tscn" id="33_crate_large"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_shells.tscn" id="34_ammo_shells"]
+[ext_resource type="PackedScene" path="res://scenes/props/bucket.tscn" id="34_bucket"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="35_medkit"]
+[ext_resource type="PackedScene" path="res://scenes/props/radio.tscn" id="35_radio"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rifle.tscn" id="36_ammo_rifle"]
+[ext_resource type="Material" path="res://materials/lamp_glow.tres" id="36_lamp_glow"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rocket.tscn" id="37_ammo_rocket"]
+[ext_resource type="Script" path="res://scripts/world/flicker_light.gd" id="37_flicker_light"]
 
-[ext_resource type="Script" path="res://scripts/story/story_event.gd" id="38_story_event"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/walker.tscn" id="38_walker"]
 
-[ext_resource type="Script" path="res://scripts/story/story_trigger.gd" id="39_story_trigger"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/runner.tscn" id="39_runner"]
 
-[ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="40_zombie_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_shells.tscn" id="40_ammo_shells"]
 
-[ext_resource type="Script" path="res://scripts/story/holdout.gd" id="41_holdout"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="41_medkit"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/lineman.tscn" id="42_lineman"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rifle.tscn" id="42_ammo_rifle"]
 
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="43_player"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rocket.tscn" id="43_ammo_rocket"]
 
-[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="44_hud"]
+[ext_resource type="Script" path="res://scripts/story/story_event.gd" id="44_story_event"]
 
-[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="45_ambience"]
+[ext_resource type="Script" path="res://scripts/story/story_trigger.gd" id="45_story_trigger"]
+
+[ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="46_zombie_spawner"]
+
+[ext_resource type="Script" path="res://scripts/story/holdout.gd" id="47_holdout"]
+
+[ext_resource type="PackedScene" path="res://scenes/zombies/lineman.tscn" id="48_lineman"]
+
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="49_player"]
+
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="50_hud"]
+
+[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="51_ambience"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -135,7 +147,7 @@ material = ExtResource("8_rail")
 
 [sub_resource type="BoxMesh" id="BoxMesh_8"]
 size = Vector3(1.0, 0.05, 0.35)
-material = ExtResource("30_lamp_glow")
+material = ExtResource("36_lamp_glow")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_9"]
 size = Vector3(6.0, 3.0, 2.0)
@@ -966,6 +978,40 @@ rotation = Vector3(0.0, -0.8237, 0.0)
 [node name="Barrier1" parent="NavigationRegion3D" instance=ExtResource("29_barrier")]
 position = Vector3(-7.0, 0.0, -86.6)
 
+[node name="ConstructionLight1" parent="NavigationRegion3D" instance=ExtResource("30_construction_light")]
+position = Vector3(-9.4, 0.0, -83.6)
+rotation = Vector3(0.0, -1.1507, 0.0)
+
+[node name="ConstructionFence1" parent="NavigationRegion3D" instance=ExtResource("31_construction_fence")]
+position = Vector3(-4.6, 0.0, -80.0)
+
+[node name="MetalPanel1" parent="NavigationRegion3D" instance=ExtResource("32_metal_panel")]
+position = Vector3(-9.6, 0.0, -70.0)
+rotation = Vector3(0.0, 1.5708, 0.0)
+
+[node name="CrateLarge1" parent="NavigationRegion3D" instance=ExtResource("33_crate_large")]
+position = Vector3(-9.3, 0.0, -112.0)
+
+[node name="Bucket1" parent="Decor" instance=ExtResource("34_bucket")]
+position = Vector3(-5.0, 0.0, -100.5)
+rotation = Vector3(0.0, 0.207, 0.0)
+
+[node name="Radio1" parent="Decor" instance=ExtResource("35_radio")]
+position = Vector3(0.2643, 0.0, -20.0)
+rotation = Vector3(0.0, -1.6049, 0.0)
+
+[node name="Radio2" parent="Decor" instance=ExtResource("35_radio")]
+position = Vector3(1.5931, 0.0, -44.0)
+rotation = Vector3(0.0, 0.0832, 0.0)
+
+[node name="Radio3" parent="Decor" instance=ExtResource("35_radio")]
+position = Vector3(0.4816, 0.0, -140.0)
+rotation = Vector3(0.0, 0.8996, 0.0)
+
+[node name="Radio4" parent="Decor" instance=ExtResource("35_radio")]
+position = Vector3(-2.2135, 0.0, -164.0)
+rotation = Vector3(0.0, -2.2015, 0.0)
+
 [node name="Block86" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-5.1, 4.2, -52.375)
 size = Vector3(10.2, 0.4, 15.25)
@@ -1114,7 +1160,7 @@ position = Vector3(3.0, 3.55, -9.0)
 light_color = Color(1.0, 0.88, 0.7, 1.0)
 light_energy = 2.2
 omni_range = 9.0
-script = ExtResource("31_flicker_light")
+script = ExtResource("37_flicker_light")
 
 [node name="D23" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_8")
@@ -1137,7 +1183,7 @@ position = Vector3(0.0, 3.55, -24.0)
 light_color = Color(1.0, 0.88, 0.7, 1.0)
 light_energy = 1.8
 omni_range = 9.0
-script = ExtResource("31_flicker_light")
+script = ExtResource("37_flicker_light")
 
 [node name="D25" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_8")
@@ -1171,7 +1217,7 @@ position = Vector3(0.0, 3.55, -48.0)
 light_color = Color(1.0, 0.88, 0.7, 1.0)
 light_energy = 1.8
 omni_range = 9.0
-script = ExtResource("31_flicker_light")
+script = ExtResource("37_flicker_light")
 
 [node name="D28" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_8")
@@ -1189,49 +1235,49 @@ position = Vector3(-4.4, 3.4, -66.0)
 light_color = Color(1.0, 0.25, 0.15, 1.0)
 light_energy = 1.2
 omni_range = 9
-script = ExtResource("31_flicker_light")
+script = ExtResource("37_flicker_light")
 
 [node name="Light12" type="OmniLight3D" parent="Lights"]
 position = Vector3(-4.4, 3.4, -78.0)
 light_color = Color(1.0, 0.25, 0.15, 1.0)
 light_energy = 1.2
 omni_range = 9
-script = ExtResource("31_flicker_light")
+script = ExtResource("37_flicker_light")
 
 [node name="Light13" type="OmniLight3D" parent="Lights"]
 position = Vector3(-4.4, 3.4, -90.0)
 light_color = Color(1.0, 0.25, 0.15, 1.0)
 light_energy = 1.2
 omni_range = 9
-script = ExtResource("31_flicker_light")
+script = ExtResource("37_flicker_light")
 
 [node name="Light14" type="OmniLight3D" parent="Lights"]
 position = Vector3(-4.4, 3.4, -102.0)
 light_color = Color(1.0, 0.25, 0.15, 1.0)
 light_energy = 1.2
 omni_range = 9
-script = ExtResource("31_flicker_light")
+script = ExtResource("37_flicker_light")
 
 [node name="Light15" type="OmniLight3D" parent="Lights"]
 position = Vector3(-4.4, 3.4, -114.0)
 light_color = Color(1.0, 0.25, 0.15, 1.0)
 light_energy = 1.2
 omni_range = 9
-script = ExtResource("31_flicker_light")
+script = ExtResource("37_flicker_light")
 
 [node name="Light16" type="OmniLight3D" parent="Lights"]
 position = Vector3(-4.4, 3.4, -126.0)
 light_color = Color(1.0, 0.25, 0.15, 1.0)
 light_energy = 1.2
 omni_range = 9
-script = ExtResource("31_flicker_light")
+script = ExtResource("37_flicker_light")
 
 [node name="Light17" type="OmniLight3D" parent="Lights"]
 position = Vector3(-13.0, 3.5, -96.0)
 light_color = Color(1.0, 0.8, 0.5, 1.0)
 light_energy = 1.2
 omni_range = 8
-script = ExtResource("31_flicker_light")
+script = ExtResource("37_flicker_light")
 
 [node name="D29" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_8")
@@ -1243,7 +1289,7 @@ position = Vector3(0.0, 3.55, -134.0)
 light_color = Color(1.0, 0.88, 0.7, 1.0)
 light_energy = 1.8
 omni_range = 9.0
-script = ExtResource("31_flicker_light")
+script = ExtResource("37_flicker_light")
 
 [node name="D30" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_8")
@@ -1266,7 +1312,7 @@ position = Vector3(0.0, 3.55, -150.0)
 light_color = Color(1.0, 0.88, 0.7, 1.0)
 light_energy = 1.8
 omni_range = 9.0
-script = ExtResource("31_flicker_light")
+script = ExtResource("37_flicker_light")
 
 [node name="D32" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_8")
@@ -1289,7 +1335,7 @@ position = Vector3(0.0, 3.55, -166.0)
 light_color = Color(1.0, 0.88, 0.7, 1.0)
 light_energy = 1.8
 omni_range = 9.0
-script = ExtResource("31_flicker_light")
+script = ExtResource("37_flicker_light")
 
 [node name="Light23" type="OmniLight3D" parent="Lights"]
 position = Vector3(0.0, 3.5, -178.0)
@@ -1297,82 +1343,82 @@ light_color = Color(1.0, 0.9, 0.7, 1.0)
 light_energy = 1.5
 omni_range = 8
 
-[node name="Walker1" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker1" parent="Zombies" instance=ExtResource("38_walker")]
 position = Vector3(-1.0, 0.0, -24.0)
-rotation = Vector3(0.0, -1.1507, 0.0)
-
-[node name="Walker2" parent="Zombies" instance=ExtResource("32_walker")]
-position = Vector3(2.0, 0.0, -35.0)
-rotation = Vector3(0.0, 0.207, 0.0)
-
-[node name="Walker3" parent="Zombies" instance=ExtResource("32_walker")]
-position = Vector3(-7.0, 0.0, -44.0)
-rotation = Vector3(0.0, 0.3322, 0.0)
-
-[node name="Walker4" parent="Zombies" instance=ExtResource("32_walker")]
-position = Vector3(-2.0, 0.0, -52.0)
-rotation = Vector3(0.0, -1.6049, 0.0)
-
-[node name="Walker5" parent="Zombies" instance=ExtResource("32_walker")]
-position = Vector3(-7.0, 0.0, -72.0)
-rotation = Vector3(0.0, 2.0019, 0.0)
-
-[node name="Walker6" parent="Zombies" instance=ExtResource("32_walker")]
-position = Vector3(-6.0, 0.0, -84.0)
-rotation = Vector3(0.0, 0.0832, 0.0)
-
-[node name="Walker7" parent="Zombies" instance=ExtResource("32_walker")]
-position = Vector3(-13.0, 0.0, -95.0)
-rotation = Vector3(0.0, 0.6052, 0.0)
-
-[node name="Runner1" parent="Zombies" instance=ExtResource("33_runner")]
-position = Vector3(-13.0, 0.0, -101.0)
-rotation = Vector3(0.0, 0.8996, 0.0)
-
-[node name="Walker8" parent="Zombies" instance=ExtResource("32_walker")]
-position = Vector3(-6.0, 0.0, -118.0)
-rotation = Vector3(0.0, -2.7815, 0.0)
-
-[node name="Walker9" parent="Zombies" instance=ExtResource("32_walker")]
-position = Vector3(1.0, 0.0, -145.0)
-rotation = Vector3(0.0, -2.2015, 0.0)
-
-[node name="Walker10" parent="Zombies" instance=ExtResource("32_walker")]
-position = Vector3(-6.0, 0.0, -158.0)
 rotation = Vector3(0.0, 1.0683, 0.0)
 
-[node name="AmmoShells1" parent="Pickups" instance=ExtResource("34_ammo_shells")]
+[node name="Walker2" parent="Zombies" instance=ExtResource("38_walker")]
+position = Vector3(2.0, 0.0, -35.0)
+rotation = Vector3(0.0, 1.2646, 0.0)
+
+[node name="Walker3" parent="Zombies" instance=ExtResource("38_walker")]
+position = Vector3(-7.0, 0.0, -44.0)
+rotation = Vector3(0.0, 2.0422, 0.0)
+
+[node name="Walker4" parent="Zombies" instance=ExtResource("38_walker")]
+position = Vector3(-2.0, 0.0, -52.0)
+rotation = Vector3(0.0, 0.4066, 0.0)
+
+[node name="Walker5" parent="Zombies" instance=ExtResource("38_walker")]
+position = Vector3(-7.0, 0.0, -72.0)
+rotation = Vector3(0.0, -2.0105, 0.0)
+
+[node name="Walker6" parent="Zombies" instance=ExtResource("38_walker")]
+position = Vector3(-6.0, 0.0, -84.0)
+rotation = Vector3(0.0, 2.5778, 0.0)
+
+[node name="Walker7" parent="Zombies" instance=ExtResource("38_walker")]
+position = Vector3(-13.0, 0.0, -95.0)
+rotation = Vector3(0.0, -2.1229, 0.0)
+
+[node name="Runner1" parent="Zombies" instance=ExtResource("39_runner")]
+position = Vector3(-13.0, 0.0, -101.0)
+rotation = Vector3(0.0, 0.0403, 0.0)
+
+[node name="Walker8" parent="Zombies" instance=ExtResource("38_walker")]
+position = Vector3(-6.0, 0.0, -118.0)
+rotation = Vector3(0.0, -1.1002, 0.0)
+
+[node name="Walker9" parent="Zombies" instance=ExtResource("38_walker")]
+position = Vector3(1.0, 0.0, -145.0)
+rotation = Vector3(0.0, 2.0816, 0.0)
+
+[node name="Walker10" parent="Zombies" instance=ExtResource("38_walker")]
+position = Vector3(-6.0, 0.0, -158.0)
+rotation = Vector3(0.0, -1.3208, 0.0)
+
+[node name="AmmoShells1" parent="Pickups" instance=ExtResource("40_ammo_shells")]
 position = Vector3(-1.0, 0.0, -15.0)
 
-[node name="Medkit1" parent="Pickups" instance=ExtResource("35_medkit")]
+[node name="Medkit1" parent="Pickups" instance=ExtResource("41_medkit")]
 position = Vector3(2.5, 0.0, -50.0)
 
-[node name="AmmoRifle1" parent="Pickups" instance=ExtResource("36_ammo_rifle")]
+[node name="AmmoRifle1" parent="Pickups" instance=ExtResource("42_ammo_rifle")]
 position = Vector3(-14.5, 0.0, -100.0)
 
-[node name="AmmoShells2" parent="Pickups" instance=ExtResource("34_ammo_shells")]
+[node name="AmmoShells2" parent="Pickups" instance=ExtResource("40_ammo_shells")]
 position = Vector3(-14.5, 0.0, -88.0)
 
-[node name="Medkit2" parent="Pickups" instance=ExtResource("35_medkit")]
+[node name="Medkit2" parent="Pickups" instance=ExtResource("41_medkit")]
 position = Vector3(-5.0, 0.0, -126.0)
 
-[node name="AmmoShells3" parent="Pickups" instance=ExtResource("34_ammo_shells")]
+[node name="AmmoShells3" parent="Pickups" instance=ExtResource("40_ammo_shells")]
 position = Vector3(-2.0, 0.0, -150.0)
 respawn_time = 25.0
 
-[node name="AmmoRifle2" parent="Pickups" instance=ExtResource("36_ammo_rifle")]
+[node name="AmmoRifle2" parent="Pickups" instance=ExtResource("42_ammo_rifle")]
 position = Vector3(2.0, 0.0, -150.0)
 respawn_time = 25.0
 
-[node name="Medkit3" parent="Pickups" instance=ExtResource("35_medkit")]
+[node name="Medkit3" parent="Pickups" instance=ExtResource("41_medkit")]
 position = Vector3(0.0, 0.0, -165.0)
 respawn_time = 25.0
 
-[node name="AmmoRocket1" parent="Pickups" instance=ExtResource("37_ammo_rocket")]
+[node name="AmmoRocket1" parent="Pickups" instance=ExtResource("43_ammo_rocket")]
 position = Vector3(-8.5, 0.0, -168.0)
 
 [node name="Intro" type="Node" parent="Story"]
-script = ExtResource("38_story_event")
+script = ExtResource("44_story_event")
 speaker = "Диспетчер"
 message = "Ты в метро? До «Динамо» два перегона. Иди по левому пути — правый перекрыт составом."
 message_duration = 8.0
@@ -1382,21 +1428,21 @@ position = Vector3(-7.0, 1.5, -83.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("39_story_trigger")
+script = ExtResource("45_story_trigger")
 event = NodePath("../Blockage")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/BlockageTrigger"]
 shape = SubResource("BoxShape3D_9")
 
 [node name="Blockage" type="Node" parent="Story"]
-script = ExtResource("38_story_event")
+script = ExtResource("44_story_event")
 objective = "Найди обход завала"
 speaker = "Диспетчер"
 message = "Впереди сошедший вагон, тоннель перекрыт. Ищи служебную дверь — они есть через каждые сто метров."
 message_duration = 7.0
 
 [node name="Bypass" type="Node" parent="Story"]
-script = ExtResource("38_story_event")
+script = ExtResource("44_story_event")
 objective = "Пройди служебным коридором"
 
 [node name="AmbushTrigger" type="Area3D" parent="Story"]
@@ -1404,14 +1450,14 @@ position = Vector3(-7.0, 1.5, -108.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("39_story_trigger")
+script = ExtResource("45_story_trigger")
 event = NodePath("../Ambush")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/AmbushTrigger"]
 shape = SubResource("BoxShape3D_10")
 
 [node name="Ambush" type="Node" parent="Story"]
-script = ExtResource("38_story_event")
+script = ExtResource("44_story_event")
 objective = "Беги к станции «Динамо»"
 speaker = "Диспетчер"
 message = "Слышишь топот? Сзади бегуны — не останавливайся!"
@@ -1419,8 +1465,8 @@ message_duration = 6.0
 targets = Array[NodePath]([NodePath("../Runners")])
 
 [node name="Runners" type="Node3D" parent="Story"]
-script = ExtResource("40_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("33_runner"), ExtResource("33_runner"), ExtResource("32_walker")])
+script = ExtResource("46_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("39_runner"), ExtResource("39_runner"), ExtResource("38_walker")])
 count = 6
 interval = 0.9
 max_alive = 10
@@ -1436,14 +1482,14 @@ position = Vector3(0.0, 1.5, -142.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("39_story_trigger")
+script = ExtResource("45_story_trigger")
 event = NodePath("../GateSiege")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/GateTrigger"]
 shape = SubResource("BoxShape3D_11")
 
 [node name="GateSiege" type="Node" parent="Story"]
-script = ExtResource("38_story_event")
+script = ExtResource("44_story_event")
 objective = "Продержись, пока диспетчер открывает решётку"
 speaker = "Диспетчер"
 message = "Выход перекрыт решёткой. Взламываю систему станции — продержись минуту!"
@@ -1451,7 +1497,7 @@ message_duration = 8.0
 targets = Array[NodePath]([NodePath("../Holdout")])
 
 [node name="Holdout" type="Node" parent="Story"]
-script = ExtResource("41_holdout")
+script = ExtResource("47_holdout")
 duration = 60.0
 timer_text = "Решётка откроется через %s"
 spawners = Array[NodePath]([NodePath("../TunnelSpawn"), NodePath("../PassageSpawn")])
@@ -1462,8 +1508,8 @@ boss_text = "Убей Обходчика!"
 on_finished = NodePath("../GateOpen")
 
 [node name="TunnelSpawn" type="Node3D" parent="Story"]
-script = ExtResource("40_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("32_walker"), ExtResource("32_walker"), ExtResource("33_runner")])
+script = ExtResource("46_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("38_walker"), ExtResource("38_walker"), ExtResource("39_runner")])
 count = 0
 interval = 3.0
 max_alive = 5
@@ -1476,8 +1522,8 @@ position = Vector3(-7.0, 0.0, -122.0)
 position = Vector3(-7.0, 0.0, -126.0)
 
 [node name="PassageSpawn" type="Node3D" parent="Story"]
-script = ExtResource("40_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("32_walker"), ExtResource("32_walker"), ExtResource("33_runner")])
+script = ExtResource("46_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("38_walker"), ExtResource("38_walker"), ExtResource("39_runner")])
 count = 0
 interval = 3.5
 max_alive = 4
@@ -1490,8 +1536,8 @@ position = Vector3(14.0, 0.0, -150.0)
 position = Vector3(14.0, 0.0, -152.0)
 
 [node name="SpawnBoss" type="Node3D" parent="Story"]
-script = ExtResource("40_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("42_lineman")])
+script = ExtResource("46_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("48_lineman")])
 count = 1
 interval = 0.1
 max_alive = 10
@@ -1500,13 +1546,13 @@ max_alive = 10
 position = Vector3(14.0, 0.0, -151.0)
 
 [node name="LinemanWarning" type="Node" parent="Story"]
-script = ExtResource("38_story_event")
+script = ExtResource("44_story_event")
 speaker = "Диспетчер"
 message = "По боковому проходу идёт что-то тяжёлое… Обходчик с кувалдой! Когда он бьёт по земле — подпрыгни, ударная волна идёт по полу."
 message_duration = 9.0
 
 [node name="GateOpen" type="Node" parent="Story"]
-script = ExtResource("38_story_event")
+script = ExtResource("44_story_event")
 objective = "Поднимайся к выходу"
 speaker = "Диспетчер"
 message = "Есть! Решётка поднята — наверх, стадион прямо над тобой!"
@@ -1518,7 +1564,7 @@ position = Vector3(0.0, 1.5, -179.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("39_story_trigger")
+script = ExtResource("45_story_trigger")
 event = NodePath("../Exit")
 enabled = false
 
@@ -1526,16 +1572,16 @@ enabled = false
 shape = SubResource("BoxShape3D_12")
 
 [node name="Exit" type="Node" parent="Story"]
-script = ExtResource("38_story_event")
+script = ExtResource("44_story_event")
 complete_level = true
 
-[node name="Player" parent="." instance=ExtResource("43_player")]
+[node name="Player" parent="." instance=ExtResource("49_player")]
 position = Vector3(0.0, 0.0, -3.0)
 rotation = Vector3(0.0, 0.0, 0.0)
 
-[node name="HUD" parent="." instance=ExtResource("44_hud")]
+[node name="HUD" parent="." instance=ExtResource("50_hud")]
 
 [node name="Ambience" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("45_ambience")
+stream = ExtResource("51_ambience")
 autoplay = true
 volume_db = -12.0

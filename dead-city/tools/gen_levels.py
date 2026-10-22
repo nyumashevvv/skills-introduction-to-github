@@ -12,6 +12,7 @@ NAV = 'NavigationRegion3D'
 
 
 PROP = 'res://scenes/props/{}.tscn'
+VEHICLE = 'res://scenes/world/vehicles/{}.tscn'
 FACING = {'+x': -math.pi / 2, '-x': math.pi / 2, '+z': math.pi, '-z': 0.0}
 
 
@@ -210,6 +211,24 @@ def street_clutter(L):
     for pos in [(13, 0, -67), (-13.4, 0, -73), (15, 0, -73), (-15.5, 0, -67.5)]:
         c('trash_bags', pos)
     c('box_pile', (12.6, 0, -73.2)); c('tyre_stack', (-12.8, 0, -67.2)); c('pallet', (16.5, 0, -67.4), 0.1)
+    # power poles, traffic lights, signs, roadworks
+    for z in (-2, -38, -110):
+        c('electricity_pole', (8.4, 0, z), 0.0)
+    for z in (-20, -56, -92):
+        c('electricity_pole', (-8.4, 0, z), 0.0)
+    c('traffic_light', (6.6, 0, -65.2), math.pi / 2); c('traffic_light', (-6.6, 0, -74.8), -math.pi / 2)
+    c('sign_stop', (8.5, 0, -75.5), math.pi / 2); c('sign_warning', (-8.5, 0, -44), -math.pi / 2)
+    c('sign_street', (8.5, 0, -64.5), 0.0); c('sign_warning', (8.4, 0, -112), math.pi / 2)
+    c('construction_barrier', (5.6, 0, -36.2), 0.2); c('construction_light', (6.2, 0, -41.6))
+    c('construction_fence', (-7.6, 0, -114.6), math.pi / 2); c('construction_light', (-6.4, 0, -112.4))
+    # car wreckage
+    for kind, pos in [('debris_door', (-1.2, 0, -4.2)), ('debris_tire', (-5.2, 0, -0.4)), ('debris_bumper', (-2.2, 0, -81)),
+                      ('debris_door_window', (-6.4, 0, -75.6)), ('debris_plate', (4.2, 0, -73)), ('debris_spoiler', (0.6, 0, -68.6)),
+                      ('debris_tire', (6.4, 0, -9.5)), ('debris_axle', (1.6, 0, -73.6)), ('debris_plate', (-1.5, 0, -90.5))]:
+        c(kind, pos)
+    for pos in [(-12.4, 0, -69.6), (13.4, 0, -70.2)]:
+        c('barrel_open', pos)
+    c('crate_large', (14.6, 0, -73.0), 0.2); c('crate_large_open', (-14.4, 0, -73.2), -0.3)
 
 
 def hospital_clutter(L):
@@ -224,6 +243,8 @@ def hospital_clutter(L):
     for pos in [(-7, 0, -4.5), (3, 0, -11.5), (-4.5, 0, -12)]:
         c(L.rnd.choice(['papers', 'newspaper', 'books_floor']), pos)
     w('noticeboard', (-6, 1.7, -13.83), '+z'); w('wall_clock', (6, 3.0, -13.82), '+z')
+    c('lounge_sofa', (9.6, 0, -0.65), 0.0); c('lounge_chair', (-11.0, 0, -3.6), -H); c('table_round', (8.0, 0, -4.8), 0.4)
+    c('plant_tall', (-4.8, 0, -13.3)); c('coffee_machine', (-2.6, 1.1, -7.3), math.pi); c('tv_old', (-9.0, 0, -13.3), 0.0)
     # corridor: gurneys along the wall, a wheelchair, drips, rubbish on the floor
     for x in (-15, 3.5, 14):
         c('gurney', (x, 0, -14.6), H)
@@ -237,10 +258,13 @@ def hospital_clutter(L):
         c('medical_cart', (cx - 3.6, 0, -20.0), 0.0)
         c('syringes_floor', (cx + 1, 0, -24)); c('pills', (cx - 2, 0, -25.4)); c('chair', (cx + 4.6, 0, -24.5), 0.4)
         w('wall_clock', (cx + 2.5, 3.0, -19.17), '-z')
+        c('tv_cabinet', (cx - 4.85, 0, -19.6), 0.0); c('tv_old', (cx - 4.85, 0.65, -19.6), 0.0)
+        c('sink', (cx + 5.2, 0, -30.4), math.pi); c('trashcan_small', (cx + 4.4, 0, -30.4))
     c('wheelchair', (-1.2, 0, -22.5), 1.0); c('vase_broken', (9.5, 0, -22))
     # technical wing
     c('toolbox', (15, 0, -29.6)); c('jerrycan', (16.2, 0, -30.3), 0.4); c('cardboard_box', (13.4, 0, -24.2))
     c('box_pile', (22.4, 0, -20.2), 0.2); c('car_battery', (19, 0, -26.3)); c('oil_stain', (20.5, 0, -26.5))
+    c('barrel_open', (14.0, 0, -27.4)); c('crate_large', (16.8, 0, -21.0), 0.3); c('bucket', (15.0, 0, -28.2))
     # car park, yard
     for pos in [(-5, 0, 3), (-4, 0, 4.2), (16, 0, 4), (7.5, 0, 11.5)]:
         c('traffic_cone', pos)
@@ -248,6 +272,8 @@ def hospital_clutter(L):
     L.prop('res://scenes/world/dumpster.tscn', (-34.8, 0, -24.8), 0.0)
     c('trash_bags', (-35.2, 0, -9)); c('trash_bags', (-31.5, 0, -25.3)); c('box_pile', (-28.5, 0, -25.2), 0.4)
     c('syringes_floor', (-30, 0, -13)); c('rubble', (-27, 0, -21))
+    c('barrel_open', (-25.2, 0, -9.0)); c('crate_large_open', (-35.4, 0, -12.5), 0.0)
+    c('construction_barrier', (0, 0, 12.6), H); c('sign_warning', (19.5, 0, 1.0), -H)
 
 
 def subway_clutter(L):
@@ -266,6 +292,10 @@ def subway_clutter(L):
     L.scatter(['rubble', 'newspaper', 'trash_bags'], -9.3, -4.7, -126, -64, 9)
     c('toolbox', (-15.3, 0, -104.6)); c('cardboard_box', (-11.2, 0, -105.3), 0.2); c('box_pile', (-15, 0, -87.2), 0.0)
     c('traffic_cone', (-6, 0, -84.5)); c('traffic_cone', (-8, 0, -85)); c('barrier', (-7, 0, -86.6), 0.0)
+    c('construction_light', (-9.4, 0, -83.6)); c('construction_fence', (-4.6, 0, -80.0), 0.0)
+    c('metal_panel', (-9.6, 0, -70.0), H); c('crate_large', (-9.3, 0, -112.0), 0.0); c('bucket', (-5.0, 0, -100.5))
+    for z in (-20, -44, -140, -164):
+        c('radio' if z % 3 else 'bottle', (L.rnd.uniform(-2.5, 2.5), 0, z))
 
 
 def stadium_clutter(L):
@@ -282,6 +312,21 @@ def stadium_clutter(L):
             c('traffic_cone', (x, 0, z))
     L.scatter(['backpack', 'suitcase', 'suitcase_open', 'trash_bags', 'newspaper', 'papers'], -30, 30, -45, 45, 22)
     c('barrier', (-2, 0, 52), 0.0); c('barrier', (2, 0, -52), 0.0)
+    # survivors' corner: small tents around a campfire, a shelter, crates and fences
+    for pos, rot in [((-27, 0, -2), 0.4), ((-25, 0, 3.5), 1.2), ((-30, 0, 2.5), -0.6), ((25, 0, -4), 2.6)]:
+        c(L.rnd.choice(['tent_small', 'tent_canvas']), pos, rot)
+    c('campfire_pit', (-26.8, 0, 1.2)); L.fire((-26.8, 0.15, 1.2))
+    for pos in [(-28.2, 0, 0.4), (-25.4, 0, 0.0), (-27.5, 0, 2.6)]:
+        c('bedroll', pos)
+    c('canvas_shelter', (-22.0, 0, 16.0), 0.3); c('camp_workbench', (-20.4, 0, 15.4), 0.3); c('chest', (-21.8, 0, 18.0))
+    for pos in [(22.5, 0, -21), (-27, 0, 23.5), (27.5, 0, 6), (-12, 0, 30)]:
+        c('crate_large', pos)
+    for i in range(5):
+        c('fence_fortified', (-34.0, 0, -12 + i * 1.33), math.pi / 2)
+        c('fence_fortified', (34.0, 0, 10 + i * 1.33), math.pi / 2)
+    c('signpost', (-3.2, 0, 40), 0.3); c('construction_barrier', (-6, 0, -55), 0.0); c('construction_barrier', (6, 0, -55), 0.0)
+    for x, z in [(-9.2, 9.2), (9.2, -9.2)]:
+        c('construction_light', (x, 0, z))
 
 
 def station_clutter(L):
@@ -310,6 +355,8 @@ def station_clutter(L):
     for pos in [(-2, 0, -3), (5, 0, -11.5), (1, 0, -12.3), (-6.5, 0, -7.5)]:
         c('papers', pos)
     c('chair_fallen', (2.2, 0, -11)); c('vase_broken', (-3.8, 0, -4.2)); c('books_floor', (6.5, 0, -6.5))
+    c('coat_rack', (-9.2, 0, -2.2)); c('plant_tall', (2.6, 0, -13.3)); c('radio', (0.4, 1.1, -6.1), math.pi)
+    c('side_table', (9.5, 0, -10.3), H); c('tv_old', (9.5, 0.81, -10.3), H)
     w('noticeboard', (-9.83, 1.7, -6.0), '+x')
     w('wanted_poster', (-9.84, 1.6, -3.2), '+x'); w('wanted_poster', (-9.84, 1.6, -8.8), '+x')
     w('wanted_poster', (9.84, 1.6, -2.4), '-x'); w('wall_clock', (-6.0, 3.0, -13.82), '+z')
@@ -328,9 +375,14 @@ def station_clutter(L):
     c('papers', (-6, 0, -19)); c('papers', (-10.5, 0, -27)); c('books_floor', (-11.8, 0, -21.5)); c('chair_fallen', (-5, 0, -26))
     c('trash_can', (-2.6, 0, -15.0))
     w('noticeboard', (-2.17, 1.7, -25.5), '-x'); w('wall_clock', (-11.0, 3.0, -28.83), '+z')
+    c('kitchen_cabinet', (-2.62, 0, -16.0), H); c('coffee_machine', (-2.62, 0.945, -16.0), H)
+    c('kitchen_sink', (-2.62, 0, -16.92), H); c('microwave', (-2.62, 0.95, -16.85), H); c('fridge', (-2.78, 0, -18.1), H)
+    c('rug_round', (-12.3, 0, -22.0), 0.0); c('floor_lamp', (-13.5, 0, -23.7)); c('table_lamp', (-5.5, 0.81, -17.2))
     # locker room
     c('backpack', (-7.7, 0.45, -36.5)); c('backpack', (-8.2, 0, -40.8))
-    c('suitcase_open', (-11, 0, -48.6), 0.2); c('box_pile', (-5.2, 0, -48.8), 0.3); c('trash_can', (-2.6, 0, -31))
+    c('suitcase_open', (-9.5, 0, -42.0), 0.2);
+    c('shower', (-13.3, 0, -49.3), math.pi); c('shower', (-12.0, 0, -49.3), math.pi); c('sink', (-9.8, 0, -49.6), math.pi)
+    c('bucket', (-10.6, 0, -48.4)); c('box_pile', (-5.2, 0, -48.8), 0.3); c('trash_can', (-2.6, 0, -31))
     c('water_cooler', (-2.5, 0, -48.6), H); c('fire_extinguisher', (-2.3, 0, -36.4))
     c('papers', (-6, 0, -32)); c('chair', (-4.2, 0, -44.5), 0.6); c('chair_fallen', (-9.5, 0, -47))
     for z in (-43.6, -45.5):
@@ -345,6 +397,7 @@ def station_clutter(L):
     # cell block: guard post in the hall, bunk and toilet in every cell
     L.prop('res://scenes/world/desk.tscn', (7, 0, -16), 0.0)
     c('office_chair', (7, 0, -16.9), math.pi); c('mug', (7.6, 0.81, -15.8)); c('phone', (6.3, 0.81, -16.1))
+    c('radio', (7.0, 0.81, -15.7), math.pi); c('coat_rack', (12.3, 0, -18.0))
     c('bench', (2.5, 0, -27), -H); c('water_cooler', (2.5, 0, -32.6), -H); c('trash_can', (11.6, 0, -15.2))
     c('bench', (2.5, 0, -23.5), -H); c('workstation', (10.5, 0, -32.6), 0.0); c('filing_cabinet', (12.4, 0, -33.4), math.pi)
     c('whiteboard', (5.5, 1.6, -14.17), 0.0001)
@@ -362,6 +415,8 @@ def station_clutter(L):
     c('oil_stain', (10, 0, -41)); c('oil_stain', (14, 0, -55.5)); c('oil_stain', (6, 0, -46))
     c('traffic_cone', (12, 0, -45.5)); c('traffic_cone', (13.1, 0, -46.4)); c('traffic_cone', (5.5, 0, -53))
     c('box_pile', (18.6, 0, -58.6), 0.2); c('pallet', (6.5, 0, -58.9), 0.0)
+    c('crate_large', (11.0, 0, -59.0), H); c('barrel_open', (19.0, 0, -35.5)); c('bucket', (5.2, 0, -50.2))
+    c('shovel', (3.3, 0, -52.6)); c('debris_tire', (8.6, 0, -44.2)); c('metal_panel', (17.5, 0, -35.0), 0.0)
     # armory
     for x, facing in ((-5.7, -H), (5.7, H)):
         for z in (-53.0, -55.6):
@@ -375,6 +430,7 @@ def station_clutter(L):
     c('trash_bags', (24, 0, -41)); c('trash_bags', (33, 0, -54.6)); c('tyre', (22, 0, -55), 0.4)
     c('tyre_stack', (25.5, 0, -55.2)); c('traffic_cone', (23, 0, -46)); c('traffic_cone', (23.5, 0, -50.2))
     c('barrier', (21.6, 0, -42.6), 0.3); c('rubble', (26, 0, -52)); c('newspaper', (27.5, 0, -43))
+    c('construction_barrier', (24.6, 0, -53.6), 0.4); c('crate_large', (33.0, 0, -50.5), 0.0); c('barrel_open', (21.2, 0, -54.8))
 
 
 # =================================================================== CHAPTER 1
@@ -417,7 +473,7 @@ def level_1():
         L.wall_x(21.5 * side, -66, -74, 'brick_dark', h=8, t=1.0)
     # start: dead end behind the player
     L.wall_z(Z0 + 0.5, -9, 9, 'concrete', h=3, t=1.0)
-    L.prop('res://scenes/world/bus.tscn', (0, 0, 11.5), 1.45)
+    L.prop(VEHICLE.format('bus'), (0, 0, 11.5), 1.45)
     # street furniture
     for i, z in enumerate(range(4, -128, -18)):
         side = -1 if i % 2 == 0 else 1
@@ -428,14 +484,16 @@ def level_1():
     for pos in [(-8, 0, -20), (-8.2, 0, -20.8), (8, 0, -58), (-14, 0, -68), (16, 0, -71), (8.2, 0, -110)]:
         L.prop('res://scenes/world/barrel.tscn', pos)
     # cars
-    cars = [('car_red', (-3.0, 0, -2), 0.45), ('car_white', (3.8, 0, -16), -0.15), ('car_black', (-3.8, 0, -27), 0.1),
-            ('car_blue', (-1.6, 0, -38), 1.45), ('car_white', (3.2, 0, -39.5), 1.3), ('police_car', (4.2, 0, -55), 0.25),
-            ('car_red', (-4.2, 0, -78), -0.3), ('car_black', (3.5, 0, -100), 0.6), ('police_car', (-3.5, 0, -122), 1.2),
-            ('police_car', (4.0, 0, -125), -1.3)]
+    cars = [('sedan_burnt', (-3.0, 0, -2), 0.45), ('suv', (3.8, 0, -16), -0.15), ('hatchback_sports', (-3.8, 0, -27), 0.1),
+            ('van', (-2.0, 0, -38), 1.45), ('taxi', (3.4, 0, -39.5), 1.3), ('police', (4.2, 0, -55), 0.25),
+            ('sedan', (-4.8, 0, -63.5), 0.15), ('hatchback_sports_burnt', (2.4, 0, -70.5), 2.0),
+            ('suv_burnt', (-4.2, 0, -78), -0.3), ('delivery', (3.5, 0, -100), 0.6), ('ambulance', (-3.6, 0, -106), -0.3),
+            ('police', (-3.5, 0, -122), 1.2), ('police', (4.0, 0, -125), -1.3), ('taxi_burnt', (4.6, 0, -6.5), -2.6)]
     for scene, pos, rot in cars:
-        L.prop(f'res://scenes/world/{scene}.tscn', pos, rot)
-    L.fire((-3.0, 1.2, -2))
-    L.prop('res://scenes/world/bus.tscn', (0.0, 0, -88), 1.4)
+        L.prop(VEHICLE.format(scene), pos, rot)
+    L.fire((-3.0, 1.1, -2))
+    L.fire((-4.2, 1.0, -78))
+    L.prop(VEHICLE.format('bus'), (0.0, 0, -88), 1.4)
     L.fire((1.5, 3.2, -88))
     L.blk('concrete', (3.0, 0.9, 0.6), (7.5, 0.45, -39), rot=(0, 0.2, 0))  # jersey barrier
     for x in (-5, -2.5, 2.5, 5):  # police barricade in front of the station
@@ -616,12 +674,12 @@ def level_2():
     L.blk('wood', (1.0, 0.45, 5.0), (-8, 0.22, -38), name='Bench')
     for x in (-5, -1, 3):
         L.prop('res://scenes/world/shelf.tscn', (x, 0, -59.4), 0.0)
-    L.prop('res://scenes/world/police_car.tscn', (10, 0, -40), 0.0)
-    L.prop('res://scenes/world/car_black.tscn', (14.5, 0, -56), 1.5)
+    L.prop(VEHICLE.format('police'), (10, 0, -40), 0.0)
+    L.prop(VEHICLE.format('suv'), (14.5, 0, -56), 1.5)
     for pos in [(18, 0, -37), (18.8, 0, -37.8), (8, 0, -58.5), (17, 0, -44)]:
         L.prop('res://scenes/world/barrel.tscn', pos)
     L.prop('res://scenes/world/shelf.tscn', (7.0, 0, -36), math.pi / 2)
-    L.prop('res://scenes/world/car_red.tscn', (28, 0, -48), 1.57)
+    L.prop(VEHICLE.format('sedan'), (28, 0, -48), 1.57)
 
     # lights
     L.ceiling_lamp(-4, -5); L.ceiling_lamp(4, -10, flicker=True)
@@ -758,8 +816,8 @@ def level_3():
         L.blk('crate', (1.4, 1.4, 1.4), (pos[0], 0.7, pos[2]), rot=(0, L.rnd.uniform(0, 1.5), 0))
     for pos in [(-11.5, 0, 17.5), (13.2, 0, -16.4), (8, 0, 25), (-26, 0, -25), (27, 0, -26)]:
         L.prop('res://scenes/world/barrel.tscn', pos)
-    L.prop('res://scenes/world/car_white.tscn', (-28, 0, 32), 0.8)
-    L.prop('res://scenes/world/police_car.tscn', (29, 0, 34), -0.6)
+    L.prop(VEHICLE.format('ambulance'), (-28, 0, 32), 0.8)
+    L.prop(VEHICLE.format('police'), (29, 0, 34), -0.6)
     L.fire((-24, 2.4, 20))
     L.fire((26, 0.1, -34))
     stadium_clutter(L)
@@ -885,11 +943,10 @@ def level_hospital():
     for pos in [(14, 0, -30), (14.8, 0, -30.2), (13.5, 0, -21)]:
         L.prop('res://scenes/world/barrel.tscn', pos)
     # outside: the car from the station yard, an ambulance, a fire
-    L.prop('res://scenes/world/car_red.tscn', (3, 0, 5), 0.9)
+    L.prop(VEHICLE.format('sedan_burnt'), (3, 0, 5), 0.9)
     L.fire((3, 1.2, 5))
-    L.prop('res://scenes/world/car_white.tscn', (-9, 0, 7), 0.25)
-    L.decor((1.9, 0.25, 4.3), (-9, 1.05, 7), 'siren_red', rot=(0, 0.25, 0))
-    L.prop('res://scenes/world/car_blue.tscn', (12, 0, 9), -1.2)
+    L.prop(VEHICLE.format('ambulance'), (-9, 0, 7), 0.25)
+    L.prop(VEHICLE.format('van'), (12, 0, 9), -1.2)
     L.prop('res://scenes/world/street_lamp_flicker.tscn', (-15, 0, 12), math.pi)
     L.prop('res://scenes/world/street_lamp.tscn', (15, 0, 12), math.pi)
     L.omni((0, 3.4, -1), (1, 0.85, 0.6), 1.2, 8)

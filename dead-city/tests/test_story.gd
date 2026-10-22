@@ -27,8 +27,10 @@ func wait_scene(scene_name: String) -> Level:
 
 func start(level: Level) -> void:
 	level.start_playing()
-	for i in 600:
-		if not level.nav_region.is_baking():
+	# The navmesh bakes on a thread; with lots of props it can take a while right after an import.
+	var map := level.get_world_3d().navigation_map
+	for i in 3000:
+		if not level.nav_region.is_baking() and NavigationServer3D.map_get_iteration_id(map) > 0:
 			break
 		await get_tree().physics_frame
 	await frames(10)

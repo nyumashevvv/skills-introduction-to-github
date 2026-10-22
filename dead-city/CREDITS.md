@@ -9,6 +9,10 @@
 | Пистолет M1911 | [Low Poly Animated Guns](https://opengameart.org/content/low-poly-animated-guns) | Quaternius |
 | Автомат AK-47 | [Low poly Guns](https://opengameart.org/content/low-poly-guns) | Quaternius |
 | РПГ-7 и выстрел | [Low poly RPG7](https://opengameart.org/content/low-poly-rpg7) | Lucian Pavel |
+| Машины (седаны, внедорожники, такси, полиция, скорая, фургоны, мусоровоз, пожарная) и их обломки | [Car Kit](https://kenney.nl/assets/car-kit) | Kenney |
+| Мебель (шкафы, кухня, диваны, лампы, телевизоры, душ, раковины) | [Furniture Kit](https://kenney.nl/assets/furniture-kit) | Kenney |
+| Светофоры, знаки, столбы, стройограждения | [City Kit (Roads)](https://kenney.nl/assets/city-kit-roads) | Kenney |
+| Палатки, костёр, ящики, заборы, инструменты | [Survival Kit](https://kenney.nl/assets/survival-kit) | Kenney |
 | Руки от первого лица | [fps arms (rigged only)](https://opengameart.org/content/fps-arms-rigged-only) | para |
 | Голоса зомби | [Zombie noises and moans](https://opengameart.org/content/zombie-noises-and-moans) | ianzazz |
 | | [Zombies Sound Pack](https://opengameart.org/content/zombies-sound-pack) | artisticdude |
@@ -20,6 +24,7 @@
 | Музыка боссов: Колосс | [Epic Boss Battle](https://opengameart.org/content/boss-battle-music) | Juhani Junkala |
 
 Нож и снаряжение боссов (тесак, щит и дубинка, кувалда, наросты, костяные шипы) смоделированы скриптом в Blender
-(`tools/blender/build_assets.py`) и прикреплены к костям рук и туловища. Позы рук, перекраска, сборка
+(`tools/blender/build_assets.py`) и прикреплены к костям рук и туловища. Автобус тоже смоделирован там, а модели
+Kenney пропущены через Blender: реальный масштаб, пропорции машин, «грязные» и обгоревшие текстуры. Позы рук, перекраска, сборка
 оружия и экспорт в glTF тоже делаются этим скриптом. Остальная графика, текстуры и звуки
 (выстрелы, взрывы, окружение) сгенерированы процедурно скриптами из `tools/`.

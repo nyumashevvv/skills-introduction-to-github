@@ -299,8 +299,42 @@ def build():
                          ('b', (0.9, 0.08, 0.02), (0.05, 1.05, -0.305), 'paint_yellow')],
          ('box', (1.05, 1.2, 1.25), (0.02, 0.6, 0.32)))
 
+# Kenney models built by tools/blender/build_assets.py (part "kenney"): sizes come from models/kenney_sizes.json.
+LOOSE = {'debris_door', 'debris_door_window', 'debris_bumper', 'debris_tire', 'debris_plate', 'debris_spoiler', 'debris_axle',
+         'computer_screen', 'computer_keyboard', 'laptop', 'microwave', 'coffee_machine', 'table_lamp', 'radio', 'books', 'rug',
+         'rug_round', 'plant_small', 'toaster', 'bottle', 'shovel', 'pickaxe', 'axe', 'bucket', 'rock_flat', 'planks', 'bedroll',
+         'bedroll_packed', 'campfire_pit', 'tv_old', 'speaker'}
+SIRENS = {'police': ((1, 0.1, 0.1), (0.2, 0.3, 1)), 'ambulance': ((1, 0.1, 0.1), (0.2, 0.3, 1)), 'firetruck': ((1, 0.15, 0.1), (1, 0.15, 0.1))}
+
+
+def kenney():
+    import json
+    sizes = json.load(open('models/kenney_sizes.json'))
+    for name, (w, h, d) in sorted(sizes.items()):
+        vehicle = os.path.exists(f'models/vehicles/{name}.glb')
+        s = Scene()
+        glb = s.ext_res('PackedScene', f'res://models/{"vehicles" if vehicle else "props"}/{name}.glb')
+        root = ''.join(p.title() for p in name.split('_'))
+        if name in LOOSE:
+            s.node(root, 'Node3D')
+        else:
+            s.node(root, 'StaticBody3D')
+            shape = s.sub_res('BoxShape3D', size=V3(w * 0.92, h, d * 0.92))
+            s.node('CollisionShape3D', 'CollisionShape3D', '.', position=V3(0, h / 2, 0), shape=shape)
+        s.node('Model', None, '.', instance=glb)
+        if name in SIRENS:
+            for i, col in enumerate(SIRENS[name]):
+                s.node(f'Siren{i}', 'OmniLight3D', '.', position=V3(-0.4 + i * 0.8, h + 0.3, d * 0.1), light_color=C(*col),
+                       light_energy=2.0, omni_range=7.0, script=s.ext_res('Script', 'res://scripts/world/flicker_light.gd'),
+                       flicker_chance=0.5)
+        folder = 'scenes/world/vehicles' if vehicle else 'scenes/props'
+        os.makedirs(folder, exist_ok=True)
+        s.save(f'{folder}/{name}.tscn')
+
+
 
 if __name__ == '__main__':
     mats()
     build()
+    kenney()
     print('props ok')

@@ -283,13 +283,15 @@ func _tour() -> void:
 			["station_office", Vector3(-2.6, 0, -21.2), 75, -12], ["station_lockers", Vector3(-2.6, 0, -39.2), 100, -12],
 			["station_cells", Vector3(3, 0, -15.5), -40, -10], ["station_garage", Vector3(4, 0, -42), -110, -8],
 			["station_armory", Vector3(0, 0, -50.8), 0, -14], ["station_yard", Vector3(21, 0, -48), -90, -6]],
-		"res://scenes/levels/level_1_outskirts.tscn": [["street_a", Vector3(0, 0, -20), 0, -6],
-			["street_alley", Vector3(4, 0, -70), -90, -6]],
+		"res://scenes/levels/level_1_outskirts.tscn": [["street_a", Vector3(1, 0, 6), 0, -8],
+			["street_b", Vector3(-1, 0, -30), 0, -8], ["street_c", Vector3(2, 0, -60), 15, -8],
+			["street_d", Vector3(0, 0, -96), 0, -6]],
 		"res://scenes/levels/level_3_hospital.tscn": [["hospital_lobby", Vector3(0, 0, -1), 0, -8],
 			["hospital_corridor", Vector3(-22, 0, -16.5), -90, -6], ["hospital_ward", Vector3(-6, 0, -20), 0, -14]],
 		"res://scenes/levels/level_4_subway.tscn": [["subway_platform", Vector3(0, 0, -13), 0, -6],
 			["subway_dinamo", Vector3(0, 0, -132), 0, -6]],
-		"res://scenes/levels/level_5_stadium.tscn": [["stadium_field", Vector3(-10, 0, 25), -160, -6]],
+		"res://scenes/levels/level_5_stadium.tscn": [["stadium_field", Vector3(-10, 0, 25), -160, -6],
+			["stadium_camp", Vector3(-19, 0, 6), 110, -10]],
 	}
 	for path: String in views:
 		var level := await load_level(path)

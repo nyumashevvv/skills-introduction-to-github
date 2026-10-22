@@ -7,7 +7,10 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
 - Scenes in `scenes/<area>/`, scripts in `scripts/<area>/`.
 - Characters and first-person weapons are glTF files in `models/`, built by `tools/blender/build_assets.py`
   (Blender 4.5, headless) from CC0 packs fetched by `tools/fetch_assets.sh`; see CREDITS.md.
-  Level geometry and props are Box/Cylinder meshes; `materials/`, `textures/` and most of `sounds/` are
+  Vehicles (`models/vehicles`, scenes in `scenes/world/vehicles/`) and furniture/street/camp props (`models/props`)
+  are Kenney CC0 kits run through Blender (part `kenney`: scale, proportions, grime/burnt textures; sizes in
+  `models/kenney_sizes.json` feed the collision boxes in `tools/gen_props.py`); the bus is modelled there too.
+  Level geometry and the other props are Box/Cylinder meshes; `materials/`, `textures/` and most of `sounds/` are
   procedurally generated. Zombie voices in `sounds/zombie/` are processed CC0 recordings.
 - Calling methods on nodes found by NodePath: use `node.call("activate")` (untyped), not direct calls.
 
