@@ -361,13 +361,35 @@ def level_2():
     L.box('Reader', A, (0.22, 0.32, 0.06), (1.55, -0.1, 0.16), 'dark')
     L.box('ReaderLight', A, (0.1, 0.05, 0.02), (1.55, 0.0, 0.2), 'taillight', cast_shadow=0)
     L.ceiling_lamp(0, -48.4, energy=2.4, rng=7.0)
-    L.door('GarageDoor', (0.25, 3.2, 2.5), (2, 1.6, -41.25), 'metal', player_can_open=False,
+    L.door('GarageDoor', (0.25, 3.2, 2.5), (2, 1.6, -41.25), 'door_steel', player_can_open=False,
            locked_message='Заблокировано', open_offset=V3(0, 3.0, 0))
     for i, (z0, z1) in enumerate([(-14.6, -20.6), (-20.6, -27.3), (-27.3, -33.4)]):
         L.door(f'Cell{i + 1}', (0.12, 3.6, z0 - z1), (13, 1.8, (z0 + z1) / 2), 'bars', player_can_open=False,
                locked_message='Камера заперта', open_offset=V3(0, 3.4, 0), open_time=0.6)
-    L.door('Shutter', (0.3, 4.0, 8.0), (20, 2.0, -48), 'metal_rust', event='ShutterOpened',
+    L.door('Shutter', (0.3, 4.0, 8.0), (20, 2.0, -48), 'door_steel', event='ShutterOpened',
            prompt='Поднять ворота', open_offset=V3(0, 3.7, 0), open_time=2.5)
+    # Both garage doors face west (-X): slats, hazard stripes and signs so they stand out in the dark.
+    def hazard(door, width, y, x):
+        L.box(L.uid('Band'), door, (0.02, 0.36, width), (x, y, 0), 'paint_yellow', cast_shadow=0)
+        for i in range(int(width / 0.5)):
+            L.box(L.uid('Slash'), door, (0.022, 0.36, 0.16), (x - 0.002, y, -width / 2 + 0.25 + i * 0.5), 'dark',
+                  rot=(0.6, 0, 0), cast_shadow=0)
+    S_ = 'Doors/Shutter'
+    for i in range(8):
+        L.box(L.uid('Slat'), S_, (0.02, 0.05, 7.9), (-0.16, -1.4 + i * 0.4, 0), 'metal', cast_shadow=0)
+    hazard(S_, 8.0, -1.75, -0.17)
+    L.node('Sign', 'Label3D', S_, position=V3(-0.18, 1.3, 0), rotation=V3(0, -math.pi / 2, 0), text=S('ВЫЕЗД'),
+           font_size=110, pixel_size=0.01, modulate=C(1.0, 0.85, 0.3), outline_size=10)
+    L.decor((0.08, 0.5, 0.35), (19.82, 1.3, -43.4), 'dark')                       # control box with a green button
+    L.decor((0.04, 0.12, 0.12), (19.77, 1.38, -43.4), 'lamp_glow', cast_shadow=0)
+    L.omni((19.4, 1.4, -43.4), (0.4, 1.0, 0.4), 0.8, 2.5)
+    L.ceiling_lamp(18.2, -48, energy=2.4, rng=8.0)
+    G_ = 'Doors/GarageDoor'
+    hazard(G_, 2.5, -1.35, -0.135)
+    hazard(G_, 2.5, 1.35, -0.135)
+    L.node('Sign', 'Label3D', G_, position=V3(-0.14, 0.3, 0), rotation=V3(0, -math.pi / 2, 0), text=S('ГАРАЖ'),
+           font_size=64, pixel_size=0.008, modulate=C(1.0, 0.85, 0.3), outline_size=8)
+    L.omni((0.8, 3.2, -41.25), (1, 0.85, 0.6), 1.2, 4)
 
     # furniture
     L.prop('res://scenes/world/desk.tscn', (-4, 0, -9), 0.0)

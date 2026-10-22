@@ -137,6 +137,12 @@ func _doors() -> void:
 	player.holder.visible = false
 	await pose(player, Vector3(0, 0, -41), 0, 2)
 	await snap("16_armory_door")
+	await pose(player, Vector3(-1.2, 0, -41.25), -90, 0)
+	await snap("17_garage_door")
+	(level.get_node("Doors/GarageDoor") as Door).open()
+	await get_tree().create_timer(1.5).timeout
+	await pose(player, Vector3(9, 0, -47), -90, 6)
+	await snap("18_garage_shutter")
 
 
 func _station() -> void:

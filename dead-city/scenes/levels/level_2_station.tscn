@@ -28,9 +28,9 @@
 
 [ext_resource type="Material" path="res://materials/lamp_glow.tres" id="14_lamp_glow"]
 
-[ext_resource type="Material" path="res://materials/bars.tres" id="15_bars"]
+[ext_resource type="Material" path="res://materials/door_steel.tres" id="15_door_steel"]
 
-[ext_resource type="Material" path="res://materials/metal_rust.tres" id="16_metal_rust"]
+[ext_resource type="Material" path="res://materials/bars.tres" id="16_bars"]
 
 [ext_resource type="PackedScene" path="res://scenes/world/desk.tscn" id="17_desk"]
 
@@ -129,7 +129,31 @@ material = ExtResource("13_taillight")
 size = Vector3(1.0, 0.05, 0.35)
 material = ExtResource("14_lamp_glow")
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_8"]
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(0.02, 0.05, 7.9)
+material = ExtResource("10_metal")
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(0.02, 0.36, 8.0)
+material = ExtResource("11_paint_yellow")
+
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
+size = Vector3(0.022, 0.36, 0.16)
+material = ExtResource("12_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(0.08, 0.5, 0.35)
+material = ExtResource("12_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_12"]
+size = Vector3(0.04, 0.12, 0.12)
+material = ExtResource("14_lamp_glow")
+
+[sub_resource type="BoxMesh" id="BoxMesh_13"]
+size = Vector3(0.02, 0.36, 2.5)
+material = ExtResource("11_paint_yellow")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_14"]
 size = Vector3(4.0, 3.0, 14.0)
 
 [node name="Station" type="Node3D"]
@@ -550,7 +574,7 @@ omni_range = 7.0
 [node name="GarageDoor" parent="Doors" instance=ExtResource("9_door")]
 position = Vector3(2.0, 1.6, -41.25)
 size = Vector3(0.25, 3.2, 2.5)
-material = ExtResource("10_metal")
+material = ExtResource("15_door_steel")
 player_can_open = false
 locked_message = "Заблокировано"
 open_offset = "Vector3(0.0, 3.0, 0.0)"
@@ -558,7 +582,7 @@ open_offset = "Vector3(0.0, 3.0, 0.0)"
 [node name="Cell1" parent="Doors" instance=ExtResource("9_door")]
 position = Vector3(13.0, 1.8, -17.6)
 size = Vector3(0.12, 3.6, 6.0)
-material = ExtResource("15_bars")
+material = ExtResource("16_bars")
 player_can_open = false
 locked_message = "Камера заперта"
 open_offset = "Vector3(0.0, 3.4, 0.0)"
@@ -567,7 +591,7 @@ open_time = 0.6
 [node name="Cell2" parent="Doors" instance=ExtResource("9_door")]
 position = Vector3(13.0, 1.8, -23.95)
 size = Vector3(0.12, 3.6, 6.7)
-material = ExtResource("15_bars")
+material = ExtResource("16_bars")
 player_can_open = false
 locked_message = "Камера заперта"
 open_offset = "Vector3(0.0, 3.4, 0.0)"
@@ -576,7 +600,7 @@ open_time = 0.6
 [node name="Cell3" parent="Doors" instance=ExtResource("9_door")]
 position = Vector3(13.0, 1.8, -30.35)
 size = Vector3(0.12, 3.6, 6.1)
-material = ExtResource("15_bars")
+material = ExtResource("16_bars")
 player_can_open = false
 locked_message = "Камера заперта"
 open_offset = "Vector3(0.0, 3.4, 0.0)"
@@ -585,11 +609,272 @@ open_time = 0.6
 [node name="Shutter" parent="Doors" instance=ExtResource("9_door")]
 position = Vector3(20.0, 2.0, -48.0)
 size = Vector3(0.3, 4.0, 8.0)
-material = ExtResource("16_metal_rust")
+material = ExtResource("15_door_steel")
 prompt = "Поднять ворота"
 open_offset = "Vector3(0.0, 3.7, 0.0)"
 open_time = 2.5
 event = NodePath("../../Story/ShutterOpened")
+
+[node name="Slat1" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(-0.16, -1.4, 0.0)
+cast_shadow = 0
+
+[node name="Slat2" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(-0.16, -1.0, 0.0)
+cast_shadow = 0
+
+[node name="Slat3" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(-0.16, -0.6, 0.0)
+cast_shadow = 0
+
+[node name="Slat4" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(-0.16, -0.2, 0.0)
+cast_shadow = 0
+
+[node name="Slat5" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(-0.16, 0.2, 0.0)
+cast_shadow = 0
+
+[node name="Slat6" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(-0.16, 0.6, 0.0)
+cast_shadow = 0
+
+[node name="Slat7" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(-0.16, 1.0, 0.0)
+cast_shadow = 0
+
+[node name="Slat8" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(-0.16, 1.4, 0.0)
+cast_shadow = 0
+
+[node name="Band3" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_9")
+position = Vector3(-0.17, -1.75, 0.0)
+cast_shadow = 0
+
+[node name="Slash17" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, -3.75)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash18" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, -3.25)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash19" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, -2.75)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash20" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, -2.25)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash21" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, -1.75)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash22" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, -1.25)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash23" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, -0.75)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash24" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, -0.25)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash25" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, 0.25)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash26" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, 0.75)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash27" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, 1.25)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash28" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, 1.75)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash29" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, 2.25)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash30" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, 2.75)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash31" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, 3.25)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash32" type="MeshInstance3D" parent="Doors/Shutter"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.172, -1.75, 3.75)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Sign" type="Label3D" parent="Doors/Shutter"]
+position = Vector3(-0.18, 1.3, 0.0)
+rotation = Vector3(0.0, -1.5708, 0.0)
+text = "ВЫЕЗД"
+font_size = 110
+pixel_size = 0.01
+modulate = Color(1.0, 0.85, 0.3, 1.0)
+outline_size = 10
+
+[node name="D2" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_11")
+position = Vector3(19.82, 1.3, -43.4)
+
+[node name="D3" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_12")
+position = Vector3(19.77, 1.38, -43.4)
+cast_shadow = 0
+
+[node name="Light2" type="OmniLight3D" parent="Lights"]
+position = Vector3(19.4, 1.4, -43.4)
+light_color = Color(0.4, 1.0, 0.4, 1.0)
+light_energy = 0.8
+omni_range = 2.5
+
+[node name="D4" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(18.2, 3.95, -48.0)
+cast_shadow = 0
+
+[node name="Light3" type="OmniLight3D" parent="Lights"]
+position = Vector3(18.2, 3.55, -48.0)
+light_color = Color(1.0, 0.88, 0.7, 1.0)
+light_energy = 2.4
+omni_range = 8.0
+
+[node name="Band4" type="MeshInstance3D" parent="Doors/GarageDoor"]
+mesh = SubResource("BoxMesh_13")
+position = Vector3(-0.135, -1.35, 0.0)
+cast_shadow = 0
+
+[node name="Slash33" type="MeshInstance3D" parent="Doors/GarageDoor"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.137, -1.35, -1.0)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash34" type="MeshInstance3D" parent="Doors/GarageDoor"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.137, -1.35, -0.5)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash35" type="MeshInstance3D" parent="Doors/GarageDoor"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.137, -1.35, 0.0)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash36" type="MeshInstance3D" parent="Doors/GarageDoor"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.137, -1.35, 0.5)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash37" type="MeshInstance3D" parent="Doors/GarageDoor"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.137, -1.35, 1.0)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Band5" type="MeshInstance3D" parent="Doors/GarageDoor"]
+mesh = SubResource("BoxMesh_13")
+position = Vector3(-0.135, 1.35, 0.0)
+cast_shadow = 0
+
+[node name="Slash38" type="MeshInstance3D" parent="Doors/GarageDoor"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.137, 1.35, -1.0)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash39" type="MeshInstance3D" parent="Doors/GarageDoor"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.137, 1.35, -0.5)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash40" type="MeshInstance3D" parent="Doors/GarageDoor"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.137, 1.35, 0.0)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash41" type="MeshInstance3D" parent="Doors/GarageDoor"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.137, 1.35, 0.5)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Slash42" type="MeshInstance3D" parent="Doors/GarageDoor"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-0.137, 1.35, 1.0)
+rotation = Vector3(0.6, 0.0, 0.0)
+cast_shadow = 0
+
+[node name="Sign" type="Label3D" parent="Doors/GarageDoor"]
+position = Vector3(-0.14, 0.3, 0.0)
+rotation = Vector3(0.0, -1.5708, 0.0)
+text = "ГАРАЖ"
+font_size = 64
+pixel_size = 0.008
+modulate = Color(1.0, 0.85, 0.3, 1.0)
+outline_size = 8
+
+[node name="Light4" type="OmniLight3D" parent="Lights"]
+position = Vector3(0.8, 3.2, -41.25)
+light_color = Color(1.0, 0.85, 0.6, 1.0)
+light_energy = 1.2
+omni_range = 4
 
 [node name="Desk1" parent="NavigationRegion3D" instance=ExtResource("17_desk")]
 position = Vector3(-4.0, 0.0, -9.0)
@@ -675,30 +960,30 @@ rotation = Vector3(0.0, 1.5708, 0.0)
 position = Vector3(28.0, 0.0, -48.0)
 rotation = Vector3(0.0, 1.57, 0.0)
 
-[node name="D2" type="MeshInstance3D" parent="Decor"]
+[node name="D5" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_7")
 position = Vector3(-4.0, 3.95, -5.0)
 cast_shadow = 0
 
-[node name="Light2" type="OmniLight3D" parent="Lights"]
+[node name="Light5" type="OmniLight3D" parent="Lights"]
 position = Vector3(-4.0, 3.55, -5.0)
 light_color = Color(1.0, 0.88, 0.7, 1.0)
 light_energy = 2.2
 omni_range = 9.0
 
-[node name="D3" type="MeshInstance3D" parent="Decor"]
+[node name="D6" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_7")
 position = Vector3(4.0, 3.95, -10.0)
 cast_shadow = 0
 
-[node name="Light3" type="OmniLight3D" parent="Lights"]
+[node name="Light6" type="OmniLight3D" parent="Lights"]
 position = Vector3(4.0, 3.55, -10.0)
 light_color = Color(1.0, 0.88, 0.7, 1.0)
 light_energy = 2.2
 omni_range = 9.0
 script = ExtResource("25_flicker_light")
 
-[node name="D4" type="MeshInstance3D" parent="Decor"]
+[node name="D7" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_7")
 position = Vector3(0.0, 3.95, -18.0)
 cast_shadow = 0
@@ -710,7 +995,7 @@ light_energy = 2.2
 omni_range = 9.0
 script = ExtResource("25_flicker_light")
 
-[node name="D5" type="MeshInstance3D" parent="Decor"]
+[node name="D8" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_7")
 position = Vector3(0.0, 3.95, -30.0)
 cast_shadow = 0
@@ -721,7 +1006,7 @@ light_color = Color(1.0, 0.88, 0.7, 1.0)
 light_energy = 1.2
 omni_range = 9.0
 
-[node name="D6" type="MeshInstance3D" parent="Decor"]
+[node name="D9" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_7")
 position = Vector3(0.0, 3.95, -44.0)
 cast_shadow = 0
@@ -733,31 +1018,31 @@ light_energy = 2.2
 omni_range = 9.0
 script = ExtResource("25_flicker_light")
 
-[node name="D7" type="MeshInstance3D" parent="Decor"]
+[node name="D10" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_7")
 position = Vector3(-8.0, 3.95, -21.0)
 cast_shadow = 0
 
-[node name="Light4" type="OmniLight3D" parent="Lights"]
+[node name="Light7" type="OmniLight3D" parent="Lights"]
 position = Vector3(-8.0, 3.55, -21.0)
 light_color = Color(1.0, 0.88, 0.7, 1.0)
 light_energy = 2.2
 omni_range = 9.0
 script = ExtResource("25_flicker_light")
 
-[node name="D8" type="MeshInstance3D" parent="Decor"]
+[node name="D11" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_7")
 position = Vector3(-8.0, 3.95, -40.0)
 cast_shadow = 0
 
-[node name="Light5" type="OmniLight3D" parent="Lights"]
+[node name="Light8" type="OmniLight3D" parent="Lights"]
 position = Vector3(-8.0, 3.55, -40.0)
 light_color = Color(1.0, 0.88, 0.7, 1.0)
 light_energy = 0.8
 omni_range = 9.0
 script = ExtResource("25_flicker_light")
 
-[node name="D9" type="MeshInstance3D" parent="Decor"]
+[node name="D12" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_7")
 position = Vector3(8.0, 3.95, -24.0)
 cast_shadow = 0
@@ -769,18 +1054,18 @@ light_energy = 2.2
 omni_range = 9.0
 script = ExtResource("25_flicker_light")
 
-[node name="D10" type="MeshInstance3D" parent="Decor"]
+[node name="D13" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_7")
 position = Vector3(0.0, 3.95, -55.0)
 cast_shadow = 0
 
-[node name="Light6" type="OmniLight3D" parent="Lights"]
+[node name="Light9" type="OmniLight3D" parent="Lights"]
 position = Vector3(0.0, 3.55, -55.0)
 light_color = Color(1.0, 0.88, 0.7, 1.0)
 light_energy = 2.5
 omni_range = 9.0
 
-[node name="D11" type="MeshInstance3D" parent="Decor"]
+[node name="D14" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_7")
 position = Vector3(11.0, 3.95, -46.0)
 cast_shadow = 0
@@ -792,18 +1077,18 @@ light_energy = 2.2
 omni_range = 9.0
 script = ExtResource("25_flicker_light")
 
-[node name="D12" type="MeshInstance3D" parent="Decor"]
+[node name="D15" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_7")
 position = Vector3(13.0, 3.95, -56.0)
 cast_shadow = 0
 
-[node name="Light7" type="OmniLight3D" parent="Lights"]
+[node name="Light10" type="OmniLight3D" parent="Lights"]
 position = Vector3(13.0, 3.55, -56.0)
 light_color = Color(1.0, 0.88, 0.7, 1.0)
 light_energy = 1.5
 omni_range = 9.0
 
-[node name="Light8" type="OmniLight3D" parent="Lights"]
+[node name="Light11" type="OmniLight3D" parent="Lights"]
 position = Vector3(27.0, 4.0, -48.0)
 light_color = Color(1.0, 0.8, 0.55, 1.0)
 light_energy = 2.0
@@ -1011,7 +1296,7 @@ event = NodePath("../Exit")
 enabled = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/ExitTrigger"]
-shape = SubResource("BoxShape3D_8")
+shape = SubResource("BoxShape3D_14")
 
 [node name="Exit" type="Node" parent="Story"]
 script = ExtResource("38_story_event")
