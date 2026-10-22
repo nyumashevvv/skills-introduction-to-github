@@ -83,6 +83,22 @@ ffmpeg -v error -y -i starninjas/gun_reload.2.ogg -i clipload2.wav -filter_compl
   "[1]adelay=1500|1500,volume=2[b];[0][b]amix=inputs=2:duration=longest:normalize=0,aformat=channel_layouts=mono" \
   -ar 44100 -c:a pcm_s16le "$PROJECT/sounds/reload_rocket.wav"
 
+# Gunshots (CC0, OpenGameArt): "The Free Firearm Sound Library". One near-distance shot per weapon:
+# file, start (s), length (s), extra filter. The SMG is suppressed in the game, so its shot is muffled.
+cd "$SRC/sounds"
+get "Prepared%20SFX%20Library.7z" firearms.7z
+[ -d "Prepared SFX Library" ] || python3 -c "import py7zr; py7zr.SevenZipFile('firearms.7z').extractall('.')"
+FL="Prepared SFX Library"
+shot() { ffmpeg -v error -y -ss "$3" -t "$4" -i "$FL/$1" -ac 1 -ar 44100 \
+  -af "highpass=f=40,loudnorm=I=-12:TP=-1:LRA=11,${5:+$5,}afade=t=in:d=0.004,afade=t=out:st=$(awk "BEGIN{print $4*0.55}"):d=$(awk "BEGIN{print $4*0.45}")" \
+  -c:a pcm_s16le "$PROJECT/sounds/$2.wav"; }
+shot 1911/A_42P.wav pistol 0.92 1.1
+shot "Smith & Wesson 642/V_27P.wav" revolver 0.78 1.4 "bass=g=4:f=90"
+shot "Model 12/K_22P.wav" shotgun 0.82 1.5 "bass=g=5:f=80"
+shot "Carl Gustav M45/G_31P.wav" smg 0.29 0.5 "lowpass=f=2600"
+shot AK-47/C_28P.wav rifle 0.59 1.0
+shot "Mosin Nagant/M_21P.wav" sniper 1.01 2.2 "bass=g=4:f=70"
+
 # PBR textures (CC0, ambientCG): colour, normal (GL) and roughness, scaled into textures/pbr/
 mkdir -p "$SRC/ambientcg" "$PROJECT/textures/pbr"
 for id in Asphalt012 PavingStones070 Concrete044B Concrete034 Bricks059 Plaster001 PaintedPlaster017 Tiles107 \

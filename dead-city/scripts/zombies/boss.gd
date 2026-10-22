@@ -258,7 +258,8 @@ func _process_charge(delta: float, to_player: Vector3) -> void:
 	velocity.x = _charge_direction.x * charge_speed
 	velocity.z = _charge_direction.z * charge_speed
 	_face(_charge_direction, delta)
-	if not _done and to_player.length() < attack_range + 0.4 and absf(player.global_position.y - global_position.y) < 1.5:
+	if not _done and to_player.length() < attack_range + 0.4 and absf(player.global_position.y - global_position.y) < 1.5 \
+			and _can_reach_player():
 		_done = true
 		player.take_damage(charge_damage)
 		player.apply_knockback(_charge_direction * 11.0 + Vector3.UP * 4.0)

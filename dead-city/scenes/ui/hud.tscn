@@ -249,7 +249,7 @@ anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 24.0
-offset_top = -96.0
+offset_top = -104.0
 offset_right = 290.0
 offset_bottom = -24.0
 grow_vertical = 0
@@ -281,6 +281,13 @@ theme_override_font_sizes/font_size = 34
 custom_minimum_size = Vector2(190.0, 9.0)
 mouse_filter = 2
 segments = 10
+script = ExtResource("8_segment_bar")
+
+[node name="StaminaBar" type="Control" parent="Gameplay/HealthBox/HBox/VBox"]
+custom_minimum_size = Vector2(190.0, 4.0)
+mouse_filter = 2
+segments = 0
+fill_color = Color(0.95, 0.75, 0.3, 1.0)
 script = ExtResource("8_segment_bar")
 
 [node name="WeaponBox" type="PanelContainer" parent="Gameplay"]

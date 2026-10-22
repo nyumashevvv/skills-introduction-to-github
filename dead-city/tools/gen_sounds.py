@@ -49,9 +49,10 @@ def env_noise(dur, decay, lp=None):
 def click(f, d=0.05, decay=70):
     return mix(tone(lambda t: f, d, lambda t: math.exp(-t * decay)), scale(env_noise(d, decay * 1.5), 0.6))
 
-# weapons
-save('pistol', mix(env_noise(0.3, 35, 0.55), scale(tone(lambda t: 180 * math.exp(-t * 15) + 50, 0.25, lambda t: math.exp(-t * 28)), 0.9)))
-save('rifle', mix(env_noise(0.35, 24, 0.4), scale(tone(lambda t: 120 * math.exp(-t * 10) + 40, 0.3, lambda t: math.exp(-t * 20)), 1.0)))
+# weapons. Gunshots (pistol, rifle, shotgun, revolver, smg, sniper) are CC0 recordings now (tools/fetch_assets.sh);
+# the old synthesised ones are still computed so the sounds below keep their noise.
+_ = (mix(env_noise(0.3, 35, 0.55), scale(tone(lambda t: 180 * math.exp(-t * 15) + 50, 0.25, lambda t: math.exp(-t * 28)), 0.9)))
+_ = (mix(env_noise(0.35, 24, 0.4), scale(tone(lambda t: 120 * math.exp(-t * 10) + 40, 0.3, lambda t: math.exp(-t * 20)), 1.0)))
 whoosh = [noise() * min(1, i / n(0.05)) * math.exp(-i / SR * 3) for i in range(n(0.9))]
 save('rocket_launch', mix(lowpass(env_noise(0.4, 12), 0.2), scale(lowpass(whoosh, 0.3), 0.7), scale(tone(lambda t: 60, 0.4, lambda t: math.exp(-t * 8)), 0.8)))
 save('explosion', mix(lowpass(env_noise(1.6, 2.8), 0.07), tone(lambda t: 55 * math.exp(-t * 1.5) + 22, 1.6, lambda t: math.exp(-t * 3)), scale(env_noise(0.15, 30, 0.6), 0.5)))
@@ -99,7 +100,7 @@ save('ambience', amb[:-fade], 0.5)
 random.seed(23)
 blast = mix(lowpass(env_noise(0.6, 9), 0.3), scale(lowpass(env_noise(0.25, 25), 0.7), 0.6),
             tone(lambda t: 90 * math.exp(-t * 8) + 35, 0.5, lambda t: math.exp(-t * 9)))
-save('shotgun', blast)
+_ = blast  # shotgun: now a CC0 recording
 rack = lambda f1, f2: mix(click(f1, 0.07, 45), delay(lowpass(env_noise(0.08, 30), 0.3), 0.02), delay(click(f2, 0.06, 55), 0.12))
 _ = mix(rack(500, 900), delay(rack(700, 1200), 0.16))  # shotgun_pump: now a CC0 recording; still computed so the sounds below keep their noise
 _ = mix(click(1800, 0.04, 90), delay(click(600, 0.07, 50), 0.05))  # shell_insert: now a CC0 recording; still computed so the sounds below keep their noise
@@ -115,9 +116,9 @@ save('shield_hit', mix(tone(lambda t: 1250, 0.35, lambda t: math.exp(-t * 14)), 
 random.seed(41)
 save('tv_static', mix(bandpass(env_noise(6.0, 0.0), 2500, 0.8), scale(highpass(env_noise(6.0, 0.0), 0.6), 0.4)), 0.5)
 random.seed(53)
-save('revolver', mix(env_noise(0.45, 18, 0.45), scale(tone(lambda t: 95 * math.exp(-t * 9) + 38, 0.45, lambda t: math.exp(-t * 11)), 1.1)))
-save('smg', mix(env_noise(0.2, 40, 0.5), scale(tone(lambda t: 170 * math.exp(-t * 20) + 60, 0.15, lambda t: math.exp(-t * 35)), 0.7)), 0.8)
-save('sniper', mix(env_noise(1.2, 5, 0.5), scale(env_noise(0.08, 60, 0.9), 0.9),
+_ = (mix(env_noise(0.45, 18, 0.45), scale(tone(lambda t: 95 * math.exp(-t * 9) + 38, 0.45, lambda t: math.exp(-t * 11)), 1.1)))
+_ = (mix(env_noise(0.2, 40, 0.5), scale(tone(lambda t: 170 * math.exp(-t * 20) + 60, 0.15, lambda t: math.exp(-t * 35)), 0.7)), 0.8)
+_ = (mix(env_noise(1.2, 5, 0.5), scale(env_noise(0.08, 60, 0.9), 0.9),
                    scale(tone(lambda t: 70 * math.exp(-t * 4) + 30, 1.0, lambda t: math.exp(-t * 5)), 1.0)))
 save('throw', bandpass([noise() * math.sin(math.pi * min(1, i / n(0.25))) for i in range(n(0.25))], 700, 1.0), 0.5)
 print('sounds ok')

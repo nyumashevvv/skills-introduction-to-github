@@ -202,6 +202,7 @@ func _run() -> void:
 	brute.queue_free()
 
 	await test_new_arsenal()
+	await test_movement_and_doors()
 	await test_bosses()
 
 	# Pickups and inventory.
@@ -393,4 +394,55 @@ func test_new_arsenal() -> void:
 	spitter.queue_free()
 	for z in get_tree().get_nodes_in_group("zombies"):
 		z.queue_free()
+	await reset_player()
+
+
+func test_movement_and_doors() -> void:
+	await reset_player()
+	# Sprinting drains stamina; once it runs out, sprinting and jumping stop until it recovers.
+	Input.action_press("move_forward")
+	Input.action_press("sprint")
+	await get_tree().create_timer(1.0).timeout
+	check(player.stamina < player.max_stamina - 10.0, "sprinting spends stamina (%.0f)" % player.stamina)
+	Input.action_release("sprint")
+	Input.action_release("move_forward")
+	player.stamina = 5.0
+	player.call("_spend", 10.0)
+	Input.action_press("jump")
+	await frames(2)
+	Input.action_release("jump")
+	check(player.velocity.y <= 0.1, "no jump when out of breath")
+	await get_tree().create_timer(2.5).timeout
+	check(player.stamina > 30.0, "stamina recovers (%.0f)" % player.stamina)
+	# Crouching lowers the head and the capsule; releasing stands back up.
+	await reset_player()
+	Input.action_press("crouch")
+	await get_tree().create_timer(0.5).timeout
+	check(player.crouching and player.head.position.y < 1.1, "crouch lowers the view")
+	Input.action_release("crouch")
+	await get_tree().create_timer(0.5).timeout
+	check(not player.crouching and player.head.position.y > 1.5, "stands up again")
+
+	# Doors swing open on a hinge, away from the player, instead of sliding up.
+	var door := level.get_node("Doors/PharmacyDoor") as Door
+	var closed := door.global_transform
+	player.global_position = Vector3(8.0, 0, -82)
+	await frames(3)
+	door.interact(player)
+	await get_tree().create_timer(door.open_time + 0.2).timeout
+	check(door.is_open and absf(door.global_transform.origin.y - closed.origin.y) < 0.01, "pharmacy door does not rise")
+	check(absf(door.global_rotation.y) > 1.4, "pharmacy door swung %.0f°" % rad_to_deg(door.global_rotation.y))
+	check(door.global_position.x > closed.origin.x + 0.4, "it swung inwards, away from the player")
+
+	# A zombie on the other side of a shut door cannot claw through it.
+	var shop := level.get_node("Doors/ShopDoor") as Door
+	player.global_position = Vector3(-8.2, 0, -80)
+	player.health = 100
+	var inside := dummy(WALKER, Vector3(-1.6, 0, 0), false)
+	inside.global_position = Vector3(-9.8, 0, -80)
+	await frames(2)
+	inside.alert(false)
+	await get_tree().create_timer(3.0).timeout
+	check(not shop.is_open and player.health == 100, "no damage through the shut shop door (%d)" % player.health)
+	inside.queue_free()
 	await reset_player()

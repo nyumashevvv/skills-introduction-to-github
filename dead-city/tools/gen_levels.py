@@ -117,8 +117,9 @@ class LevelBuilder(Scene):
         """A door dressed like the police station's: frame, window, handles, a lamp and a sign over it.
         along: 'x' or 'z' (the axis the door spans); face: the side players arrive from ('+x', '-x', '+z', '-z')."""
         x, y, z = pos
-        size = (width, 3.0, 0.14) if along == 'x' else (0.14, 3.0, width)
-        self.door(name, size, (x, 1.5, z), mat, **props)
+        size = (width, 2.95, 0.14) if along == 'x' else (0.14, 2.95, width)
+        props.setdefault('swing_degrees', 100.0)
+        self.door(name, size, (x, 1.475, z), mat, **props)
         d = 'Doors/' + name
         n = 1.0 if face[0] == '+' else -1.0
         off = lambda a, b: (a, 0, 0.08 * b) if along == 'x' else (0.08 * b, 0, a)
@@ -138,7 +139,8 @@ class LevelBuilder(Scene):
         for s_ in (-1, 1):
             jamb = (x + s_ * (width / 2 + 0.07), 1.55, z) if along == 'x' else (x, 1.55, z + s_ * (width / 2 + 0.07))
             self.decor((0.14, 3.1, 0.36) if along == 'x' else (0.36, 3.1, 0.14), jamb, 'dark')
-        self.decor((width + 0.28, 0.16, 0.36) if along == 'x' else (0.36, 0.16, width + 0.28), (x, 3.08, z), 'dark')
+        # The header hangs 3 cm below the lintel so their undersides do not z-fight.
+        self.decor((width + 0.28, 0.19, 0.36) if along == 'x' else (0.36, 0.19, width + 0.28), (x, 3.065, z), 'dark')
         out = (0, 0, 0.22 * n) if along == 'x' else (0.22 * n, 0, 0)
         if lamp:
             self.decor((0.5, 0.06, 0.2) if along == 'x' else (0.2, 0.06, 0.5), (x + out[0], 3.3, z + out[2]), 'lamp_glow',
@@ -554,8 +556,8 @@ def station_clutter(L):
     c('papers', (-6, 0, -19)); c('papers', (-10.5, 0, -27)); c('books_floor', (-11.8, 0, -21.5)); c('chair_fallen', (-5, 0, -26))
     c('trash_can', (-2.6, 0, -15.0))
     w('noticeboard', (-2.17, 1.7, -25.5), '-x'); w('wall_clock', (-11.0, 3.0, -28.83), '+z')
-    c('kitchen_cabinet', (-2.62, 0, -16.0), H); c('coffee_machine', (-2.62, 0.945, -16.0), H)
-    c('kitchen_sink', (-2.62, 0, -16.92), H); c('microwave', (-2.62, 0.95, -16.85), H); c('fridge', (-2.78, 0, -18.1), H)
+    c('kitchen_cabinet', (-2.62, 0, -16.0), H); c('microwave', (-2.62, 0.945, -16.0), H)
+    c('kitchen_sink', (-2.62, 0, -16.92), H); c('fridge', (-2.78, 0, -18.1), H)
     c('rug_round', (-12.3, 0, -22.0), 0.0); c('floor_lamp', (-13.5, 0, -23.7)); c('table_lamp', (-5.5, 0.81, -17.2))
     # locker room
     c('backpack', (-7.7, 0.45, -36.5)); c('backpack', (-8.2, 0, -40.8))
@@ -818,7 +820,7 @@ def level_2():
     L.door('EntranceDoor', (3.0, 3.0, 0.2), (0, 1.5, 0), 'police_blue', player_can_open=False,
            locked_message='Снаружи слишком много мертвецов')
     L.door('ArmoryDoor', (4.0, 3.2, 0.25), (0, 1.6, -50), 'metal', event='ArmoryOpened', required_key='armory',
-           locked_message='Нужна ключ-карта оружейной', prompt='Открыть оружейную', open_offset=V3(0, 3.0, 0))
+           locked_message='Нужна ключ-карта оружейной', prompt='Открыть оружейную', open_offset=V3(-3.8, 0, 0), open_time=1.6)
     # make the armory door stand out: hazard stripes, a sign, a card reader and its own lamp
     A = 'Doors/ArmoryDoor'
     for y in (-1.35, 1.35):
@@ -832,10 +834,10 @@ def level_2():
     L.box('ReaderLight', A, (0.1, 0.05, 0.02), (1.55, 0.0, 0.2), 'taillight', cast_shadow=0)
     L.ceiling_lamp(0, -48.4, energy=2.4, rng=7.0)
     L.door('GarageDoor', (0.25, 3.2, 2.5), (2, 1.6, -41.25), 'door_steel', player_can_open=False,
-           locked_message='Заблокировано', open_offset=V3(0, 3.0, 0))
+           locked_message='Заблокировано', open_offset=V3(0, 0, -2.4))
     for i, (z0, z1) in enumerate([(-14.6, -20.6), (-20.6, -27.3), (-27.3, -33.4)]):
         L.door(f'Cell{i + 1}', (0.12, 3.6, z0 - z1), (13, 1.8, (z0 + z1) / 2), 'bars', player_can_open=False,
-               locked_message='Камера заперта', open_offset=V3(0, 3.4, 0), open_time=0.6)
+               locked_message='Камера заперта', open_offset=V3(0, 0, -0.6 * (z0 - z1)), open_time=0.8)
     L.door('Shutter', (0.3, 4.0, 8.0), (20, 2.0, -48), 'door_steel', event='ShutterOpened',
            prompt='Поднять ворота', open_offset=V3(0, 3.7, 0), open_time=2.5)
     # Both garage doors face west (-X): slats, hazard stripes and signs so they stand out in the dark.
@@ -1125,7 +1127,7 @@ def level_hospital():
     L.omni((-34.5, 3.0, -17), (1, 0.5, 0.4), 1.2, 6)
     L.dress_door((-24, 0, -16.5), 'z', '+x', width=2.0)
     L.door('FireDoor', (0.3, 3.0, 2.0), (-24, 1.5, -16.5), 'door_steel', player_can_open=False,
-           locked_message='Электрозамок — нет питания', open_offset=V3(0, 0, -2.0), open_time=1.0)
+           locked_message='Электрозамок — нет питания', swing_degrees=100.0, open_time=1.0)
 
     # lobby: reception, benches, security post
     L.blk('wood', (6, 1.1, 0.8), (0, 0.55, -7), name='Reception')
@@ -1261,10 +1263,9 @@ def level_subway():
             L.blk('subway_tile', (0.8, 4.0, 0.8), (x, 2.0, z))
     rails(-7, -12, -60)
     rails(7, -12, -60)
-    # parked train on the right track
-    L.blk('train_red', (2.9, 3.0, 24), (7, 1.55, -34), name='Train')
-    for z in range(-44, -23, 4):
-        L.decor((0.05, 0.9, 2.4), (5.53, 2.0, z), 'glass', cast_shadow=0)
+    # the right-hand tunnel has caved in: a heap of rubble in front of the end wall
+    for x, z, s_, r in [(7, -58.6, 2.6, 0.3), (5.6, -57.4, 1.4, 0.9), (8.6, -57.0, 1.2, 0.5), (6.6, -56.2, 0.8, 1.4)]:
+        L.blk('concrete', (s_, s_ * 0.7, s_), (x, s_ * 0.3, z), rot=(0.2, r, 0.15))
     # tunnel along the left track, with a derailed car blocking it
     L.floor('concrete', -10, -4, -60, -130)
     L.wall_x(-10, -60, -88, C_); L.wall_x(-10, -90, -102, C_); L.wall_x(-10, -104, -130, C_)
@@ -1279,7 +1280,7 @@ def level_subway():
     L.wall_z(-86, -16, -10, C_); L.wall_z(-106, -16, -10, C_)
     L.dress_door((-10, 0, -89), 'z', '+x', sign='СЛУЖЕБНЫЙ ПРОХОД', width=2.0)
     L.door('ServiceDoor', (0.25, 3.0, 2.0), (-10, 1.5, -89), 'door_steel', event='Bypass',
-           prompt='Открыть служебную дверь', open_offset=V3(0, 2.9, 0), open_time=1.0)
+           prompt='Открыть служебную дверь', swing_degrees=100.0, open_time=1.0)
     for z in (-93, -97):
         L.prop('res://scenes/world/lockers.tscn', (-15.6, 0, z), math.pi / 2)
     # station "Dinamo"
@@ -1354,7 +1355,7 @@ def level_subway():
 
     D = 'Диспетчер'
     L.event('Intro', speaker=D, duration=8,
-            message='Ты в метро? До «Динамо» два перегона. Иди по левому пути — правый перекрыт составом.')
+            message='Ты в метро? До «Динамо» два перегона. Иди по левому пути — правый тоннель завалило.')
     L.trigger('BlockageTrigger', (-7, 1.5, -83), (6, 3, 2), 'Blockage')
     L.event('Blockage', speaker=D, duration=7, objective='Найди обход завала',
             message='Впереди сошедший вагон, тоннель перекрыт. Ищи служебную дверь — они есть через каждые сто метров.')

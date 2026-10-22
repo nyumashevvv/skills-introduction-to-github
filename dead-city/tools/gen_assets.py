@@ -964,7 +964,7 @@ def hud():
            mouse_filter=2, **{'theme_override_font_sizes/normal_font_size': 20})
     # health: cross, number, segmented bar
     s.node('HealthBox', 'PanelContainer', g, anchors_preset=2, anchor_top=1.0, anchor_bottom=1.0, offset_left=24.0,
-           offset_top=-96.0, offset_right=290.0, offset_bottom=-24.0, grow_vertical=0, mouse_filter=2,
+           offset_top=-104.0, offset_right=290.0, offset_bottom=-24.0, grow_vertical=0, mouse_filter=2,
            **{'theme_override_styles/panel': panel_style()})
     s.node('HBox', 'HBoxContainer', f'{g}/HealthBox', mouse_filter=2, **{'theme_override_constants/separation': 12})
     hb = f'{g}/HealthBox/HBox'
@@ -973,6 +973,8 @@ def hud():
     label(s, 'HealthLabel', f'{hb}/VBox', '100', 34, None, None, **RF)
     s.node('HealthBar', 'Control', f'{hb}/VBox', custom_minimum_size=V2(190, 9), mouse_filter=2, segments=10,
            script=s.ext_res('Script', 'res://scripts/ui/segment_bar.gd'))
+    s.node('StaminaBar', 'Control', f'{hb}/VBox', custom_minimum_size=V2(190, 4), mouse_filter=2, segments=0,
+           fill_color=C(0.95, 0.75, 0.3), script=s.ext_res('Script', 'res://scripts/ui/segment_bar.gd'))
     # weapon: magazine, reserve, name, round marks
     s.node('WeaponBox', 'PanelContainer', g, anchors_preset=3, anchor_left=1.0, anchor_top=1.0, anchor_right=1.0,
            anchor_bottom=1.0, offset_left=-300.0, offset_top=-120.0, offset_right=-24.0, offset_bottom=-24.0,

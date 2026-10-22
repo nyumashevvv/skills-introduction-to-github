@@ -52,8 +52,8 @@ EN = {
         "and don't let him call the others!",
     'Он мёртв. Вход в метро в углу двора — иди!': "He's dead. The metro entrance is in the corner of the yard. Go!",
     # chapter 4
-    'Ты в метро? До «Динамо» два перегона. Иди по левому пути — правый перекрыт составом.':
-        "You're in the metro? Two stops to Dynamo. Take the left track. A train is blocking the right one.",
+    'Ты в метро? До «Динамо» два перегона. Иди по левому пути — правый тоннель завалило.':
+        "You're in the metro? Two stops to Dynamo. Take the left track. The right tunnel has caved in.",
     'Впереди сошедший вагон, тоннель перекрыт. Ищи служебную дверь — они есть через каждые сто метров.':
         "There's a derailed car ahead, the tunnel is blocked. Look for a service door. There's one every hundred meters.",
     'Слышишь топот? Сзади бегуны — не останавливайся!': "Hear those footsteps? Runners behind you. Don't stop!",

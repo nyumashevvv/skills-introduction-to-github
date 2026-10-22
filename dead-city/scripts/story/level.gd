@@ -34,6 +34,7 @@ func _ready() -> void:
 
 	player.health_changed.connect(hud.set_health)
 	player.damaged.connect(hud.flash_damage)
+	player.stamina_changed.connect(hud.set_stamina)
 	player.died.connect(_on_player_died)
 	player.interact_prompt_changed.connect(hud.set_prompt)
 	player.holder.weapon_changed.connect(hud.set_weapon)

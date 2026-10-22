@@ -294,7 +294,7 @@ func _process_chase(delta: float) -> void:
 	to_player.y = 0.0
 	if _try_special(to_player.length()):
 		return
-	if to_player.length() <= attack_range and vertical < 1.5:
+	if to_player.length() <= attack_range and vertical < 1.5 and _can_reach_player():
 		_start_attack()
 		return
 	var speed := chase_speed * (0.25 if _stagger > 0.0 else 1.0)
@@ -327,7 +327,7 @@ func _process_attack(delta: float) -> void:
 		attack_sound.stream = ATTACKS.pick_random()
 		attack_sound.pitch_scale = voice_pitch * randf_range(0.9, 1.1)
 		attack_sound.play()
-		if not player.is_dead and to_player.length() <= attack_range + 0.7:
+		if not player.is_dead and to_player.length() <= attack_range + 0.7 and _can_reach_player():
 			player.take_damage(attack_damage)
 			if knockback > 0.0:
 				player.apply_knockback(to_player.normalized() * knockback + Vector3.UP * knockback * 0.4)
@@ -387,9 +387,16 @@ func _can_see_player() -> bool:
 	if distance > 4.0 and (-global_basis.z).dot(to_player.normalized()) < 0.2:
 		return false
 	var from := global_position + Vector3.UP * 1.5
-	var query := PhysicsRayQueryParameters3D.create(from, player.global_position + Vector3.UP * 1.3, SIGHT_MASK, [get_rid()])
+	var query := PhysicsRayQueryParameters3D.create(from, player.global_position + Vector3.UP * 0.9, SIGHT_MASK, [get_rid()])
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
 	return not hit.is_empty() and hit.collider == player
+
+
+## No wall or closed door between us at waist height: claws do not go through a shut gate.
+func _can_reach_player() -> bool:
+	var from := global_position + Vector3.UP * 0.9
+	var query := PhysicsRayQueryParameters3D.create(from, player.global_position + Vector3.UP * 0.7, 1, [get_rid()])
+	return get_world_3d().direct_space_state.intersect_ray(query).is_empty()
 
 
 func _animate(delta: float) -> void:

@@ -47,6 +47,7 @@ var _voice: AudioStreamPlayer
 @onready var health_label: Label = $Gameplay/HealthBox/HBox/VBox/HealthLabel
 @onready var health_bar: SegmentBar = $Gameplay/HealthBox/HBox/VBox/HealthBar
 @onready var health_cross: Label = $Gameplay/HealthBox/HBox/Cross
+@onready var stamina_bar: SegmentBar = $Gameplay/HealthBox/HBox/VBox/StaminaBar
 @onready var weapon_label: Label = $Gameplay/WeaponBox/VBox/Row/Side/WeaponLabel
 @onready var ammo_label: Label = $Gameplay/WeaponBox/VBox/Row/AmmoLabel
 @onready var reserve_label: Label = $Gameplay/WeaponBox/VBox/Row/Side/ReserveLabel
@@ -212,6 +213,14 @@ func set_objective(text: String) -> void:
 
 func set_timer(text: String) -> void:
 	timer_label.text = text
+
+
+## Stamina strip under the health bar; dims to red while the player is out of breath.
+func set_stamina(current: float, maximum: float, winded: bool) -> void:
+	stamina_bar.max_value = maximum
+	stamina_bar.value = current
+	stamina_bar.fill_color = Color(0.8, 0.3, 0.2) if winded else Color(0.95, 0.75, 0.3)
+	stamina_bar.modulate.a = 0.35 if current >= maximum else 1.0
 
 
 func show_boss(title: String, health: int, max_health: int) -> void:
