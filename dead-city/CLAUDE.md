@@ -22,6 +22,12 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
 - Menu and intro cutscene share `scenes/ui/backdrop_world.tscn` (street + basement set, camera marks `<Shot>A/B`);
   cutscene text lives in `tools/story_text.py`. Radio lines and the intro are voiced by `tools/gen_voice.py` (Piper,
   CC0 Russian voices) into `sounds/voice/<md5(text)[:12]>.ogg`; `Hud.voice_line(text)` finds them.
+- `Settings` autoload (`scripts/autoload/settings.gd`): volumes on the Master / Music / Voice buses
+  (`default_bus_layout.tres`), quality (MSAA, FXAA, shadows, SSAO, glow), window mode, vsync, 3D scale, brightness
+  (tonemap exposure), FOV of the player's camera, mouse sensitivity; applied to nodes as they enter the tree.
+  UI: `scenes/ui/settings_panel.tscn` (rows built in `settings_panel.gd`) in the main menu and the pause menu.
+- Level surfaces use ambientCG CC0 PBR sets in `textures/pbr/` (`material(..., pbr=id)` in `tools/tscn.py`,
+  world triplanar, normal + roughness maps; imports are VRAM-compressed with mipmaps, normal maps flagged).
 - Knife: `Zombie.can_be_stealth_killed` (unaware or struck in the back) → `stealth_kill` (silent, no alert);
   otherwise `melee_hit` (stagger + knock back). Bosses take `Boss.BACKSTAB_DAMAGE` instead.
 - `Level` (`scripts/story/level.gd`) is the root of every chapter: intro card, pause/death/completion,

@@ -27,6 +27,7 @@ var _finished := false
 func _ready() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_HIDDEN
 	news.visible = false
+	voice.bus = &"Voice"
 	subtitle_panel.modulate.a = 0.0
 	fade.color.a = 1.0
 	# Zombies in the street shuffle about in front of the cameras.

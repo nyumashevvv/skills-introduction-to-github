@@ -6,27 +6,31 @@ from tscn import *
 # ------------------------------------------------------------------ materials
 def mats():
     T = 'materials/'
-    # textured (world-space triplanar)
-    material(T + 'asphalt.tres', (1, 1, 1), roughness=0.95, texture='asphalt', uv_scale=0.25)
-    material(T + 'sidewalk.tres', (0.95, 0.93, 0.9), roughness=0.9, texture='concrete', uv_scale=0.35)
-    material(T + 'concrete.tres', (0.75, 0.75, 0.75), roughness=0.9, texture='concrete', uv_scale=0.3)
-    material(T + 'brick.tres', (1, 1, 1), roughness=0.9, texture='brick', uv_scale=0.4)
-    material(T + 'brick_dark.tres', (0.6, 0.55, 0.55), roughness=0.9, texture='brick', uv_scale=0.4)
-    material(T + 'plaster.tres', (0.78, 0.7, 0.58), roughness=0.95, texture='concrete', uv_scale=0.25)
-    material(T + 'plaster_gray.tres', (0.45, 0.47, 0.5), roughness=0.95, texture='concrete', uv_scale=0.25)
-    material(T + 'wall_interior.tres', (0.62, 0.66, 0.6), roughness=0.9, texture='concrete', uv_scale=0.4)
-    material(T + 'tile.tres', (0.85, 0.85, 0.82), roughness=0.5, texture='tile', uv_scale=0.5)
-    material(T + 'wood.tres', (1, 1, 1), roughness=0.8, texture='wood', uv_scale=0.6)
-    material(T + 'crate.tres', (0.8, 0.65, 0.45), roughness=0.85, texture='wood', uv_scale=0.8)
-    material(T + 'metal.tres', (0.55, 0.57, 0.6), metallic=0.6, roughness=0.5, texture='metal', uv_scale=0.4)
-    material(T + 'metal_rust.tres', (0.5, 0.33, 0.22), metallic=0.3, roughness=0.8, texture='metal', uv_scale=0.4)
-    material(T + 'grass.tres', (1, 1, 1), roughness=1.0, texture='grass', uv_scale=0.12)
-    material(T + 'stands.tres', (0.45, 0.47, 0.52), roughness=0.9, texture='concrete', uv_scale=0.3)
-    material(T + 'hospital_wall.tres', (0.72, 0.8, 0.78), roughness=0.9, texture='concrete', uv_scale=0.4)
-    material(T + 'linoleum.tres', (0.55, 0.68, 0.62), roughness=0.4, texture='tile', uv_scale=0.35)
-    material(T + 'subway_tile.tres', (0.92, 0.88, 0.76), roughness=0.35, texture='tile', uv_scale=1.0)
-    material(T + 'rail.tres', (0.3, 0.27, 0.25), metallic=0.7, roughness=0.5, texture='metal', uv_scale=1.0)
-    material(T + 'sandbag.tres', (0.62, 0.54, 0.4), roughness=1.0, texture='concrete', uv_scale=1.2)
+    # textured: ambientCG CC0 PBR sets (colour, normal, roughness), world-space triplanar
+    for name, pbr, tint, uv, extra in [
+        ('asphalt', 'Asphalt012', (0.8, 0.8, 0.8), 0.35, {}),
+        ('sidewalk', 'PavingStones070', (0.85, 0.83, 0.8), 0.6, {}),
+        ('concrete', 'Concrete044B', (0.95, 0.95, 0.95), 0.3, {}),
+        ('brick', 'Bricks059', (1, 1, 1), 0.45, {}),
+        ('brick_dark', 'Bricks059', (0.55, 0.48, 0.48), 0.45, {}),
+        ('plaster', 'Plaster001', (0.82, 0.72, 0.58), 0.3, {}),
+        ('plaster_gray', 'Plaster001', (0.48, 0.5, 0.53), 0.3, {}),
+        ('wall_interior', 'PaintedPlaster017', (0.62, 0.67, 0.6), 0.4, {}),
+        ('tile', 'Tiles107', (0.86, 0.84, 0.78), 0.5, {}),
+        ('wood', 'Wood049', (1, 1, 1), 0.8, {}),
+        ('crate', 'Wood049', (0.85, 0.72, 0.55), 1.0, {}),
+        ('metal', 'Metal032', (0.62, 0.64, 0.68), 0.6, dict(metallic=0.6)),
+        ('metal_rust', 'Rust004', (0.9, 0.85, 0.8), 0.5, dict(metallic=0.2)),
+        ('grass', 'Grass004', (0.7, 0.75, 0.65), 0.25, dict(rough_map=False, roughness=1.0)),
+        ('stands', 'Concrete034', (0.55, 0.57, 0.62), 0.3, {}),
+        ('hospital_wall', 'PaintedPlaster017', (0.72, 0.82, 0.8), 0.4, {}),
+        ('linoleum', 'Terrazzo009', (0.55, 0.63, 0.59), 0.35, {}),
+        ('subway_tile', 'Tiles107', (0.92, 0.87, 0.74), 0.7, {}),
+        ('rail', 'Metal032', (0.35, 0.32, 0.3), 1.0, dict(metallic=0.7)),
+        ('sandbag', 'Concrete034', (0.7, 0.6, 0.45), 1.2, {}),
+        ('door_steel', 'Metal032', (0.85, 0.87, 0.9), 0.6, dict(metallic=0.5)),
+    ]:
+        material(T + name + '.tres', tint, pbr=pbr, uv_scale=uv, **extra)
     # plain
     for name, col in [('car_red', (0.45, 0.06, 0.05)), ('car_blue', (0.08, 0.15, 0.35)), ('car_white', (0.75, 0.75, 0.72)),
                       ('car_black', (0.04, 0.04, 0.05)), ('car_green', (0.12, 0.25, 0.15)), ('bus_yellow', (0.75, 0.55, 0.08))]:
@@ -53,7 +57,6 @@ def mats():
     material(T + 'military.tres', (0.22, 0.26, 0.17), roughness=0.85)
     material(T + 'tent.tres', (0.3, 0.33, 0.22), roughness=1.0)
     material(T + 'fire_glow.tres', (0, 0, 0), emission=(1.0, 0.45, 0.1), energy=4.0)
-    material(T + 'door_steel.tres', (0.78, 0.8, 0.83), metallic=0.5, roughness=0.45, texture='metal', uv_scale=0.6)
     material(T + 'door_glass_lit.tres', (0.1, 0.12, 0.14), roughness=0.1, emission=(0.8, 0.88, 0.95), energy=0.8)
     material(T + 'acid_glow.tres', (0, 0, 0), emission=(0.45, 1.0, 0.15), energy=3.0)
     # weapons & hands
@@ -805,7 +808,14 @@ def menu_screen(s, name, title, title_color, buttons, labels=(), parent='.', bg=
         s.node(bname, 'Button', vb, custom_minimum_size=V2(340, 0), size_flags_horizontal=4, text=S(text))
 
 
+def settings_panel():
+    s = Scene()
+    s.node('Settings', 'PanelContainer', script=s.ext_res('Script', 'res://scripts/ui/settings_panel.gd'))
+    s.save('scenes/ui/settings_panel.tscn')
+
+
 def hud():
+    settings_panel()
     s = Scene()
     vig = s.sub_res('ShaderMaterial', shader=s.ext_res('Shader', 'res://scenes/ui/vignette.gdshader'),
                     **{'shader_parameter/intensity': 0.0})
@@ -897,9 +907,12 @@ def hud():
           C(0.6, 0.6, 0.6), 1)
 
     menu_screen(s, 'PauseMenu', 'ПАУЗА', C(1, 1, 1),
-                [('ResumeButton', 'Продолжить'), ('RestartButton', 'Начать главу заново'), ('MenuButton', 'Главное меню')])
+                [('ResumeButton', 'Продолжить'), ('SettingsButton', 'Настройки'), ('RestartButton', 'Начать главу заново'),
+                 ('MenuButton', 'Главное меню')])
     menu_screen(s, 'DeathScreen', 'ВЫ ПОГИБЛИ', BLOOD,
                 [('RestartButton', 'Начать главу заново'), ('MenuButton', 'Главное меню')], bg=0.7)
+    s.node('SettingsLayer', 'CenterContainer', '.', visible=False, **FULL)
+    s.node('Settings', None, 'SettingsLayer', instance=s.ext_res('PackedScene', 'res://scenes/ui/settings_panel.tscn'))
     s.node('Fade', 'ColorRect', '.', mouse_filter=2, color=C(0, 0, 0, 0), **FULL)
     s.node('RadioSound', 'AudioStreamPlayer', '.', stream=s.sound('radio'), volume_db=-8.0)
     s.save('scenes/ui/hud.tscn')
@@ -931,7 +944,8 @@ def hud():
     label(s, 'Subtitle', 'Menu', 'Последний вертолёт улетает на рассвете', 24, C(0.85, 0.78, 0.7))
     s.node('Spacer', 'Control', 'Menu', custom_minimum_size=V2(0, 34))
     s.node('Buttons', 'VBoxContainer', 'Menu', **{'theme_override_constants/separation': 4})
-    for b, t in [('ContinueButton', 'Продолжить'), ('NewGameButton', 'Новая игра'), ('QuitButton', 'Выход')]:
+    for b, t in [('ContinueButton', 'Продолжить'), ('NewGameButton', 'Новая игра'), ('SettingsButton', 'Настройки'),
+                 ('QuitButton', 'Выход')]:
         s.node(b, 'Button', 'Menu/Buttons', text=S(t.upper()), **button_style)
     s.node('Difficulty', 'VBoxContainer', 'Menu', visible=False, **{'theme_override_constants/separation': 4})
     label(s, 'Header', 'Menu/Difficulty', 'СЛОЖНОСТЬ', 16, C(0.95, 0.3, 0.2), None, **{'theme_override_fonts/font': russo})
@@ -941,6 +955,8 @@ def hud():
           custom_minimum_size=V2(420, 56))
     s.node('BackButton', 'Button', 'Menu/Difficulty', text=S('НАЗАД'), **dict(button_style, **{
         'theme_override_font_sizes/font_size': 18}))
+    s.node('Settings', None, 'Menu', visible=False,
+           instance=s.ext_res('PackedScene', 'res://scenes/ui/settings_panel.tscn'))
     label(s, 'Footer', '.', 'Пять глав · пять боссов · одна ночь', 15, C(0.6, 0.58, 0.55), None, anchors_preset=2,
           anchor_top=1.0, anchor_bottom=1.0, offset_left=96.0, offset_top=-48.0, offset_right=600.0, offset_bottom=-20.0,
           grow_vertical=0)

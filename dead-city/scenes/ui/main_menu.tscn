@@ -6,7 +6,9 @@
 
 [ext_resource type="PackedScene" path="res://scenes/ui/backdrop_world.tscn" id="3_backdrop_world"]
 
-[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="4_ambience"]
+[ext_resource type="PackedScene" path="res://scenes/ui/settings_panel.tscn" id="4_settings_panel"]
+
+[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="5_ambience"]
 
 [sub_resource type="Gradient" id="Gradient_1"]
 offsets = PackedFloat32Array(0, 0.45, 1)
@@ -110,6 +112,18 @@ theme_override_colors/font_color = Color(0.85, 0.82, 0.78, 1.0)
 alignment = 0
 custom_minimum_size = Vector2(420.0, 0.0)
 
+[node name="SettingsButton" type="Button" parent="Menu/Buttons"]
+text = "НАСТРОЙКИ"
+theme_override_fonts/font = ExtResource("1_RussoOne-Regular")
+theme_override_font_sizes/font_size = 26
+theme_override_styles/normal = SubResource("StyleBoxFlat_3")
+theme_override_styles/hover = SubResource("StyleBoxFlat_4")
+theme_override_styles/focus = SubResource("StyleBoxFlat_4")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_4")
+theme_override_colors/font_color = Color(0.85, 0.82, 0.78, 1.0)
+alignment = 0
+custom_minimum_size = Vector2(420.0, 0.0)
+
 [node name="QuitButton" type="Button" parent="Menu/Buttons"]
 text = "ВЫХОД"
 theme_override_fonts/font = ExtResource("1_RussoOne-Regular")
@@ -186,6 +200,9 @@ theme_override_colors/font_color = Color(0.85, 0.82, 0.78, 1.0)
 alignment = 0
 custom_minimum_size = Vector2(420.0, 0.0)
 
+[node name="Settings" parent="Menu" instance=ExtResource("4_settings_panel")]
+visible = false
+
 [node name="Footer" type="Label" parent="."]
 anchors_preset = 2
 anchor_top = 1.0
@@ -200,6 +217,6 @@ theme_override_font_sizes/font_size = 15
 theme_override_colors/font_color = Color(0.6, 0.58, 0.55, 1.0)
 
 [node name="Ambience" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("4_ambience")
+stream = ExtResource("5_ambience")
 autoplay = true
 volume_db = -4.0

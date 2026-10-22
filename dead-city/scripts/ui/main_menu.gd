@@ -15,6 +15,7 @@ const DIFFICULTY_TEXT: Array[String] = [
 @onready var difficulty_panel: Control = $Menu/Difficulty
 @onready var difficulty_info: Label = $Menu/Difficulty/Info
 @onready var title: Label = $Menu/Title
+@onready var settings: Control = $Menu/Settings
 @onready var camera: Camera3D = $Camera3D
 
 
@@ -23,6 +24,8 @@ func _ready() -> void:
 	new_game_button.pressed.connect(_show_difficulty)
 	continue_button.pressed.connect(Game.continue_game)
 	$Menu/Buttons/QuitButton.pressed.connect(get_tree().quit)
+	$Menu/Buttons/SettingsButton.pressed.connect(_show_settings)
+	settings.connect("closed", _show_main)
 	$Menu/Difficulty/BackButton.pressed.connect(_show_main)
 	for i in 3:
 		var button := difficulty_panel.get_node("Level%d" % i) as Button
@@ -58,7 +61,19 @@ func _drift() -> void:
 func _show_main() -> void:
 	buttons.visible = true
 	difficulty_panel.visible = false
+	settings.visible = false
+	title.visible = true
+	$Menu/Subtitle.visible = true
+	$Footer.visible = true
 	(continue_button if continue_button.visible else new_game_button).grab_focus()
+
+
+func _show_settings() -> void:
+	buttons.visible = false
+	title.visible = false
+	$Menu/Subtitle.visible = false
+	$Footer.visible = false
+	settings.call("open")
 
 
 func _show_difficulty() -> void:

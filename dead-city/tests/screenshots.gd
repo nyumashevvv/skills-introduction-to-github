@@ -86,6 +86,10 @@ func _run() -> void:
 		(get_tree().current_scene.get_node("Menu/Difficulty/Level1") as Button).grab_focus()
 		await frames(5)
 		await snap("01_menu_difficulty")
+		(get_tree().current_scene.get_node("Menu/Difficulty/BackButton") as Button).pressed.emit()
+		(get_tree().current_scene.get_node("Menu/Buttons/SettingsButton") as Button).pressed.emit()
+		await frames(5)
+		await snap("01_menu_settings")
 	if "gallery" in sections:
 		await _gallery()
 	if "bosses" in sections:

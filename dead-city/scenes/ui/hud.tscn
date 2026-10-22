@@ -14,7 +14,9 @@
 
 [ext_resource type="Script" path="res://scripts/ui/ammo_pips.gd" id="7_ammo_pips"]
 
-[ext_resource type="AudioStream" path="res://sounds/radio.wav" id="8_radio"]
+[ext_resource type="PackedScene" path="res://scenes/ui/settings_panel.tscn" id="8_settings_panel"]
+
+[ext_resource type="AudioStream" path="res://sounds/radio.wav" id="9_radio"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
 shader = ExtResource("1_vignette")
@@ -424,6 +426,11 @@ custom_minimum_size = Vector2(340.0, 0.0)
 size_flags_horizontal = 4
 text = "Продолжить"
 
+[node name="SettingsButton" type="Button" parent="PauseMenu/Center/VBox"]
+custom_minimum_size = Vector2(340.0, 0.0)
+size_flags_horizontal = 4
+text = "Настройки"
+
 [node name="RestartButton" type="Button" parent="PauseMenu/Center/VBox"]
 custom_minimum_size = Vector2(340.0, 0.0)
 size_flags_horizontal = 4
@@ -480,6 +487,16 @@ custom_minimum_size = Vector2(340.0, 0.0)
 size_flags_horizontal = 4
 text = "Главное меню"
 
+[node name="SettingsLayer" type="CenterContainer" parent="."]
+visible = false
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Settings" parent="SettingsLayer" instance=ExtResource("8_settings_panel")]
+
 [node name="Fade" type="ColorRect" parent="."]
 mouse_filter = 2
 color = Color(0.0, 0.0, 0.0, 0.0)
@@ -490,5 +507,5 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="RadioSound" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("8_radio")
+stream = ExtResource("9_radio")
 volume_db = -8.0

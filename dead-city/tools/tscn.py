@@ -88,9 +88,23 @@ class Scene:
 
 
 def material(path, color=(0.5, 0.5, 0.5), metallic=0.0, roughness=0.8, texture=None, uv_scale=0.5,
-             emission=None, energy=1.0, extra=None):
+             emission=None, energy=1.0, extra=None, pbr=None, normal_scale=1.0, rough_map=True):
+    """pbr: an ambientCG set in textures/pbr (<id>_color/_normal/_rough.jpg), mapped world-triplanar."""
     lines = []
     ext = ''
+    if pbr:
+        ext = ''.join(f'[ext_resource type="Texture2D" path="res://textures/pbr/{pbr}_{m}.jpg" id="{i}_{m}"]\n\n'
+                      for i, m in enumerate(('color', 'normal', 'rough'), 1))
+        lines += [f'albedo_color = {C(*color)}', 'albedo_texture = ExtResource("1_color")',
+                  f'metallic = {fmt(float(metallic))}', f'roughness = {fmt(1.0 if rough_map else float(roughness))}',
+                  *(['roughness_texture = ExtResource("3_rough")'] if rough_map else []),
+                  'normal_enabled = true', f'normal_scale = {fmt(float(normal_scale))}', 'normal_texture = ExtResource("2_normal")',
+                  f'uv1_scale = {V3(uv_scale, uv_scale, uv_scale)}', 'uv1_triplanar = true', 'uv1_world_triplanar = true']
+        for k, v in (extra or {}).items():
+            lines.append(f'{k} = {fmt(v)}')
+        open(path, 'w').write('[gd_resource type="StandardMaterial3D" load_steps=4 format=3]\n\n' + ext + '[resource]\n'
+                              + '\n'.join(lines) + '\n')
+        return
     if texture:
         ext = f'[ext_resource type="Texture2D" path="res://textures/{texture}.png" id="1_tex"]\n\n'
     lines.append(f'albedo_color = {C(*color)}')

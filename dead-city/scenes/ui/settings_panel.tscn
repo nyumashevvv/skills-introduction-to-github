@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/settings_panel.gd" id="1_settings_panel"]
+
+[node name="Settings" type="PanelContainer"]
+script = ExtResource("1_settings_panel")

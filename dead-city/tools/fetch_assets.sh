@@ -82,4 +82,16 @@ rl shotguncock_0.wav shotgun_pump -4dB
 ffmpeg -v error -y -i starninjas/gun_reload.2.ogg -i clipload2.wav -filter_complex \
   "[1]adelay=1500|1500,volume=2[b];[0][b]amix=inputs=2:duration=longest:normalize=0,aformat=channel_layouts=mono" \
   -ar 44100 -c:a pcm_s16le "$PROJECT/sounds/reload_rocket.wav"
+
+# PBR textures (CC0, ambientCG): colour, normal (GL) and roughness, scaled into textures/pbr/
+mkdir -p "$SRC/ambientcg" "$PROJECT/textures/pbr"
+for id in Asphalt012 PavingStones070 Concrete044B Concrete034 Bricks059 Plaster001 PaintedPlaster017 Tiles107 \
+    Terrazzo009 Wood049 Metal032 Rust004 Grass004; do
+  [ -d "$SRC/ambientcg/$id" ] || { curl -sSL -o "$SRC/ambientcg/$id.zip" "https://ambientcg.com/get?file=${id}_1K-JPG.zip" &&
+    unzip -oq "$SRC/ambientcg/$id.zip" -d "$SRC/ambientcg/$id"; }
+  ffmpeg -v error -y -i "$SRC/ambientcg/$id/${id}_1K-JPG_Color.jpg" -q:v 3 "$PROJECT/textures/pbr/${id}_color.jpg"
+  ffmpeg -v error -y -i "$SRC/ambientcg/$id/${id}_1K-JPG_NormalGL.jpg" -q:v 3 "$PROJECT/textures/pbr/${id}_normal.jpg"
+  ffmpeg -v error -y -i "$SRC/ambientcg/$id/${id}_1K-JPG_Roughness.jpg" -vf "scale=512:512,format=gray" -q:v 3 \
+    "$PROJECT/textures/pbr/${id}_rough.jpg"
+done
 echo "Sources ready in $SRC"

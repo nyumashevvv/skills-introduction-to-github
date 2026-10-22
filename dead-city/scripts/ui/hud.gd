@@ -64,6 +64,8 @@ func _ready() -> void:
 	$IntroScreen/Center/VBox/ContinueButton.pressed.connect(continue_pressed.emit)
 	$PauseMenu/Center/VBox/ResumeButton.pressed.connect(resume_pressed.emit)
 	$PauseMenu/Center/VBox/RestartButton.pressed.connect(restart_pressed.emit)
+	$PauseMenu/Center/VBox/SettingsButton.pressed.connect(_show_settings)
+	$SettingsLayer/Settings.connect("closed", show_pause_menu)
 	$PauseMenu/Center/VBox/MenuButton.pressed.connect(menu_pressed.emit)
 	$DeathScreen/Center/VBox/RestartButton.pressed.connect(restart_pressed.emit)
 	$DeathScreen/Center/VBox/MenuButton.pressed.connect(menu_pressed.emit)
@@ -74,6 +76,8 @@ func _ready() -> void:
 	objective_box.visible = false
 	_voice = AudioStreamPlayer.new()
 	_voice.name = "Voice"
+	_voice.bus = &"Voice"
+	radio_sound.bus = &"Voice"
 	add_child(_voice)
 	_slot_on = _slot_style(Color(ACCENT, 0.9))
 	_slot_off = _slot_style(Color(0, 0, 0, 0.45))
@@ -267,6 +271,12 @@ func show_intro(chapter: String, title: String, text: String) -> void:
 	$IntroScreen/Center/VBox/ContinueButton.grab_focus()
 
 
+func _show_settings() -> void:
+	pause_menu.visible = false
+	$SettingsLayer.visible = true
+	$SettingsLayer/Settings.call("open")
+
+
 func show_pause_menu() -> void:
 	hide_menus()
 	pause_menu.visible = true
@@ -281,6 +291,7 @@ func show_death_screen() -> void:
 
 func hide_menus() -> void:
 	gameplay.visible = true
+	$SettingsLayer.visible = false
 	intro_screen.visible = false
 	pause_menu.visible = false
 	death_screen.visible = false

@@ -96,6 +96,7 @@ func play_music(stream: AudioStream, fade := 1.5) -> void:
 	if _music == null:
 		_music = AudioStreamPlayer.new()
 		_music.name = "Music"
+		_music.bus = &"Music"
 		add_child(_music)
 	if _music.stream == stream and _music.playing:
 		return

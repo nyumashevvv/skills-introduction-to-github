@@ -49,8 +49,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if event is InputEventMouseMotion:
 		var motion := event as InputEventMouseMotion
-		rotate_y(-motion.relative.x * mouse_sensitivity)
-		head.rotate_x(-motion.relative.y * mouse_sensitivity)
+		var sensitivity: float = mouse_sensitivity * float(Settings.get_value("sensitivity"))
+		rotate_y(-motion.relative.x * sensitivity)
+		head.rotate_x(-motion.relative.y * sensitivity)
 		head.rotation.x = clampf(head.rotation.x, deg_to_rad(-89.0), deg_to_rad(89.0))
 		holder.add_sway(motion.relative)
 	elif event.is_action_pressed("flashlight"):
