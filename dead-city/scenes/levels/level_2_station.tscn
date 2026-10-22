@@ -1203,6 +1203,138 @@ omni_range = 12
 [node name="Fire1" parent="Decor" instance=ExtResource("26_fire")]
 position = Vector3(31.0, 0.0, -53.0)
 
+[node name="D16" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(-6.0, 3.95, -11.5)
+cast_shadow = 0
+
+[node name="Light12" type="OmniLight3D" parent="Lights"]
+position = Vector3(-6.0, 3.55, -11.5)
+light_color = Color(1.0, 0.88, 0.7, 1.0)
+light_energy = 1.6
+omni_range = 8.0
+
+[node name="D17" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(6.0, 3.95, -3.0)
+cast_shadow = 0
+
+[node name="Light13" type="OmniLight3D" parent="Lights"]
+position = Vector3(6.0, 3.55, -3.0)
+light_color = Color(1.0, 0.88, 0.7, 1.0)
+light_energy = 1.6
+omni_range = 8.0
+script = ExtResource("25_flicker_light")
+
+[node name="D18" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(-8.0, 3.95, -17.0)
+cast_shadow = 0
+
+[node name="Light14" type="OmniLight3D" parent="Lights"]
+position = Vector3(-8.0, 3.55, -17.0)
+light_color = Color(1.0, 0.88, 0.7, 1.0)
+light_energy = 1.6
+omni_range = 8.0
+
+[node name="D19" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(-6.0, 3.95, -26.5)
+cast_shadow = 0
+
+[node name="Light15" type="OmniLight3D" parent="Lights"]
+position = Vector3(-6.0, 3.55, -26.5)
+light_color = Color(1.0, 0.88, 0.7, 1.0)
+light_energy = 1.6
+omni_range = 8.0
+script = ExtResource("25_flicker_light")
+
+[node name="D20" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(-11.0, 3.95, -24.0)
+cast_shadow = 0
+
+[node name="Light16" type="OmniLight3D" parent="Lights"]
+position = Vector3(-11.0, 3.55, -24.0)
+light_color = Color(1.0, 0.88, 0.7, 1.0)
+light_energy = 1.6
+omni_range = 8.0
+
+[node name="D21" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(-8.0, 3.95, -32.5)
+cast_shadow = 0
+
+[node name="Light17" type="OmniLight3D" parent="Lights"]
+position = Vector3(-8.0, 3.55, -32.5)
+light_color = Color(1.0, 0.88, 0.7, 1.0)
+light_energy = 1.6
+omni_range = 8.0
+
+[node name="D22" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(-8.0, 3.95, -46.0)
+cast_shadow = 0
+
+[node name="Light18" type="OmniLight3D" parent="Lights"]
+position = Vector3(-8.0, 3.55, -46.0)
+light_color = Color(1.0, 0.88, 0.7, 1.0)
+light_energy = 1.6
+omni_range = 8.0
+script = ExtResource("25_flicker_light")
+
+[node name="D23" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(5.0, 3.95, -17.0)
+cast_shadow = 0
+
+[node name="Light19" type="OmniLight3D" parent="Lights"]
+position = Vector3(5.0, 3.55, -17.0)
+light_color = Color(1.0, 0.88, 0.7, 1.0)
+light_energy = 1.6
+omni_range = 8.0
+
+[node name="D24" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(9.0, 3.95, -31.0)
+cast_shadow = 0
+
+[node name="Light20" type="OmniLight3D" parent="Lights"]
+position = Vector3(9.0, 3.55, -31.0)
+light_color = Color(1.0, 0.88, 0.7, 1.0)
+light_energy = 1.6
+omni_range = 8.0
+script = ExtResource("25_flicker_light")
+
+[node name="D25" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(4.0, 3.95, -56.0)
+cast_shadow = 0
+
+[node name="Light21" type="OmniLight3D" parent="Lights"]
+position = Vector3(4.0, 3.55, -56.0)
+light_color = Color(1.0, 0.88, 0.7, 1.0)
+light_energy = 1.6
+omni_range = 8.0
+
+[node name="Light22" type="OmniLight3D" parent="Lights"]
+position = Vector3(15.5, 3.4, -17.6)
+light_color = Color(0.9, 0.85, 0.7, 1.0)
+light_energy = 0.9
+omni_range = 5.0
+
+[node name="Light23" type="OmniLight3D" parent="Lights"]
+position = Vector3(15.5, 3.4, -24.0)
+light_color = Color(0.9, 0.85, 0.7, 1.0)
+light_energy = 0.9
+omni_range = 5.0
+
+[node name="Light24" type="OmniLight3D" parent="Lights"]
+position = Vector3(15.5, 3.4, -30.4)
+light_color = Color(0.9, 0.85, 0.7, 1.0)
+light_energy = 0.9
+omni_range = 5.0
+
 [node name="PottedPlant1" parent="NavigationRegion3D" instance=ExtResource("27_potted_plant")]
 position = Vector3(-9.3, 0.0, -0.8)
 rotation = Vector3(0.0, -1.5469, 0.0)
@@ -1741,8 +1873,8 @@ position = Vector3(5.2, 0.0, -58.6)
 rotation = Vector3(0.0, 3.2416, 0.0)
 
 [node name="AmmoCrates3" parent="NavigationRegion3D" instance=ExtResource("74_ammo_crates")]
-position = Vector3(-1.0, 0.0, -52.0)
-rotation = Vector3(0.0, 0.4, 0.0)
+position = Vector3(-4.9, 0.0, -57.6)
+rotation = Vector3(0.0, 1.5708, 0.0)
 
 [node name="Dumpster1" parent="NavigationRegion3D" instance=ExtResource("77_dumpster")]
 position = Vector3(32.8, 0.0, -41.2)

@@ -45,7 +45,8 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
 1 world (also doors) · 2 player · 3 zombies · 5 pickups. Bullets use mask `1 | 4`; zombie sight `1 | 2`.
 
 ## Generators and tests
-- `tools/gen_assets.py`, `tools/gen_levels.py` (run from the project root with `PYTHONPATH=tools`)
+- `tools/gen_assets.py`, `tools/gen_props.py` (clutter props in `scenes/props/`; solid ones are StaticBody3D and
+  `LevelBuilder.clutter` puts them under the navigation region), `tools/gen_levels.py` (run from the project root with `PYTHONPATH=tools`)
   regenerate scenes and overwrite editor changes — only use them if the scenes were not hand-edited.
 - Input map: `godot --headless --path . --script tools/setup_input.gd`.
 - Tests (must pass before committing):

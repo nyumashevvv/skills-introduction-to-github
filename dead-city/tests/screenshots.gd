@@ -279,10 +279,10 @@ func _props() -> void:
 ## Views of every chapter's rooms (no HUD, no zombies) to check how furnished they look.
 func _tour() -> void:
 	var views := {
-		"res://scenes/levels/level_2_station.tscn": [["station_lobby", Vector3(0, 0, -1), 0, -8],
-			["station_office", Vector3(-3, 0, -21), 60, -12], ["station_lockers", Vector3(-3, 0, -39), 70, -10],
-			["station_cells", Vector3(3, 0, -19), -110, -8], ["station_garage", Vector3(4, 0, -42), -110, -8],
-			["station_armory", Vector3(0, 0, -51), 0, -12], ["station_yard", Vector3(21, 0, -48), -90, -6]],
+		"res://scenes/levels/level_2_station.tscn": [["station_lobby", Vector3(9, 0, -1.2), 50, -10],
+			["station_office", Vector3(-2.6, 0, -21.2), 75, -12], ["station_lockers", Vector3(-2.6, 0, -39.2), 100, -12],
+			["station_cells", Vector3(3, 0, -15.5), -40, -10], ["station_garage", Vector3(4, 0, -42), -110, -8],
+			["station_armory", Vector3(0, 0, -50.8), 0, -14], ["station_yard", Vector3(21, 0, -48), -90, -6]],
 		"res://scenes/levels/level_1_outskirts.tscn": [["street_a", Vector3(0, 0, -20), 0, -6],
 			["street_alley", Vector3(4, 0, -70), -90, -6]],
 		"res://scenes/levels/level_3_hospital.tscn": [["hospital_lobby", Vector3(0, 0, -1), 0, -8],

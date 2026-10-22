@@ -288,6 +288,12 @@ def station_clutter(L):
     """Furnishes the police station: lobby, office, locker room, corridor, cells, garage, armory, yard."""
     c, w = L.clutter, L.on_wall
     H = math.pi / 2
+    # extra lamps so the rooms (and what is in them) can be seen; some are dying
+    for x, z, flicker in [(-6, -11.5, False), (6, -3, True), (-8, -17, False), (-6, -26.5, True), (-11, -24, False),
+                          (-8, -32.5, False), (-8, -46, True), (5, -17, False), (9, -31, True), (4, -56, False)]:
+        L.ceiling_lamp(x, z, flicker=flicker, energy=1.6, rng=8.0)
+    for z in (-17.6, -24.0, -30.4):
+        L.omni((15.5, 3.4, z), (0.9, 0.85, 0.7), 0.9, 5.0)
     # lobby
     for pos in [(-9.3, 0, -0.8), (9.3, 0, -0.8), (-9.3, 0, -13.2), (9.3, 0, -13.2)]:
         c('potted_plant', pos)
@@ -363,7 +369,7 @@ def station_clutter(L):
     c('ammo_crates', (4.2, 0, -51.3), 0.0); c('ammo_crates', (-4.6, 0, -51.3), math.pi)
     c('cardboard_box', (1.0, 0, -59.3), 0.1)
     c('crate_stack', (-3.0, 0, -59.0), math.pi); c('crate_stack', (5.2, 0, -58.6), math.pi + 0.1)
-    c('ammo_crates', (-1.0, 0, -52.0), 0.4)
+    c('ammo_crates', (-4.9, 0, -57.6), H)
     # yard
     L.prop('res://scenes/world/dumpster.tscn', (32.8, 0, -41.2), 0.0)
     c('trash_bags', (24, 0, -41)); c('trash_bags', (33, 0, -54.6)); c('tyre', (22, 0, -55), 0.4)
