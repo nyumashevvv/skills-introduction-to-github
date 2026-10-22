@@ -3,7 +3,8 @@
     blender -b --python tools/blender/build_assets.py -- <sources dir> <project dir> [part ...]
 
 <sources dir> is where tools/fetch_assets.sh unpacked the CC0 source packs.
-Parts: characters, viewmodels, previews (default: characters viewmodels).
+Parts: characters, bosses, viewmodels, previews (default: characters bosses viewmodels);
+`boss:<name>` or `vm:<name>` rebuild a single model.
 
 Coordinates for first-person models: the camera sits at the origin looking down +Y with +Z up,
 which the glTF exporter turns into Godot's camera space (-Z forward, +Y up), in metres.
@@ -17,7 +18,7 @@ from mathutils import Vector, Matrix
 
 argv = sys.argv[sys.argv.index("--") + 1:]
 SRC, PROJECT = argv[0], argv[1]
-PARTS = argv[2:] or ["characters", "viewmodels"]
+PARTS = argv[2:] or ["characters", "bosses", "viewmodels"]
 UACP = os.path.join(SRC, "uacp", "Ultimate Animated Character Pack - Nov 2019", "Blends")
 CHAR_SCALE = 0.58  # Quaternius characters are ~3.06 units tall -> ~1.78 m
 FOV_DEG = 78.0     # Godot camera fov (vertical)
@@ -184,6 +185,191 @@ def build_characters():
             track.strips.new(act.name, int(act.frame_range[0]), act)
         print("ACTIONS", src, [a.name for a in bpy.data.actions])
         export_glb(os.path.join(PROJECT, "models", "characters", out_name + ".glb"), objs, animations='nla')
+
+
+# ---------------------------------------------------------------- bosses
+# Character units: the rig is ~3.2 units tall and imported at 0.58, so 1 m = 1.72 units.
+# Rest pose is a T-pose facing -Y. In the idle/walk animations the fists turn so that the rest
+# pose's outward arm axis (-X right, +X left) points down-forward and rest +Z points forward,
+# so hand-held props run along the arm axis and face +Z.
+M = 1.0 / CHAR_SCALE
+FIST_R = Vector((-1.41, 0.02, 1.86))
+FIST_L = Vector((1.41, 0.02, 1.86))
+ALONG_X = (0, math.pi / 2, 0)
+
+
+def prim(kind, size, loc, mat, rot=(0, 0, 0)):
+    """A primitive in character units: box size (x, y, z), cyl/cone (radius, depth[, radius2]), sphere (radius,)."""
+    if kind == 'box':
+        bpy.ops.mesh.primitive_cube_add(size=1.0, location=loc, rotation=rot)
+        bpy.context.object.scale = size
+    elif kind == 'cyl':
+        bpy.ops.mesh.primitive_cylinder_add(vertices=10, radius=size[0], depth=size[1], location=loc, rotation=rot)
+    elif kind == 'cone':
+        bpy.ops.mesh.primitive_cone_add(vertices=8, radius1=size[0], radius2=size[2] if len(size) > 2 else 0.0,
+                                        depth=size[1], location=loc, rotation=rot)
+    else:
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=10, ring_count=6, radius=size[0], location=loc, rotation=rot)
+    o = bpy.context.object
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    o.data.materials.append(mat)
+    return o
+
+
+def attach(parts, arm, bone, name, pivot=None, tilt=0.0):
+    """Join `parts` into one mesh and parent it to `bone`, keeping its rest-pose placement.
+    `tilt` turns the prop about the Y axis through `pivot` first (tips the tip of a held weapon forward)."""
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in parts:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = parts[0]
+    if len(parts) > 1:
+        bpy.ops.object.join()
+    o = bpy.context.object
+    o.name = name
+    if tilt:
+        o.matrix_world = Matrix.Translation(pivot) @ Matrix.Rotation(tilt, 4, 'Y') @ Matrix.Translation(-pivot) @ o.matrix_world
+    mw = o.matrix_world.copy()
+    o.parent, o.parent_type, o.parent_bone = arm, 'BONE', bone
+    bpy.context.view_layer.update()
+    o.matrix_world = mw
+    return o
+
+
+def emissive(name, color, strength):
+    m = material(name, color)
+    bsdf = m.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Emission Color"].default_value = (*color, 1)
+    bsdf.inputs["Emission Strength"].default_value = strength
+    return m
+
+
+def props_butcher(arm):
+    steel, wood = material("Steel", (0.55, 0.56, 0.58), 0.9, 0.35), material("Wood", (0.25, 0.14, 0.07))
+    blood = material("Blood", (0.3, 0.02, 0.02), 0.0, 0.3)
+    g = FIST_R
+    handle = prim('cyl', (0.03 * M, 0.2 * M), g + Vector((-0.06 * M, 0, 0)), wood, rot=ALONG_X)
+    blade = prim('box', (0.42 * M, 0.02 * M, 0.24 * M), g + Vector((-0.37 * M, 0, 0.09 * M)), steel)
+    smear = prim('box', (0.16 * M, 0.024 * M, 0.08 * M), g + Vector((-0.4 * M, 0, 0.12 * M)), blood)
+    return [attach([handle, blade, smear], arm, "Fist.R", "Cleaver", g, 0.5)]
+
+
+def props_warden(arm):
+    pane = material("ShieldPane", (0.08, 0.09, 0.11), 0.2, 0.15)
+    frame, white = material("ShieldFrame", (0.03, 0.03, 0.03)), material("ShieldStripe", (0.85, 0.85, 0.8))
+    rubber = material("Baton", (0.04, 0.04, 0.04), 0.0, 0.5)
+    # Riot shield: long side along the arm, spreading inward (+Y) and held in front (+Z).
+    c = FIST_L + Vector((-0.2 * M, 0.18 * M, 0.16 * M))
+    parts = [prim('box', (1.25 * M, 0.72 * M, 0.03 * M), c, pane),
+             prim('box', (1.29 * M, 0.76 * M, 0.025 * M), c + Vector((0, 0, -0.01 * M)), frame),
+             prim('box', (1.2 * M, 0.1 * M, 0.035 * M), c, white)]
+    shield = attach(parts, arm, "Fist.L", "Shield")
+    baton = attach([prim('cyl', (0.025 * M, 0.55 * M), FIST_R + Vector((-0.2 * M, 0, 0)), rubber, rot=ALONG_X)],
+                   arm, "Fist.R", "Baton", FIST_R, 0.6)
+    return [shield, baton]
+
+
+def props_patient(arm):
+    glow = emissive("Acid", (0.45, 0.9, 0.15), 2.0)
+    rnd = __import__("random").Random(7)
+    torso, head = [], []
+    for i in range(14):  # pustules around the chest and back
+        a = rnd.uniform(0, math.tau)
+        torso.append(prim('sphere', (rnd.uniform(0.05, 0.1) * M,),
+                          Vector((math.cos(a) * 0.36, math.sin(a) * 0.36, rnd.uniform(1.25, 2.0))), glow))
+    for i in range(7):  # and on the skull, away from the face
+        a, up = rnd.uniform(0.3, math.pi - 0.3), rnd.uniform(0.2, 1.0)
+        d = Vector((math.cos(a) * math.sqrt(1 - up * up), math.sin(a) * math.sqrt(1 - up * up), up))
+        head.append(prim('sphere', (rnd.uniform(0.04, 0.08) * M,), Vector((0, 0, 2.7)) + d * 0.62, glow))
+    return [attach(torso, arm, "Torso", "BackGrowths"), attach(head, arm, "Head", "HeadGrowths")]
+
+
+def props_lineman(arm):
+    steel, wood = material("HammerHead", (0.3, 0.3, 0.32), 0.9, 0.4), material("Wood", (0.35, 0.22, 0.1))
+    lamp = emissive("HeadLamp", (1.0, 0.95, 0.7), 4.0)
+    f = FIST_R
+    handle = prim('cyl', (0.025 * M, 0.7 * M), f + Vector((-0.15 * M, 0, 0)), wood, rot=ALONG_X)
+    head = prim('box', (0.13 * M, 0.13 * M, 0.34 * M), f + Vector((-0.48 * M, 0, 0)), steel)
+    hammer = attach([handle, head], arm, "Fist.R", "Sledgehammer", f, 0.6)
+    light = attach([prim('cyl', (0.05 * M, 0.04 * M), Vector((0, -0.62, 2.95)), lamp, rot=(math.pi / 2, 0, 0))],
+                   arm, "Head", "HeadLamp")
+    return [hammer, light]
+
+
+def props_colossus(arm):
+    bone = material("BoneSpike", (0.85, 0.8, 0.68), 0.0, 0.5)
+    spikes = []
+    for x, z, tilt in [(-0.35, 1.95, -0.5), (0.0, 2.05, 0.0), (0.35, 1.95, 0.5), (-0.2, 1.6, -0.3), (0.2, 1.6, 0.3)]:
+        spikes.append(prim('cone', (0.09 * M, 0.45 * M), Vector((x, 0.75, z)), bone, rot=(-math.pi / 2 - 0.4, tilt, 0)))
+    for sx in (-1, 1):
+        spikes.append(prim('cone', (0.08 * M, 0.35 * M), Vector((sx * 0.62, 0.1, 2.15)), bone, rot=(0, sx * 0.5, 0)))
+    return [attach(spikes, arm, "Torso", "Spikes")]
+
+
+BOSSES = {
+    # out name: (source blend, material colour overrides, props)
+    "boss_butcher": ("Chef_Male", {"Clothes": (0.62, 0.55, 0.5), "Shirt": (0.5, 0.2, 0.18)}, props_butcher),
+    "boss_warden": ("BlueSoldier_Male", {}, props_warden),
+    "boss_patient": ("Goblin_Male", {"Pants": (0.55, 0.62, 0.66)}, props_patient),
+    "boss_lineman": ("Worker_Male", {"Vest": (0.95, 0.4, 0.05)}, props_lineman),
+    "boss_colossus": ("Viking_Male", {"Main": (0.22, 0.16, 0.12), "Light": (0.35, 0.3, 0.25)}, props_colossus),
+}
+
+
+def build_bosses(only=()):
+    for out_name, (src, colors, props) in BOSSES.items():
+        if only and out_name not in only:
+            continue
+        reset()
+        objs = append_objects(os.path.join(UACP, src + ".blend"), actions=True)
+        fix_flat_materials(objs, colors)
+        arm = next(o for o in objs if o.type == 'ARMATURE')
+        arm.data.pose_position = 'REST'
+        bpy.context.view_layer.update()
+        objs += props(arm)
+        arm.data.pose_position = 'POSE'
+        if arm.animation_data is None:
+            arm.animation_data_create()
+        arm.animation_data.action = None
+        for act in bpy.data.actions:
+            act.use_fake_user = True
+            track = arm.animation_data.nla_tracks.new()
+            track.name = act.name
+            track.strips.new(act.name, int(act.frame_range[0]), act)
+        path = os.path.join(PROJECT, "models", "characters", out_name + ".glb")
+        export_glb(path, objs, animations='nla')
+        render_character(arm, os.path.join(SRC, "previews", out_name + "_%s.png"))
+
+
+def render_character(arm, out_pattern, poses=(("Idle", 10), ("Walk", 8), ("SwordSlash", 14), ("Punch", 10))):
+    """Renders the character in a few animation frames (front three-quarter view)."""
+    scene = bpy.context.scene
+    for track in arm.animation_data.nla_tracks:
+        track.mute = True
+    cam = bpy.data.objects.new("Cam", bpy.data.cameras.new("Cam"))
+    cam.location = (-4.5, -7.5, 2.6)
+    direction = Vector((0, 0, 1.6)) - cam.location
+    cam.rotation_euler = direction.to_track_quat('-Z', 'Y').to_euler()
+    scene.collection.objects.link(cam)
+    scene.camera = cam
+    sun = bpy.data.objects.new("Sun", bpy.data.lights.new("Sun", 'SUN'))
+    sun.data.energy = 3.5
+    sun.rotation_euler = (0.7, 0.2, -0.6)
+    scene.collection.objects.link(sun)
+    scene.world = bpy.data.worlds.new("W")
+    scene.world.use_nodes = True
+    scene.world.node_tree.nodes["Background"].inputs[0].default_value = (0.3, 0.32, 0.36, 1)
+    scene.render.engine = 'CYCLES'
+    scene.cycles.samples = 8
+    scene.render.resolution_x, scene.render.resolution_y = 300, 360
+    for action, frame in poses:
+        if action not in bpy.data.actions:
+            continue
+        arm.animation_data.action = bpy.data.actions[action]
+        scene.frame_set(frame)
+        scene.render.filepath = out_pattern % action
+        bpy.ops.render.render(write_still=True)
+    arm.animation_data.action = None
 
 
 # ---------------------------------------------------------------- weapons
@@ -604,6 +790,11 @@ if "characters" in PARTS:
     build_characters()
 if "viewmodels" in PARTS:
     build_viewmodels()
+if "bosses" in PARTS:
+    build_bosses()
+BOSS_ONLY = [p[5:] for p in PARTS if p.startswith("boss:")]
+if BOSS_ONLY:
+    build_bosses(BOSS_ONLY)
 ONLY = [p[3:] for p in PARTS if p.startswith("vm:")]
 if ONLY:
     build_viewmodels(ONLY)

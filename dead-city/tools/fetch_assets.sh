@@ -43,4 +43,9 @@ i=1; for f in "$VE/zombieYell2.wav" "$VE/zombieYell8.wav" "$VE/zombieYell4.wav" 
   proc "$f" "attack$i" -20; i=$((i + 1)); done
 i=1; for f in "$VE/zombieDeath3.wav" "$VE/zombieDeath4.wav" "$VE/zombieDeath2.wav" zombies/zombies/zombie-15.wav; do
   proc "$f" "death$i" -21; i=$((i + 1)); done
+# Boss roars: the same yells pitched down an octave-ish, with a short echo.
+roar() { ffmpeg -v error -y -i "$1" -ac 1 \
+  -af "asetrate=44100*0.62,aresample=22050,aecho=0.8:0.5:70:0.35,highpass=f=50,lowpass=f=3000,loudnorm=I=-18:TP=-2:LRA=11" \
+  -c:a libvorbis -q:a 4 "$OUT/$2.ogg"; }
+roar "$VE/zombieYell1.wav" roar1; roar "$VE/zombieYell6.wav" roar2; roar "$VE/zombieYell9.wav" roar3
 echo "Sources ready in $SRC"

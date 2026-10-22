@@ -5,7 +5,8 @@ extends CharacterBody3D
 
 signal died(zombie: Zombie)
 
-enum State { IDLE, CHASE, ATTACK, DEAD }
+## SPECIAL: a boss ability ([Boss]) is running.
+enum State { IDLE, CHASE, ATTACK, SPECIAL, DEAD }
 
 const BLOOD_SCENE := preload("res://scenes/effects/blood_burst.tscn")
 const BLOOD_DECAL_SCENE := preload("res://scenes/effects/blood_decal.tscn")
@@ -46,11 +47,15 @@ static var _next_groan_time := 0.0
 @export var attack_range := 1.6
 @export var attack_windup := 0.5
 @export var attack_recovery := 0.6
+@export var attack_animation := "Punch"
 ## Pushes the player away on a hit (the brute).
 @export var knockback := 0.0
 @export_group("Senses")
 @export var sight_range := 20.0
 @export var start_alerted := false
+## Woken by gunfire and by neighbours joining the hunt. Bosses turn this off and wait for
+## the story, the sight of the player or a bullet.
+@export var wakes_from_noise := true
 @export_group("Body")
 ## Rigged character models to pick from at random.
 @export var bodies: Array[PackedScene] = []
@@ -59,6 +64,8 @@ static var _next_groan_time := 0.0
 @export var skin_colors: Array[Color] = []
 ## Animation used while chasing: "Walk" (shambling, arms out) or "Run".
 @export var chase_animation := "Walk"
+## Stretch the arms towards the player while walking (off for bosses holding weapons).
+@export var reach_arms := true
 @export_range(0.0, 1.0) var stagger_resistance := 0.0
 @export var voice_pitch := 1.0
 
@@ -117,6 +124,8 @@ func _physics_process(delta: float) -> void:
 			_process_chase(delta)
 		State.ATTACK:
 			_process_attack(delta)
+		State.SPECIAL:
+			_process_special(delta)
 	move_and_slide()
 	_animate(delta)
 
@@ -131,6 +140,7 @@ func is_headshot(point: Vector3) -> bool:
 func take_damage(amount: int, direction: Vector3, hit_point: Vector3, explosive := false) -> bool:
 	if state == State.DEAD:
 		return false
+	amount = roundi(amount * _damage_scale(direction, hit_point, explosive))
 	health -= amount
 	_flash_timer = 0.06
 	for mesh in _meshes:
@@ -162,7 +172,7 @@ func alert(spread := true) -> void:
 		# Zombies nearby join the hunt.
 		for node in get_tree().get_nodes_in_group("zombies"):
 			var other := node as Zombie
-			if other != self and other.global_position.distance_to(global_position) < 10.0:
+			if other != self and other.wakes_from_noise and other.global_position.distance_to(global_position) < 10.0:
 				other.alert.call_deferred(false)
 
 
@@ -172,7 +182,7 @@ func activate() -> void:
 
 
 func hear_noise(at: Vector3, radius: float) -> void:
-	if state == State.IDLE and global_position.distance_to(at) <= radius:
+	if wakes_from_noise and state == State.IDLE and global_position.distance_to(at) <= radius:
 		alert()
 
 
@@ -241,6 +251,8 @@ func _process_chase(delta: float) -> void:
 	var to_player := player.global_position - global_position
 	var vertical := absf(to_player.y)
 	to_player.y = 0.0
+	if _try_special(to_player.length()):
+		return
 	if to_player.length() <= attack_range and vertical < 1.5:
 		_start_attack()
 		return
@@ -252,10 +264,10 @@ func _start_attack() -> void:
 	state = State.ATTACK
 	_attack_timer = attack_windup + attack_recovery
 	_attack_hit_done = false
-	if _anim != null and _anim.has_animation("Punch"):
-		_anim.play("Punch", 0.1)
-		# Land the punch's swing at the end of the windup.
-		_anim.speed_scale = _anim.get_animation("Punch").length * 0.5 / attack_windup
+	if _anim != null and _anim.has_animation(attack_animation):
+		_anim.play(attack_animation, 0.1)
+		# Land the swing at the end of the windup.
+		_anim.speed_scale = _anim.get_animation(attack_animation).length * 0.5 / attack_windup
 
 
 func _process_attack(delta: float) -> void:
@@ -275,6 +287,20 @@ func _process_attack(delta: float) -> void:
 				player.apply_knockback(to_player.normalized() * knockback + Vector3.UP * knockback * 0.4)
 	if _attack_timer <= 0.0:
 		state = State.CHASE
+
+
+## Overridden by [Boss]: starts an ability instead of chasing; returns true if one started.
+func _try_special(_distance: float) -> bool:
+	return false
+
+
+func _process_special(_delta: float) -> void:
+	pass
+
+
+## Overridden by [Boss]: armour, e.g. a shield that blocks hits from the front.
+func _damage_scale(_direction: Vector3, _hit_point: Vector3, _explosive: bool) -> float:
+	return 1.0
 
 
 func _move(direction: Vector3, speed: float, delta: float) -> void:
@@ -324,19 +350,19 @@ func _animate(delta: float) -> void:
 	var speed := Vector2(velocity.x, velocity.z).length()
 	var size := model.scale.y / 0.58
 	var reaching := 0.0
-	if state == State.ATTACK or _hit_anim_time > 0.0:
-		pass  # Punch / RecieveHit play out on their own.
+	if state == State.ATTACK or state == State.SPECIAL or _hit_anim_time > 0.0:
+		pass  # Attacks, abilities and RecieveHit play out on their own.
 	elif state == State.CHASE and speed > 0.3:
 		if chase_animation == "Run":
 			_play("Run", speed / (RUN_ANIM_SPEED * size))
 		else:
 			_play("Walk", speed / (WALK_ANIM_SPEED * size))
-			reaching = 1.0
+			reaching = 1.0 if reach_arms else 0.0
 	elif speed > 0.2:
 		_play("Walk", speed / (WALK_ANIM_SPEED * size))
 	else:
 		_play("Idle", 1.0)
-		reaching = 0.6 if state == State.CHASE else 0.0
+		reaching = 0.6 if state == State.CHASE and reach_arms else 0.0
 	_pose.reach = lerpf(_pose.reach, reaching, clampf(delta * 5.0, 0.0, 1.0))
 
 

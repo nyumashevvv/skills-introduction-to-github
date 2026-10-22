@@ -53,6 +53,7 @@ def mats():
     material(T + 'military.tres', (0.22, 0.26, 0.17), roughness=0.85)
     material(T + 'tent.tres', (0.3, 0.33, 0.22), roughness=1.0)
     material(T + 'fire_glow.tres', (0, 0, 0), emission=(1.0, 0.45, 0.1), energy=4.0)
+    material(T + 'acid_glow.tres', (0, 0, 0), emission=(0.45, 1.0, 0.15), energy=3.0)
     # weapons & hands
     material(T + 'gun_black.tres', (0.05, 0.05, 0.055), metallic=0.3, roughness=0.55)
     material(T + 'gun_steel.tres', (0.26, 0.27, 0.29), metallic=0.5, roughness=0.38)
@@ -132,7 +133,7 @@ def weapons():
     s = Scene()
     weapon_root(s, 'gun', dict(node_name='Pistol', id=S('pistol'), display_name=S('Пистолет'), slot=2,
                 ammo_type=S('pistol'), magazine_size=12, max_reserve=96, reload_time=1.3, noise_radius=28.0,
-                damage=34, headshot_multiplier=3.0, fire_rate=6.0, base_spread_deg=0.25, move_spread_deg=1.8,
+                damage=34, headshot_multiplier=2.5, fire_rate=6.0, base_spread_deg=0.25, move_spread_deg=1.8,
                 heat_spread_deg=0.8, recoil=0.018, kick_back=0.05, kick_up=0.12))
     viewmodel(s, 'pistol')
     flash_node(s, 'Model', 0.13, 3.0)
@@ -144,7 +145,7 @@ def weapons():
     s = Scene()
     weapon_root(s, 'gun', dict(node_name='Shotgun', id=S('shotgun'), display_name=S('Дробовик'), slot=3,
                 ammo_type=S('shells'), magazine_size=6, max_reserve=48, reload_time=0.55, reload_per_round=True,
-                noise_radius=45.0, damage=16, headshot_multiplier=2.0, fire_rate=1.25, max_range=60.0,
+                noise_radius=45.0, damage=20, headshot_multiplier=2.0, fire_rate=1.25, max_range=60.0,
                 base_spread_deg=1.0, move_spread_deg=1.5, heat_spread_deg=0.5, pellets=8, pellet_spread_deg=4.0,
                 falloff=V2(6, 22), pump_delay=0.3, recoil=0.05, kick_back=0.12, kick_up=0.12))
     viewmodel(s, 'shotgun')
@@ -158,7 +159,7 @@ def weapons():
     s = Scene()
     weapon_root(s, 'gun', dict(node_name='Rifle', id=S('rifle'), display_name=S('Автомат'), slot=4,
                 ammo_type=S('rifle'), magazine_size=30, max_reserve=210, reload_time=2.0, noise_radius=40.0,
-                automatic=True, damage=26, headshot_multiplier=2.5, fire_rate=10.0, base_spread_deg=0.35,
+                automatic=True, damage=30, headshot_multiplier=2.5, fire_rate=10.0, base_spread_deg=0.35,
                 move_spread_deg=3.0, heat_spread_deg=1.6, recoil=0.009, kick_back=0.03, kick_up=0.03))
     viewmodel(s, 'rifle')
     flash_node(s, 'Model', 0.2, 4.0)
@@ -179,7 +180,7 @@ def weapons():
     # Knife (modelled in Blender by tools/blender/build_assets.py)
     s = Scene()
     weapon_root(s, 'melee_weapon', dict(node_name='Knife', id=S('knife'), display_name=S('Нож'), slot=1,
-                equip_time=0.2))
+                equip_time=0.2, damage=50))
     viewmodel(s, 'knife')
     s.node('SwingSound', 'AudioStreamPlayer', '.', stream=s.sound('knife_swing'), volume_db=-4.0, max_polyphony=2)
     s.node('StabSound', 'AudioStreamPlayer', '.', stream=s.sound('knife_hit'), volume_db=-2.0)
@@ -229,16 +230,18 @@ def player():
 
 
 # ------------------------------------------------------------------ zombies
-def zombie(path, root_name, stats, bodies, radius=0.35, height=1.8, body_scale=0.58, skin=True):
+def zombie(path, root_name, stats, bodies, radius=0.35, height=1.8, body_scale=0.58, skin=True,
+           script='zombie', extra=None):
     s = Scene()
     shape = s.sub_res('CapsuleShape3D', radius=radius, height=height)
-    props = dict(collision_layer=4, collision_mask=7, script=s.ext_res('Script', 'res://scripts/zombies/zombie.gd'))
-    props.update(stats)
+    props = dict(collision_layer=4, collision_mask=7, script=s.ext_res('Script', f'res://scripts/zombies/{script}.gd'))
+    props.update(stats(s) if callable(stats) else stats)
     props['bodies'] = 'Array[PackedScene]([' + ', '.join(
         s.ext_res('PackedScene', f'res://models/characters/{b}.glb') for b in bodies) + '])'
     props['body_scale'] = body_scale
     if skin:
-        props['skin_colors'] = 'Array[Color]([' + ', '.join(C(*c) for c in ZOMBIE_SKINS) + '])'
+        colors = ZOMBIE_SKINS if skin is True else skin
+        props['skin_colors'] = 'Array[Color]([' + ', '.join(C(*c) for c in colors) + '])'
     s.node(root_name, 'CharacterBody3D', groups=['zombies'], **props)
     s.node('CollisionShape3D', 'CollisionShape3D', '.', position=V3(0, height / 2, 0), shape=shape)
     # The character models face +Z; turn them to Godot's forward (-Z).
@@ -249,6 +252,8 @@ def zombie(path, root_name, stats, bodies, radius=0.35, height=1.8, body_scale=0
                            ('DeathSound', 'zombie/death1', -4.0)]:
         s.node(name, 'AudioStreamPlayer3D', '.', stream=s.ext_res('AudioStream', f'res://sounds/{snd}.ogg'),
                position=V3(0, 1.6 * body_scale / 0.58, 0), volume_db=vol, unit_size=3.0, max_distance=30.0)
+    if extra:
+        extra(s)
     s.save(path)
 
 
@@ -257,19 +262,104 @@ ZOMBIE_SKINS = [(0.42, 0.5, 0.38), (0.5, 0.55, 0.45), (0.36, 0.42, 0.34), (0.55,
 
 def zombies():
     zombie('scenes/zombies/walker.tscn', 'Walker',
-           dict(max_health=70, chase_speed=1.9, wander_speed=0.45, attack_damage=14, attack_range=1.5,
-                attack_windup=0.55, attack_recovery=0.6, sight_range=18.0),
+           dict(max_health=120, chase_speed=2.0, wander_speed=0.45, attack_damage=18, attack_range=1.5,
+                attack_windup=0.5, attack_recovery=0.6, sight_range=20.0),
            ['zombie_male', 'zombie_female', 'worker', 'doctor', 'chef'])
     zombie('scenes/zombies/runner.tscn', 'Runner',
-           dict(max_health=45, chase_speed=5.4, wander_speed=0.8, turn_speed=10.0, attack_damage=10,
-                attack_range=1.4, attack_windup=0.35, attack_recovery=0.45, sight_range=26.0,
+           dict(max_health=90, chase_speed=5.6, wander_speed=0.8, turn_speed=10.0, attack_damage=13,
+                attack_range=1.4, attack_windup=0.35, attack_recovery=0.45, sight_range=28.0,
                 chase_animation=S('Run'), voice_pitch=1.15),
            ['soldier', 'worker', 'zombie_female'], radius=0.3)
     zombie('scenes/zombies/brute.tscn', 'Brute',
-           dict(max_health=1000, chase_speed=2.6, wander_speed=0.4, turn_speed=3.5, attack_damage=34,
+           dict(max_health=1200, chase_speed=2.6, wander_speed=0.4, turn_speed=3.5, attack_damage=34,
                 attack_range=2.4, attack_windup=0.8, attack_recovery=0.9, knockback=7.0, sight_range=30.0,
                 stagger_resistance=0.92, voice_pitch=0.65),
            ['zombie_male'], radius=0.65, height=2.9, body_scale=0.95)
+    bosses()
+
+
+def boss(name, root_name, title, body, stats, body_scale, radius, height, skin, extra=None):
+    def props(s):
+        p = dict(boss_name=S(title), wander_speed=0.4, stagger_resistance=0.97, sight_range=30.0, reach_arms=False,
+                 wakes_from_noise=False,
+                 attack_animation=S('SwordSlash'), voice_pitch=0.8)
+        p.update({k: (v(s) if callable(v) else v) for k, v in stats.items()})
+        return p
+
+    def nodes(s):
+        s.node('RoarSound', 'AudioStreamPlayer3D', '.', stream=s.ext_res('AudioStream', 'res://sounds/zombie/roar1.ogg'),
+               position=V3(0, height * 0.8, 0), volume_db=2.0, unit_size=8.0, max_distance=60.0)
+        if extra:
+            extra(s)
+    zombie(f'scenes/zombies/{name}.tscn', root_name, props, [body], radius=radius, height=height,
+           body_scale=body_scale, skin=[skin], script='boss', extra=nodes)
+
+
+def scenes(*names):
+    return lambda s: 'Array[PackedScene]([' + ', '.join(s.ext_res('PackedScene', f'res://scenes/{n}.tscn') for n in names) + '])'
+
+
+def scene(name):
+    return lambda s: s.ext_res('PackedScene', f'res://scenes/{name}.tscn')
+
+
+def bosses():
+    # Chapter 1: a cook with a cleaver who charges across the street.
+    boss('butcher', 'Butcher', 'Мясник', 'boss_butcher',
+         dict(max_health=1100, chase_speed=2.6, turn_speed=5.0, attack_damage=28, attack_range=2.1,
+              attack_windup=0.55, attack_recovery=0.7, knockback=5.0, charge_speed=12.0, charge_cooldown=6.0,
+              charge_damage=32, drops=scenes('pickups/medkit', 'pickups/ammo_rifle')),
+         0.78, 0.5, 2.5, (0.5, 0.56, 0.45))
+    # Chapter 2: riot police; the shield stops bullets from the front, the head is open.
+    boss('warden', 'Warden', 'Надзиратель', 'boss_warden',
+         dict(max_health=1300, chase_speed=2.4, turn_speed=3.2, attack_damage=30, attack_range=2.0,
+              attack_windup=0.5, attack_recovery=0.6, knockback=8.0, front_armor=0.1, charge_speed=10.0,
+              charge_cooldown=8.0, charge_damage=26, drops=scenes('pickups/medkit', 'pickups/ammo_rocket')),
+         0.76, 0.5, 2.45, (0.45, 0.5, 0.48),
+         extra=lambda s: s.node('ShieldSound', 'AudioStreamPlayer3D', '.', stream=s.sound('shield_hit'),
+                                position=V3(0, 1.2, 0), unit_size=5.0, max_polyphony=3))
+    # Chapter 3: the first infected; spits acid and calls the patients.
+    boss('patient_zero', 'PatientZero', 'Пациент Ноль', 'boss_patient',
+         dict(max_health=1200, chase_speed=2.2, attack_damage=22, attack_range=1.8, attack_windup=0.45,
+              attack_animation=S('Punch'), projectile=scene('zombies/acid_spit'), projectile_count=3,
+              throw_cooldown=3.2, throw_distance=V2(4, 26), throw_animation=S('Shoot_OneHanded'),
+              minion=scene('zombies/walker'), summon_count=3, summon_cooldown=16.0, max_minions=5, voice_pitch=1.1,
+              drops=scenes('pickups/medkit', 'pickups/ammo_shells')),
+         0.72, 0.45, 2.3, (0.55, 0.62, 0.38))
+    # Chapter 4: a track worker with a sledgehammer; slams the ground and calls runners from the tunnel.
+    boss('lineman', 'Lineman', 'Обходчик', 'boss_lineman',
+         dict(max_health=1600, chase_speed=2.5, turn_speed=4.0, attack_damage=34, attack_range=2.3,
+              attack_windup=0.6, attack_recovery=0.8, knockback=8.0, slam_radius=7.0, slam_damage=34,
+              slam_cooldown=6.5, minion=scene('zombies/runner'), summon_count=2, summon_cooldown=20.0,
+              max_minions=4, drops=scenes('pickups/medkit', 'pickups/ammo_shells', 'pickups/ammo_rifle')),
+         0.8, 0.5, 2.6, (0.42, 0.47, 0.4))
+    # Chapter 5: a giant; throws rubble, slams, charges and goes berserk at half health.
+    boss('colossus', 'Colossus', 'Колосс', 'boss_colossus',
+         dict(max_health=4000, chase_speed=2.3, turn_speed=2.8, attack_damage=40, attack_range=3.4,
+              attack_windup=0.8, attack_recovery=0.9, knockback=10.0, projectile=scene('zombies/debris'),
+              throw_cooldown=5.0, throw_distance=V2(8, 40), slam_radius=9.0, slam_damage=40, slam_cooldown=7.0,
+              charge_speed=11.0, charge_cooldown=9.0, charge_damage=40, charge_distance=V2(8, 26),
+              enrage_at=0.5, voice_pitch=0.6),
+         1.3, 0.9, 4.2, (0.4, 0.42, 0.44))
+
+
+def projectiles():
+    # Acid spit (Patient Zero)
+    s = Scene()
+    s.node('AcidSpit', 'Node3D', script=s.ext_res('Script', 'res://scripts/zombies/boss_projectile.gd'), damage=14,
+           splash_radius=1.6, speed=15.0, gravity=9.0, hit_effect=s.ext_res('PackedScene', 'res://scenes/effects/acid_splash.tscn'))
+    s.sphere('Blob', '.', 0.16, (0, 0, 0), 'acid_glow', cast_shadow=0)
+    s.node('Light', 'OmniLight3D', '.', light_color=C(0.5, 1, 0.2), light_energy=1.5, omni_range=3.0)
+    s.node('Sound', 'AudioStreamPlayer3D', '.', stream=s.sound('spit'), autoplay=True, unit_size=5.0)
+    s.save('scenes/zombies/acid_spit.tscn')
+    # Rubble (the Colossus)
+    s = Scene()
+    s.node('Debris', 'Node3D', script=s.ext_res('Script', 'res://scripts/zombies/boss_projectile.gd'), damage=30,
+           splash_radius=2.8, speed=20.0, gravity=12.0, spin=240.0, effect_scale=0.45,
+           hit_effect=s.ext_res('PackedScene', 'res://scenes/effects/slam.tscn'))
+    s.box('Chunk', '.', (0.9, 0.7, 0.8), (0, 0, 0), 'concrete')
+    s.box('Rebar', '.', (0.06, 0.06, 1.3), (0.2, 0.15, 0), 'metal_rust', rot=(0.3, 0.4, 0))
+    s.save('scenes/zombies/debris.tscn')
 
 
 # ------------------------------------------------------------------ pickups
@@ -299,7 +389,7 @@ def pickups():
         s.box('Lid', p, (w + 0.02, 0.04, 0.24), (0, 0.11, 0), 'dark')
         s.box('Label', p, (w * 0.6, 0.08, 0.005), (0, 0, -0.112), color)
     pickup('scenes/pickups/ammo_pistol.tscn', 'AmmoPistol',
-           dict(kind=1, amount=24, ammo_type=S('pistol'), display_name=S('Патроны для пистолета')),
+           dict(kind=1, amount=30, ammo_type=S('pistol'), display_name=S('Патроны для пистолета')),
            lambda s, p: ammo_box(s, p, 0.26, 'brass'))
     def shells(s, p):
         ammo_box(s, p, 0.3, 'rocket_red')
@@ -307,9 +397,9 @@ def pickups():
             s.cyl(f'Shell{i}', p, 0.018, 0.07, (-0.09 + i * 0.06, 0.17, 0), 'rocket_red')
             s.cyl(f'Brass{i}', p, 0.019, 0.02, (-0.09 + i * 0.06, 0.135, 0), 'brass')
     pickup('scenes/pickups/ammo_shells.tscn', 'AmmoShells',
-           dict(kind=1, amount=8, ammo_type=S('shells'), display_name=S('Патроны для дробовика')), shells, (1, 0.5, 0.4))
+           dict(kind=1, amount=10, ammo_type=S('shells'), display_name=S('Патроны для дробовика')), shells, (1, 0.5, 0.4))
     pickup('scenes/pickups/ammo_rifle.tscn', 'AmmoRifle',
-           dict(kind=1, amount=60, ammo_type=S('rifle'), display_name=S('Патроны для автомата')),
+           dict(kind=1, amount=75, ammo_type=S('rifle'), display_name=S('Патроны для автомата')),
            lambda s, p: (ammo_box(s, p, 0.4, 'paint_yellow'),
                          s.box('Mag', p, (0.04, 0.16, 0.08), (0.12, 0.2, 0), 'bakelite', rot=(0, 0, 0.3))))
     def rockets(s, p):
@@ -413,6 +503,42 @@ def effects():
     s.node('Light', 'OmniLight3D', '.', light_color=C(1, 0.55, 0.2), light_energy=12.0, omni_range=14.0)
     s.node('Sound', 'AudioStreamPlayer3D', '.', stream=s.sound('explosion'), autoplay=True, unit_size=15.0, volume_db=2.0)
     s.save('scenes/effects/explosion.tscn')
+
+    # Ground slam: a ring of dust and flying chunks
+    s = Scene()
+    dust = s.sub_res('QuadMesh', size=V2(1.4, 1.4), material=particle_mat(s, True, True))
+    chunk = s.sub_res('BoxMesh', size=V3(0.18, 0.12, 0.2), material=s.mat('concrete'))
+    grow = s.sub_res('Curve', _data='[Vector2(0, 0.5), 0.0, 0.0, 0, 0, Vector2(1, 1.8), 0.0, 0.0, 0, 0]', point_count=2)
+    ramp = s.sub_res('Gradient', offsets='PackedFloat32Array(0, 0.15, 1)',
+                     colors='PackedColorArray(0.4, 0.37, 0.33, 0, 0.4, 0.37, 0.33, 0.8, 0.35, 0.33, 0.3, 0)')
+    s.node('Slam', 'Node3D', script=s.ext_res('Script', script), lifetime=3.0)
+    s.node('Dust', 'CPUParticles3D', '.', emitting=False, amount=40, lifetime=1.6, one_shot=True, explosiveness=1.0,
+           mesh=dust, emission_shape=6, emission_ring_axis=V3(0, 1, 0), emission_ring_radius=1.0,
+           emission_ring_inner_radius=0.8, emission_ring_height=0.2, direction=V3(1, 0, 0), spread=180.0, flatness=1.0,
+           gravity=V3(0, 0.4, 0), initial_velocity_min=5.0, initial_velocity_max=8.0, damping_min=4.0, damping_max=6.0,
+           scale_amount_curve=grow, color_ramp=ramp)
+    s.node('Chunks', 'CPUParticles3D', '.', emitting=False, amount=16, lifetime=1.2, one_shot=True, explosiveness=1.0,
+           mesh=chunk, direction=V3(0, 1, 0), spread=60.0, gravity=V3(0, -14, 0), initial_velocity_min=4.0,
+           initial_velocity_max=8.0, angular_velocity_min=-300.0, angular_velocity_max=300.0)
+    s.node('Sound', 'AudioStreamPlayer3D', '.', stream=s.sound('slam'), autoplay=True, unit_size=12.0, volume_db=2.0)
+    s.save('scenes/effects/slam.tscn')
+
+    # Acid splash
+    s = Scene()
+    drop = s.sub_res('SphereMesh', radius=0.04, height=0.08, radial_segments=6, rings=3, material=particle_mat(s))
+    mist = s.sub_res('QuadMesh', size=V2(0.8, 0.8), material=particle_mat(s, True, True))
+    ramp = s.sub_res('Gradient', offsets='PackedFloat32Array(0, 1)',
+                     colors='PackedColorArray(0.5, 1, 0.2, 0.7, 0.3, 0.6, 0.1, 0)')
+    s.node('AcidSplash', 'Node3D', script=s.ext_res('Script', script), lifetime=2.0, light_fade_time=0.5)
+    s.node('Drops', 'CPUParticles3D', '.', emitting=False, amount=20, lifetime=0.7, one_shot=True, explosiveness=1.0,
+           mesh=drop, direction=V3(0, 0, -1), spread=70.0, gravity=V3(0, -12, 0), initial_velocity_min=2.0,
+           initial_velocity_max=5.0, color=C(1.2, 2.5, 0.4))
+    s.node('Mist', 'CPUParticles3D', '.', emitting=False, amount=8, lifetime=1.2, one_shot=True, explosiveness=0.9,
+           mesh=mist, direction=V3(0, 0, -1), spread=60.0, gravity=V3(0, 0.3, 0), initial_velocity_min=0.4,
+           initial_velocity_max=1.2, scale_amount_min=0.8, scale_amount_max=1.6, color_ramp=ramp)
+    s.node('Light', 'OmniLight3D', '.', light_color=C(0.5, 1, 0.2), light_energy=3.0, omni_range=4.0)
+    s.node('Sound', 'AudioStreamPlayer3D', '.', stream=s.sound('splash'), autoplay=True, unit_size=5.0)
+    s.save('scenes/effects/acid_splash.tscn')
 
     # Looping fire (burning cars, barrels)
     s = Scene()
@@ -736,6 +862,11 @@ def hud():
           offset_bottom=105.0, grow_horizontal=2)
     label(s, 'TimerLabel', g, '', 34, C(1, 0.85, 0.5), 1, anchors_preset=5, anchor_left=0.5, anchor_right=0.5,
           offset_left=-300.0, offset_top=16.0, offset_right=300.0, offset_bottom=60.0, grow_horizontal=2)
+    s.node('BossBox', 'VBoxContainer', g, anchors_preset=5, anchor_left=0.5, anchor_right=0.5, offset_left=-280.0,
+           offset_top=64.0, offset_right=280.0, offset_bottom=110.0, grow_horizontal=2, mouse_filter=2)
+    label(s, 'BossLabel', f'{g}/BossBox', '', 22, C(1, 0.55, 0.45), 1)
+    s.node('BossBar', 'ProgressBar', f'{g}/BossBox', custom_minimum_size=V2(0, 14), value=100.0,
+           show_percentage=False, mouse_filter=2, modulate=C(1, 0.3, 0.25))
     s.node('ObjectiveBox', 'VBoxContainer', g, offset_left=24.0, offset_top=20.0, offset_right=520.0,
            offset_bottom=110.0, mouse_filter=2)
     label(s, 'Header', f'{g}/ObjectiveBox', 'ЦЕЛЬ', 15, C(0.9, 0.3, 0.2))
@@ -826,6 +957,7 @@ if __name__ == '__main__':
     zombies()
     pickups()
     effects()
+    projectiles()
     prefabs()
     ui_files()
     hud()

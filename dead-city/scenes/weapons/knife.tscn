@@ -14,6 +14,7 @@ id = "knife"
 display_name = "Нож"
 slot = 1
 equip_time = 0.2
+damage = 50
 
 [node name="Model" parent="." instance=ExtResource("2_knife_fp")]
 

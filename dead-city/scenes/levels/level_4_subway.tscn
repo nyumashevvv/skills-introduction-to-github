@@ -54,11 +54,13 @@
 
 [ext_resource type="Script" path="res://scripts/story/holdout.gd" id="27_holdout"]
 
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="28_player"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/lineman.tscn" id="28_lineman"]
 
-[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="29_hud"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="29_player"]
 
-[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="30_ambience"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="30_hud"]
+
+[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="31_ambience"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -1212,6 +1214,10 @@ script = ExtResource("27_holdout")
 duration = 60.0
 timer_text = "Решётка откроется через %s"
 spawners = Array[NodePath]([NodePath("../TunnelSpawn"), NodePath("../PassageSpawn")])
+boss_spawner = NodePath("../SpawnBoss")
+boss_time = 20.0
+boss_event = NodePath("../LinemanWarning")
+boss_text = "Убей Обходчика!"
 on_finished = NodePath("../GateOpen")
 
 [node name="TunnelSpawn" type="Node3D" parent="Story"]
@@ -1242,6 +1248,22 @@ position = Vector3(14.0, 0.0, -150.0)
 [node name="M1" type="Marker3D" parent="Story/PassageSpawn"]
 position = Vector3(14.0, 0.0, -152.0)
 
+[node name="SpawnBoss" type="Node3D" parent="Story"]
+script = ExtResource("26_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("28_lineman")])
+count = 1
+interval = 0.1
+max_alive = 10
+
+[node name="M0" type="Marker3D" parent="Story/SpawnBoss"]
+position = Vector3(14.0, 0.0, -151.0)
+
+[node name="LinemanWarning" type="Node" parent="Story"]
+script = ExtResource("24_story_event")
+speaker = "Диспетчер"
+message = "По боковому проходу идёт что-то тяжёлое… Обходчик с кувалдой! Когда он бьёт по земле — подпрыгни, ударная волна идёт по полу."
+message_duration = 9.0
+
 [node name="GateOpen" type="Node" parent="Story"]
 script = ExtResource("24_story_event")
 objective = "Поднимайся к выходу"
@@ -1266,13 +1288,13 @@ shape = SubResource("BoxShape3D_12")
 script = ExtResource("24_story_event")
 complete_level = true
 
-[node name="Player" parent="." instance=ExtResource("28_player")]
+[node name="Player" parent="." instance=ExtResource("29_player")]
 position = Vector3(0.0, 0.0, -3.0)
 rotation = Vector3(0.0, 0.0, 0.0)
 
-[node name="HUD" parent="." instance=ExtResource("29_hud")]
+[node name="HUD" parent="." instance=ExtResource("30_hud")]
 
 [node name="Ambience" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("30_ambience")
+stream = ExtResource("31_ambience")
 autoplay = true
 volume_db = -12.0

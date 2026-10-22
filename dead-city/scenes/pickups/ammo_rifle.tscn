@@ -35,7 +35,7 @@ collision_mask = 2
 monitorable = false
 script = ExtResource("1_pickup")
 kind = 1
-amount = 60
+amount = 75
 ammo_type = "rifle"
 display_name = "Патроны для автомата"
 

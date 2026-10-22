@@ -10,6 +10,8 @@ extends Block
 @export var prompt := "Открыть"
 @export var open_offset := Vector3(0.0, 3.0, 0.0)
 @export var open_time := 1.2
+## When true a StoryEvent only unlocks the door (the player still opens it by hand).
+@export var event_unlocks := false
 ## StoryEvent fired when the door opens.
 @export var event: NodePath
 
@@ -37,7 +39,10 @@ func interact(player: Player) -> void:
 
 ## Called by StoryEvents.
 func activate() -> void:
-	open()
+	if event_unlocks:
+		player_can_open = true
+	else:
+		open()
 
 
 func open() -> void:

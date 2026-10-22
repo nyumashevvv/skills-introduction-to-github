@@ -4,7 +4,7 @@ extends Node
 
 var out := "user://"
 ## Optional second argument: comma-separated sections to render (menu, street, station, stadium).
-var sections := PackedStringArray(["menu", "gallery", "street", "station", "hospital", "subway", "stadium"])
+var sections := PackedStringArray(["menu", "gallery", "bosses", "street", "station", "hospital", "subway", "stadium"])
 
 
 func frames(n: int) -> void:
@@ -83,6 +83,8 @@ func _run() -> void:
 		await snap("01_menu")
 	if "gallery" in sections:
 		await _gallery()
+	if "bosses" in sections:
+		await _bosses()
 	if "street" in sections:
 		await _street()
 	if "station" in sections:
@@ -139,10 +141,10 @@ func _station() -> void:
 func _stadium() -> void:
 	var level := await load_level("res://scenes/levels/level_5_stadium.tscn")
 	var player := await play(level)
-	var brute := (load("res://scenes/zombies/brute.tscn") as PackedScene).instantiate() as Zombie
-	brute.position = Vector3(3, 0, -14)
-	level.add_child(brute)
-	brute.alert(false)
+	var colossus := (load("res://scenes/zombies/colossus.tscn") as PackedScene).instantiate() as Zombie
+	colossus.position = Vector3(-6.5, 0, -12)
+	level.add_child(colossus)
+	colossus.alert(false)
 	await get_tree().create_timer(0.4).timeout
 	freeze_zombies()
 	level.get_node("Helicopter").activate()
@@ -186,6 +188,38 @@ func _gallery() -> void:
 	await snap("00_gallery")
 	await pose(player, Vector3(-5.5, 0, -7.0), -60, -8)
 	await snap("00_gallery_side")
+
+
+## The five chapter bosses side by side in the hospital lobby (power on, no HUD).
+func _bosses() -> void:
+	var level := await load_level("res://scenes/levels/level_3_hospital.tscn")
+	var player := await play(level)
+	level.get_node("Story/PowerOn").call("fire")
+	(level.get_node("Decor/Alarm") as AudioStreamPlayer3D).stop()
+	await get_tree().create_timer(2.0).timeout
+	for z in get_tree().get_nodes_in_group("zombies"):
+		z.queue_free()
+	for spawner: String in ["Story/WardHorde", "Story/LobbyHorde"]:
+		(level.get_node(spawner) as ZombieSpawner).deactivate()
+	await frames(2)
+	var specs := [["butcher", Vector3(-4.4, 0, -12.2)], ["warden", Vector3(-2.2, 0, -12.0)], ["patient_zero", Vector3(-0.1, 0, -11.8)],
+		["lineman", Vector3(2.1, 0, -12.0)], ["colossus", Vector3(5.2, 0, -12.6)]]
+	for spec: Array in specs:
+		var boss := (load("res://scenes/zombies/%s.tscn" % spec[0]) as PackedScene).instantiate() as Boss
+		boss.position = spec[1]
+		level.add_child(boss)
+		boss.set_physics_process(false)
+		boss.rotation.y = PI - 0.2
+	await frames(5)
+	for boss in get_tree().get_nodes_in_group("bosses"):
+		(boss as Boss)._play("Walk", 1.0)
+	level.hud.gameplay.visible = false
+	player.holder.visible = false
+	await pose(player, Vector3(0.3, 0, -6.2), 0, 12)
+	await get_tree().create_timer(0.6).timeout
+	await snap("00_bosses")
+	level.hud.gameplay.visible = true
+	player.holder.visible = true
 
 
 func _hospital() -> void:

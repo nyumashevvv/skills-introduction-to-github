@@ -54,7 +54,7 @@
 
 [ext_resource type="PackedScene" path="res://scenes/zombies/runner.tscn" id="27_runner"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/brute.tscn" id="28_brute"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/warden.tscn" id="28_warden"]
 
 [ext_resource type="PackedScene" path="res://scenes/pickups/keycard.tscn" id="29_keycard"]
 
@@ -715,14 +715,24 @@ rotation = Vector3(0.0, 1.8884, 0.0)
 position = Vector3(6.0, 0.0, -30.0)
 rotation = Vector3(0.0, 0.2533, 0.0)
 
-[node name="GarageBrute" parent="Zombies" instance=ExtResource("28_brute")]
-position = Vector3(13.0, 0.0, -51.0)
-rotation = Vector3(0.0, 0.3458, 0.0)
-max_health = 600
-
 [node name="Walker7" parent="Zombies" instance=ExtResource("26_walker")]
-position = Vector3(16.0, 0.0, -40.0)
+position = Vector3(12.0, 0.0, -52.0)
+rotation = Vector3(0.0, 0.3458, 0.0)
+
+[node name="Runner2" parent="Zombies" instance=ExtResource("27_runner")]
+position = Vector3(9.0, 0.0, -55.0)
 rotation = Vector3(0.0, 0.4786, 0.0)
+
+[node name="Warden" parent="Zombies" instance=ExtResource("28_warden")]
+position = Vector3(30.0, 0.0, -44.0)
+rotation = Vector3(0.0, 1.5708, 0.0)
+sight_range = 12.0
+alert_event = NodePath("../../Story/WardenAppears")
+death_event = NodePath("../../Story/WardenDead")
+
+[node name="Walker8" parent="Zombies" instance=ExtResource("26_walker")]
+position = Vector3(16.0, 0.0, -40.0)
+rotation = Vector3(0.0, 2.2689, 0.0)
 
 [node name="Keycard1" parent="Pickups" instance=ExtResource("29_keycard")]
 position = Vector3(-8.2, 0.8, -24.3)
@@ -755,6 +765,9 @@ position = Vector3(-2.5, 0.0, -54.0)
 
 [node name="Medkit3" parent="Pickups" instance=ExtResource("31_medkit")]
 position = Vector3(17.0, 0.0, -58.0)
+
+[node name="AmmoRifle3" parent="Pickups" instance=ExtResource("32_ammo_rifle")]
+position = Vector3(18.5, 0.0, -55.0)
 
 [node name="Intro" type="Node" parent="Story"]
 script = ExtResource("35_story_event")
@@ -815,9 +828,20 @@ position = Vector3(0.0, 0.0, -4.0)
 
 [node name="ShutterOpened" type="Node" parent="Story"]
 script = ExtResource("35_story_event")
-objective = "Выбирайся во двор"
+targets = Array[NodePath]([NodePath("../../Zombies/Warden")])
+
+[node name="WardenAppears" type="Node" parent="Story"]
+script = ExtResource("35_story_event")
+objective = "Убей Надзирателя"
 speaker = "Диспетчер"
-message = "Во дворе машина! Давай, быстрее!"
+message = "Во дворе машина… и охранник со щитом! Щит держит пули — целься в голову, заходи сбоку или стреляй из РПГ."
+message_duration = 9.0
+
+[node name="WardenDead" type="Node" parent="Story"]
+script = ExtResource("35_story_event")
+objective = "Садись в машину во дворе"
+speaker = "Диспетчер"
+message = "Чисто! Машина ждёт — давай!"
 message_duration = 6.0
 targets = Array[NodePath]([NodePath("../ExitTrigger")])
 

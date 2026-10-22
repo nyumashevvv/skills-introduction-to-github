@@ -103,4 +103,13 @@ save('shotgun', blast)
 rack = lambda f1, f2: mix(click(f1, 0.07, 45), delay(lowpass(env_noise(0.08, 30), 0.3), 0.02), delay(click(f2, 0.06, 55), 0.12))
 save('shotgun_pump', mix(rack(500, 900), delay(rack(700, 1200), 0.16)), 0.6)
 save('shell_insert', mix(click(1800, 0.04, 90), delay(click(600, 0.07, 50), 0.05)), 0.5)
+
+# bosses (own seed as well)
+random.seed(31)
+save('slam', mix(lowpass(env_noise(1.2, 4), 0.05), tone(lambda t: 48 * math.exp(-t * 2) + 20, 1.0, lambda t: math.exp(-t * 4)),
+                 delay(scale(lowpass(env_noise(0.8, 6), 0.25), 0.35), 0.05)))
+save('spit', mix(bandpass(env_noise(0.35, 12), 900, 1.5), scale(lowpass(env_noise(0.2, 20), 0.15), 0.8)), 0.6)
+save('splash', mix(lowpass(env_noise(0.5, 9), 0.2), scale(highpass(env_noise(0.7, 5), 0.5), 0.25)), 0.6)
+save('shield_hit', mix(tone(lambda t: 1250, 0.35, lambda t: math.exp(-t * 14)), scale(tone(lambda t: 1890, 0.3, lambda t: math.exp(-t * 18)), 0.6),
+                       scale(env_noise(0.05, 80, 0.6), 0.8)), 0.45)
 print('sounds ok')

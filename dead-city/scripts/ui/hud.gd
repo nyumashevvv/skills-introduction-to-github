@@ -29,6 +29,9 @@ var _holder: WeaponHolder
 @onready var objective_label: Label = $Gameplay/ObjectiveBox/ObjectiveLabel
 @onready var objective_box: Control = $Gameplay/ObjectiveBox
 @onready var timer_label: Label = $Gameplay/TimerLabel
+@onready var boss_box: Control = $Gameplay/BossBox
+@onready var boss_label: Label = $Gameplay/BossBox/BossLabel
+@onready var boss_bar: ProgressBar = $Gameplay/BossBox/BossBar
 @onready var prompt_label: Label = $Gameplay/PromptLabel
 @onready var pickup_label: Label = $Gameplay/PickupLabel
 @onready var subtitle_panel: PanelContainer = $Gameplay/Subtitle
@@ -59,6 +62,7 @@ func _ready() -> void:
 	reload_label.visible = false
 	objective_box.visible = false
 	timer_label.text = ""
+	boss_box.visible = false
 	prompt_label.text = ""
 	fade.color.a = 0.0
 	hide_menus()
@@ -152,6 +156,17 @@ func set_objective(text: String) -> void:
 
 func set_timer(text: String) -> void:
 	timer_label.text = text
+
+
+func show_boss(title: String, health: int, max_health: int) -> void:
+	boss_box.visible = true
+	boss_label.text = title
+	boss_bar.max_value = max_health
+	boss_bar.value = maxi(health, 0)
+
+
+func hide_boss() -> void:
+	boss_box.visible = false
 
 
 func set_prompt(text: String) -> void:

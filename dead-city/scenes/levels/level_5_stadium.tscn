@@ -60,7 +60,7 @@
 
 [ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="30_zombie_spawner"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/brute.tscn" id="31_brute"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/colossus.tscn" id="31_colossus"]
 
 [ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="32_player"]
 
@@ -1107,6 +1107,7 @@ spawners = Array[NodePath]([NodePath("../SpawnNorth"), NodePath("../SpawnEast"),
 boss_spawner = NodePath("../SpawnBoss")
 boss_time = 55.0
 boss_event = NodePath("../BossWarning")
+boss_text = "Убей Колосса! Вертолёт не сядет"
 on_finished = NodePath("../HeliArrives")
 
 [node name="SpawnNorth" type="Node3D" parent="Story"]
@@ -1167,7 +1168,7 @@ position = Vector3(2.0, 0.0, 64.0)
 
 [node name="SpawnBoss" type="Node3D" parent="Story"]
 script = ExtResource("30_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("31_brute")])
+zombie_scenes = Array[PackedScene]([ExtResource("31_colossus")])
 count = 1
 interval = 0.1
 max_alive = 10
@@ -1178,8 +1179,8 @@ position = Vector3(0.0, 0.0, -67.0)
 [node name="BossWarning" type="Node" parent="Story"]
 script = ExtResource("27_story_event")
 speaker = "Диспетчер"
-message = "Осторожно! С севера идёт что-то огромное. Не подпускай его!"
-message_duration = 6.0
+message = "С севера идёт что-то огромное… Это Колосс! Он швыряет обломки и бьёт о землю — прыгай, когда замахивается. Пока он жив, вертолёт не сядет!"
+message_duration = 9.0
 
 [node name="HeliArrives" type="Node" parent="Story"]
 script = ExtResource("27_story_event")

@@ -47,7 +47,7 @@ collision_mask = 2
 monitorable = false
 script = ExtResource("1_pickup")
 kind = 1
-amount = 8
+amount = 10
 ammo_type = "shells"
 display_name = "Патроны для дробовика"
 

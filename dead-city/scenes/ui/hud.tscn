@@ -100,6 +100,29 @@ theme_override_font_sizes/font_size = 34
 theme_override_colors/font_color = Color(1.0, 0.85, 0.5, 1.0)
 horizontal_alignment = 1
 
+[node name="BossBox" type="VBoxContainer" parent="Gameplay"]
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -280.0
+offset_top = 64.0
+offset_right = 280.0
+offset_bottom = 110.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="BossLabel" type="Label" parent="Gameplay/BossBox"]
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(1.0, 0.55, 0.45, 1.0)
+horizontal_alignment = 1
+
+[node name="BossBar" type="ProgressBar" parent="Gameplay/BossBox"]
+custom_minimum_size = Vector2(0.0, 14.0)
+value = 100.0
+show_percentage = false
+mouse_filter = 2
+modulate = Color(1.0, 0.3, 0.25, 1.0)
+
 [node name="ObjectiveBox" type="VBoxContainer" parent="Gameplay"]
 offset_left = 24.0
 offset_top = 20.0

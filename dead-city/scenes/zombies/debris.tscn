@@ -1,0 +1,36 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/zombies/boss_projectile.gd" id="1_boss_projectile"]
+
+[ext_resource type="PackedScene" path="res://scenes/effects/slam.tscn" id="2_slam"]
+
+[ext_resource type="Material" path="res://materials/concrete.tres" id="3_concrete"]
+
+[ext_resource type="Material" path="res://materials/metal_rust.tres" id="4_metal_rust"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+size = Vector3(0.9, 0.7, 0.8)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(0.06, 0.06, 1.3)
+material = ExtResource("4_metal_rust")
+
+[node name="Debris" type="Node3D"]
+script = ExtResource("1_boss_projectile")
+damage = 30
+splash_radius = 2.8
+speed = 20.0
+gravity = 12.0
+spin = 240.0
+effect_scale = 0.45
+hit_effect = ExtResource("2_slam")
+
+[node name="Chunk" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_1")
+position = Vector3(0.0, 0.0, 0.0)
+
+[node name="Rebar" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.2, 0.15, 0.0)
+rotation = Vector3(0.3, 0.4, 0.0)

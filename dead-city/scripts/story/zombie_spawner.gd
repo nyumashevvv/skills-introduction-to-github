@@ -29,6 +29,10 @@ func deactivate() -> void:
 	_left = 0
 
 
+func alive_count() -> int:
+	return _alive
+
+
 func spawn_one(scene: PackedScene) -> Zombie:
 	var markers := get_children().filter(func(n: Node) -> bool: return n is Marker3D)
 	var origin: Vector3 = (markers.pick_random() as Marker3D).global_position if not markers.is_empty() else global_position

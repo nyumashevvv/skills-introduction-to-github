@@ -1,5 +1,5 @@
 extends Node
-## Plays through all three chapters by teleporting the player and checks every story beat.
+## Plays through all five chapters by teleporting the player and checks every story beat.
 ##   godot --headless --path . res://tests/test_story.tscn
 
 var failures := 0
@@ -58,10 +58,10 @@ func node_pos(level: Level, path: String) -> Vector3:
 	return (level.get_node(path) as Node3D).global_position
 
 
-func kill_all(level: Level) -> void:
+func kill_all(level: Level, bosses := false) -> void:
 	for z in get_tree().get_nodes_in_group("zombies"):
 		var zombie := z as Zombie
-		if zombie.state != Zombie.State.DEAD:
+		if zombie.state != Zombie.State.DEAD and (bosses or not zombie is Boss):
 			zombie.take_damage(99999, Vector3.FORWARD, zombie.global_position)
 	await frames(3)
 
@@ -105,7 +105,21 @@ func _run() -> void:
 	check(level.hud.objective_label.text == "Доберись до полицейского участка", "alley cleared -> objective: " + level.hud.objective_label.text)
 	await teleport(level, Vector3(0, 0, -104))
 	check((level.get_node("Story/Horde") as ZombieSpawner).active, "ambush horde started")
-	check(level.hud.objective_label.text == "Войди в полицейский участок", "objective: enter the station")
+	check(level.hud.objective_label.text == "Беги к полицейскому участку", "objective: run to the station")
+	var butcher := level.get_node("Zombies/Butcher") as Boss
+	check(butcher.state == Zombie.State.IDLE and not level.hud.boss_box.visible, "the Butcher waits at the station")
+	await teleport(level, Vector3(0, 0, -112))
+	check(butcher.state != Zombie.State.IDLE and level.hud.boss_box.visible and level.hud.boss_label.text == "Мясник",
+		"the Butcher attacks, boss bar: " + level.hud.boss_label.text)
+	check(level.hud.objective_label.text == "Убей Мясника", "objective: " + level.hud.objective_label.text)
+	var station_door := level.get_node("Doors/StationDoor") as Door
+	station_door.interact(p)
+	await frames(3)
+	check(not station_door.is_open, "station door stays shut while the Butcher lives")
+	butcher.take_damage(99999, Vector3.FORWARD, butcher.global_position)
+	await frames(5)
+	check(not level.hud.boss_box.visible and level.hud.objective_label.text == "Войди в полицейский участок",
+		"Butcher dead -> objective: " + level.hud.objective_label.text)
 	await teleport(level, Vector3(0, 0, -127.6))
 	p.rotation = Vector3.ZERO
 	p.head.rotation = Vector3.ZERO
@@ -149,6 +163,14 @@ func _run() -> void:
 	await frames(10)
 	check(shutter.is_open, "garage shutter raised")
 	await get_tree().create_timer(3.0).timeout
+	var warden := level.get_node("Zombies/Warden") as Boss
+	check(warden.state != Zombie.State.IDLE and level.hud.objective_label.text == "Убей Надзирателя",
+		"the Warden comes for you: " + level.hud.objective_label.text)
+	await teleport(level, Vector3(30, 0.1, -48))
+	check(get_tree().current_scene == level, "no escape while the Warden lives")
+	await kill_all(level, true)
+	check(level.hud.objective_label.text.contains("машину"), "Warden dead -> objective: " + level.hud.objective_label.text)
+	await teleport(level, Vector3(26, 0.1, -48))
 	await teleport(level, Vector3(30, 0.1, -48))
 
 	# ---------------------------------------------------------------- chapter 3: hospital
@@ -158,7 +180,7 @@ func _run() -> void:
 	p = level.player
 	check(p.holder.get_weapon("bazooka").owned, "bazooka carried into the hospital")
 	check_paths(level, {"shotgun": node_pos(level, "Pickups/WeaponShotgun1"), "generator": Vector3(17.5, 0, -28),
-		"fire door": Vector3(-23, 0, -16.5), "yard": Vector3(-31, 0, -17)})
+		"fire door": Vector3(-23, 0, -16.5), "yard": Vector3(-31, 0, -17), "metro entrance": Vector3(-34.5, 0, -17)})
 	await teleport(level, node_pos(level, "Pickups/WeaponShotgun1"))
 	check(p.holder.get_weapon("shotgun").owned and p.holder.current.id == "shotgun", "shotgun picked up and equipped")
 	var fire_door := level.get_node("Doors/FireDoor") as Door
@@ -175,7 +197,16 @@ func _run() -> void:
 	check((level.get_node("Story/WardHorde") as ZombieSpawner).active, "power on: the wards wake up")
 	check(level.hud.objective_label.text.contains("пожарному выходу"), "objective: " + level.hud.objective_label.text)
 	await kill_all(level)
-	await teleport(level, Vector3(-31, 0.1, -17))
+	await teleport(level, Vector3(-26.5, 0.1, -17))
+	var patient := level.get_node("Zombies/PatientZero") as Boss
+	check(patient.state != Zombie.State.IDLE and level.hud.objective_label.text == "Убей Пациента Ноль",
+		"Patient Zero in the yard: " + level.hud.objective_label.text)
+	await teleport(level, Vector3(-34.5, 0.1, -17))
+	check(get_tree().current_scene == level, "metro entrance closed while Patient Zero lives")
+	await kill_all(level, true)
+	check(level.hud.objective_label.text == "Спускайся в метро", "Patient Zero dead -> " + level.hud.objective_label.text)
+	await teleport(level, Vector3(-30, 0.1, -17))
+	await teleport(level, Vector3(-34.5, 0.1, -17))
 
 	# ---------------------------------------------------------------- chapter 4: subway
 	level = await wait_scene("Subway")
@@ -198,10 +229,18 @@ func _run() -> void:
 	check(gate_holdout.running, "gate siege started")
 	await get_tree().create_timer(4.0).timeout
 	check(level.hud.timer_label.text.begins_with("Решётка откроется"), "timer: " + level.hud.timer_label.text)
+	gate_holdout.time_left = gate_holdout.duration - gate_holdout.boss_time - 0.1
+	await frames(5)
+	var linemen := get_tree().get_nodes_in_group("bosses").filter(func(z: Zombie) -> bool: return z.name.begins_with("Lineman"))
+	check(linemen.size() == 1, "the Lineman comes out of the side passage")
 	gate_holdout.time_left = 0.05
+	await frames(5)
+	check(not (level.get_node("Doors/Gate") as Door).is_open and level.hud.timer_label.text == "Убей Обходчика!",
+		"gate waits for the Lineman: " + level.hud.timer_label.text)
+	await kill_all(level, true)
 	await get_tree().create_timer(2.5).timeout
-	check((level.get_node("Doors/Gate") as Door).is_open, "gate opened")
-	await kill_all(level)
+	check((level.get_node("Doors/Gate") as Door).is_open, "Lineman dead -> gate opened")
+	await kill_all(level, true)
 	await teleport(level, Vector3(0, 0.1, -179))
 
 	# ---------------------------------------------------------------- chapter 5: stadium
@@ -221,12 +260,17 @@ func _run() -> void:
 	check(siege_zombies >= 10, "siege spawns zombies (%d alive)" % siege_zombies)
 	holdout.time_left = holdout.duration - holdout.boss_time - 0.1
 	await frames(5)
-	var brutes := get_tree().get_nodes_in_group("zombies").filter(func(z: Zombie) -> bool: return z.name.begins_with("Brute"))
-	check(brutes.size() == 1, "boss spawned at the halfway mark")
+	var colossi := get_tree().get_nodes_in_group("bosses").filter(func(z: Zombie) -> bool: return z.name.begins_with("Colossus"))
+	check(colossi.size() == 1, "the Colossus arrives at the halfway mark")
+	check(level.hud.boss_box.visible and level.hud.boss_label.text == "Колосс", "boss bar: " + level.hud.boss_label.text)
 	holdout.time_left = 0.05
 	await frames(5)
-	check(not holdout.running and level.get_node("Helicopter").visible, "time up: helicopter is flying in")
-	await kill_all(level)
+	check(holdout.running and not level.get_node("Helicopter").visible and level.hud.timer_label.text.begins_with("Убей Колосса"),
+		"helicopter waits for the Colossus: " + level.hud.timer_label.text)
+	await kill_all(level, true)
+	await frames(5)
+	check(not holdout.running and level.get_node("Helicopter").visible, "Colossus dead: helicopter is flying in")
+	await kill_all(level, true)
 	await teleport(level, Vector3(0, 0.1, 20))
 	await get_tree().create_timer(11.0).timeout
 	check(level.hud.objective_label.text == "Садись в вертолёт!", "objective: board the helicopter")

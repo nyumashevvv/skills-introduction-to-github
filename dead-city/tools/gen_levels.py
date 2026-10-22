@@ -1,9 +1,10 @@
-"""Generates the three chapters of Dead City. Run from the project root."""
+"""Generates the five chapters of Dead City. Run from the project root."""
 import math
 import random
 from tscn import *
 
-ZOMBIE = {k: f'res://scenes/zombies/{k}.tscn' for k in ('walker', 'runner', 'brute')}
+ZOMBIE = {k: f'res://scenes/zombies/{k}.tscn' for k in
+          ('walker', 'runner', 'brute', 'butcher', 'warden', 'patient_zero', 'lineman', 'colossus')}
 PICKUP = {k: f'res://scenes/pickups/{k}.tscn' for k in
           ('medkit', 'ammo_pistol', 'ammo_rifle', 'ammo_rocket', 'ammo_shells', 'weapon_rifle', 'weapon_shotgun',
            'weapon_bazooka', 'keycard')}
@@ -236,7 +237,8 @@ def level_1():
     L.omni((0, 6, -128), (0.4, 0.6, 1.0), 2.0, 10, flicker=True)
     L.omni((0, 3.5, -127), (1, 0.85, 0.6), 1.5, 8)
     L.door('StationDoor', (3.0, 3.0, 0.2), (0, 1.5, -129.6), 'police_blue', event='Exit',
-           prompt='Войти в участок', open_offset=V3(0, 0, -0.01), open_time=0.1)
+           prompt='Войти в участок', open_offset=V3(0, 0, -0.01), open_time=0.1, player_can_open=False,
+           event_unlocks=True, locked_message='Сначала разберись с Мясником')
 
     # zombies
     for kind, pos in [('walker', (-2, 0, -14)), ('walker', (2.5, 0, -22)), ('walker', (-4.5, 0, -31)),
@@ -246,6 +248,8 @@ def level_1():
                       ('walker', (-3, 0, -98)), ('walker', (0, 0, -110)), ('walker', (6, 0, -119)),
                       ('walker', (-6.5, 0, -125))]:
         L.zombie(kind, pos)
+    L.zombie('butcher', (0, 0, -125), math.pi, name='Butcher', sight_range=14.0,
+             alert_event=NP('../../Story/ButcherAppears'), death_event=NP('../../Story/ButcherDead'))
     # pickups
     L.pickup('ammo_pistol', (7.0, 0, -12))
     L.pickup('medkit', (-7.5, 0, -50))
@@ -254,6 +258,8 @@ def level_1():
     L.pickup('ammo_pistol', (-7.2, 0, -90))
     L.pickup('medkit', (7.3, 0, -104))
     L.pickup('ammo_rifle', (0.5, 0, -120))
+    L.pickup('ammo_pistol', (-7.6, 0, -121))
+    L.pickup('ammo_rifle', (7.6, 0, -112))
 
     # story
     D = 'Диспетчер'
@@ -274,9 +280,16 @@ def level_1():
     L.event('AlleyCleared', speaker=D, objective='Доберись до полицейского участка',
             message='Тихо? Двигай дальше, участок сразу за автобусом.')
     L.trigger('AmbushTrigger', (0, 1.5, -104), (18, 3, 2), 'Ambush')
-    L.event('Ambush', speaker=D, duration=6, objective='Войди в полицейский участок',
+    L.event('Ambush', speaker=D, duration=6, objective='Беги к полицейскому участку',
             message='Сзади! Целая толпа — беги к участку!', targets=['Story/Horde'])
-    L.spawner('Horde', [(-3, 0, -62), (3, 0, -64), (0, 0, -60)], ['runner', 'walker', 'walker'], 8, interval=0.8)
+    L.spawner('Horde', [(-3, 0, -62), (3, 0, -64), (0, 0, -60)], ['runner', 'walker', 'walker'], 6, interval=0.9)
+    L.trigger('ButcherTrigger', (0, 1.5, -112), (18, 3, 2), 'WakeButcher')
+    L.event('WakeButcher', targets=['Zombies/Butcher'])
+    L.event('ButcherAppears', speaker=D, duration=8, objective='Убей Мясника',
+            message='У входа в участок… повар с тесаком? Он не человек уже. Осторожно, он бросается с разбега — '
+                    'отходи в сторону, а если врежется в стену, бей!')
+    L.event('ButcherDead', speaker=D, objective='Войди в полицейский участок',
+            message='Готов! Заходи в участок, пока толпа не догнала.', targets=['Doors/StationDoor'])
     L.event('Exit', complete=True)
 
     L.finish((0, 0, 8))
@@ -376,7 +389,9 @@ def level_2():
     for i, z in enumerate((-16.5, -18.5, -23, -25.5, -29.5, -32)):                       # cells
         L.zombie('walker' if i % 3 else 'runner', (15.5 + (i % 2) * 1.5, 0, z), name=f'Prisoner{i + 1}')
     L.zombie('walker', (8, 0, -18)); L.zombie('walker', (6, 0, -30))
-    L.zombie('brute', (13, 0, -51), max_health=600, name='GarageBrute')
+    L.zombie('walker', (12, 0, -52)); L.zombie('runner', (9, 0, -55))                   # garage
+    L.zombie('warden', (30, 0, -44), math.pi / 2, name='Warden', sight_range=12.0,
+             alert_event=NP('../../Story/WardenAppears'), death_event=NP('../../Story/WardenDead'))
     L.zombie('walker', (16, 0, -40))
 
     # pickups
@@ -390,6 +405,7 @@ def level_2():
     L.pickup('ammo_rifle', (2.5, 0, -54))
     L.pickup('medkit', (-2.5, 0, -54))
     L.pickup('medkit', (17, 0, -58))
+    L.pickup('ammo_rifle', (18.5, 0, -55))
 
     D = 'Диспетчер'
     L.event('Intro', speaker=D, duration=8, targets=['Story/Intro2'],
@@ -406,7 +422,11 @@ def level_2():
                      'Story/LobbyHorde', 'Story/AlertPrisoners'])
     L.event('AlertPrisoners', delay=1.0, targets=[f'Zombies/Prisoner{i}' for i in range(1, 7)])
     L.spawner('LobbyHorde', [(-6, 0, -3), (6, 0, -3), (0, 0, -4)], ['walker', 'walker', 'runner'], 8, interval=1.2)
-    L.event('ShutterOpened', speaker=D, objective='Выбирайся во двор', message='Во дворе машина! Давай, быстрее!',
+    L.event('ShutterOpened', targets=['Zombies/Warden'])
+    L.event('WardenAppears', speaker=D, duration=9, objective='Убей Надзирателя',
+            message='Во дворе машина… и охранник со щитом! Щит держит пули — целься в голову, заходи сбоку '
+                    'или стреляй из РПГ.')
+    L.event('WardenDead', speaker=D, objective='Садись в машину во дворе', message='Чисто! Машина ждёт — давай!',
             targets=['Story/ExitTrigger'])
     L.trigger('ExitTrigger', (30, 1.5, -48), (4, 3, 14), 'Exit', enabled=False)
     L.event('Exit', complete=True)
@@ -515,14 +535,16 @@ def level_3():
     L.node('Holdout', 'Node', 'Story', script=L.ext_res('Script', 'res://scripts/story/holdout.gd'), duration=120.0,
            spawners=NPS(['../SpawnNorth', '../SpawnEast', '../SpawnWest', '../SpawnSouth']),
            boss_spawner=NP('../SpawnBoss'), boss_time=55.0, boss_event=NP('../BossWarning'),
-           on_finished=NP('../HeliArrives'))
+           boss_text=S('Убей Колосса! Вертолёт не сядет'), on_finished=NP('../HeliArrives'))
     mix = ['walker', 'walker', 'walker', 'runner']
     L.spawner('SpawnNorth', [(-2, 0, -66), (2, 0, -68)], mix, 0, interval=2.6, continuous=True, max_alive=6)
     L.spawner('SpawnEast', [(52, 0, -2), (50, 0, 2)], mix, 0, interval=3.2, continuous=True, max_alive=5)
     L.spawner('SpawnWest', [(-52, 0, 2), (-50, 0, -2)], mix, 0, interval=3.2, continuous=True, max_alive=5)
     L.spawner('SpawnSouth', [(-2, 0, 63), (2, 0, 64)], mix, 0, interval=5.0, continuous=True, max_alive=3)
-    L.spawner('SpawnBoss', [(0, 0, -67)], ['brute'], 1, interval=0.1)
-    L.event('BossWarning', speaker=D, duration=6, message='Осторожно! С севера идёт что-то огромное. Не подпускай его!')
+    L.spawner('SpawnBoss', [(0, 0, -67)], ['colossus'], 1, interval=0.1)
+    L.event('BossWarning', speaker=D, duration=9,
+            message='С севера идёт что-то огромное… Это Колосс! Он швыряет обломки и бьёт о землю — '
+                    'прыгай, когда замахивается. Пока он жив, вертолёт не сядет!')
     L.event('HeliArrives', speaker=P, duration=7, objective='Вертолёт садится — держись!',
             message='Захожу на посадку! Держись, я почти над тобой!', targets=['Helicopter', 'Story/HeliLanded'])
     L.event('HeliLanded', delay=9.5, speaker=P, objective='Садись в вертолёт!', message='Сел! Запрыгивай, живо!',
@@ -576,6 +598,11 @@ def level_hospital():
     L.decor((0.06, 0.6, 2.6), (-23.8, 3.4, -16.5), 'siren_red', cast_shadow=0)  # EXIT sign
     L.node('ExitSign', 'Label3D', 'Decor', position=V3(-23.7, 3.4, -16.5), rotation=V3(0, math.pi / 2, 0),
            text=S('ВЫХОД'), font_size=64, pixel_size=0.006, modulate=C(0.4, 1.0, 0.5))
+    # metro entrance in the yard's west wall
+    L.decor((0.1, 2.6, 2.6), (-35.95, 1.3, -17), 'dark')
+    L.node('MetroSign', 'Label3D', 'Decor', position=V3(-35.85, 3.2, -17), rotation=V3(0, math.pi / 2, 0),
+           text=S('М  МЕТРО'), font_size=80, pixel_size=0.008, modulate=C(1.0, 0.25, 0.2))
+    L.omni((-34.5, 3.0, -17), (1, 0.5, 0.4), 1.2, 6)
     L.door('FireDoor', (0.3, 3.0, 2.0), (-24, 1.5, -16.5), 'metal', player_can_open=False,
            locked_message='Электрозамок — нет питания', open_offset=V3(0, 0, -2.0), open_time=1.0)
 
@@ -640,6 +667,10 @@ def level_hospital():
     L.pickup('ammo_pistol', (-2, 1.1, -7))
     L.pickup('ammo_rifle', (22.5, 0, -30))
     L.pickup('medkit', (10.5, 0, -29.5))
+    L.pickup('medkit', (-25.5, 0, -24.5))
+    L.pickup('ammo_shells', (-25.5, 0, -9.5))
+    L.zombie('patient_zero', (-33, 0, -17), -math.pi / 2, name='PatientZero', sight_range=11.0,
+             alert_event=NP('../../Story/PatientZeroAppears'), death_event=NP('../../Story/PatientZeroDead'))
 
     D = 'Диспетчер'
     L.event('Intro', speaker=D, duration=9, targets=['Story/Intro2'],
@@ -653,7 +684,14 @@ def level_hospital():
             targets=power + ['Decor/Alarm', 'Doors/FireDoor', 'Story/WardHorde', 'Story/LobbyHorde'] + patients)
     L.spawner('WardHorde', [(-18, 0, -23), (-6, 0, -23), (6, 0, -23)], ['walker', 'walker', 'runner'], 7, interval=1.0)
     L.spawner('LobbyHorde', [(-2, 0, 6), (2, 0, 8)], ['runner', 'walker'], 5, interval=1.3)
-    L.trigger('ExitTrigger', (-31, 1.5, -17), (8, 3, 14), 'Exit')
+    L.trigger('YardTrigger', (-26.5, 1.5, -17), (3, 3, 8), 'WakePatientZero')
+    L.event('WakePatientZero', targets=['Zombies/PatientZero'])
+    L.event('PatientZeroAppears', speaker=D, duration=8, objective='Убей Пациента Ноль',
+            message='Во дворе… оно светится?! Это нулевой пациент, с него всё началось. '
+                    'Не попадай под его плевки и не дай ему созвать больных!')
+    L.event('PatientZeroDead', speaker=D, objective='Спускайся в метро',
+            message='Он мёртв. Вход в метро в углу двора — иди!', targets=['Story/ExitTrigger'])
+    L.trigger('ExitTrigger', (-34.5, 1.5, -17), (3, 3, 5), 'Exit', enabled=False)
     L.event('Exit', complete=True)
 
     L.finish((0, 0, 9))
@@ -790,10 +828,15 @@ def level_subway():
             message='Выход перекрыт решёткой. Взламываю систему станции — продержись минуту!', targets=['Story/Holdout'])
     L.node('Holdout', 'Node', 'Story', script=L.ext_res('Script', 'res://scripts/story/holdout.gd'), duration=60.0,
            timer_text=S('Решётка откроется через %s'),
-           spawners=NPS(['../TunnelSpawn', '../PassageSpawn']), on_finished=NP('../GateOpen'))
+           spawners=NPS(['../TunnelSpawn', '../PassageSpawn']), boss_spawner=NP('../SpawnBoss'), boss_time=20.0,
+           boss_event=NP('../LinemanWarning'), boss_text=S('Убей Обходчика!'), on_finished=NP('../GateOpen'))
     mix = ['walker', 'walker', 'runner']
     L.spawner('TunnelSpawn', [(-7, 0, -122), (-7, 0, -126)], mix, 0, interval=3.0, continuous=True, max_alive=5)
     L.spawner('PassageSpawn', [(14, 0, -150), (14, 0, -152)], mix, 0, interval=3.5, continuous=True, max_alive=4)
+    L.spawner('SpawnBoss', [(14, 0, -151)], ['lineman'], 1, interval=0.1)
+    L.event('LinemanWarning', speaker=D, duration=9,
+            message='По боковому проходу идёт что-то тяжёлое… Обходчик с кувалдой! Когда он бьёт по земле — '
+                    'подпрыгни, ударная волна идёт по полу.')
     L.event('GateOpen', speaker=D, duration=6, objective='Поднимайся к выходу',
             message='Есть! Решётка поднята — наверх, стадион прямо над тобой!', targets=['Doors/Gate', 'Story/ExitTrigger'])
     L.trigger('ExitTrigger', (0, 1.5, -179), (6, 3, 5), 'Exit', enabled=False)

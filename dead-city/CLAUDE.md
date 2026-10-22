@@ -18,7 +18,8 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
   wires `Player` signals to `Hud`. Expected children: `Player`, `HUD`, `NavigationRegion3D` (baked at runtime
   from static colliders), plus `Decor`, `Lights`, `Doors`, `Zombies`, `Pickups`, `Story`.
 - Story is data-driven: `StoryEvent` (objective + radio message + `targets` with `activate()`),
-  `StoryTrigger` (Area3D), `ZombieSpawner`, `Holdout`, `Door`, `Pickup.event`. Anything with `activate()`
+  `StoryTrigger` (Area3D), `ZombieSpawner`, `Holdout`, `Door` (`event_unlocks`: an event unlocks instead of
+  opening), `Pickup.event`. Anything with `activate()`
   can be a target (doors, spawners, zombies, flicker lights, `power_light` (dark until powered),
   `sound_trigger`, other events, helicopter).
 - Player: `Player` → `Head/Camera3D/WeaponHolder` → weapons. `Weapon` base (ammo, reload, equip/idle anim,
@@ -29,6 +30,12 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
   Quaternius rig: Idle/Walk/Run/Punch/RecieveHit/Death) and tints its "Skin" material. `ZombiePose`
   (SkeletonModifier3D) layers arms-forward reaching and headshot head removal over the animation.
   Headshot = hit above the Neck bone. Groans are rate-limited globally (`GROAN_GAP`).
+- `Boss` (`scripts/zombies/boss.gd`, extends `Zombie`; scenes butcher / warden / patient_zero / lineman /
+  colossus): HUD health bar, abilities switched on by exports (charge, `BossProjectile` throw, ground slam,
+  summon, `front_armor` shield, enrage) run in `State.SPECIAL` via the `_try_special` / `_process_special` /
+  `_damage_scale` hooks in `Zombie`. Bosses ignore noise (`wakes_from_noise = false`). Placed bosses fire
+  `alert_event` / `death_event`; spawned ones (subway, stadium) are tracked by `Holdout.boss_spawner`, which
+  keeps the exit shut until they die. Boss models are `models/characters/boss_*.glb` (props parented to bones).
 - Weapon scenes instance `models/weapons/<name>_fp.glb` as `Model` (gun + posed arms in camera space,
   plus a `Muzzle` marker); `Weapon._ready` moves their meshes to render layer 2 (viewmodel layer).
 - `Effects` static helpers: spawn one-shot effects, tracers, `apply_blast` for explosions.

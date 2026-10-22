@@ -4,6 +4,11 @@ extends Node
 
 const WALKER := preload("res://scenes/zombies/walker.tscn")
 const BRUTE := preload("res://scenes/zombies/brute.tscn")
+const BUTCHER := preload("res://scenes/zombies/butcher.tscn")
+const WARDEN := preload("res://scenes/zombies/warden.tscn")
+const PATIENT_ZERO := preload("res://scenes/zombies/patient_zero.tscn")
+const LINEMAN := preload("res://scenes/zombies/lineman.tscn")
+const COLOSSUS := preload("res://scenes/zombies/colossus.tscn")
 
 var failures := 0
 var level: Level
@@ -67,7 +72,7 @@ func _run() -> void:
 	player.global_position = Vector3(0, 0, 6)
 	await frames(20)
 
-	# Knife: silent, two body hits kill a walker.
+	# Knife: silent, three body hits kill a walker.
 	var knife := await equip("knife")
 	var w := dummy(WALKER, Vector3(0, 0, -1.4))
 	var far := dummy(WALKER, Vector3(6, 0, -14), false)
@@ -75,13 +80,16 @@ func _run() -> void:
 	await aim_at(w.global_position + Vector3.UP * 0.8)
 	knife._handle_input(true, true)
 	await get_tree().create_timer(0.5).timeout
-	check(w.health == 70 - 45, "knife hit for 45 (health %d)" % w.health)
+	check(w.health == 120 - 50, "knife hit for 50 (health %d)" % w.health)
 	knife._handle_input(true, true)
 	await get_tree().create_timer(0.5).timeout
-	check(w.state == Zombie.State.DEAD, "second stab kills the walker")
+	check(w.state != Zombie.State.DEAD, "a walker survives two stabs")
+	knife._handle_input(true, true)
+	await get_tree().create_timer(0.5).timeout
+	check(w.state == Zombie.State.DEAD, "third stab kills the walker")
 	check(far.state == Zombie.State.IDLE, "knife is silent: walker 15 m away still idle")
 
-	# Pistol headshot.
+	# Pistol: a walker takes two headshots.
 	var pistol := await equip("pistol")
 	var target := dummy(WALKER, Vector3(0, 0, -7))
 	await aim_at(target.global_position + Vector3.UP * 1.5)
@@ -89,7 +97,11 @@ func _run() -> void:
 	pistol._handle_input(true, true)
 	await frames(2)
 	check(pistol.ammo == ammo - 1, "pistol used one round")
-	check(target.state == Zombie.State.DEAD and target._pose.head_hidden, "pistol headshot kills and removes the head")
+	check(target.state != Zombie.State.DEAD and target.health == 120 - 85, "one headshot is not enough (health %d)" % target.health)
+	(pistol as Gun)._cooldown = 0.0
+	pistol._handle_input(true, true)
+	await frames(2)
+	check(target.state == Zombie.State.DEAD and target._pose.head_hidden, "second headshot kills and removes the head")
 	await frames(10)
 	check(far.state == Zombie.State.CHASE, "gunshot alerted the distant walker")
 	far.queue_free()
@@ -108,7 +120,7 @@ func _run() -> void:
 	shotgun._cooldown = 0.0
 	shotgun._handle_input(true, true)
 	await frames(2)
-	check(far_target.state != Zombie.State.DEAD and far_target.health > 35,
+	check(far_target.state != Zombie.State.DEAD and far_target.health > 80,
 		"shotgun is weak at 25 m (health %d)" % far_target.health)
 	far_target.queue_free()
 	await get_tree().create_timer(1.0).timeout
@@ -126,7 +138,7 @@ func _run() -> void:
 	(rifle as Gun)._cooldown = 0.0
 	rifle._handle_input(true, true)
 	await frames(2)
-	check(target.health == 70 - 26, "rifle body shot for 26 (health %d)" % target.health)
+	check(target.health == 120 - 30, "rifle body shot for 30 (health %d)" % target.health)
 	target.queue_free()
 
 	# Reload.
@@ -170,15 +182,123 @@ func _run() -> void:
 	check(player.health <= 100 - 34, "brute hits hard (health %d)" % player.health)
 	check(player.global_position.distance_to(start) > 1.0, "brute knocks the player back")
 	brute.take_damage(300, Vector3.FORWARD, brute.global_position + Vector3.UP)
-	check(brute.state != Zombie.State.DEAD and brute.health == 700, "brute survives 300 damage")
+	check(brute.state != Zombie.State.DEAD and brute.health == 900, "brute survives 300 damage")
+	brute.queue_free()
+
+	await test_bosses()
 
 	# Pickups and inventory.
 	var pistol_weapon := player.holder.get_weapon("pistol")
 	var before := pistol_weapon.reserve
-	check(player.holder.add_ammo("pistol", 24) and pistol_weapon.reserve == mini(before + 24, pistol_weapon.max_reserve),
+	check(player.holder.add_ammo("pistol", 30) and pistol_weapon.reserve == mini(before + 30, pistol_weapon.max_reserve),
 		"pistol ammo pickup")
 	var state := player.get_state()
 	check(state["weapons"]["owned"].size() == 5, "state lists five weapons")
 
 	print("FAILURES: %d" % failures)
 	get_tree().quit(failures)
+
+
+func reset_player() -> void:
+	player.health = 100
+	player.velocity = Vector3.ZERO
+	player.global_position = Vector3(0, 0, 6)
+	player.rotation = Vector3.ZERO
+	player.head.rotation = Vector3.ZERO
+	await frames(5)
+
+
+func test_bosses() -> void:
+	# The Warden's shield: bullets from the front barely scratch it, its head and back are open.
+	await reset_player()
+	var rifle := await equip("rifle") as Gun
+	player.holder.add_ammo("rifle", 60)
+	var warden := dummy(WARDEN, Vector3(0, 0, -8)) as Boss
+	await aim_at(warden.global_position + Vector3.UP * 1.0)
+	rifle._cooldown = 0.0
+	rifle._handle_input(true, true)
+	await frames(2)
+	check(warden.health == warden.max_health - 3, "shield blocks a body shot (%d damage)" % (warden.max_health - warden.health))
+	check(level.hud.boss_box.visible and level.hud.boss_label.text == "Надзиратель", "shooting the Warden shows its health bar")
+	var before := warden.health
+	await aim_at(warden.global_position + Vector3.UP * 2.1)
+	rifle._cooldown = 0.0
+	rifle._handle_input(true, true)
+	await frames(2)
+	check(before - warden.health == 75, "headshot goes over the shield (%d damage)" % (before - warden.health))
+	warden.rotation.y = 0.0  # back to the player
+	await frames(2)
+	before = warden.health
+	await aim_at(warden.global_position + Vector3.UP * 1.0)
+	rifle._cooldown = 0.0
+	rifle._handle_input(true, true)
+	await frames(2)
+	check(before - warden.health == 30, "full damage from behind (%d)" % (before - warden.health))
+	warden.take_damage(99999, Vector3.FORWARD, warden.global_position)
+	await frames(3)
+	check(not level.hud.boss_box.visible, "boss bar hidden when the boss dies")
+	var drops := level.get_children().filter(func(n: Node) -> bool: return n is Pickup)
+	check(drops.size() == warden.drops.size(), "the Warden dropped %d pickups" % drops.size())
+	for drop: Node in drops:
+		drop.queue_free()
+	warden.queue_free()
+
+	# The Butcher charges from a distance.
+	await reset_player()
+	var butcher := dummy(BUTCHER, Vector3(0, 0, -12), false) as Boss
+	butcher.alert(false)
+	var top_speed := 0.0
+	for i in 300:
+		await frames(1)
+		top_speed = maxf(top_speed, Vector2(butcher.velocity.x, butcher.velocity.z).length())
+		if player.health < 100:
+			break
+	check(top_speed > 8.0, "the Butcher charges (top speed %.1f m/s)" % top_speed)
+	check(player.health <= 100 - butcher.charge_damage, "the charge hits hard (health %d)" % player.health)
+	butcher.queue_free()
+
+	# The Lineman's ground slam: hurts on the ground, a jump dodges it.
+	await reset_player()
+	var lineman := dummy(LINEMAN, Vector3(0, 0, -3.5), false) as Boss
+	lineman.summon_cooldown = 999.0
+	lineman._cooldowns[Boss.Ability.SUMMON] = 999.0
+	lineman.alert(false)
+	for i in 240:
+		await frames(1)
+		if lineman.ability == Boss.Ability.SLAM:
+			break
+	check(lineman.ability == Boss.Ability.SLAM, "the Lineman slams when the player is close")
+	await get_tree().create_timer(Boss.SLAM_LAND + 0.1).timeout
+	check(player.health < 100, "the shockwave hurts (health %d)" % player.health)
+	lineman.queue_free()
+
+	# Patient Zero spits acid from afar and calls the sick.
+	await reset_player()
+	var patient := dummy(PATIENT_ZERO, Vector3(0, 0, -12), false) as Boss
+	patient._cooldowns[Boss.Ability.SUMMON] = 0.0
+	patient.alert(false)
+	await get_tree().create_timer(1.5).timeout
+	check(patient._minions.size() == patient.summon_count, "Patient Zero summoned %d walkers" % patient._minions.size())
+	for minion: Zombie in patient._minions:
+		minion.queue_free()
+	await reset_player()
+	patient._cooldowns[Boss.Ability.SUMMON] = 999.0
+	patient._cooldowns[Boss.Ability.THROW] = 0.0
+	patient.global_position = player.global_position + Vector3(0, 0, -12)
+	await get_tree().create_timer(2.5).timeout
+	check(player.health < 100, "acid spit hits a standing target (health %d)" % player.health)
+	patient.queue_free()
+
+	# The Colossus goes berserk at half health.
+	await reset_player()
+	var colossus := dummy(COLOSSUS, Vector3(0, 0, -20)) as Boss
+	var speed := colossus.chase_speed
+	colossus.take_damage(colossus.max_health / 2 + 10, Vector3.FORWARD, colossus.global_position + Vector3.UP)
+	check(colossus.enraged and colossus.chase_speed > speed, "the Colossus is enraged below half health")
+	check(level.hud.boss_label.text.contains("ярости"), "boss bar says it: " + level.hud.boss_label.text)
+	colossus.take_damage(99999, Vector3.FORWARD, colossus.global_position + Vector3.UP)
+	await frames(3)
+	colossus.queue_free()
+	for z in get_tree().get_nodes_in_group("zombies"):
+		z.queue_free()
+	await reset_player()

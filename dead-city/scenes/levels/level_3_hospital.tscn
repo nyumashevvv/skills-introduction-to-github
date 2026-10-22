@@ -18,21 +18,21 @@
 
 [ext_resource type="Material" path="res://materials/siren_red.tres" id="9_siren_red"]
 
-[ext_resource type="Material" path="res://materials/metal.tres" id="10_metal"]
+[ext_resource type="Material" path="res://materials/dark.tres" id="10_dark"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/door.tscn" id="11_door"]
+[ext_resource type="Material" path="res://materials/metal.tres" id="11_metal"]
 
-[ext_resource type="Material" path="res://materials/wood.tres" id="12_wood"]
+[ext_resource type="PackedScene" path="res://scenes/world/door.tscn" id="12_door"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/desk.tscn" id="13_desk"]
+[ext_resource type="Material" path="res://materials/wood.tres" id="13_wood"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/lockers.tscn" id="14_lockers"]
+[ext_resource type="PackedScene" path="res://scenes/world/desk.tscn" id="14_desk"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/bed.tscn" id="15_bed"]
+[ext_resource type="PackedScene" path="res://scenes/world/lockers.tscn" id="15_lockers"]
 
-[ext_resource type="Material" path="res://materials/sheet.tres" id="16_sheet"]
+[ext_resource type="PackedScene" path="res://scenes/world/bed.tscn" id="16_bed"]
 
-[ext_resource type="Material" path="res://materials/dark.tres" id="17_dark"]
+[ext_resource type="Material" path="res://materials/sheet.tres" id="17_sheet"]
 
 [ext_resource type="PackedScene" path="res://scenes/world/shelf.tscn" id="18_shelf"]
 
@@ -74,17 +74,19 @@
 
 [ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rifle.tscn" id="37_ammo_rifle"]
 
-[ext_resource type="Script" path="res://scripts/story/story_event.gd" id="38_story_event"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/patient_zero.tscn" id="38_patient_zero"]
 
-[ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="39_zombie_spawner"]
+[ext_resource type="Script" path="res://scripts/story/story_event.gd" id="39_story_event"]
 
-[ext_resource type="Script" path="res://scripts/story/story_trigger.gd" id="40_story_trigger"]
+[ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="40_zombie_spawner"]
 
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="41_player"]
+[ext_resource type="Script" path="res://scripts/story/story_trigger.gd" id="41_story_trigger"]
 
-[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="42_hud"]
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="42_player"]
 
-[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="43_ambience"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="43_hud"]
+
+[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="44_ambience"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.01, 0.012, 0.03, 1.0)
@@ -126,19 +128,26 @@ size = Vector3(0.06, 0.6, 2.6)
 material = ExtResource("9_siren_red")
 
 [sub_resource type="BoxMesh" id="BoxMesh_6"]
-size = Vector3(0.04, 2.2, 2.4)
-material = ExtResource("16_sheet")
+size = Vector3(0.1, 2.6, 2.6)
+material = ExtResource("10_dark")
 
 [sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(0.04, 2.2, 2.4)
+material = ExtResource("17_sheet")
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
 size = Vector3(1.9, 0.25, 4.3)
 material = ExtResource("9_siren_red")
 
-[sub_resource type="BoxMesh" id="BoxMesh_8"]
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
 size = Vector3(1.0, 0.05, 0.35)
 material = ExtResource("27_lamp_off")
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_9"]
-size = Vector3(8.0, 3.0, 14.0)
+[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+size = Vector3(3.0, 3.0, 8.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_11"]
+size = Vector3(3.0, 3.0, 5.0)
 
 [node name="Hospital" type="Node3D"]
 script = ExtResource("1_level")
@@ -403,10 +412,28 @@ font_size = 64
 pixel_size = 0.006
 modulate = Color(0.4, 1.0, 0.5, 1.0)
 
-[node name="FireDoor" parent="Doors" instance=ExtResource("11_door")]
+[node name="D2" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_6")
+position = Vector3(-35.95, 1.3, -17.0)
+
+[node name="MetroSign" type="Label3D" parent="Decor"]
+position = Vector3(-35.85, 3.2, -17.0)
+rotation = Vector3(0.0, 1.5708, 0.0)
+text = "М  МЕТРО"
+font_size = 80
+pixel_size = 0.008
+modulate = Color(1.0, 0.25, 0.2, 1.0)
+
+[node name="Light1" type="OmniLight3D" parent="Lights"]
+position = Vector3(-34.5, 3.0, -17.0)
+light_color = Color(1.0, 0.5, 0.4, 1.0)
+light_energy = 1.2
+omni_range = 6
+
+[node name="FireDoor" parent="Doors" instance=ExtResource("12_door")]
 position = Vector3(-24.0, 1.5, -16.5)
 size = Vector3(0.3, 3.0, 2.0)
-material = ExtResource("10_metal")
+material = ExtResource("11_metal")
 player_can_open = false
 locked_message = "Электрозамок — нет питания"
 open_offset = "Vector3(0.0, 0.0, -2.0)"
@@ -415,128 +442,128 @@ open_time = 1.0
 [node name="Reception" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(0.0, 0.55, -7.0)
 size = Vector3(6.0, 1.1, 0.8)
-material = ExtResource("12_wood")
+material = ExtResource("13_wood")
 
 [node name="ReceptionSide" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-3.4, 0.55, -5.5)
 size = Vector3(0.8, 1.1, 3.0)
-material = ExtResource("12_wood")
+material = ExtResource("13_wood")
 
 [node name="Block44" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-9.0, 0.22, -2.5)
 size = Vector3(2.4, 0.45, 0.6)
-material = ExtResource("12_wood")
+material = ExtResource("13_wood")
 
 [node name="Block45" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-6.0, 0.22, -2.5)
 size = Vector3(2.4, 0.45, 0.6)
-material = ExtResource("12_wood")
+material = ExtResource("13_wood")
 
 [node name="Block46" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(6.0, 0.22, -2.5)
 size = Vector3(2.4, 0.45, 0.6)
-material = ExtResource("12_wood")
+material = ExtResource("13_wood")
 
-[node name="SecurityDesk" parent="NavigationRegion3D" instance=ExtResource("13_desk")]
+[node name="SecurityDesk" parent="NavigationRegion3D" instance=ExtResource("14_desk")]
 position = Vector3(9.0, 0.0, -11.0)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
-[node name="Lockers1" parent="NavigationRegion3D" instance=ExtResource("14_lockers")]
+[node name="Lockers1" parent="NavigationRegion3D" instance=ExtResource("15_lockers")]
 position = Vector3(11.6, 0.0, -8.0)
 rotation = Vector3(0.0, -1.5708, 0.0)
 
-[node name="Bed1" parent="NavigationRegion3D" instance=ExtResource("15_bed")]
+[node name="Bed1" parent="NavigationRegion3D" instance=ExtResource("16_bed")]
 position = Vector3(-21.5, 0.0, -28.6)
 rotation = Vector3(0.0, 3.1416, 0.0)
 
-[node name="D2" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_6")
+[node name="D3" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
 position = Vector3(-19.8, 1.3, -28.4)
 cast_shadow = 0
 
-[node name="Bed2" parent="NavigationRegion3D" instance=ExtResource("15_bed")]
+[node name="Bed2" parent="NavigationRegion3D" instance=ExtResource("16_bed")]
 position = Vector3(-18.0, 0.0, -28.6)
 rotation = Vector3(0.0, 3.1416, 0.0)
 
-[node name="D3" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_6")
+[node name="D4" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
 position = Vector3(-16.3, 1.3, -28.4)
 cast_shadow = 0
 
-[node name="Bed3" parent="NavigationRegion3D" instance=ExtResource("15_bed")]
+[node name="Bed3" parent="NavigationRegion3D" instance=ExtResource("16_bed")]
 position = Vector3(-14.5, 0.0, -28.6)
 rotation = Vector3(0.0, 3.1416, 0.0)
 
-[node name="D4" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_6")
+[node name="D5" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
 position = Vector3(-12.8, 1.3, -28.4)
 cast_shadow = 0
 
-[node name="Bed4" parent="NavigationRegion3D" instance=ExtResource("15_bed")]
+[node name="Bed4" parent="NavigationRegion3D" instance=ExtResource("16_bed")]
 position = Vector3(-9.5, 0.0, -28.6)
 rotation = Vector3(0.0, 3.1416, 0.0)
 
-[node name="D5" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_6")
+[node name="D6" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
 position = Vector3(-7.8, 1.3, -28.4)
 cast_shadow = 0
 
-[node name="Bed5" parent="NavigationRegion3D" instance=ExtResource("15_bed")]
+[node name="Bed5" parent="NavigationRegion3D" instance=ExtResource("16_bed")]
 position = Vector3(-6.0, 0.0, -28.6)
 rotation = Vector3(0.0, 3.1416, 0.0)
 
-[node name="D6" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_6")
+[node name="D7" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
 position = Vector3(-4.3, 1.3, -28.4)
 cast_shadow = 0
 
-[node name="Bed6" parent="NavigationRegion3D" instance=ExtResource("15_bed")]
+[node name="Bed6" parent="NavigationRegion3D" instance=ExtResource("16_bed")]
 position = Vector3(-2.5, 0.0, -28.6)
 rotation = Vector3(0.0, 3.1416, 0.0)
 
-[node name="D7" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_6")
+[node name="D8" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
 position = Vector3(-0.8, 1.3, -28.4)
 cast_shadow = 0
 
-[node name="Bed7" parent="NavigationRegion3D" instance=ExtResource("15_bed")]
+[node name="Bed7" parent="NavigationRegion3D" instance=ExtResource("16_bed")]
 position = Vector3(2.5, 0.0, -28.6)
 rotation = Vector3(0.0, 3.1416, 0.0)
 
-[node name="D8" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_6")
+[node name="D9" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
 position = Vector3(4.2, 1.3, -28.4)
 cast_shadow = 0
 
-[node name="Bed8" parent="NavigationRegion3D" instance=ExtResource("15_bed")]
+[node name="Bed8" parent="NavigationRegion3D" instance=ExtResource("16_bed")]
 position = Vector3(6.0, 0.0, -28.6)
 rotation = Vector3(0.0, 3.1416, 0.0)
 
-[node name="D9" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_6")
+[node name="D10" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
 position = Vector3(7.7, 1.3, -28.4)
 cast_shadow = 0
 
-[node name="Bed9" parent="NavigationRegion3D" instance=ExtResource("15_bed")]
+[node name="Bed9" parent="NavigationRegion3D" instance=ExtResource("16_bed")]
 position = Vector3(9.5, 0.0, -28.6)
 rotation = Vector3(0.0, 3.1416, 0.0)
 
-[node name="D10" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_6")
+[node name="D11" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
 position = Vector3(11.2, 1.3, -28.4)
 cast_shadow = 0
 
 [node name="Generator" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(20.5, 0.9, -28.5)
 size = Vector3(3.0, 1.8, 1.6)
-material = ExtResource("10_metal")
+material = ExtResource("11_metal")
 
 [node name="GeneratorPanel" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(18.7, 1.2, -28.5)
 size = Vector3(0.6, 0.6, 1.6)
-material = ExtResource("17_dark")
+material = ExtResource("10_dark")
 
-[node name="GeneratorSwitch" parent="Doors" instance=ExtResource("11_door")]
+[node name="GeneratorSwitch" parent="Doors" instance=ExtResource("12_door")]
 position = Vector3(18.35, 1.3, -28.2)
 size = Vector3(0.12, 0.5, 0.5)
 material = ExtResource("9_siren_red")
@@ -573,8 +600,8 @@ position = Vector3(3.0, 1.2, 5.0)
 position = Vector3(-9.0, 0.0, 7.0)
 rotation = Vector3(0.0, 0.25, 0.0)
 
-[node name="D11" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_7")
+[node name="D12" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_8")
 position = Vector3(-9.0, 1.05, 7.0)
 rotation = Vector3(0.0, 0.25, 0.0)
 
@@ -590,49 +617,49 @@ rotation = Vector3(0.0, 3.1416, 0.0)
 position = Vector3(15.0, 0.0, 12.0)
 rotation = Vector3(0.0, 3.1416, 0.0)
 
-[node name="Light1" type="OmniLight3D" parent="Lights"]
+[node name="Light2" type="OmniLight3D" parent="Lights"]
 position = Vector3(0.0, 3.4, -1.0)
 light_color = Color(1.0, 0.85, 0.6, 1.0)
 light_energy = 1.2
 omni_range = 8
 
-[node name="Light2" type="OmniLight3D" parent="Lights"]
+[node name="Light3" type="OmniLight3D" parent="Lights"]
 position = Vector3(0.0, 3.6, -10.0)
 light_color = Color(1.0, 0.15, 0.1, 1.0)
 light_energy = 0.8
 omni_range = 7
 script = ExtResource("26_flicker_light")
 
-[node name="Light3" type="OmniLight3D" parent="Lights"]
+[node name="Light4" type="OmniLight3D" parent="Lights"]
 position = Vector3(-18.0, 3.6, -16.5)
 light_color = Color(1.0, 0.15, 0.1, 1.0)
 light_energy = 0.8
 omni_range = 7
 script = ExtResource("26_flicker_light")
 
-[node name="Light4" type="OmniLight3D" parent="Lights"]
+[node name="Light5" type="OmniLight3D" parent="Lights"]
 position = Vector3(0.0, 3.6, -16.5)
 light_color = Color(1.0, 0.15, 0.1, 1.0)
 light_energy = 0.8
 omni_range = 7
 script = ExtResource("26_flicker_light")
 
-[node name="Light5" type="OmniLight3D" parent="Lights"]
+[node name="Light6" type="OmniLight3D" parent="Lights"]
 position = Vector3(18.0, 3.6, -16.5)
 light_color = Color(1.0, 0.15, 0.1, 1.0)
 light_energy = 0.8
 omni_range = 7
 script = ExtResource("26_flicker_light")
 
-[node name="Light6" type="OmniLight3D" parent="Lights"]
+[node name="Light7" type="OmniLight3D" parent="Lights"]
 position = Vector3(21.0, 3.6, -25.0)
 light_color = Color(1.0, 0.15, 0.1, 1.0)
 light_energy = 0.8
 omni_range = 7
 script = ExtResource("26_flicker_light")
 
-[node name="D12" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_8")
+[node name="D13" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
 position = Vector3(-6.0, 3.95, -4.0)
 cast_shadow = 0
 
@@ -643,8 +670,8 @@ light_energy = 2.0
 omni_range = 9.0
 script = ExtResource("28_power_light")
 
-[node name="D13" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_8")
+[node name="D14" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
 position = Vector3(6.0, 3.95, -4.0)
 cast_shadow = 0
 
@@ -655,8 +682,8 @@ light_energy = 2.0
 omni_range = 9.0
 script = ExtResource("28_power_light")
 
-[node name="D14" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_8")
+[node name="D15" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
 position = Vector3(-6.0, 3.95, -10.0)
 cast_shadow = 0
 
@@ -667,8 +694,8 @@ light_energy = 2.0
 omni_range = 9.0
 script = ExtResource("28_power_light")
 
-[node name="D15" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_8")
+[node name="D16" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
 position = Vector3(6.0, 3.95, -10.0)
 cast_shadow = 0
 
@@ -679,8 +706,8 @@ light_energy = 2.0
 omni_range = 9.0
 script = ExtResource("28_power_light")
 
-[node name="D16" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_8")
+[node name="D17" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
 position = Vector3(-20.0, 3.95, -16.5)
 cast_shadow = 0
 
@@ -691,8 +718,8 @@ light_energy = 2.0
 omni_range = 9.0
 script = ExtResource("28_power_light")
 
-[node name="D17" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_8")
+[node name="D18" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
 position = Vector3(-12.0, 3.95, -16.5)
 cast_shadow = 0
 
@@ -703,8 +730,8 @@ light_energy = 2.0
 omni_range = 9.0
 script = ExtResource("28_power_light")
 
-[node name="D18" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_8")
+[node name="D19" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
 position = Vector3(-4.0, 3.95, -16.5)
 cast_shadow = 0
 
@@ -715,8 +742,8 @@ light_energy = 2.0
 omni_range = 9.0
 script = ExtResource("28_power_light")
 
-[node name="D19" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_8")
+[node name="D20" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
 position = Vector3(4.0, 3.95, -16.5)
 cast_shadow = 0
 
@@ -727,8 +754,8 @@ light_energy = 2.0
 omni_range = 9.0
 script = ExtResource("28_power_light")
 
-[node name="D20" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_8")
+[node name="D21" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
 position = Vector3(12.0, 3.95, -16.5)
 cast_shadow = 0
 
@@ -739,8 +766,8 @@ light_energy = 2.0
 omni_range = 9.0
 script = ExtResource("28_power_light")
 
-[node name="D21" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_8")
+[node name="D22" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
 position = Vector3(20.0, 3.95, -16.5)
 cast_shadow = 0
 
@@ -751,8 +778,8 @@ light_energy = 2.0
 omni_range = 9.0
 script = ExtResource("28_power_light")
 
-[node name="D22" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_8")
+[node name="D23" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
 position = Vector3(-18.0, 3.95, -25.0)
 cast_shadow = 0
 
@@ -763,8 +790,8 @@ light_energy = 2.0
 omni_range = 9.0
 script = ExtResource("28_power_light")
 
-[node name="D23" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_8")
+[node name="D24" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
 position = Vector3(-6.0, 3.95, -25.0)
 cast_shadow = 0
 
@@ -775,8 +802,8 @@ light_energy = 2.0
 omni_range = 9.0
 script = ExtResource("28_power_light")
 
-[node name="D24" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_8")
+[node name="D25" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
 position = Vector3(6.0, 3.95, -25.0)
 cast_shadow = 0
 
@@ -787,8 +814,8 @@ light_energy = 2.0
 omni_range = 9.0
 script = ExtResource("28_power_light")
 
-[node name="D25" type="MeshInstance3D" parent="Decor"]
-mesh = SubResource("BoxMesh_8")
+[node name="D26" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
 position = Vector3(18.0, 3.95, -25.0)
 cast_shadow = 0
 
@@ -872,28 +899,41 @@ position = Vector3(22.5, 0.0, -30.0)
 [node name="Medkit2" parent="Pickups" instance=ExtResource("35_medkit")]
 position = Vector3(10.5, 0.0, -29.5)
 
+[node name="Medkit3" parent="Pickups" instance=ExtResource("35_medkit")]
+position = Vector3(-25.5, 0.0, -24.5)
+
+[node name="AmmoShells3" parent="Pickups" instance=ExtResource("34_ammo_shells")]
+position = Vector3(-25.5, 0.0, -9.5)
+
+[node name="PatientZero" parent="Zombies" instance=ExtResource("38_patient_zero")]
+position = Vector3(-33.0, 0.0, -17.0)
+rotation = Vector3(0.0, -1.5708, 0.0)
+sight_range = 11.0
+alert_event = NodePath("../../Story/PatientZeroAppears")
+death_event = NodePath("../../Story/PatientZeroDead")
+
 [node name="Intro" type="Node" parent="Story"]
-script = ExtResource("38_story_event")
+script = ExtResource("39_story_event")
 speaker = "Диспетчер"
 message = "Больница? Плохо, но другого пути нет. Пожарный выход в западном крыле на электрозамке — сначала запусти генератор, он в техническом крыле, на востоке."
 message_duration = 9.0
 targets = Array[NodePath]([NodePath("../Intro2")])
 
 [node name="Intro2" type="Node" parent="Story"]
-script = ExtResource("38_story_event")
+script = ExtResource("39_story_event")
 delay = 9.5
 speaker = "Диспетчер"
 message = "Свет отключён. Фонарик — F. И лишний раз не шуми."
 message_duration = 6.0
 
 [node name="ShotgunFound" type="Node" parent="Story"]
-script = ExtResource("38_story_event")
+script = ExtResource("39_story_event")
 speaker = "Диспетчер"
 message = "Дробовик охраны! В тесных коридорах лучше не придумаешь. Клавиша 3."
 message_duration = 6.0
 
 [node name="PowerOn" type="Node" parent="Story"]
-script = ExtResource("38_story_event")
+script = ExtResource("39_story_event")
 objective = "Беги к пожарному выходу в западном конце коридора"
 speaker = "Диспетчер"
 message = "Есть питание! Чёрт… сирена подняла всё здание. Пожарная дверь открыта — беги!"
@@ -901,7 +941,7 @@ message_duration = 8.0
 targets = Array[NodePath]([NodePath("../../Lights/Ceiling1"), NodePath("../../Lights/Ceiling2"), NodePath("../../Lights/Ceiling3"), NodePath("../../Lights/Ceiling4"), NodePath("../../Lights/Ceiling5"), NodePath("../../Lights/Ceiling6"), NodePath("../../Lights/Ceiling7"), NodePath("../../Lights/Ceiling8"), NodePath("../../Lights/Ceiling9"), NodePath("../../Lights/Ceiling10"), NodePath("../../Lights/Ceiling11"), NodePath("../../Lights/Ceiling12"), NodePath("../../Lights/Ceiling13"), NodePath("../../Lights/Ceiling14"), NodePath("../../Decor/Alarm"), NodePath("../../Doors/FireDoor"), NodePath("../WardHorde"), NodePath("../LobbyHorde"), NodePath("../../Zombies/Patient1"), NodePath("../../Zombies/Patient2"), NodePath("../../Zombies/Patient3"), NodePath("../../Zombies/Patient4"), NodePath("../../Zombies/Patient5"), NodePath("../../Zombies/Patient6"), NodePath("../../Zombies/Patient7"), NodePath("../../Zombies/Patient8")])
 
 [node name="WardHorde" type="Node3D" parent="Story"]
-script = ExtResource("39_zombie_spawner")
+script = ExtResource("40_zombie_spawner")
 zombie_scenes = Array[PackedScene]([ExtResource("31_walker"), ExtResource("31_walker"), ExtResource("32_runner")])
 count = 7
 interval = 1.0
@@ -917,7 +957,7 @@ position = Vector3(-6.0, 0.0, -23.0)
 position = Vector3(6.0, 0.0, -23.0)
 
 [node name="LobbyHorde" type="Node3D" parent="Story"]
-script = ExtResource("39_zombie_spawner")
+script = ExtResource("40_zombie_spawner")
 zombie_scenes = Array[PackedScene]([ExtResource("32_runner"), ExtResource("31_walker")])
 count = 5
 interval = 1.3
@@ -929,28 +969,59 @@ position = Vector3(-2.0, 0.0, 6.0)
 [node name="M1" type="Marker3D" parent="Story/LobbyHorde"]
 position = Vector3(2.0, 0.0, 8.0)
 
-[node name="ExitTrigger" type="Area3D" parent="Story"]
-position = Vector3(-31.0, 1.5, -17.0)
+[node name="YardTrigger" type="Area3D" parent="Story"]
+position = Vector3(-26.5, 1.5, -17.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("40_story_trigger")
+script = ExtResource("41_story_trigger")
+event = NodePath("../WakePatientZero")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Story/YardTrigger"]
+shape = SubResource("BoxShape3D_10")
+
+[node name="WakePatientZero" type="Node" parent="Story"]
+script = ExtResource("39_story_event")
+targets = Array[NodePath]([NodePath("../../Zombies/PatientZero")])
+
+[node name="PatientZeroAppears" type="Node" parent="Story"]
+script = ExtResource("39_story_event")
+objective = "Убей Пациента Ноль"
+speaker = "Диспетчер"
+message = "Во дворе… оно светится?! Это нулевой пациент, с него всё началось. Не попадай под его плевки и не дай ему созвать больных!"
+message_duration = 8.0
+
+[node name="PatientZeroDead" type="Node" parent="Story"]
+script = ExtResource("39_story_event")
+objective = "Спускайся в метро"
+speaker = "Диспетчер"
+message = "Он мёртв. Вход в метро в углу двора — иди!"
+message_duration = 6.0
+targets = Array[NodePath]([NodePath("../ExitTrigger")])
+
+[node name="ExitTrigger" type="Area3D" parent="Story"]
+position = Vector3(-34.5, 1.5, -17.0)
+collision_layer = 0
+collision_mask = 2
+monitorable = false
+script = ExtResource("41_story_trigger")
 event = NodePath("../Exit")
+enabled = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/ExitTrigger"]
-shape = SubResource("BoxShape3D_9")
+shape = SubResource("BoxShape3D_11")
 
 [node name="Exit" type="Node" parent="Story"]
-script = ExtResource("38_story_event")
+script = ExtResource("39_story_event")
 complete_level = true
 
-[node name="Player" parent="." instance=ExtResource("41_player")]
+[node name="Player" parent="." instance=ExtResource("42_player")]
 position = Vector3(0.0, 0.0, 9.0)
 rotation = Vector3(0.0, 0.0, 0.0)
 
-[node name="HUD" parent="." instance=ExtResource("42_hud")]
+[node name="HUD" parent="." instance=ExtResource("43_hud")]
 
 [node name="Ambience" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("43_ambience")
+stream = ExtResource("44_ambience")
 autoplay = true
 volume_db = -8.0
