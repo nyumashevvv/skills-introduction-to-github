@@ -16,7 +16,7 @@
 script = ExtResource("2_launcher")
 id = "bazooka"
 display_name = "РПГ-7"
-slot = 5
+slot = 8
 ammo_type = "rocket"
 magazine_size = 1
 max_reserve = 8

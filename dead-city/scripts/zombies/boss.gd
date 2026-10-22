@@ -25,6 +25,8 @@ const RAGE_SPEED := 1.35
 const RAGE_COOLDOWN := 0.65
 
 @export var boss_name := ""
+## Off for ordinary special zombies (the spitter): no health bar, no music.
+@export var show_health_bar := true
 ## StoryEvent fired when it first notices the player (or gets shot), so its introduction
 ## always comes before its death even if the player opens fire from afar.
 @export var alert_event: NodePath
@@ -141,6 +143,8 @@ func _damage_scale(direction: Vector3, hit_point: Vector3, explosive: bool) -> f
 
 
 func _update_bar() -> void:
+	if not show_health_bar:
+		return
 	var level := get_tree().current_scene as Level
 	if level == null:
 		return
@@ -339,7 +343,7 @@ func _die(headshot: bool, silent := false) -> void:
 	ability = Ability.NONE
 	_update_bar()
 	var level := get_tree().current_scene as Level
-	if level != null:
+	if level != null and show_health_bar:
 		level.stop_music()
 	for i in drops.size():
 		var pickup := drops[i].instantiate() as Node3D

@@ -1,0 +1,35 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/grenade.gd" id="1_grenade"]
+
+[ext_resource type="PackedScene" path="res://models/weapons/grenade_world.glb" id="2_grenade_world"]
+
+[ext_resource type="AudioStream" path="res://sounds/impact.wav" id="3_impact"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_1"]
+friction = 0.9
+rough = true
+bounce = 0.25
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_2"]
+radius = 0.05
+
+[node name="ThrownGrenade" type="RigidBody3D"]
+collision_layer = 0
+collision_mask = 5
+mass = 0.4
+continuous_cd = true
+linear_damp = 1.2
+angular_damp = 2.0
+physics_material_override = SubResource("PhysicsMaterial_1")
+script = ExtResource("1_grenade")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_2")
+
+[node name="Model" parent="." instance=ExtResource("2_grenade_world")]
+scale = Vector3(1.4, 1.4, 1.4)
+
+[node name="BounceSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("3_impact")
+unit_size = 4.0

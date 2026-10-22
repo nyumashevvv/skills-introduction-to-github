@@ -1,0 +1,87 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/effects/one_shot_effect.gd" id="1_one_shot_effect"]
+
+[ext_resource type="AudioStream" path="res://sounds/splash.wav" id="2_splash"]
+
+[ext_resource type="AudioStream" path="res://sounds/explosion.wav" id="3_explosion"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+shading_mode = 0
+vertex_color_use_as_albedo = true
+transparency = 1
+billboard_mode = 3
+
+[sub_resource type="QuadMesh" id="QuadMesh_2"]
+size = Vector2(1.6, 1.6)
+material = SubResource("StandardMaterial3D_1")
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3"]
+shading_mode = 0
+vertex_color_use_as_albedo = true
+
+[sub_resource type="SphereMesh" id="SphereMesh_4"]
+radius = 0.06
+height = 0.12
+radial_segments = 6
+rings = 3
+material = SubResource("StandardMaterial3D_3")
+
+[sub_resource type="Gradient" id="Gradient_5"]
+offsets = PackedFloat32Array(0, 0.2, 1)
+colors = PackedColorArray(0.6, 1, 0.2, 0.0, 0.45, 0.7, 0.15, 0.7, 0.3, 0.4, 0.1, 0)
+
+[node name="BloatBurst" type="Node3D"]
+script = ExtResource("1_one_shot_effect")
+lifetime = 3.0
+light_fade_time = 0.4
+
+[node name="Gas" type="CPUParticles3D" parent="."]
+emitting = false
+amount = 24
+lifetime = 2.2
+one_shot = true
+explosiveness = 0.95
+mesh = SubResource("QuadMesh_2")
+emission_shape = 1
+emission_sphere_radius = 0.6
+direction = Vector3(0.0, 1.0, 0.0)
+spread = 180.0
+gravity = Vector3(0.0, 0.3, 0.0)
+initial_velocity_min = 1.0
+initial_velocity_max = 3.0
+damping_min = 1.5
+damping_max = 2.5
+color_ramp = SubResource("Gradient_5")
+
+[node name="Gore" type="CPUParticles3D" parent="."]
+emitting = false
+amount = 26
+lifetime = 1.0
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("SphereMesh_4")
+direction = Vector3(0.0, 1.0, 0.0)
+spread = 90.0
+gravity = Vector3(0.0, -14.0, 0.0)
+initial_velocity_min = 3.0
+initial_velocity_max = 7.0
+color = Color(0.35, 0.45, 0.08, 1.0)
+
+[node name="Light" type="OmniLight3D" parent="."]
+light_color = Color(0.6, 1.0, 0.2, 1.0)
+light_energy = 5.0
+omni_range = 7.0
+
+[node name="Sound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("2_splash")
+autoplay = true
+unit_size = 10.0
+volume_db = 4.0
+
+[node name="Boom" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("3_explosion")
+autoplay = true
+unit_size = 8.0
+volume_db = -6.0
+pitch_scale = 1.4

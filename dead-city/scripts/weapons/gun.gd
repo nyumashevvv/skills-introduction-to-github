@@ -23,6 +23,11 @@ const PUMP_TIME := 0.3
 @export var falloff := Vector2.ZERO
 ## Seconds after a shot when the pump is racked (PumpSound plays). 0 = no pump.
 @export var pump_delay := 0.0
+@export_group("Scope")
+## Field of view while aiming down the scope (right mouse button); 0 = no scope.
+@export var scope_fov := 0.0
+
+var aiming := false
 
 var _cooldown := 0.0
 var _heat := 0.0
@@ -51,6 +56,8 @@ func _handle_input(held: bool, just_pressed: bool) -> void:
 
 func _update(delta: float) -> void:
 	_cooldown = maxf(_cooldown - delta, 0.0)
+	if scope_fov > 0.0:
+		_update_scope(delta)
 	_heat = move_toward(_heat, 0.0, delta * 2.0)
 	if _flash_left > 0.0:
 		_flash_left -= delta
@@ -69,6 +76,8 @@ func _update(delta: float) -> void:
 
 
 func spread_deg() -> float:
+	if aiming:
+		return 0.03
 	return base_spread_deg + move_spread_deg * movement_factor + heat_spread_deg * _heat
 
 
@@ -107,3 +116,28 @@ func _try_fire(just_pressed: bool) -> void:
 			Effects.spawn_tracer(self, muzzle.global_position, end)
 	make_noise()
 	fired.emit(recoil)
+
+
+func unequip() -> void:
+	super.unequip()
+	if scope_fov > 0.0:
+		_set_scoped(false)
+		camera.fov = Settings.get_value("fov")
+
+
+func _update_scope(delta: float) -> void:
+	var want := active and not is_reloading and Input.is_action_pressed("aim")
+	var target_fov: float = scope_fov if want else Settings.get_value("fov")
+	camera.fov = lerpf(camera.fov, target_fov, clampf(delta * 14.0, 0.0, 1.0))
+	# The scope picture appears once the gun is nearly at the eye.
+	var scoped := want and absf(camera.fov - scope_fov) < 6.0
+	if scoped != aiming:
+		_set_scoped(scoped)
+
+
+func _set_scoped(value: bool) -> void:
+	aiming = value
+	model.visible = not value
+	var level := get_tree().current_scene as Level
+	if level != null and level.hud != null:
+		level.hud.set_scope(value)

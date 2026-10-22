@@ -1,0 +1,85 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/gun.gd" id="1_gun"]
+
+[ext_resource type="PackedScene" path="res://models/weapons/sniper_fp.glb" id="2_sniper_fp"]
+
+[ext_resource type="Material" path="res://materials/muzzle_flash.tres" id="3_muzzle_flash"]
+
+[ext_resource type="AudioStream" path="res://sounds/sniper.wav" id="4_sniper"]
+
+[ext_resource type="AudioStream" path="res://sounds/reload_rifle.wav" id="5_reload_rifle"]
+
+[ext_resource type="AudioStream" path="res://sounds/empty.wav" id="6_empty"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_1"]
+material = ExtResource("3_muzzle_flash")
+size = Vector2(0.2, 0.2)
+
+[sub_resource type="QuadMesh" id="QuadMesh_2"]
+material = ExtResource("3_muzzle_flash")
+size = Vector2(0.12, 0.32)
+
+[node name="Sniper" type="Node3D"]
+script = ExtResource("1_gun")
+id = "sniper"
+display_name = "Снайперская винтовка"
+slot = 7
+ammo_type = "sniper"
+magazine_size = 5
+max_reserve = 30
+reload_time = 2.6
+noise_radius = 70.0
+damage = 150
+headshot_multiplier = 3.0
+fire_rate = 0.8
+max_range = 300.0
+base_spread_deg = 1.2
+move_spread_deg = 4.0
+heat_spread_deg = 0.5
+recoil = 0.06
+kick_back = 0.14
+kick_up = 0.2
+scope_fov = 18.0
+
+[node name="Model" parent="." instance=ExtResource("2_sniper_fp")]
+
+[node name="Flash" type="Node3D" parent="Model"]
+
+[node name="Quad" type="MeshInstance3D" parent="Model/Flash"]
+mesh = SubResource("QuadMesh_1")
+cast_shadow = 0
+layers = 2
+
+[node name="Quad2" type="MeshInstance3D" parent="Model/Flash"]
+mesh = SubResource("QuadMesh_1")
+cast_shadow = 0
+layers = 2
+rotation = Vector3(0.0, 0.0, 0.7854)
+
+[node name="Side" type="MeshInstance3D" parent="Model/Flash"]
+mesh = SubResource("QuadMesh_2")
+cast_shadow = 0
+layers = 2
+rotation = Vector3(1.5708, 0.0, 0.0)
+position = Vector3(0.0, 0.0, -0.1)
+
+[node name="Light" type="OmniLight3D" parent="Model/Flash"]
+light_color = Color(1.0, 0.7, 0.35, 1.0)
+light_energy = 5.0
+omni_range = 7.0
+
+[node name="ShootSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_sniper")
+volume_db = -1.0
+max_polyphony = 6
+
+[node name="ReloadSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_reload_rifle")
+volume_db = -3.0
+max_polyphony = 6
+
+[node name="EmptySound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_empty")
+volume_db = -4.0
+max_polyphony = 6

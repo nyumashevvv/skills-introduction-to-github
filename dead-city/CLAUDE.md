@@ -40,8 +40,11 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
   `sound_trigger`, other events, helicopter).
 - Player: `Player` → `Head/Camera3D/WeaponHolder` → weapons. `Weapon` base (ammo, reload, equip/idle anim,
   `fire_ray` with distance falloff) with `Gun` (pistol, rifle, pump shotgun: `pellets`, `pump_delay`,
-  `reload_per_round`), `MeleeWeapon` (knife), `Launcher` (RPG-7, id "bazooka" → `Rocket`). Slots 1–5.
-- `Zombie` (one script, scenes walker / runner / brute): IDLE → CHASE → ATTACK, hears weapon noise
+  `reload_per_round`), `MeleeWeapon` (knife), `Launcher` (RPG-7, id "bazooka" → `Rocket`), `Thrower` (grenades → `Grenade` RigidBody).
+  Slots 1–9: knife, pistol, revolver, shotgun, smg, rifle, sniper (`Gun.scope_fov`, "aim" action, HUD scope overlay),
+  bazooka, grenade. SMG and AK are modelled in `build_assets.py` (`GunKit`), revolver/sniper come from the FPS Pack.
+- `Zombie` (one script, scenes walker / runner / brute / soldier (`body_armor`) / bloater (`explode_damage`,
+  bursts on death or on reaching the player); the spitter is a `Boss` with `show_health_bar = false`): IDLE → CHASE → ATTACK, hears weapon noise
   (`hear_noise` via the "zombies" group). Picks a random body from `bodies` (models/characters/*.glb,
   Quaternius rig: Idle/Walk/Run/Punch/RecieveHit/Death) and tints its "Skin" material. `ZombiePose`
   (SkeletonModifier3D) layers arms-forward reaching and headshot head removal over the animation.
@@ -71,6 +74,8 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
   `LevelBuilder.clutter` puts them under the navigation region), `tools/gen_levels.py` (run from the project root with `PYTHONPATH=tools`)
   regenerate scenes and overwrite editor changes — only use them if the scenes were not hand-edited.
 - Input map: `godot --headless --path . --script tools/setup_input.gd`.
+- `LevelBuilder.shell` hollows a building's ground floor (walls with door gaps, ceiling, solid storeys above);
+  `fancy_door` / `dress_door` give doors the station-entrance look (frame, window, handles, lamp, sign).
 - `tools/gen_levels.py`: chapter scenes are `Level` roots — keep `script` the first property of a node or Godot drops
   the script's exported values. After changing radio text, rerun `tools/gen_voice.py`.
 - Tests (must pass before committing):

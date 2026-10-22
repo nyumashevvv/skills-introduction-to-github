@@ -148,7 +148,7 @@ def weapons():
 
     # Pump shotgun: 8 pellets, damage falls off with distance, loads shell by shell
     s = Scene()
-    weapon_root(s, 'gun', dict(node_name='Shotgun', id=S('shotgun'), display_name=S('Дробовик'), slot=3,
+    weapon_root(s, 'gun', dict(node_name='Shotgun', id=S('shotgun'), display_name=S('Дробовик'), slot=4,
                 ammo_type=S('shells'), magazine_size=6, max_reserve=48, reload_time=0.55, reload_per_round=True,
                 noise_radius=45.0, damage=20, headshot_multiplier=2.0, fire_rate=1.25, max_range=60.0,
                 base_spread_deg=1.0, move_spread_deg=1.5, heat_spread_deg=0.5, pellets=8, pellet_spread_deg=4.0,
@@ -162,7 +162,7 @@ def weapons():
 
     # Rifle
     s = Scene()
-    weapon_root(s, 'gun', dict(node_name='Rifle', id=S('rifle'), display_name=S('Автомат'), slot=4,
+    weapon_root(s, 'gun', dict(node_name='Rifle', id=S('rifle'), display_name=S('Автомат'), slot=6,
                 ammo_type=S('rifle'), magazine_size=30, max_reserve=210, reload_time=2.0, noise_radius=40.0,
                 automatic=True, damage=30, headshot_multiplier=2.5, fire_rate=10.0, base_spread_deg=0.35,
                 move_spread_deg=3.0, heat_spread_deg=1.6, recoil=0.009, kick_back=0.03, kick_up=0.03))
@@ -174,13 +174,60 @@ def weapons():
 
     # RPG-7 (slot "bazooka")
     s = Scene()
-    weapon_root(s, 'launcher', dict(node_name='Bazooka', id=S('bazooka'), display_name=S('РПГ-7'), slot=5,
+    weapon_root(s, 'launcher', dict(node_name='Bazooka', id=S('bazooka'), display_name=S('РПГ-7'), slot=8,
                 ammo_type=S('rocket'), magazine_size=1, max_reserve=8, reload_time=2.3, noise_radius=60.0,
                 equip_time=0.6, rocket_scene=s.ext_res('PackedScene', 'res://scenes/weapons/rocket.tscn')))
     viewmodel(s, 'rpg')
     for name, snd, vol in [('ShootSound', 'rocket_launch', -2.0), ('ReloadSound', 'reload_rocket', -3.0), ('EmptySound', 'empty', -4.0)]:
         s.node(name, 'AudioStreamPlayer', '.', stream=s.sound(snd), volume_db=vol)
     s.save('scenes/weapons/bazooka.tscn')
+
+    def gun(file, node, wid, title, slot, props, model, flash, sounds):
+        s = Scene()
+        weapon_root(s, 'gun', dict(node_name=node, id=S(wid), display_name=S(title), slot=slot, **props))
+        viewmodel(s, model)
+        flash_node(s, 'Model', *flash)
+        for name, snd, vol in sounds:
+            s.node(name, 'AudioStreamPlayer', '.', stream=s.sound(snd), volume_db=vol, max_polyphony=6)
+        s.save(f'scenes/weapons/{file}.tscn')
+    # Revolver: six heavy rounds, slow and loud
+    gun('revolver', 'Revolver', 'revolver', 'Револьвер', 3,
+        dict(ammo_type=S('magnum'), magazine_size=6, max_reserve=36, reload_time=2.4, noise_radius=36.0, damage=80,
+             headshot_multiplier=2.2, fire_rate=2.2, base_spread_deg=0.2, move_spread_deg=2.2, heat_spread_deg=1.5,
+             recoil=0.045, kick_back=0.08, kick_up=0.22), 'revolver', (0.16, 4.0),
+        [('ShootSound', 'revolver', -3.0), ('ReloadSound', 'reload_pistol', -4.0), ('EmptySound', 'empty', -4.0)])
+    # Submachine gun: fast, light, inaccurate on the move
+    gun('smg', 'Smg', 'smg', 'ПП-9', 5,
+        dict(ammo_type=S('smg'), magazine_size=32, max_reserve=192, reload_time=1.6, noise_radius=26.0, automatic=True,
+             damage=17, headshot_multiplier=2.2, fire_rate=14.0, base_spread_deg=0.6, move_spread_deg=2.4,
+             heat_spread_deg=2.2, recoil=0.006, kick_back=0.02, kick_up=0.02), 'smg', (0.12, 3.0),
+        [('ShootSound', 'smg', -8.0), ('ReloadSound', 'reload_rifle', -4.0), ('EmptySound', 'empty', -4.0)])
+    # Sniper rifle: right mouse button looks through the scope
+    gun('sniper', 'Sniper', 'sniper', 'Снайперская винтовка', 7,
+        dict(ammo_type=S('sniper'), magazine_size=5, max_reserve=30, reload_time=2.6, noise_radius=70.0, damage=150,
+             headshot_multiplier=3.0, fire_rate=0.8, max_range=300.0, base_spread_deg=1.2, move_spread_deg=4.0,
+             heat_spread_deg=0.5, recoil=0.06, kick_back=0.14, kick_up=0.2, scope_fov=18.0), 'sniper', (0.2, 5.0),
+        [('ShootSound', 'sniper', -1.0), ('ReloadSound', 'reload_rifle', -3.0), ('EmptySound', 'empty', -4.0)])
+
+    # Hand grenades
+    s = Scene()
+    weapon_root(s, 'thrower', dict(node_name='Grenade', id=S('grenade'), display_name=S('Граната'), slot=9,
+                ammo_type=S('grenade'), magazine_size=1, max_reserve=6, reload_time=0.6, noise_radius=0.0, equip_time=0.3,
+                grenade_scene=s.ext_res('PackedScene', 'res://scenes/weapons/thrown_grenade.tscn')))
+    viewmodel(s, 'grenade')
+    s.node('ThrowSound', 'AudioStreamPlayer', '.', stream=s.sound('throw'), volume_db=-4.0)
+    s.node('ReloadSound', 'AudioStreamPlayer', '.', stream=s.sound('weapon_switch'), volume_db=-8.0)
+    s.save('scenes/weapons/grenade.tscn')
+    s = Scene()
+    # Rough and heavy enough to stop within a few metres; bumps into zombies as well as walls.
+    s.node('ThrownGrenade', 'RigidBody3D', collision_layer=0, collision_mask=5, mass=0.4, continuous_cd=True,
+           linear_damp=1.2, angular_damp=2.0,
+           physics_material_override=s.sub_res('PhysicsMaterial', friction=0.9, rough=True, bounce=0.25),
+           script=s.ext_res('Script', 'res://scripts/weapons/grenade.gd'))
+    s.node('CollisionShape3D', 'CollisionShape3D', '.', shape=s.sub_res('SphereShape3D', radius=0.05))
+    s.node('Model', None, '.', instance=s.ext_res('PackedScene', 'res://models/weapons/grenade_world.glb'), scale=V3(1.4, 1.4, 1.4))
+    s.node('BounceSound', 'AudioStreamPlayer3D', '.', stream=s.sound('impact'), unit_size=4.0)
+    s.save('scenes/weapons/thrown_grenade.tscn')
 
     # Knife (modelled in Blender by tools/blender/build_assets.py)
     s = Scene()
@@ -223,7 +270,7 @@ def player():
     s.node('ViewmodelLight', 'OmniLight3D', 'Head/Camera3D', position=V3(-0.1, 0.25, 0.1), light_color=C(0.85, 0.85, 1),
            light_energy=0.7, omni_range=2.0, light_cull_mask=2)
     s.node('WeaponHolder', 'Node3D', 'Head/Camera3D', script=s.ext_res('Script', 'res://scripts/player/weapon_holder.gd'))
-    for name in ('knife', 'pistol', 'shotgun', 'rifle', 'bazooka'):
+    for name in ('knife', 'pistol', 'revolver', 'shotgun', 'smg', 'rifle', 'sniper', 'bazooka', 'grenade'):
         s.node(name.capitalize(), None, 'Head/Camera3D/WeaponHolder',
                instance=s.ext_res('PackedScene', f'res://scenes/weapons/{name}.tscn'))
     s.node('SwitchSound', 'AudioStreamPlayer', 'Head/Camera3D/WeaponHolder', stream=s.sound('weapon_switch'), volume_db=-6.0)
@@ -280,6 +327,27 @@ def zombies():
                 attack_range=2.4, attack_windup=0.8, attack_recovery=0.9, knockback=7.0, sight_range=30.0,
                 stagger_resistance=0.92, voice_pitch=0.65),
            ['zombie_male'], radius=0.65, height=2.9, body_scale=0.95)
+    # Soldier: body armour soaks bullets, the head is bare
+    zombie('scenes/zombies/soldier.tscn', 'Soldier',
+           dict(max_health=150, chase_speed=2.3, wander_speed=0.5, attack_damage=20, attack_range=1.5, attack_windup=0.5,
+                attack_recovery=0.55, sight_range=24.0, body_armor=0.45, stagger_resistance=0.4),
+           ['soldier'], skin=[(0.45, 0.5, 0.42)])
+    # Bloater: slow, bursts when shot dead or when it reaches you — hurts other zombies too
+    zombie('scenes/zombies/bloater.tscn', 'Bloater',
+           dict(max_health=90, chase_speed=1.6, wander_speed=0.35, attack_range=2.0, sight_range=18.0, explode_damage=75,
+                explode_radius=4.5, voice_pitch=0.75, reach_arms=False),
+           ['boss_patient'], radius=0.45, height=2.0, body_scale=0.66, skin=[(0.62, 0.66, 0.36)])
+
+    def roar_node(s):
+        s.node('RoarSound', 'AudioStreamPlayer3D', '.', stream=s.ext_res('AudioStream', 'res://sounds/zombie/roar2.ogg'),
+               position=V3(0, 1.6, 0), volume_db=-2.0, unit_size=5.0, max_distance=40.0)
+    # Spitter: keeps its distance and spits acid
+    zombie('scenes/zombies/spitter.tscn', 'Spitter',
+           lambda s: dict(max_health=110, chase_speed=2.4, wander_speed=0.5, attack_damage=10, attack_range=1.4,
+                          sight_range=26.0, show_health_bar=False, voice_pitch=1.3, reach_arms=False,
+                          projectile=s.ext_res('PackedScene', 'res://scenes/zombies/acid_spit.tscn'), projectile_count=1,
+                          throw_cooldown=3.2, throw_distance=V2(4, 22), throw_animation=S('Shoot_OneHanded')),
+           ['zombie_female'], skin=[(0.5, 0.62, 0.35)], script='boss', extra=roar_node)
     bosses()
 
 
@@ -426,6 +494,15 @@ def pickups():
         return build
     pickup('scenes/pickups/weapon_shotgun.tscn', 'WeaponShotgun',
            dict(kind=2, item_id=S('shotgun'), display_name=S('Дробовик')), weapon_visual('shotgun', 1.0))
+    for wid, title, scale in [('revolver', 'Револьвер', 1.6), ('smg', 'ПП-9', 1.3), ('sniper', 'Снайперская винтовка', 0.9),
+                              ('grenade', 'Гранаты', 2.5)]:
+        pickup(f'scenes/pickups/weapon_{wid}.tscn', 'Weapon' + wid.title(),
+               dict(kind=2, item_id=S(wid), display_name=S(title)), weapon_visual(wid, scale))
+    for ammo_type, title, amount, color in [('magnum', 'Патроны для револьвера', 12, 'brass'), ('smg', 'Патроны для ПП', 64, 'paint_white'),
+                                            ('sniper', 'Патроны для снайперки', 10, 'rocket_red')]:
+        pickup(f'scenes/pickups/ammo_{ammo_type}.tscn', 'Ammo' + ammo_type.title(),
+               dict(kind=1, amount=amount, ammo_type=S(ammo_type), display_name=S(title)),
+               lambda s, p, c=color: ammo_box(s, p, 0.3, c))
     pickup('scenes/pickups/weapon_rifle.tscn', 'WeaponRifle',
            dict(kind=2, item_id=S('rifle'), display_name=S('Автомат')), weapon_visual('rifle', 1.0))
     pickup('scenes/pickups/weapon_bazooka.tscn', 'WeaponBazooka',
@@ -548,6 +625,25 @@ def effects():
     s.node('Light', 'OmniLight3D', '.', light_color=C(0.5, 1, 0.2), light_energy=3.0, omni_range=4.0)
     s.node('Sound', 'AudioStreamPlayer3D', '.', stream=s.sound('splash'), autoplay=True, unit_size=5.0)
     s.save('scenes/effects/acid_splash.tscn')
+
+    # Bloater burst: a cloud of green gas and gore
+    s = Scene()
+    gas = s.sub_res('QuadMesh', size=V2(1.6, 1.6), material=particle_mat(s, True, True))
+    gore = s.sub_res('SphereMesh', radius=0.06, height=0.12, radial_segments=6, rings=3, material=particle_mat(s))
+    ramp = s.sub_res('Gradient', offsets='PackedFloat32Array(0, 0.2, 1)',
+                     colors='PackedColorArray(0.6, 1, 0.2, 0.0, 0.45, 0.7, 0.15, 0.7, 0.3, 0.4, 0.1, 0)')
+    s.node('BloatBurst', 'Node3D', script=s.ext_res('Script', script), lifetime=3.0, light_fade_time=0.4)
+    s.node('Gas', 'CPUParticles3D', '.', emitting=False, amount=24, lifetime=2.2, one_shot=True, explosiveness=0.95,
+           mesh=gas, emission_shape=1, emission_sphere_radius=0.6, direction=V3(0, 1, 0), spread=180.0, gravity=V3(0, 0.3, 0),
+           initial_velocity_min=1.0, initial_velocity_max=3.0, damping_min=1.5, damping_max=2.5, color_ramp=ramp)
+    s.node('Gore', 'CPUParticles3D', '.', emitting=False, amount=26, lifetime=1.0, one_shot=True, explosiveness=1.0,
+           mesh=gore, direction=V3(0, 1, 0), spread=90.0, gravity=V3(0, -14, 0), initial_velocity_min=3.0,
+           initial_velocity_max=7.0, color=C(0.35, 0.45, 0.08))
+    s.node('Light', 'OmniLight3D', '.', light_color=C(0.6, 1, 0.2), light_energy=5.0, omni_range=7.0)
+    s.node('Sound', 'AudioStreamPlayer3D', '.', stream=s.sound('splash'), autoplay=True, unit_size=10.0, volume_db=4.0)
+    s.node('Boom', 'AudioStreamPlayer3D', '.', stream=s.sound('explosion'), autoplay=True, unit_size=8.0, volume_db=-6.0,
+           pitch_scale=1.4)
+    s.save('scenes/effects/bloat_burst.tscn')
 
     # Looping fire (burning cars, barrels)
     s = Scene()
@@ -823,6 +919,10 @@ def hud():
     s.node('Gameplay', 'Control', '.', mouse_filter=2, **FULL)
     g = 'Gameplay'
     s.node('Vignette', 'ColorRect', g, material=vig, mouse_filter=2, **FULL)
+    s.node('Scope', 'Control', g, visible=False, mouse_filter=2, script=s.ext_res('Script', 'res://scripts/ui/scope_overlay.gd'),
+           **FULL)
+    s.node('Mask', 'ColorRect', f'{g}/Scope', mouse_filter=2, show_behind_parent=True,
+           material=s.sub_res('ShaderMaterial', shader=s.ext_res('Shader', 'res://scenes/ui/scope.gdshader')), **FULL)
     s.node('Crosshair', 'Control', g, mouse_filter=2, script=s.ext_res('Script', 'res://scripts/ui/crosshair.gd'), **CENTER)
     s.node('HitMarker', 'Control', g, mouse_filter=2, script=s.ext_res('Script', 'res://scripts/ui/hit_marker.gd'), **CENTER)
     label(s, 'PromptLabel', g, '', 20, C(1, 0.95, 0.8), 1, anchors_preset=8, anchor_left=0.5, anchor_top=0.5,

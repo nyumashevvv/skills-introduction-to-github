@@ -8,25 +8,33 @@
 
 [ext_resource type="PackedScene" path="res://scenes/weapons/pistol.tscn" id="4_pistol"]
 
-[ext_resource type="PackedScene" path="res://scenes/weapons/shotgun.tscn" id="5_shotgun"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/revolver.tscn" id="5_revolver"]
 
-[ext_resource type="PackedScene" path="res://scenes/weapons/rifle.tscn" id="6_rifle"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/shotgun.tscn" id="6_shotgun"]
 
-[ext_resource type="PackedScene" path="res://scenes/weapons/bazooka.tscn" id="7_bazooka"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/smg.tscn" id="7_smg"]
 
-[ext_resource type="AudioStream" path="res://sounds/weapon_switch.wav" id="8_weapon_switch"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/rifle.tscn" id="8_rifle"]
 
-[ext_resource type="AudioStream" path="res://sounds/flesh_hit.wav" id="9_flesh_hit"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/sniper.tscn" id="9_sniper"]
 
-[ext_resource type="AudioStream" path="res://sounds/hurt.wav" id="10_hurt"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/bazooka.tscn" id="10_bazooka"]
 
-[ext_resource type="AudioStream" path="res://sounds/pickup.wav" id="11_pickup"]
+[ext_resource type="PackedScene" path="res://scenes/weapons/grenade.tscn" id="11_grenade"]
 
-[ext_resource type="AudioStream" path="res://sounds/key_pickup.wav" id="12_key_pickup"]
+[ext_resource type="AudioStream" path="res://sounds/weapon_switch.wav" id="12_weapon_switch"]
 
-[ext_resource type="AudioStream" path="res://sounds/footstep.wav" id="13_footstep"]
+[ext_resource type="AudioStream" path="res://sounds/flesh_hit.wav" id="13_flesh_hit"]
 
-[ext_resource type="AudioStream" path="res://sounds/flashlight.wav" id="14_flashlight"]
+[ext_resource type="AudioStream" path="res://sounds/hurt.wav" id="14_hurt"]
+
+[ext_resource type="AudioStream" path="res://sounds/pickup.wav" id="15_pickup"]
+
+[ext_resource type="AudioStream" path="res://sounds/key_pickup.wav" id="16_key_pickup"]
+
+[ext_resource type="AudioStream" path="res://sounds/footstep.wav" id="17_footstep"]
+
+[ext_resource type="AudioStream" path="res://sounds/flashlight.wav" id="18_flashlight"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 radius = 0.4
@@ -73,42 +81,50 @@ script = ExtResource("2_weapon_holder")
 
 [node name="Pistol" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("4_pistol")]
 
-[node name="Shotgun" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("5_shotgun")]
+[node name="Revolver" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("5_revolver")]
 
-[node name="Rifle" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("6_rifle")]
+[node name="Shotgun" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("6_shotgun")]
 
-[node name="Bazooka" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("7_bazooka")]
+[node name="Smg" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("7_smg")]
+
+[node name="Rifle" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("8_rifle")]
+
+[node name="Sniper" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("9_sniper")]
+
+[node name="Bazooka" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("10_bazooka")]
+
+[node name="Grenade" parent="Head/Camera3D/WeaponHolder" instance=ExtResource("11_grenade")]
 
 [node name="SwitchSound" type="AudioStreamPlayer" parent="Head/Camera3D/WeaponHolder"]
-stream = ExtResource("8_weapon_switch")
+stream = ExtResource("12_weapon_switch")
 volume_db = -6.0
 
 [node name="HitSound" type="AudioStreamPlayer" parent="Head/Camera3D/WeaponHolder"]
-stream = ExtResource("9_flesh_hit")
+stream = ExtResource("13_flesh_hit")
 volume_db = -6.0
 max_polyphony = 4
 
 [node name="HurtSound" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("10_hurt")
+stream = ExtResource("14_hurt")
 volume_db = -2.0
 max_polyphony = 2
 
 [node name="PickupSound" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("11_pickup")
+stream = ExtResource("15_pickup")
 volume_db = -4.0
 max_polyphony = 2
 
 [node name="KeySound" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("12_key_pickup")
+stream = ExtResource("16_key_pickup")
 volume_db = -4.0
 max_polyphony = 2
 
 [node name="FootstepSound" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("13_footstep")
+stream = ExtResource("17_footstep")
 volume_db = -10.0
 max_polyphony = 2
 
 [node name="FlashlightSound" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("14_flashlight")
+stream = ExtResource("18_flashlight")
 volume_db = -6.0
 max_polyphony = 2

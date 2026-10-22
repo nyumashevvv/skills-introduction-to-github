@@ -229,6 +229,11 @@ func set_prompt(text: String) -> void:
 	prompt_label.text = text
 
 
+func set_scope(on: bool) -> void:
+	$Gameplay/Scope.visible = on
+	crosshair.visible = not on
+
+
 ## Knife hint under the crosshair ("ЛКМ — тихое убийство"); empty hides it.
 func set_hint(text: String) -> void:
 	if prompt_label.text == "" or prompt_label.has_meta("hint"):

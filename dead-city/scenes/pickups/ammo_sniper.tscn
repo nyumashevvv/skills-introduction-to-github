@@ -1,0 +1,61 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/pickups/pickup.gd" id="1_pickup"]
+
+[ext_resource type="Material" path="res://materials/ammo_green.tres" id="2_ammo_green"]
+
+[ext_resource type="Material" path="res://materials/dark.tres" id="3_dark"]
+
+[ext_resource type="Material" path="res://materials/rocket_red.tres" id="4_rocket_red"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_1"]
+radius = 0.8
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(0.3, 0.2, 0.22)
+material = ExtResource("2_ammo_green")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.32, 0.04, 0.24)
+material = ExtResource("3_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.18, 0.08, 0.005)
+material = ExtResource("4_rocket_red")
+
+[node name="AmmoSniper" type="Area3D"]
+collision_layer = 16
+collision_mask = 2
+monitorable = false
+script = ExtResource("1_pickup")
+kind = 1
+amount = 10
+ammo_type = "sniper"
+display_name = "Патроны для снайперки"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.5, 0.0)
+shape = SubResource("SphereShape3D_1")
+
+[node name="Visual" type="Node3D" parent="."]
+
+[node name="Item" type="Node3D" parent="Visual"]
+position = Vector3(0.0, 0.5, 0.0)
+
+[node name="Box" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.0, 0.0)
+
+[node name="Lid" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.0, 0.11, 0.0)
+
+[node name="Label" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(0.0, 0.0, -0.112)
+
+[node name="Light" type="OmniLight3D" parent="."]
+position = Vector3(0.0, 0.8, 0.0)
+light_color = Color(1.0, 0.9, 0.6, 1.0)
+light_energy = 0.8
+omni_range = 2.5

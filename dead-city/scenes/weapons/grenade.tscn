@@ -1,0 +1,34 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/weapons/thrown_grenade.tscn" id="1_thrown_grenade"]
+
+[ext_resource type="Script" path="res://scripts/weapons/thrower.gd" id="2_thrower"]
+
+[ext_resource type="PackedScene" path="res://models/weapons/grenade_fp.glb" id="3_grenade_fp"]
+
+[ext_resource type="AudioStream" path="res://sounds/throw.wav" id="4_throw"]
+
+[ext_resource type="AudioStream" path="res://sounds/weapon_switch.wav" id="5_weapon_switch"]
+
+[node name="Grenade" type="Node3D"]
+script = ExtResource("2_thrower")
+id = "grenade"
+display_name = "Граната"
+slot = 9
+ammo_type = "grenade"
+magazine_size = 1
+max_reserve = 6
+reload_time = 0.6
+noise_radius = 0.0
+equip_time = 0.3
+grenade_scene = ExtResource("1_thrown_grenade")
+
+[node name="Model" parent="." instance=ExtResource("3_grenade_fp")]
+
+[node name="ThrowSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_throw")
+volume_db = -4.0
+
+[node name="ReloadSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_weapon_switch")
+volume_db = -8.0

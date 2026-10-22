@@ -1,0 +1,84 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/weapons/gun.gd" id="1_gun"]
+
+[ext_resource type="PackedScene" path="res://models/weapons/smg_fp.glb" id="2_smg_fp"]
+
+[ext_resource type="Material" path="res://materials/muzzle_flash.tres" id="3_muzzle_flash"]
+
+[ext_resource type="AudioStream" path="res://sounds/smg.wav" id="4_smg"]
+
+[ext_resource type="AudioStream" path="res://sounds/reload_rifle.wav" id="5_reload_rifle"]
+
+[ext_resource type="AudioStream" path="res://sounds/empty.wav" id="6_empty"]
+
+[sub_resource type="QuadMesh" id="QuadMesh_1"]
+material = ExtResource("3_muzzle_flash")
+size = Vector2(0.12, 0.12)
+
+[sub_resource type="QuadMesh" id="QuadMesh_2"]
+material = ExtResource("3_muzzle_flash")
+size = Vector2(0.072, 0.192)
+
+[node name="Smg" type="Node3D"]
+script = ExtResource("1_gun")
+id = "smg"
+display_name = "ПП-9"
+slot = 5
+ammo_type = "smg"
+magazine_size = 32
+max_reserve = 192
+reload_time = 1.6
+noise_radius = 26.0
+automatic = true
+damage = 17
+headshot_multiplier = 2.2
+fire_rate = 14.0
+base_spread_deg = 0.6
+move_spread_deg = 2.4
+heat_spread_deg = 2.2
+recoil = 0.006
+kick_back = 0.02
+kick_up = 0.02
+
+[node name="Model" parent="." instance=ExtResource("2_smg_fp")]
+
+[node name="Flash" type="Node3D" parent="Model"]
+
+[node name="Quad" type="MeshInstance3D" parent="Model/Flash"]
+mesh = SubResource("QuadMesh_1")
+cast_shadow = 0
+layers = 2
+
+[node name="Quad2" type="MeshInstance3D" parent="Model/Flash"]
+mesh = SubResource("QuadMesh_1")
+cast_shadow = 0
+layers = 2
+rotation = Vector3(0.0, 0.0, 0.7854)
+
+[node name="Side" type="MeshInstance3D" parent="Model/Flash"]
+mesh = SubResource("QuadMesh_2")
+cast_shadow = 0
+layers = 2
+rotation = Vector3(1.5708, 0.0, 0.0)
+position = Vector3(0.0, 0.0, -0.06)
+
+[node name="Light" type="OmniLight3D" parent="Model/Flash"]
+light_color = Color(1.0, 0.7, 0.35, 1.0)
+light_energy = 3.0
+omni_range = 7.0
+
+[node name="ShootSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_smg")
+volume_db = -8.0
+max_polyphony = 6
+
+[node name="ReloadSound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_reload_rifle")
+volume_db = -4.0
+max_polyphony = 6
+
+[node name="EmptySound" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_empty")
+volume_db = -4.0
+max_polyphony = 6

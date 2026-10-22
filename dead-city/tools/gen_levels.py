@@ -4,10 +4,12 @@ import random
 from tscn import *
 
 ZOMBIE = {k: f'res://scenes/zombies/{k}.tscn' for k in
-          ('walker', 'runner', 'brute', 'butcher', 'warden', 'patient_zero', 'lineman', 'colossus')}
+          ('walker', 'runner', 'brute', 'soldier', 'bloater', 'spitter', 'butcher', 'warden', 'patient_zero', 'lineman',
+           'colossus')}
 PICKUP = {k: f'res://scenes/pickups/{k}.tscn' for k in
           ('medkit', 'ammo_pistol', 'ammo_rifle', 'ammo_rocket', 'ammo_shells', 'weapon_rifle', 'weapon_shotgun',
-           'weapon_bazooka', 'keycard')}
+           'weapon_bazooka', 'keycard', 'weapon_revolver', 'weapon_smg', 'weapon_sniper', 'weapon_grenade', 'ammo_magnum',
+           'ammo_smg', 'ammo_sniper')}
 NAV = 'NavigationRegion3D'
 
 
@@ -86,6 +88,67 @@ class LevelBuilder(Scene):
         p.update(props)
         base = scene.split('/')[-1].split('.')[0].title().replace('_', '')
         self.node(name or self.uid(base), None, parent, instance=self.ext_res('PackedScene', scene), **p)
+
+    def shell(self, x0, x1, z0, z1, h, mat, floor_mat='tile', gaps=(), inner_h=4.0):
+        """A hollow ground floor inside a building block: perimeter walls (with door gaps), floor, ceiling and the
+        solid upper storeys above. gaps: (side, centre, width) with side 'x0' / 'x1' (walls at x) or 'z0' / 'z1'."""
+        t = 0.3
+        self.floor(floor_mat, x0, x1, z0, z1, top=0.01, thick=0.2)
+        self.blk(mat, (abs(x1 - x0), h - inner_h, abs(z1 - z0)), ((x0 + x1) / 2, inner_h + (h - inner_h) / 2, (z0 + z1) / 2))
+        for side in ('x0', 'x1', 'z0', 'z1'):
+            fixed = {'x0': x0, 'x1': x1, 'z0': z0, 'z1': z1}[side]
+            lo, hi = (min(z0, z1), max(z0, z1)) if side[0] == 'x' else (min(x0, x1), max(x0, x1))
+            cuts = sorted((c - w / 2, c + w / 2) for sd, c, w in gaps if sd == side)
+            start = lo
+            for c0, c1 in cuts + [(hi, hi)]:
+                if c0 - start > 0.05:
+                    if side[0] == 'x':
+                        self.wall_x(fixed, start, c0, mat, h=inner_h, t=t)
+                    else:
+                        self.wall_z(fixed, start, c0, mat, h=inner_h, t=t)
+                if c1 < hi:  # lintel over the door
+                    size = (t, inner_h - 3.0, c1 - c0) if side[0] == 'x' else (c1 - c0, inner_h - 3.0, t)
+                    pos = (fixed, 3.0 + (inner_h - 3.0) / 2, (c0 + c1) / 2) if side[0] == 'x' else ((c0 + c1) / 2, 3.0 + (inner_h - 3.0) / 2, fixed)
+                    self.blk(mat, size, pos)
+                start = c1
+
+    def fancy_door(self, name, pos, along, face, sign='', sign_color=(1.0, 0.85, 0.4), glass=True, width=1.8,
+                   mat='door_steel', lamp=True, **props):
+        """A door dressed like the police station's: frame, window, handles, a lamp and a sign over it.
+        along: 'x' or 'z' (the axis the door spans); face: the side players arrive from ('+x', '-x', '+z', '-z')."""
+        x, y, z = pos
+        size = (width, 3.0, 0.14) if along == 'x' else (0.14, 3.0, width)
+        self.door(name, size, (x, 1.5, z), mat, **props)
+        d = 'Doors/' + name
+        n = 1.0 if face[0] == '+' else -1.0
+        off = lambda a, b: (a, 0, 0.08 * b) if along == 'x' else (0.08 * b, 0, a)
+        pane = 'door_glass_lit' if glass else 'glass'
+        p = off(0, 1)
+        self.box(self.uid('Pane'), d, (width * 0.6, 1.2, 0.02) if along == 'x' else (0.02, 1.2, width * 0.6),
+                 (p[0], 0.55, p[2]), pane, cast_shadow=0)
+        for side in (-1, 1):
+            q = off(width * 0.32, side)
+            self.box(self.uid('Handle'), d, (0.18, 0.05, 0.05) if along == 'x' else (0.05, 0.05, 0.18), (q[0], -0.1, q[2]), 'chrome')
+        self.dress_door(pos, along, face, sign, sign_color, width, lamp)
+
+    def dress_door(self, pos, along, face, sign='', sign_color=(1.0, 0.85, 0.4), width=1.8, lamp=True):
+        """Frame, lamp and sign around a door opening (static decoration)."""
+        x, y, z = pos
+        n = 1.0 if face[0] == '+' else -1.0
+        for s_ in (-1, 1):
+            jamb = (x + s_ * (width / 2 + 0.07), 1.55, z) if along == 'x' else (x, 1.55, z + s_ * (width / 2 + 0.07))
+            self.decor((0.14, 3.1, 0.36) if along == 'x' else (0.36, 3.1, 0.14), jamb, 'dark')
+        self.decor((width + 0.28, 0.16, 0.36) if along == 'x' else (0.36, 0.16, width + 0.28), (x, 3.08, z), 'dark')
+        out = (0, 0, 0.22 * n) if along == 'x' else (0.22 * n, 0, 0)
+        if lamp:
+            self.decor((0.5, 0.06, 0.2) if along == 'x' else (0.2, 0.06, 0.5), (x + out[0], 3.3, z + out[2]), 'lamp_glow',
+                       cast_shadow=0)
+            self.omni((x + out[0] * 3, 2.9, z + out[2] * 3), (1, 0.88, 0.7), 1.4, 6.0)
+        if sign:
+            rot = {'+z': 0.0, '-z': math.pi, '+x': math.pi / 2, '-x': -math.pi / 2}[face]
+            self.node(self.uid('Sign'), 'Label3D', 'Decor', position=V3(x + out[0] * 1.2, 3.7, z + out[2] * 1.2),
+                      rotation=V3(0, rot, 0), text=S(sign), font_size=72, pixel_size=0.008, modulate=C(*sign_color),
+                      outline_size=8)
 
     def clutter(self, kind, pos, rot_y=None):
         """A prop from scenes/props at (x, y, z); random heading unless given."""
@@ -194,14 +257,103 @@ MOON = dict(rotation=V3(-0.9, 0.6, 0), light_color=C(0.55, 0.62, 0.85), light_en
             directional_shadow_max_distance=80.0)
 
 
+def street_1_backyard(L):
+    """Chapter 1 side areas: the back yard behind the shop, the cafe, the grocery shop and the pharmacy."""
+    c, H = L.clutter, math.pi / 2
+    # back yard (x -33.5..-21) reached through the left alley or the shop's back door; a second alley at
+    # z -100..-104 leads back to the street past the bus
+    L.floor('asphalt', -33.5, -21, -66, -104)
+    L.floor('asphalt', -21, -9, -100, -104)
+    L.wall_x(-33.8, -65.6, -104.4, 'brick_dark', h=7, t=0.6)
+    L.wall_z(-65.6, -33.8, -21, 'brick_dark', h=7, t=0.6)
+    L.wall_z(-104.4, -33.8, -21, 'brick_dark', h=7, t=0.6)
+    L.prop('res://scenes/world/dumpster.tscn', (-32.6, 0, -70), H)
+    L.prop('res://scenes/world/dumpster.tscn', (-32.6, 0, -73), H)
+    L.prop(VEHICLE.format('sedan_burnt'), (-27.5, 0, -84), 0.2)
+    L.fire((-27.5, 1.0, -84))
+    for z in (-77, -78.33, -79.66):
+        c('fence_wood', (-25.0, 0, z), H)
+    for kind, pos in [('trash_bags', (-30.5, 0, -68)), ('tyre_stack', (-32.8, 0, -99)), ('crate_large', (-22.2, 0, -91)),
+                      ('box_pile', (-24.0, 0, -102.6)), ('barrel_open', (-32.6, 0, -88)), ('pallet', (-29.0, 0, -102.8)),
+                      ('trash_bags', (-22.5, 0, -97.8)), ('rubble', (-28, 0, -94)), ('debris_door', (-26.0, 0, -88.5))]:
+        c(kind, pos)
+    L.omni((-27, 5.0, -75), (1, 0.75, 0.45), 1.6, 12, flicker=True)
+    L.omni((-27, 5.0, -97), (1, 0.75, 0.45), 1.4, 11)
+    for kind, pos in [('walker', (-29, 0, -76)), ('walker', (-24, 0, -98)), ('bloater', (-30, 0, -92)), ('walker', (-31, 0, -82))]:
+        L.zombie(kind, pos)
+    L.pickup('ammo_pistol', (-32.8, 0, -95))
+    L.pickup('medkit', (-21.8, 0, -86))
+
+    # cafe (x -21..-9, z -10..-26)
+    L.fancy_door('CafeDoor', (-9, 0, -18), 'z', '+x', sign='КАФЕ «ВСТРЕЧА»', sign_color=(1, 0.75, 0.45))
+    for i, z in enumerate((-11.0, -11.95, -12.9, -13.85)):
+        c(['fridge', 'kitchen_cabinet', 'kitchen_sink', 'kitchen_stove'][i], (-20.4, 0, z), -H)
+    c('coffee_machine', (-20.4, 0.95, -11.95), -H)
+    for z in (-15.5, -16.4, -17.3):
+        c('kitchen_bar', (-17.6, 0, z), H)
+        c('stool_bar', (-16.7, 0, z), -H)
+    for tx, tz in [(-12.5, -13), (-12.5, -21.5), (-16.5, -22.5)]:
+        c('table_round', (tx, 0, tz), L.rnd.uniform(0, 3))
+        for a in (0.4, 2.5, 4.4):
+            c('chair_cushion' if L.rnd.random() < 0.7 else 'chair_fallen', (tx + math.cos(a) * 1.0, 0, tz + math.sin(a) * 1.0), -a - H)
+        c('mug', (tx, 0.77, tz + 0.2))
+    c('plant_tall', (-9.8, 0, -10.8)); c('plant_tall', (-9.8, 0, -25.2)); c('vase_broken', (-14, 0, -18))
+    c('papers', (-11, 0, -17)); c('trash_can', (-20.3, 0, -25.3))
+    L.ceiling_lamp(-15, -14, y=3.95, energy=1.4, rng=7.0); L.ceiling_lamp(-15, -22, y=3.95, flicker=True, energy=1.2, rng=7.0)
+    L.pickup('weapon_grenade', (-17.6, 0.9, -16.4))
+    L.pickup('ammo_pistol', (-20.0, 0, -24.0))
+    L.zombie('walker', (-14.5, 0, -16.5)); L.zombie('walker', (-18.5, 0, -23.5))
+
+    # grocery shop (x -21..-9, z -74..-100): front door on the street, back door into the yard
+    L.fancy_door('ShopDoor', (-9, 0, -80), 'z', '+x', sign='ПРОДУКТЫ', sign_color=(0.5, 0.9, 1.0))
+    L.fancy_door('ShopBackDoor', (-21, 0, -95), 'z', '-x', glass=False, sign='ВХОД ДЛЯ ПЕРСОНАЛА', sign_color=(0.9, 0.9, 0.85))
+    for x in (-18.0, -14.6):
+        for i in range(10):
+            L.prop('res://scenes/world/shelf.tscn', (x + (0.26 if i % 2 else -0.26) * 0, 0, -77.0 - i * 1.25), H)
+    for x in (-20.0, -18.6, -17.2, -15.8, -14.4):
+        c('fridge', (x, 0, -74.6), 0.0)
+    for z in (-84.5, -88.5):
+        c('kitchen_bar', (-11.3, 0, z), -H); c('kitchen_bar', (-11.3, 0, z - 0.9), -H)
+        c('box_closed', (-11.3, 0.88, z - 0.4))
+    for kind, pos in [('box_pile', (-19.8, 0, -98.4)), ('crate_large', (-17.5, 0, -98.8)), ('box_open', (-15.6, 0, -98.6)),
+                      ('trash_bags', (-12, 0, -98.5)), ('papers', (-16.3, 0, -83)), ('books_floor', (-13, 0, -92)),
+                      ('cardboard_box', (-16.4, 0, -94.5)), ('trash_can', (-10, 0, -76))]:
+        c(kind, pos)
+    for x, z, flicker in [(-15, -78, False), (-15, -87, True), (-15, -96, False), (-11, -86, True)]:
+        L.ceiling_lamp(x, z, y=3.95, flicker=flicker, energy=1.2, rng=7.0)
+    L.pickup('ammo_pistol', (-16.3, 0, -90))
+    L.pickup('ammo_rifle', (-19.6, 0, -86))
+    for kind, pos in [('walker', (-16.3, 0, -79)), ('walker', (-19.5, 0, -91)), ('runner', (-12.5, 0, -95)), ('walker', (-12.5, 0, -78))]:
+        L.zombie(kind, pos)
+
+    # pharmacy (x 9..21, z -74..-90); the back office behind a partition hides the revolver
+    L.fancy_door('PharmacyDoor', (9, 0, -82), 'z', '-x', sign='АПТЕКА', sign_color=(0.4, 1.0, 0.55))
+    L.wall_x(16, -74, -85.6, 'hospital_wall', h=4.0, t=0.2); L.wall_x(16, -87.2, -90, 'hospital_wall', h=4.0, t=0.2)
+    for x in (10.6, 12.0, 13.4, 14.8):
+        L.prop('res://scenes/world/shelf.tscn', (x, 0, -74.5), 0.0)
+        c('pills', (x, 0.82, -74.6))
+    for z in (-79.5, -80.4, -81.3):
+        c('kitchen_bar', (13.6, 0, z), H)
+    c('pills', (13.6, 0.88, -80.4)); c('syringes', (13.6, 0.88, -79.6)); c('papers', (11.5, 0, -86))
+    L.prop('res://scenes/world/desk.tscn', (18.6, 0, -80), H)
+    c('office_chair', (19.6, 0, -80), -H); c('filing_cabinet', (20.5, 0, -76), -H); c('filing_cabinet', (20.5, 0, -76.6), -H)
+    c('box_pile', (19.5, 0, -88.6)); c('trashcan_small', (16.6, 0, -76))
+    L.ceiling_lamp(12, -79, y=3.95, energy=1.5, rng=7.0); L.ceiling_lamp(18.5, -83, y=3.95, flicker=True, energy=1.0, rng=6.0)
+    L.pickup('medkit', (10.4, 0, -88.5)); L.pickup('medkit', (14.8, 0.82, -74.6))
+    L.pickup('weapon_revolver', (18.6, 0.85, -80.3))
+    L.pickup('ammo_magnum', (20.3, 0, -88.6))
+    L.zombie('walker', (11.5, 0, -84)); L.zombie('spitter', (18.5, 0, -85.5))
+
+
 def street_clutter(L):
     """The abandoned street: rubbish, luggage of people who fled, cones and wrecks along the sidewalks."""
     c = L.clutter
     small = ['trash_bags', 'newspaper', 'suitcase', 'tyre_flat', 'rubble', 'papers', 'backpack', 'suitcase_open']
+    doors = [(-1, -18), (-1, -80), (1, -82)]  # keep the shop doors clear
     for i, z in enumerate(range(6, -126, -6)):
         side = -1 if i % 2 else 1
         c(L.rnd.choice(small), (side * L.rnd.uniform(6.6, 8.4), 0, z + L.rnd.uniform(-2, 2)))
-        if i % 3 == 0:
+        if i % 3 == 0 and not any(sd == -side and abs(z - 2.5 - dz) < 3 for sd, dz in doors):
             c(L.rnd.choice(['trash_can', 'bench', 'box_pile']), (-side * 8.4, 0, z - 2.5), -side * math.pi / 2)
         if i % 4 == 1:
             c(L.rnd.choice(['newspaper', 'rubble', 'papers', 'tyre_flat']), (L.rnd.uniform(-4.5, 4.5), 0, z + 1))
@@ -477,27 +629,39 @@ def level_1():
     L.floor('sidewalk', 6, 9, Z0, Z1)
     for z in range(10, -150, -6):  # lane markings
         L.decor((0.15, 0.01, 2.5), (0, 0.005, z), 'paint_white')
-    # buildings (facades towards the road), alleys at z -66..-74
-    left = [(14, -10, 10, 'brick'), (-10, -40, 14, 'plaster'), (-40, -66, 9, 'brick_dark'),
-            (-74, -100, 12, 'plaster_gray'), (-100, -128, 10, 'brick')]
+    # buildings (facades towards the road), alleys at z -66..-74 and (left) -100..-104. Some ground floors can be
+    # entered: a cafe, the grocery shop (the way round the bus blocking the street) and a pharmacy.
+    left = [(14, -10, 10, 'brick'), (-10, -26, 14, 'plaster', 'cafe'), (-26, -40, 14, 'plaster'),
+            (-40, -66, 9, 'brick_dark'), (-74, -100, 12, 'plaster_gray', 'shop'), (-104, -128, 10, 'brick')]
     right = [(14, -18, 12, 'plaster_gray'), (-18, -44, 9, 'brick'), (-44, -66, 13, 'plaster'),
-             (-74, -104, 10, 'brick_dark'), (-104, -128, 11, 'plaster')]
+             (-74, -90, 10, 'brick_dark', 'pharmacy'), (-90, -104, 10, 'brick_dark'), (-104, -128, 11, 'plaster')]
     for side, rows in ((-1, left), (1, right)):
-        for z0, z1, h, mat in rows:
+        for z0, z1, h, mat, *room in rows:
             x0, x1 = (9, 21) if side > 0 else (-21, -9)
-            L.blk(mat, (12, h, z0 - z1), ((x0 + x1) / 2, h / 2, (z0 + z1) / 2))
             fx = x0 - 0.03 if side > 0 else x1 + 0.03
-            for row in range(int((h - 1.5) // 3.2)):
+            if room:
+                street = 'x1' if side < 0 else 'x0'
+                door_z = {'cafe': -18.0, 'shop': -80.0, 'pharmacy': -82.0}[room[0]]
+                gaps = [(street, door_z, 1.8)] + ([('x0', -95.0, 1.6)] if room[0] == 'shop' else [])
+                L.shell(x0, x1, z0, z1, h, mat, 'tile' if room[0] != 'pharmacy' else 'linoleum', gaps)
+                for zz in (z0 - 2.5, z1 + 2.5):  # shop windows
+                    if abs(zz - door_z) > 2.5:
+                        L.decor((0.06, 2.0, 2.6), (fx, 1.6, zz), 'window_lit', cast_shadow=0)
+            else:
+                L.blk(mat, (12, h, z0 - z1), ((x0 + x1) / 2, h / 2, (z0 + z1) / 2))
+            for row in range(1 if room else 0, int((h - 1.5) // 3.2)):
                 y = 2.4 + row * 3.2
                 n = int((z0 - z1 - 1) // 3.5)
                 for i in range(n):
                     z = z1 + 1.75 + i * 3.5 + ((z0 - z1) - n * 3.5) / 2
                     lit = L.rnd.random() < 0.1
                     L.decor((0.06, 1.5, 1.1), (fx, y, z), 'window_lit' if lit else 'window_dark', cast_shadow=0)
-        # alley floor + back wall
+        # alley floor + back wall (the left alley opens into the back yard)
         ax = 15 * side
         L.floor('asphalt', ax - 6, ax + 6, -66, -74)
-        L.wall_x(21.5 * side, -66, -74, 'brick_dark', h=8, t=1.0)
+        if side > 0:
+            L.wall_x(21.5 * side, -66, -74, 'brick_dark', h=8, t=1.0)
+    street_1_backyard(L)
     # start: dead end behind the player
     L.wall_z(Z0 + 0.5, -9, 9, 'concrete', h=3, t=1.0)
     L.prop(VEHICLE.format('bus'), (0, 0, 11.5), 1.45)
@@ -521,6 +685,10 @@ def level_1():
     L.fire((-3.0, 1.1, -2))
     L.fire((-4.2, 1.0, -78))
     L.prop(VEHICLE.format('bus'), (0.0, 0, -88), 1.4)
+    # the bus and a barricade close the street: go round through the shop or the back yard
+    for x in (-7.3, 7.3):
+        L.blk('sandbag', (3.6, 2.2, 1.0), (x, 1.1, -88.2))
+        L.blk('concrete', (3.6, 0.6, 1.2), (x, 2.5, -88.2))
     L.fire((1.5, 3.2, -88))
     L.blk('concrete', (3.0, 0.9, 0.6), (7.5, 0.45, -39), rot=(0, 0.2, 0))  # jersey barrier
     for x in (-5, -2.5, 2.5, 5):  # police barricade in front of the station
@@ -552,7 +720,7 @@ def level_1():
                       ('walker', (1.5, 0, -60)), ('walker', (-6.5, 0, -58)), ('walker', (-1, 0, -80)),
                       ('walker', (5, 0, -82)), ('runner', (-6, 0, -84)), ('walker', (4, 0, -96)),
                       ('walker', (-3, 0, -98)), ('walker', (0, 0, -110)), ('walker', (6, 0, -119)),
-                      ('walker', (-6.5, 0, -125))]:
+                      ('walker', (-6.5, 0, -125)), ('soldier', (3, 0, -118)), ('bloater', (2.5, 0, -63))]:
         L.zombie(kind, pos)
     L.zombie('butcher', (0, 0, -125), math.pi, name='Butcher', sight_range=14.0,
              alert_event=NP('../../Story/ButcherAppears'), death_event=NP('../../Story/ButcherDead'))
@@ -585,6 +753,10 @@ def level_1():
               on_cleared='AlleyCleared')
     L.event('AlleyCleared', speaker=D, objective='Доберись до полицейского участка',
             message='Тихо? Двигай дальше, участок сразу за автобусом.')
+    L.trigger('BlockadeTrigger', (0, 1.5, -82), (12, 3, 2), 'Blockade')
+    L.event('Blockade', speaker=D, duration=8, objective='Обойди завал: через магазин слева или через двор',
+            message='Автобус перегородил всю улицу. Обойди: магазин слева сквозной, выход во двор через подсобку. '
+                    'Или переулком — двор выводит обратно на улицу.')
     L.trigger('AmbushTrigger', (0, 1.5, -104), (18, 3, 2), 'Ambush')
     L.event('Ambush', speaker=D, duration=6, objective='Беги к полицейскому участку',
             message='Сзади! Целая толпа — беги к участку!', targets=['Story/Horde'])
@@ -724,12 +896,12 @@ def level_2():
            unit_size=20.0, volume_db=-4.0, script=L.ext_res('Script', 'res://scripts/world/sound_trigger.gd'))
 
     # zombies
-    L.zombie('walker', (-6, 0, -20)); L.zombie('walker', (-10, 0, -26))                  # office
+    L.zombie('soldier', (-6, 0, -20)); L.zombie('walker', (-10, 0, -26))                 # office
     L.zombie('walker', (-9, 0, -34)); L.zombie('runner', (-6, 0, -46))                   # lockers
     L.zombie('walker', (0.5, 0, -27))                                                    # corridor
     for i, z in enumerate((-16.5, -18.5, -23, -25.5, -29.5, -32)):                       # cells
         L.zombie('walker' if i % 3 else 'runner', (15.0 + (i % 2) * 1.0, 0, z), name=f'Prisoner{i + 1}')
-    L.zombie('walker', (8, 0, -18)); L.zombie('walker', (6, 0, -30))
+    L.zombie('soldier', (8, 0, -18)); L.zombie('walker', (6, 0, -30))
     L.zombie('walker', (12, 0, -52)); L.zombie('runner', (9, 0, -55))                   # garage
     L.zombie('warden', (30, 0, -44), math.pi / 2, name='Warden', sight_range=12.0,
              alert_event=NP('../../Story/WardenAppears'), death_event=NP('../../Story/WardenDead'))
@@ -744,6 +916,9 @@ def level_2():
     L.pickup('ammo_rocket', (-4, 0, -57.5))
     L.pickup('ammo_rocket', (4, 0, -57.5))
     L.pickup('ammo_rifle', (2.5, 0, -54))
+    L.pickup('weapon_smg', (-2.4, 0.95, -52.0))
+    L.pickup('ammo_smg', (2.4, 0, -52.2))
+    L.pickup('weapon_grenade', (-12.5, 0, -40.5))
     L.pickup('medkit', (-2.5, 0, -54))
     L.pickup('medkit', (17, 0, -58))
     L.pickup('ammo_rifle', (18.5, 0, -55))
@@ -762,7 +937,7 @@ def level_2():
                      'Lights/CorridorLamp1', 'Lights/CorridorLamp3', 'Lights/CellLamp', 'Lights/GarageLamp1',
                      'Story/LobbyHorde', 'Story/AlertPrisoners'])
     L.event('AlertPrisoners', delay=1.0, targets=[f'Zombies/Prisoner{i}' for i in range(1, 7)])
-    L.spawner('LobbyHorde', [(-6, 0, -3), (6, 0, -3), (0, 0, -4)], ['walker', 'walker', 'runner'], 8, interval=1.2)
+    L.spawner('LobbyHorde', [(-6, 0, -3), (6, 0, -3), (0, 0, -4)], ['walker', 'soldier', 'runner', 'walker'], 8, interval=1.2)
     L.event('ShutterOpened', targets=['Zombies/Warden'])
     L.event('WardenAppears', speaker=D, duration=9, objective='Убей Надзирателя',
             message='Во дворе машина… и охранник со щитом! Щит держит пули — целься в голову, заходи сбоку '
@@ -862,7 +1037,8 @@ def level_3():
     for kind, pos, t in [('ammo_rifle', (-3, 0, -3), 25.0), ('ammo_rifle', (3, 0, 3), 25.0), ('medkit', (-8, 0, 8), 40.0),
                          ('medkit', (8, 0, -8), 40.0), ('ammo_rocket', (-17, 0, -12), 45.0), ('ammo_pistol', (17, 0, 14), 30.0),
                          ('ammo_rocket', (21, 0, -12), 45.0), ('ammo_shells', (-17, 0, 14), 30.0),
-                         ('ammo_shells', (12, 0, -20), 30.0)]:
+                         ('ammo_shells', (12, 0, -20), 30.0), ('ammo_smg', (-12, 0, -3), 30.0), ('ammo_sniper', (14, 0, 6), 40.0),
+                         ('ammo_magnum', (-6, 0, 14), 35.0), ('weapon_grenade', (5, 0, -14), 45.0)]:
         L.pickup(kind, pos, respawn_time=t)
 
     L.prop('res://scenes/world/helicopter.tscn', (0, 0, 0), 0.0, parent='.', name='Helicopter')
@@ -878,7 +1054,7 @@ def level_3():
            spawners=NPS(['../SpawnNorth', '../SpawnEast', '../SpawnWest', '../SpawnSouth']),
            boss_spawner=NP('../SpawnBoss'), boss_time=55.0, boss_event=NP('../BossWarning'),
            boss_text=S('Убей Колосса! Вертолёт не сядет'), on_finished=NP('../HeliArrives'))
-    mix = ['walker', 'walker', 'walker', 'runner']
+    mix = ['walker', 'walker', 'soldier', 'runner', 'bloater', 'spitter']
     L.spawner('SpawnNorth', [(-2, 0, -66), (2, 0, -68)], mix, 0, interval=2.6, continuous=True, max_alive=6)
     L.spawner('SpawnEast', [(52, 0, -2), (50, 0, 2)], mix, 0, interval=3.2, continuous=True, max_alive=5)
     L.spawner('SpawnWest', [(-52, 0, 2), (-50, 0, -2)], mix, 0, interval=3.2, continuous=True, max_alive=5)
@@ -947,7 +1123,8 @@ def level_hospital():
     L.node('MetroSign', 'Label3D', 'Decor', position=V3(-35.85, 3.2, -17), rotation=V3(0, math.pi / 2, 0),
            text=S('М  МЕТРО'), font_size=80, pixel_size=0.008, modulate=C(1.0, 0.25, 0.2))
     L.omni((-34.5, 3.0, -17), (1, 0.5, 0.4), 1.2, 6)
-    L.door('FireDoor', (0.3, 3.0, 2.0), (-24, 1.5, -16.5), 'metal', player_can_open=False,
+    L.dress_door((-24, 0, -16.5), 'z', '+x', width=2.0)
+    L.door('FireDoor', (0.3, 3.0, 2.0), (-24, 1.5, -16.5), 'door_steel', player_can_open=False,
            locked_message='Электрозамок — нет питания', open_offset=V3(0, 0, -2.0), open_time=1.0)
 
     # lobby: reception, benches, security post
@@ -1012,6 +1189,10 @@ def level_hospital():
     L.pickup('ammo_rifle', (22.5, 0, -30))
     L.pickup('medkit', (10.5, 0, -29.5))
     L.pickup('medkit', (-25.5, 0, -24.5))
+    L.pickup('weapon_grenade', (-19.0, 0.8, -10.5)); L.pickup('ammo_smg', (14.2, 0, -12.8))
+    L.pickup('ammo_magnum', (20.6, 0, -2.6)); L.pickup('weapon_smg', (18.0, 0.81, -6.4))
+    for kind, pos in [('bloater', (-6, 0, -26.5)), ('bloater', (16, 0, -26)), ('spitter', (-30, 0, -24))]:
+        L.zombie(kind, pos)
     L.pickup('ammo_shells', (-25.5, 0, -9.5))
     L.zombie('patient_zero', (-33, 0, -17), -math.pi / 2, name='PatientZero', sight_range=11.0,
              alert_event=NP('../../Story/PatientZeroAppears'), death_event=NP('../../Story/PatientZeroDead'))
@@ -1026,7 +1207,7 @@ def level_hospital():
     L.event('PowerOn', speaker=D, duration=8, objective='Беги к пожарному выходу в западном конце коридора',
             message='Есть питание! Чёрт… сирена подняла всё здание. Пожарная дверь открыта — беги!',
             targets=power + ['Decor/Alarm', 'Doors/FireDoor', 'Story/WardHorde', 'Story/LobbyHorde'] + patients)
-    L.spawner('WardHorde', [(-18, 0, -23), (-6, 0, -23), (6, 0, -23)], ['walker', 'walker', 'runner'], 7, interval=1.0)
+    L.spawner('WardHorde', [(-18, 0, -23), (-6, 0, -23), (6, 0, -23)], ['walker', 'walker', 'runner', 'bloater'], 8, interval=1.0)
     L.spawner('LobbyHorde', [(-2, 0, 6), (2, 0, 8)], ['runner', 'walker'], 5, interval=1.3)
     L.trigger('YardTrigger', (-26.5, 1.5, -17), (3, 3, 8), 'WakePatientZero')
     L.event('WakePatientZero', targets=['Zombies/PatientZero'])
@@ -1071,7 +1252,7 @@ def level_subway():
     L.floor('subway_tile', -4, 4, -12, -60)
     L.floor('concrete', -10, -4, -12, -60); L.floor('concrete', 4, 10, -12, -60)
     L.wall_z(-12, -10, -8, T); L.wall_z(-12, 8, 10, T)
-    L.wall_x(-10, -12, -60, T); L.wall_x(10, -12, -60, T)
+    L.wall_x(-10, -12, -30, T); L.wall_x(-10, -40, -60, T); L.wall_x(10, -12, -60, T)
     L.wall_z(-60, -4, 10, T)
     for x in (-4.05, 4.05):
         L.decor((0.1, 0.02, 48), (x, 0.01, -36), 'paint_yellow', cast_shadow=0)
@@ -1096,7 +1277,8 @@ def level_subway():
     L.floor('concrete', -16, -10, -86, -106)
     L.wall_x(-16, -86, -106, C_)
     L.wall_z(-86, -16, -10, C_); L.wall_z(-106, -16, -10, C_)
-    L.door('ServiceDoor', (0.25, 3.0, 2.0), (-10, 1.5, -89), 'metal_rust', event='Bypass',
+    L.dress_door((-10, 0, -89), 'z', '+x', sign='СЛУЖЕБНЫЙ ПРОХОД', width=2.0)
+    L.door('ServiceDoor', (0.25, 3.0, 2.0), (-10, 1.5, -89), 'door_steel', event='Bypass',
            prompt='Открыть служебную дверь', open_offset=V3(0, 2.9, 0), open_time=1.0)
     for z in (-93, -97):
         L.prop('res://scenes/world/lockers.tscn', (-15.6, 0, z), math.pi / 2)
@@ -1123,6 +1305,19 @@ def level_subway():
     L.door('Gate', (6.0, 4.0, 0.12), (0, 2.0, -172), 'bars', player_can_open=False,
            locked_message='Решётка заперта', open_offset=V3(0, 3.8, 0), open_time=2.0)
     subway_clutter(L)
+    # dispatcher's room off the left track (optional): the sniper rifle
+    L.floor('concrete', -16, -10, -30, -40)
+    L.floor('concrete', -16.2, -10, -29.8, -40.2, top=4.4, thick=0.4)
+    L.wall_x(-16, -30, -40, C_); L.wall_z(-30, -16, -10, C_); L.wall_z(-40, -16, -10, C_)
+    L.wall_x(-10, -30, -34, T); L.wall_x(-10, -36, -40, T)
+    L.fancy_door('DispatchDoor', (-10, 0, -35), 'z', '+x', glass=False, sign='ДЕЖУРНЫЙ ПО СТАНЦИИ', width=2.0)
+    L.prop('res://scenes/world/desk.tscn', (-14.5, 0, -33), math.pi / 2)
+    L.clutter('office_chair', (-13.5, 0, -33.2), -math.pi / 2); L.clutter('radio', (-14.5, 0.81, -32.6), math.pi / 2)
+    L.clutter('filing_cabinet', (-15.5, 0, -38.8), math.pi / 2); L.clutter('tv_old', (-14.5, 0.81, -33.6), math.pi / 2)
+    L.clutter('weapon_rack', (-12.0, 0, -39.6), 0.0); L.clutter('papers', (-12.5, 0, -36))
+    L.ceiling_lamp(-13, -35, y=4.15, flicker=True, energy=1.4, rng=7.0)
+    L.pickup('weapon_sniper', (-14.5, 0.81, -33.3)); L.pickup('ammo_sniper', (-11.0, 0, -31.0))
+    L.zombie('soldier', (-12.5, 0, -37.5))
     # one ceiling for everything (tiled)
     L.floor('concrete', -10.2, 10.2, 1, -60, top=4.4, thick=0.4)
     L.floor('concrete', -16.2, -3.9, -60, -130, top=4.4, thick=0.4)
@@ -1167,7 +1362,7 @@ def level_subway():
     L.trigger('AmbushTrigger', (-7, 1.5, -108), (6, 3, 2), 'Ambush')
     L.event('Ambush', speaker=D, duration=6, objective='Беги к станции «Динамо»',
             message='Слышишь топот? Сзади бегуны — не останавливайся!', targets=['Story/Runners'])
-    L.spawner('Runners', [(-7, 0, -64), (-7, 0, -68)], ['runner', 'runner', 'walker'], 6, interval=0.9)
+    L.spawner('Runners', [(-7, 0, -64), (-7, 0, -68)], ['runner', 'runner', 'walker', 'spitter'], 7, interval=0.9)
     L.trigger('GateTrigger', (0, 1.5, -142), (20, 3, 4), 'GateSiege')
     L.event('GateSiege', speaker=D, duration=8, objective='Продержись, пока диспетчер открывает решётку',
             message='Выход перекрыт решёткой. Взламываю систему станции — продержись минуту!', targets=['Story/Holdout'])
@@ -1175,7 +1370,7 @@ def level_subway():
            timer_text=S('Решётка откроется через %s'),
            spawners=NPS(['../TunnelSpawn', '../PassageSpawn']), boss_spawner=NP('../SpawnBoss'), boss_time=20.0,
            boss_event=NP('../LinemanWarning'), boss_text=S('Убей Обходчика!'), on_finished=NP('../GateOpen'))
-    mix = ['walker', 'walker', 'runner']
+    mix = ['walker', 'walker', 'runner', 'bloater', 'spitter']
     L.spawner('TunnelSpawn', [(-7, 0, -122), (-7, 0, -126)], mix, 0, interval=3.0, continuous=True, max_alive=5)
     L.spawner('PassageSpawn', [(14, 0, -150), (14, 0, -152)], mix, 0, interval=3.5, continuous=True, max_alive=4)
     L.spawner('SpawnBoss', [(14, 0, -151)], ['lineman'], 1, interval=0.1)

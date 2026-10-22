@@ -868,15 +868,45 @@ def model_knife():
     return parts
 
 
-def model_ak():
-    """An AK-style rifle modelled from scratch (y forward from the butt to the muzzle, z up), real-life size."""
-    metal = material("AkMetal", (0.07, 0.07, 0.075), metallic=0.7, roughness=0.4)
-    dark = material("AkDark", (0.03, 0.03, 0.033), metallic=0.4, roughness=0.6)
-    wood = material("AkWood", (0.33, 0.14, 0.05), roughness=0.5)
-    mag_mat = material("AkMag", (0.24, 0.09, 0.03), roughness=0.45)
+def model_grenade():
+    """A frag grenade: ribbed olive body, fuse, spoon and pin ring (centred on the origin, ~10 cm tall)."""
+    olive = material("GrenadeBody", (0.2, 0.25, 0.12), roughness=0.6)
+    metal = material("GrenadeFuse", (0.45, 0.45, 0.47), metallic=0.8, roughness=0.35)
     parts = []
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=16, ring_count=10, radius=0.03, location=(0, 0, 0))
+    body = bpy.context.object
+    body.scale = (1, 1, 1.25)
+    body.data.materials.append(olive)
+    body.data.polygons.foreach_set("use_smooth", [True] * len(body.data.polygons))
+    parts.append(body)
+    for i in range(3):
+        bpy.ops.mesh.primitive_torus_add(major_radius=0.0305, minor_radius=0.0025, location=(0, 0, -0.018 + i * 0.018))
+        ring = bpy.context.object
+        ring.data.materials.append(olive)
+        parts.append(ring)
+    bpy.ops.mesh.primitive_cylinder_add(vertices=12, radius=0.011, depth=0.025, location=(0, 0, 0.045))
+    bpy.context.object.data.materials.append(metal)
+    parts.append(bpy.context.object)
+    bpy.ops.mesh.primitive_cube_add(size=1, location=(0.012, 0, 0.02))
+    spoon = bpy.context.object
+    spoon.scale = (0.006, 0.012, 0.06)
+    spoon.rotation_euler = (0, 0.25, 0)
+    spoon.data.materials.append(metal)
+    parts.append(spoon)
+    bpy.ops.mesh.primitive_torus_add(major_radius=0.012, minor_radius=0.0018, location=(-0.016, 0, 0.055),
+                                     rotation=(math.pi / 2, 0, 0))
+    bpy.context.object.data.materials.append(metal)
+    parts.append(bpy.context.object)
+    return parts
 
-    def prism(name, profile, width, mat, x=0.0):
+
+class GunKit:
+    """Parts for guns modelled from scratch: y forward (butt to muzzle), z up, x across, in metres."""
+
+    def __init__(self):
+        self.parts = []
+
+    def prism(self, name, profile, width, mat, x=0.0):
         """A polygon in the YZ plane extruded along x."""
         bm = bmesh.new()
         a = [bm.verts.new((x + width / 2, y, z)) for y, z in profile]
@@ -893,10 +923,10 @@ def model_ak():
         o = bpy.data.objects.new(name, me)
         o.data.materials.append(mat)
         bpy.context.scene.collection.objects.link(o)
-        parts.append(o)
+        self.parts.append(o)
         return o
 
-    def box(name, size, loc, mat, rot=(0, 0, 0), bevel=0.0):
+    def box(self, name, size, loc, mat, rot=(0, 0, 0), bevel=0.0):
         bpy.ops.mesh.primitive_cube_add(size=1.0, location=loc, rotation=rot)
         o = bpy.context.object
         o.name = name
@@ -907,18 +937,49 @@ def model_ak():
             md.width, md.segments = bevel, 2
             bpy.ops.object.modifier_apply(modifier=md.name)
         o.data.materials.append(mat)
-        parts.append(o)
+        self.parts.append(o)
         return o
 
-    def tube(name, radius, y0, y1, z, mat, x=0.0):
+    def tube(self, name, radius, y0, y1, z, mat, x=0.0):
         bpy.ops.mesh.primitive_cylinder_add(vertices=12, radius=radius, depth=y1 - y0,
                                             location=(x, (y0 + y1) / 2, z), rotation=(math.pi / 2, 0, 0))
         o = bpy.context.object
         o.name = name
         o.data.materials.append(mat)
         o.data.polygons.foreach_set("use_smooth", [True] * len(o.data.polygons))
-        parts.append(o)
+        self.parts.append(o)
         return o
+
+
+def model_smg():
+    """A compact submachine gun (MP5-like): boxy receiver, straight magazine, folding wire stock, suppressor."""
+    metal = material("SmgMetal", (0.06, 0.06, 0.065), metallic=0.6, roughness=0.45)
+    poly = material("SmgPolymer", (0.03, 0.03, 0.033), roughness=0.7)
+    k = GunKit()
+    k.box("Receiver", (0.042, 0.26, 0.06), (0, 0.27, 0.0), metal, bevel=0.006)
+    k.box("TopRail", (0.02, 0.2, 0.012), (0, 0.27, 0.037), metal)
+    k.prism("Grip", [(0.2, -0.03), (0.24, -0.03), (0.225, -0.13), (0.19, -0.125)], 0.03, poly)
+    k.box("Mag", (0.026, 0.035, 0.17), (0, 0.29, -0.11), metal, rot=(0.12, 0, 0))
+    k.box("Handguard", (0.05, 0.11, 0.05), (0, 0.44, -0.008), poly, bevel=0.012)
+    k.tube("Barrel", 0.009, 0.48, 0.52, 0.005, metal)
+    k.tube("Suppressor", 0.019, 0.52, 0.68, 0.005, poly)
+    k.box("FrontSight", (0.02, 0.015, 0.03), (0, 0.49, 0.04), metal)
+    k.box("RearSight", (0.024, 0.02, 0.025), (0, 0.16, 0.042), metal)
+    for sx in (-1, 1):
+        k.box(f"StockArm{sx}", (0.006, 0.17, 0.008), (sx * 0.018, 0.06, 0.012), metal)
+    k.box("ButtPad", (0.045, 0.012, 0.09), (0, -0.025, -0.01), poly)
+    k.box("TriggerGuard", (0.01, 0.05, 0.006), (0, 0.24, -0.055), metal)
+    return k.parts
+
+
+def model_ak():
+    """An AK-style rifle modelled from scratch (y forward from the butt to the muzzle, z up), real-life size."""
+    metal = material("AkMetal", (0.07, 0.07, 0.075), metallic=0.7, roughness=0.4)
+    dark = material("AkDark", (0.03, 0.03, 0.033), metallic=0.4, roughness=0.6)
+    wood = material("AkWood", (0.33, 0.14, 0.05), roughness=0.5)
+    mag_mat = material("AkMag", (0.24, 0.09, 0.03), roughness=0.45)
+    k = GunKit()
+    prism, box, tube, parts = k.prism, k.box, k.tube, k.parts
 
     prism("Stock", [(0.0, -0.115), (0.0, 0.025), (0.03, 0.03), (0.25, 0.022), (0.25, -0.03), (0.07, -0.115)], 0.038, wood)
     box("ButtPlate", (0.04, 0.012, 0.14), (0, 0.004, -0.045), dark)
@@ -952,6 +1013,12 @@ PISTOL_COLORS = {"Metal": (0.16, 0.16, 0.17), "DarkerMetal": (0.06, 0.06, 0.065)
                  "Wood": (0.32, 0.16, 0.07), "Magazine": (0.09, 0.09, 0.1), "Material.003": (0.2, 0.2, 0.21)}
 SHOTGUN_COLORS = {"Barrels": (0.13, 0.13, 0.14), "Black": (0.035, 0.035, 0.04), "DarkMetal": (0.07, 0.07, 0.075),
                   "Trigger": (0.1, 0.1, 0.1), "BulletRed": (0.5, 0.05, 0.03), "BulletYellow": (0.7, 0.5, 0.15)}
+REVOLVER_COLORS = {"Metal": (0.18, 0.18, 0.19), "Black": (0.03, 0.03, 0.035), "Wood": (0.3, 0.15, 0.06),
+                   "BulletYellow": (0.7, 0.5, 0.15), "BulletTip": (0.45, 0.25, 0.1)}
+SNIPER_COLORS = {"LightWood": (0.32, 0.17, 0.07), "DarkWood": (0.2, 0.1, 0.04), "Black": (0.03, 0.03, 0.035),
+                 "Metal": (0.14, 0.14, 0.15), "Barrels": (0.08, 0.08, 0.09), "Barrel": (0.08, 0.08, 0.09),
+                 "Green": (0.12, 0.16, 0.1), "Trigger": (0.1, 0.1, 0.1), "Magazine": (0.06, 0.06, 0.065),
+                 "BulletYellow": (0.7, 0.5, 0.15), "BulletOrange": (0.6, 0.3, 0.1)}
 WEAPONS = {
     # source, length (m), grip point (bbox fractions: x, y from the rear, z from the bottom) and where it goes;
     # hands: (grip point as bbox fractions, finger direction, palm direction); material colour overrides
@@ -961,6 +1028,15 @@ WEAPONS = {
     "rifle": dict(src="model:ak", length=0.72, grip=(0.5, 0.33, 0.45), at=(0.165, 0.4, -0.265), yaw=8,
                   right=((0.5, 0.33, 0.45), (0, 1, -0.3), (-1, 0, 0)),
                   left=((0.5, 0.7, 0.66), (0.6, 0.8, 0), (0, 0, 1)), colors={}),
+    "revolver": dict(src="guns/FPS Pack/Blends/Revolver.blend", length=0.27, grip=(0.5, 0.15, 0.3), at=(0.1, 0.32, -0.17),
+                     yaw=6, right=((0.5, 0.15, 0.3), (0, 1, -0.25), (-1, 0, 0)),
+                     left=((0.0, 0.12, 0.15), (0.3, 0.8, -0.3), (1, 0.2, 0.3)), colors=REVOLVER_COLORS, rest_pose=True),
+    "smg": dict(src="model:smg", length=0.6, grip=(0.5, 0.37, 0.55), at=(0.14, 0.38, -0.22), yaw=7,
+                right=((0.5, 0.37, 0.55), (0, 1, -0.3), (-1, 0, 0)),
+                left=((0.5, 0.68, 0.72), (0.6, 0.8, 0), (0, 0, 1)), colors={}),
+    "sniper": dict(src="guns/FPS Pack/Blends/SniperRifle.blend", length=1.05, grip=(0.5, 0.3, 0.4), at=(0.13, 0.38, -0.23),
+                   yaw=8, right=((0.5, 0.3, 0.4), (0, 1, -0.3), (-1, 0, 0)),
+                   left=((0.5, 0.6, 0.62), (0.6, 0.8, 0), (0, 0, 1)), colors=SNIPER_COLORS),
     "shotgun": dict(src="guns/FPS Pack/Blends/Shotgun.blend", length=0.98, grip=(0.5, 0.33, 0.5), at=(0.12, 0.38, -0.21), yaw=9,
                     right=((0.5, 0.33, 0.5), (0, 1, -0.35), (-1, 0, 0)),
                     left=((0.5, 0.62, 0.7), (0.6, 0.8, 0), (0, 0, 1)), colors=SHOTGUN_COLORS),
@@ -976,11 +1052,15 @@ def build_viewmodels(only=()):
         if only and name not in only:
             continue
         reset()
-        if w["src"] == "model:ak":
-            objs = model_ak()
+        if w["src"].startswith("model:"):
+            objs = {"model:ak": model_ak, "model:smg": model_smg}[w["src"]]()
         else:
             objs = import_any(os.path.join(SRC, w["src"]))
             fix_flat_materials(objs, w["colors"], [os.path.dirname(os.path.join(SRC, w["src"])), os.path.join(SRC, "guns")])
+            if w.get("rest_pose"):  # the file is saved mid-animation
+                for o in objs:
+                    if o.type == 'ARMATURE':
+                        o.data.pose_position = 'REST'
             objs = bake_skinned(objs)
         for o in objs:
             if o.name.startswith("Muzzle"):
@@ -1007,7 +1087,7 @@ def build_viewmodels(only=()):
         if rocket is not None:
             export_rocket(rocket, out)
         export_world_model(objs, root, os.path.join(out, f"{name}_world.glb"))
-    if only and "knife" not in only:
+    if only and "knife" not in only and "grenade" not in only:
         return
     # knife: modelled here, held in the right hand
     reset()
@@ -1025,6 +1105,19 @@ def build_viewmodels(only=()):
     export_glb(os.path.join(out, "knife_fp.glb"), parts + [root, arms])
     root.matrix_world = Matrix.Identity(4)
     export_glb(os.path.join(out, "knife_world.glb"), parts + [root])
+    # grenade: modelled here, held in the right hand
+    reset()
+    parts = model_grenade()
+    root = bpy.data.objects.new("WeaponRoot", None)
+    bpy.context.scene.collection.objects.link(root)
+    for o in parts:
+        o.parent = root
+    grip = Vector((0.13, 0.33, -0.19))
+    root.matrix_world = Matrix.Translation(grip) @ Matrix.Rotation(math.radians(20), 4, 'Y')
+    arms = build_real_arms((grip, (0, 1, -0.2), (-1, 0, 0)), None, curl=95.0)
+    export_glb(os.path.join(out, "grenade_fp.glb"), parts + [root, arms])
+    root.matrix_world = Matrix.Identity(4)
+    export_glb(os.path.join(out, "grenade_world.glb"), parts + [root])
 
 
 def split_warhead(meshes, lo, hi):

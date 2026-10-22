@@ -96,23 +96,37 @@
 
 [ext_resource type="PackedScene" path="res://scenes/pickups/ammo_shells.tscn" id="48_ammo_shells"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/helicopter.tscn" id="49_helicopter"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_smg.tscn" id="49_ammo_smg"]
 
-[ext_resource type="Script" path="res://scripts/story/story_event.gd" id="50_story_event"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_sniper.tscn" id="50_ammo_sniper"]
 
-[ext_resource type="Script" path="res://scripts/story/story_trigger.gd" id="51_story_trigger"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_magnum.tscn" id="51_ammo_magnum"]
 
-[ext_resource type="Script" path="res://scripts/story/holdout.gd" id="52_holdout"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/weapon_grenade.tscn" id="52_weapon_grenade"]
 
-[ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="53_zombie_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/world/helicopter.tscn" id="53_helicopter"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/colossus.tscn" id="54_colossus"]
+[ext_resource type="Script" path="res://scripts/story/story_event.gd" id="54_story_event"]
 
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="55_player"]
+[ext_resource type="Script" path="res://scripts/story/story_trigger.gd" id="55_story_trigger"]
 
-[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="56_hud"]
+[ext_resource type="Script" path="res://scripts/story/holdout.gd" id="56_holdout"]
 
-[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="57_ambience"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/soldier.tscn" id="57_soldier"]
+
+[ext_resource type="PackedScene" path="res://scenes/zombies/bloater.tscn" id="58_bloater"]
+
+[ext_resource type="PackedScene" path="res://scenes/zombies/spitter.tscn" id="59_spitter"]
+
+[ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="60_zombie_spawner"]
+
+[ext_resource type="PackedScene" path="res://scenes/zombies/colossus.tscn" id="61_colossus"]
+
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="62_player"]
+
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="63_hud"]
+
+[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="64_ambience"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.01, 0.012, 0.03, 1.0)
@@ -1397,11 +1411,27 @@ respawn_time = 30.0
 position = Vector3(12.0, 0.0, -20.0)
 respawn_time = 30.0
 
-[node name="Helicopter" parent="." instance=ExtResource("49_helicopter")]
+[node name="AmmoSmg1" parent="Pickups" instance=ExtResource("49_ammo_smg")]
+position = Vector3(-12.0, 0.0, -3.0)
+respawn_time = 30.0
+
+[node name="AmmoSniper1" parent="Pickups" instance=ExtResource("50_ammo_sniper")]
+position = Vector3(14.0, 0.0, 6.0)
+respawn_time = 40.0
+
+[node name="AmmoMagnum1" parent="Pickups" instance=ExtResource("51_ammo_magnum")]
+position = Vector3(-6.0, 0.0, 14.0)
+respawn_time = 35.0
+
+[node name="WeaponGrenade1" parent="Pickups" instance=ExtResource("52_weapon_grenade")]
+position = Vector3(5.0, 0.0, -14.0)
+respawn_time = 45.0
+
+[node name="Helicopter" parent="." instance=ExtResource("53_helicopter")]
 position = Vector3(0.0, 0.0, 0.0)
 
 [node name="Intro" type="Node" parent="Story"]
-script = ExtResource("50_story_event")
+script = ExtResource("54_story_event")
 speaker = "Диспетчер"
 message = "Ты на стадионе? Вертолёт на подходе. Площадка в центре поля — жди там."
 message_duration = 7.0
@@ -1411,14 +1441,14 @@ position = Vector3(0.0, 1.5, 0.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("51_story_trigger")
+script = ExtResource("55_story_trigger")
 event = NodePath("../Siege")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/PadTrigger"]
 shape = SubResource("BoxShape3D_11")
 
 [node name="Siege" type="Node" parent="Story"]
-script = ExtResource("50_story_event")
+script = ExtResource("54_story_event")
 objective = "Продержись до прилёта вертолёта"
 speaker = "Пилот"
 message = "Борт-двенадцать на связи. Вижу площадку, но вокруг толпа — сесть не могу! Продержись две минуты, я сделаю круг."
@@ -1426,7 +1456,7 @@ message_duration = 9.0
 targets = Array[NodePath]([NodePath("../Holdout")])
 
 [node name="Holdout" type="Node" parent="Story"]
-script = ExtResource("52_holdout")
+script = ExtResource("56_holdout")
 duration = 120.0
 spawners = Array[NodePath]([NodePath("../SpawnNorth"), NodePath("../SpawnEast"), NodePath("../SpawnWest"), NodePath("../SpawnSouth")])
 boss_spawner = NodePath("../SpawnBoss")
@@ -1436,8 +1466,8 @@ boss_text = "Убей Колосса! Вертолёт не сядет"
 on_finished = NodePath("../HeliArrives")
 
 [node name="SpawnNorth" type="Node3D" parent="Story"]
-script = ExtResource("53_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("42_walker"), ExtResource("42_walker"), ExtResource("42_walker"), ExtResource("43_runner")])
+script = ExtResource("60_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("42_walker"), ExtResource("42_walker"), ExtResource("57_soldier"), ExtResource("43_runner"), ExtResource("58_bloater"), ExtResource("59_spitter")])
 count = 0
 interval = 2.6
 max_alive = 6
@@ -1450,8 +1480,8 @@ position = Vector3(-2.0, 0.0, -66.0)
 position = Vector3(2.0, 0.0, -68.0)
 
 [node name="SpawnEast" type="Node3D" parent="Story"]
-script = ExtResource("53_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("42_walker"), ExtResource("42_walker"), ExtResource("42_walker"), ExtResource("43_runner")])
+script = ExtResource("60_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("42_walker"), ExtResource("42_walker"), ExtResource("57_soldier"), ExtResource("43_runner"), ExtResource("58_bloater"), ExtResource("59_spitter")])
 count = 0
 interval = 3.2
 max_alive = 5
@@ -1464,8 +1494,8 @@ position = Vector3(52.0, 0.0, -2.0)
 position = Vector3(50.0, 0.0, 2.0)
 
 [node name="SpawnWest" type="Node3D" parent="Story"]
-script = ExtResource("53_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("42_walker"), ExtResource("42_walker"), ExtResource("42_walker"), ExtResource("43_runner")])
+script = ExtResource("60_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("42_walker"), ExtResource("42_walker"), ExtResource("57_soldier"), ExtResource("43_runner"), ExtResource("58_bloater"), ExtResource("59_spitter")])
 count = 0
 interval = 3.2
 max_alive = 5
@@ -1478,8 +1508,8 @@ position = Vector3(-52.0, 0.0, 2.0)
 position = Vector3(-50.0, 0.0, -2.0)
 
 [node name="SpawnSouth" type="Node3D" parent="Story"]
-script = ExtResource("53_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("42_walker"), ExtResource("42_walker"), ExtResource("42_walker"), ExtResource("43_runner")])
+script = ExtResource("60_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("42_walker"), ExtResource("42_walker"), ExtResource("57_soldier"), ExtResource("43_runner"), ExtResource("58_bloater"), ExtResource("59_spitter")])
 count = 0
 interval = 5.0
 max_alive = 3
@@ -1492,8 +1522,8 @@ position = Vector3(-2.0, 0.0, 63.0)
 position = Vector3(2.0, 0.0, 64.0)
 
 [node name="SpawnBoss" type="Node3D" parent="Story"]
-script = ExtResource("53_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("54_colossus")])
+script = ExtResource("60_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("61_colossus")])
 count = 1
 interval = 0.1
 max_alive = 10
@@ -1502,13 +1532,13 @@ max_alive = 10
 position = Vector3(0.0, 0.0, -67.0)
 
 [node name="BossWarning" type="Node" parent="Story"]
-script = ExtResource("50_story_event")
+script = ExtResource("54_story_event")
 speaker = "Диспетчер"
 message = "С севера идёт что-то огромное… Это Колосс! Он швыряет обломки и бьёт о землю — прыгай, когда замахивается. Пока он жив, вертолёт не сядет!"
 message_duration = 9.0
 
 [node name="HeliArrives" type="Node" parent="Story"]
-script = ExtResource("50_story_event")
+script = ExtResource("54_story_event")
 objective = "Вертолёт садится — держись!"
 speaker = "Пилот"
 message = "Захожу на посадку! Держись, я почти над тобой!"
@@ -1516,7 +1546,7 @@ message_duration = 7.0
 targets = Array[NodePath]([NodePath("../../Helicopter"), NodePath("../HeliLanded")])
 
 [node name="HeliLanded" type="Node" parent="Story"]
-script = ExtResource("50_story_event")
+script = ExtResource("54_story_event")
 delay = 9.5
 objective = "Садись в вертолёт!"
 speaker = "Пилот"
@@ -1529,7 +1559,7 @@ position = Vector3(0.0, 1.5, 0.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("51_story_trigger")
+script = ExtResource("55_story_trigger")
 event = NodePath("../Exit")
 enabled = false
 
@@ -1537,16 +1567,16 @@ enabled = false
 shape = SubResource("BoxShape3D_12")
 
 [node name="Exit" type="Node" parent="Story"]
-script = ExtResource("50_story_event")
+script = ExtResource("54_story_event")
 complete_level = true
 
-[node name="Player" parent="." instance=ExtResource("55_player")]
+[node name="Player" parent="." instance=ExtResource("62_player")]
 position = Vector3(0.0, 0.0, 70.0)
 rotation = Vector3(0.0, 0.0, 0.0)
 
-[node name="HUD" parent="." instance=ExtResource("56_hud")]
+[node name="HUD" parent="." instance=ExtResource("63_hud")]
 
 [node name="Ambience" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("57_ambience")
+stream = ExtResource("64_ambience")
 autoplay = true
 volume_db = -8.0

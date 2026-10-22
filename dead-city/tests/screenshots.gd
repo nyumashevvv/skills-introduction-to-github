@@ -100,6 +100,40 @@ func _run() -> void:
 		await _tour()
 	if "reload" in sections:
 		await _reload()
+	if "arsenal" in sections:
+		var level := await load_level("res://scenes/levels/level_2_station.tscn")
+		var player := await play(level)
+		freeze_zombies()
+		await pose(player, Vector3(0, 0, -51), 0, -6)
+		for id: String in ["revolver", "smg", "sniper", "grenade"]:
+			await equip(player, id)
+			await snap("arsenal_" + id)
+		Input.action_press("aim")
+		await equip(player, "sniper")
+		await get_tree().create_timer(0.8).timeout
+		await snap("arsenal_scope")
+		Input.action_release("aim")
+	if "enemies" in sections:
+		var level := await load_level("res://scenes/levels/level_3_hospital.tscn")
+		var player := await play(level)
+		level.get_node("Story/PowerOn").call("fire")
+		await get_tree().create_timer(1.5).timeout
+		for z in get_tree().get_nodes_in_group("zombies"):
+			z.queue_free()
+		for spawner: String in ["Story/WardHorde", "Story/LobbyHorde"]:
+			(level.get_node(spawner) as ZombieSpawner).deactivate()
+		await frames(2)
+		for spec: Array in [["soldier", Vector3(-2.2, 0, -11.5)], ["bloater", Vector3(0, 0, -11.2)], ["spitter", Vector3(2.2, 0, -11.5)]]:
+			var z := (load("res://scenes/zombies/%s.tscn" % spec[0]) as PackedScene).instantiate() as Zombie
+			z.position = spec[1]
+			level.add_child(z)
+			z.set_physics_process(false)
+			z.rotation.y = PI
+		await frames(5)
+		level.hud.gameplay.visible = false
+		player.holder.visible = false
+		await pose(player, Vector3(0, 0, -6.5), 0, 4)
+		await snap("enemies")
 	if "cutscene" in sections:
 		get_tree().change_scene_to_file("res://scenes/ui/intro_cutscene.tscn")
 		for i in 9:
@@ -300,8 +334,9 @@ func _tour() -> void:
 			["station_cells", Vector3(3, 0, -15.5), -40, -10], ["station_garage", Vector3(4, 0, -42), -110, -8],
 			["station_armory", Vector3(0, 0, -50.8), 0, -14], ["station_yard", Vector3(21, 0, -48), -90, -6]],
 		"res://scenes/levels/level_1_outskirts.tscn": [["street_a", Vector3(1, 0, 6), 0, -8],
-			["street_b", Vector3(-1, 0, -30), 0, -8], ["street_c", Vector3(2, 0, -60), 15, -8],
-			["street_d", Vector3(0, 0, -96), 0, -6]],
+			["street_b", Vector3(-1, 0, -30), 0, -8], ["street_blockade", Vector3(2, 0, -72), 25, -6],
+			["street_shop", Vector3(-10, 0, -77), 120, -8], ["street_yard", Vector3(-22.5, 0, -70), 160, -8],
+			["street_cafe", Vector3(-10, 0, -13), 130, -10], ["street_pharmacy", Vector3(10, 0, -88.5), -40, -10]],
 		"res://scenes/levels/level_3_hospital.tscn": [["hospital_lobby", Vector3(0, 0, -1), 0, -8],
 			["hospital_corridor", Vector3(-22, 0, -16.5), -90, -6], ["hospital_ward", Vector3(-6, 0, -20), 0, -14],
 			["hospital_canteen", Vector3(-12.6, 0, -5), 75, -12], ["hospital_records", Vector3(12.6, 0, -4.5), -75, -12]],

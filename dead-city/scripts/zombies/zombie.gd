@@ -11,6 +11,7 @@ enum State { IDLE, CHASE, ATTACK, SPECIAL, DEAD }
 const BLOOD_SCENE := preload("res://scenes/effects/blood_burst.tscn")
 const BLOOD_DECAL_SCENE := preload("res://scenes/effects/blood_decal.tscn")
 const FLASH_MATERIAL := preload("res://materials/hit_flash.tres")
+const BLOAT_SCENE := preload("res://scenes/effects/bloat_burst.tscn")
 const GROANS: Array[AudioStream] = [
 	preload("res://sounds/zombie/groan1.ogg"), preload("res://sounds/zombie/groan2.ogg"),
 	preload("res://sounds/zombie/groan3.ogg"), preload("res://sounds/zombie/groan4.ogg"),
@@ -67,6 +68,12 @@ static var _next_groan_time := 0.0
 ## Stretch the arms towards the player while walking (off for bosses holding weapons).
 @export var reach_arms := true
 @export_range(0.0, 1.0) var stagger_resistance := 0.0
+## Damage multiplier for bullets and blades that do not hit the head (a soldier's body armour).
+@export_range(0.0, 1.0) var body_armor := 1.0
+@export_group("Explode")
+## Bloaters burst when killed or when they reach the player; 0 = an ordinary zombie.
+@export var explode_damage := 0
+@export var explode_radius := 4.5
 @export var voice_pitch := 1.0
 
 var state := State.IDLE
@@ -295,6 +302,11 @@ func _process_chase(delta: float) -> void:
 
 
 func _start_attack() -> void:
+	if explode_damage > 0:
+		# A bloater does not punch: it bursts in the player's face.
+		health = 0
+		_die(false)
+		return
 	state = State.ATTACK
 	_attack_timer = attack_windup + attack_recovery
 	_attack_hit_done = false
@@ -333,7 +345,9 @@ func _process_special(_delta: float) -> void:
 
 
 ## Overridden by [Boss]: armour, e.g. a shield that blocks hits from the front.
-func _damage_scale(_direction: Vector3, _hit_point: Vector3, _explosive: bool) -> float:
+func _damage_scale(_direction: Vector3, hit_point: Vector3, explosive: bool) -> float:
+	if body_armor < 1.0 and not explosive and not is_headshot(hit_point):
+		return body_armor
 	return 1.0
 
 
@@ -441,6 +455,10 @@ func _die(headshot: bool, silent := false) -> void:
 	for mesh in _meshes:
 		mesh.material_overlay = null
 	groan_sound.stop()
+	if explode_damage > 0 and not silent:
+		Effects.spawn(BLOAT_SCENE, self, global_position + Vector3.UP)
+		Effects.apply_blast.call_deferred(self, global_position + Vector3.UP, explode_damage, explode_radius, null)
+		model.visible = false
 	if not silent:
 		death_sound.stream = DEATHS.pick_random()
 		death_sound.pitch_scale = voice_pitch * randf_range(0.9, 1.1)

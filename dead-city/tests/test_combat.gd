@@ -9,6 +9,9 @@ const WARDEN := preload("res://scenes/zombies/warden.tscn")
 const PATIENT_ZERO := preload("res://scenes/zombies/patient_zero.tscn")
 const LINEMAN := preload("res://scenes/zombies/lineman.tscn")
 const COLOSSUS := preload("res://scenes/zombies/colossus.tscn")
+const SOLDIER := preload("res://scenes/zombies/soldier.tscn")
+const BLOATER := preload("res://scenes/zombies/bloater.tscn")
+const SPITTER := preload("res://scenes/zombies/spitter.tscn")
 
 var failures := 0
 var level: Level
@@ -198,6 +201,7 @@ func _run() -> void:
 	check(brute.state != Zombie.State.DEAD and brute.health == 900, "brute survives 300 damage")
 	brute.queue_free()
 
+	await test_new_arsenal()
 	await test_bosses()
 
 	# Pickups and inventory.
@@ -206,7 +210,8 @@ func _run() -> void:
 	check(player.holder.add_ammo("pistol", 30) and pistol_weapon.reserve == mini(before + 30, pistol_weapon.max_reserve),
 		"pistol ammo pickup")
 	var state := player.get_state()
-	check(state["weapons"]["owned"].size() == 5, "state lists five weapons")
+	var owned_count := player.holder.weapons.filter(func(w: Weapon) -> bool: return w.owned).size()
+	check(state["weapons"]["owned"].size() == owned_count and owned_count >= 8, "state lists all %d owned weapons" % owned_count)
 
 	print("FAILURES: %d" % failures)
 	get_tree().quit(failures)
@@ -318,6 +323,74 @@ func test_bosses() -> void:
 	colossus.take_damage(99999, Vector3.FORWARD, colossus.global_position + Vector3.UP)
 	await frames(3)
 	colossus.queue_free()
+	for z in get_tree().get_nodes_in_group("zombies"):
+		z.queue_free()
+	await reset_player()
+
+
+func test_new_arsenal() -> void:
+	await reset_player()
+	# Revolver: one heavy round.
+	var revolver := await equip("revolver") as Gun
+	var target := dummy(WALKER, Vector3(0, 0, -8))
+	target.alert(false)
+	target.set_physics_process(false)
+	await aim_at(target.global_position + Vector3.UP * 0.8)
+	revolver._handle_input(true, true)
+	await frames(2)
+	check(target.health == 120 - 80, "revolver body shot for 80 (health %d)" % target.health)
+	target.queue_free()
+	# SMG: holding the trigger empties the magazine fast.
+	var smg := await equip("smg") as Gun
+	var before := smg.ammo
+	for i in 30:
+		smg._handle_input(true, false)
+		await frames(1)
+	check(before - smg.ammo >= 5, "SMG fires automatically (%d rounds in half a second)" % (before - smg.ammo))
+	# Sniper: the scope narrows the view and the gun is deadly accurate.
+	var sniper := await equip("sniper") as Gun
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	Input.action_press("aim")
+	await get_tree().create_timer(0.6).timeout
+	check(sniper.aiming and player.camera.fov < 30.0 and level.hud.get_node("Gameplay/Scope").visible,
+		"sniper scope zooms in (fov %.0f)" % player.camera.fov)
+	Input.action_release("aim")
+	await get_tree().create_timer(0.6).timeout
+	check(not sniper.aiming and player.camera.fov > 60.0, "scope released")
+	# Soldier: body armour, bare head.
+	var soldier := dummy(SOLDIER, Vector3(0, 0, -8))
+	await aim_at(soldier.global_position + Vector3.UP * 0.8)
+	var pistol := await equip("pistol") as Gun
+	pistol._handle_input(true, true)
+	await frames(2)
+	check(soldier.health == 150 - roundi(34 * 0.45), "body armour stops most of a pistol round (health %d)" % soldier.health)
+	soldier.queue_free()
+	# Grenade: thrown in an arc, blows up a group.
+	await reset_player()
+	var grenade := await equip("grenade") as Thrower
+	var group: Array[Zombie] = []
+	for offset: Vector3 in [Vector3(0, 0, -9), Vector3(1.5, 0, -10), Vector3(-1.5, 0, -10)]:
+		group.append(dummy(WALKER, offset))
+	await aim_at(player.global_position + Vector3(0, 0, -6))
+	grenade._handle_input(true, true)
+	await get_tree().create_timer(3.2).timeout
+	check(group.all(func(z: Zombie) -> bool: return not is_instance_valid(z) or z.state == Zombie.State.DEAD),
+		"a grenade kills a group of walkers")
+	# Bloater: bursts next to the player, hurting the player and other zombies.
+	await reset_player()
+	var bloater := dummy(BLOATER, Vector3(0, 0, -4), false)
+	var bystander := dummy(WALKER, Vector3(1.5, 0, -4.5))
+	bloater.alert(false)
+	await get_tree().create_timer(3.0).timeout
+	check(bloater.state == Zombie.State.DEAD and player.health < 100, "the bloater bursts in your face (health %d)" % player.health)
+	check(not is_instance_valid(bystander) or bystander.health < bystander.max_health, "the burst hurts other zombies too")
+	# Spitter: acid from a distance, no boss bar.
+	await reset_player()
+	var spitter := dummy(SPITTER, Vector3(0, 0, -12), false) as Boss
+	spitter.alert(false)
+	await get_tree().create_timer(4.0).timeout
+	check(player.health < 100 and not level.hud.boss_box.visible, "the spitter spits acid (health %d), no boss bar" % player.health)
+	spitter.queue_free()
 	for z in get_tree().get_nodes_in_group("zombies"):
 		z.queue_free()
 	await reset_player()

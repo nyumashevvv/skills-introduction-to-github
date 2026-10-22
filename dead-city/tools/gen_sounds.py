@@ -114,4 +114,10 @@ save('shield_hit', mix(tone(lambda t: 1250, 0.35, lambda t: math.exp(-t * 14)), 
                        scale(env_noise(0.05, 80, 0.6), 0.8)), 0.45)
 random.seed(41)
 save('tv_static', mix(bandpass(env_noise(6.0, 0.0), 2500, 0.8), scale(highpass(env_noise(6.0, 0.0), 0.6), 0.4)), 0.5)
+random.seed(53)
+save('revolver', mix(env_noise(0.45, 18, 0.45), scale(tone(lambda t: 95 * math.exp(-t * 9) + 38, 0.45, lambda t: math.exp(-t * 11)), 1.1)))
+save('smg', mix(env_noise(0.2, 40, 0.5), scale(tone(lambda t: 170 * math.exp(-t * 20) + 60, 0.15, lambda t: math.exp(-t * 35)), 0.7)), 0.8)
+save('sniper', mix(env_noise(1.2, 5, 0.5), scale(env_noise(0.08, 60, 0.9), 0.9),
+                   scale(tone(lambda t: 70 * math.exp(-t * 4) + 30, 1.0, lambda t: math.exp(-t * 5)), 1.0)))
+save('throw', bandpass([noise() * math.sin(math.pi * min(1, i / n(0.25))) for i in range(n(0.25))], 700, 1.0), 0.5)
 print('sounds ok')
