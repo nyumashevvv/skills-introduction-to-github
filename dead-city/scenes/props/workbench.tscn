@@ -1,0 +1,126 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/wood.tres" id="1_wood"]
+
+[ext_resource type="Material" path="res://materials/metal.tres" id="2_metal"]
+
+[ext_resource type="Material" path="res://materials/dark.tres" id="3_dark"]
+
+[ext_resource type="Material" path="res://materials/car_red.tres" id="4_car_red"]
+
+[ext_resource type="Material" path="res://materials/chrome.tres" id="5_chrome"]
+
+[ext_resource type="Material" path="res://materials/metal_rust.tres" id="6_metal_rust"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(2.2, 1.0, 0.8)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(2.2, 0.07, 0.8)
+material = ExtResource("1_wood")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(2.2, 0.04, 0.7)
+material = ExtResource("1_wood")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.07, 0.9, 0.07)
+material = ExtResource("2_metal")
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(2.2, 1.0, 0.04)
+material = ExtResource("2_metal")
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.04, 0.3, 0.04)
+material = ExtResource("2_metal")
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(0.2, 0.06, 0.05)
+material = ExtResource("3_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(0.03, 0.25, 0.03)
+material = ExtResource("4_car_red")
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(0.3, 0.03, 0.03)
+material = ExtResource("5_chrome")
+
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
+size = Vector3(0.5, 0.22, 0.24)
+material = ExtResource("4_car_red")
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(0.3, 0.2, 0.18)
+material = ExtResource("3_dark")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_12"]
+top_radius = 0.06
+bottom_radius = 0.06
+height = 0.12
+radial_segments = 12
+rings = 1
+material = ExtResource("6_metal_rust")
+
+[node name="Workbench" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.5, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="P0" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.9, 0.0)
+
+[node name="P1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.0, 0.25, 0.0)
+
+[node name="P2" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(-1.05, 0.45, -0.35)
+
+[node name="P3" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(-1.05, 0.45, 0.35)
+
+[node name="P4" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(1.05, 0.45, -0.35)
+
+[node name="P5" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(1.05, 0.45, 0.35)
+
+[node name="P6" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.0, 1.43, 0.38)
+
+[node name="P7" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_6")
+position = Vector3(-0.7, 1.45, 0.34)
+
+[node name="P8" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(-0.7, 1.6, 0.34)
+
+[node name="P9" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(-0.3, 1.4, 0.34)
+
+[node name="P10" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_9")
+position = Vector3(0.2, 1.5, 0.34)
+
+[node name="P11" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(0.55, 1.05, 0.0)
+
+[node name="P12" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_11")
+position = Vector3(-0.5, 1.03, -0.1)
+
+[node name="P13" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_12")
+position = Vector3(0.0, 1.0, -0.15)

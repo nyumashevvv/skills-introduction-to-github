@@ -56,37 +56,67 @@
 
 [ext_resource type="Script" path="res://scripts/world/flicker_light.gd" id="28_flicker_light"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/door.tscn" id="29_door"]
+[ext_resource type="PackedScene" path="res://scenes/props/newspaper.tscn" id="29_newspaper"]
 
-[ext_resource type="Material" path="res://materials/door_glass_lit.tres" id="30_door_glass_lit"]
+[ext_resource type="PackedScene" path="res://scenes/props/box_pile.tscn" id="30_box_pile"]
 
-[ext_resource type="Material" path="res://materials/chrome.tres" id="31_chrome"]
+[ext_resource type="PackedScene" path="res://scenes/props/suitcase_open.tscn" id="31_suitcase_open"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/walker.tscn" id="32_walker"]
+[ext_resource type="PackedScene" path="res://scenes/props/tyre_flat.tscn" id="32_tyre_flat"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/runner.tscn" id="33_runner"]
+[ext_resource type="PackedScene" path="res://scenes/props/papers.tscn" id="33_papers"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/butcher.tscn" id="34_butcher"]
+[ext_resource type="PackedScene" path="res://scenes/props/rubble.tscn" id="34_rubble"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_pistol.tscn" id="35_ammo_pistol"]
+[ext_resource type="PackedScene" path="res://scenes/props/bench.tscn" id="35_bench"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="36_medkit"]
+[ext_resource type="PackedScene" path="res://scenes/props/trash_can.tscn" id="36_trash_can"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/weapon_rifle.tscn" id="37_weapon_rifle"]
+[ext_resource type="PackedScene" path="res://scenes/props/suitcase.tscn" id="37_suitcase"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rifle.tscn" id="38_ammo_rifle"]
+[ext_resource type="PackedScene" path="res://scenes/props/backpack.tscn" id="38_backpack"]
 
-[ext_resource type="Script" path="res://scripts/story/story_event.gd" id="39_story_event"]
+[ext_resource type="PackedScene" path="res://scenes/props/trash_bags.tscn" id="39_trash_bags"]
 
-[ext_resource type="Script" path="res://scripts/story/story_trigger.gd" id="40_story_trigger"]
+[ext_resource type="PackedScene" path="res://scenes/props/traffic_cone.tscn" id="40_traffic_cone"]
 
-[ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="41_zombie_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/props/barrier.tscn" id="41_barrier"]
 
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="42_player"]
+[ext_resource type="PackedScene" path="res://scenes/props/tyre_stack.tscn" id="42_tyre_stack"]
 
-[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="43_hud"]
+[ext_resource type="PackedScene" path="res://scenes/props/pallet.tscn" id="43_pallet"]
 
-[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="44_ambience"]
+[ext_resource type="PackedScene" path="res://scenes/world/door.tscn" id="44_door"]
+
+[ext_resource type="Material" path="res://materials/door_glass_lit.tres" id="45_door_glass_lit"]
+
+[ext_resource type="Material" path="res://materials/chrome.tres" id="46_chrome"]
+
+[ext_resource type="PackedScene" path="res://scenes/zombies/walker.tscn" id="47_walker"]
+
+[ext_resource type="PackedScene" path="res://scenes/zombies/runner.tscn" id="48_runner"]
+
+[ext_resource type="PackedScene" path="res://scenes/zombies/butcher.tscn" id="49_butcher"]
+
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_pistol.tscn" id="50_ammo_pistol"]
+
+[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="51_medkit"]
+
+[ext_resource type="PackedScene" path="res://scenes/pickups/weapon_rifle.tscn" id="52_weapon_rifle"]
+
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rifle.tscn" id="53_ammo_rifle"]
+
+[ext_resource type="Script" path="res://scripts/story/story_event.gd" id="54_story_event"]
+
+[ext_resource type="Script" path="res://scripts/story/story_trigger.gd" id="55_story_trigger"]
+
+[ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="56_zombie_spawner"]
+
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="57_player"]
+
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="58_hud"]
+
+[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="59_ambience"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.01, 0.012, 0.03, 1.0)
@@ -153,11 +183,11 @@ material = ExtResource("27_police_blue")
 
 [sub_resource type="BoxMesh" id="BoxMesh_12"]
 size = Vector3(1.2, 2.3, 0.02)
-material = ExtResource("30_door_glass_lit")
+material = ExtResource("45_door_glass_lit")
 
 [sub_resource type="BoxMesh" id="BoxMesh_13"]
 size = Vector3(0.7, 0.06, 0.06)
-material = ExtResource("31_chrome")
+material = ExtResource("46_chrome")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_14"]
 size = Vector3(18.0, 3.0, 2.0)
@@ -1597,7 +1627,218 @@ light_color = Color(1.0, 0.9, 0.7, 1.0)
 light_energy = 3.0
 omni_range = 9
 
-[node name="StationDoor" parent="Doors" instance=ExtResource("29_door")]
+[node name="Newspaper1" parent="Decor" instance=ExtResource("29_newspaper")]
+position = Vector3(8.1504, 0.0, 7.0227)
+rotation = Vector3(0.0, -1.3646, 0.0)
+
+[node name="BoxPile1" parent="NavigationRegion3D" instance=ExtResource("30_box_pile")]
+position = Vector3(-8.4, 0.0, 3.5)
+rotation = Vector3(0.0, -1.5708, 0.0)
+
+[node name="SuitcaseOpen1" parent="Decor" instance=ExtResource("31_suitcase_open")]
+position = Vector3(-7.3918, 0.0, 0.1828)
+rotation = Vector3(0.0, 1.1365, 0.0)
+
+[node name="TyreFlat1" parent="Decor" instance=ExtResource("32_tyre_flat")]
+position = Vector3(1.219, 0.0, 1.0)
+rotation = Vector3(0.0, -0.5743, 0.0)
+
+[node name="Papers1" parent="Decor" instance=ExtResource("33_papers")]
+position = Vector3(8.1736, 0.0, -7.3277)
+rotation = Vector3(0.0, -2.8478, 0.0)
+
+[node name="Rubble1" parent="Decor" instance=ExtResource("34_rubble")]
+position = Vector3(-8.1709, 0.0, -11.7211)
+rotation = Vector3(0.0, -1.6865, 0.0)
+
+[node name="BoxPile2" parent="NavigationRegion3D" instance=ExtResource("30_box_pile")]
+position = Vector3(8.4, 0.0, -14.5)
+rotation = Vector3(0.0, 1.5708, 0.0)
+
+[node name="Papers2" parent="Decor" instance=ExtResource("33_papers")]
+position = Vector3(8.2925, 0.0, -17.3978)
+rotation = Vector3(0.0, 1.8542, 0.0)
+
+[node name="SuitcaseOpen2" parent="Decor" instance=ExtResource("31_suitcase_open")]
+position = Vector3(-6.9863, 0.0, -25.9261)
+rotation = Vector3(0.0, 1.2252, 0.0)
+
+[node name="Rubble2" parent="Decor" instance=ExtResource("34_rubble")]
+position = Vector3(2.4189, 0.0, -23.0)
+rotation = Vector3(0.0, -0.9054, 0.0)
+
+[node name="SuitcaseOpen3" parent="Decor" instance=ExtResource("31_suitcase_open")]
+position = Vector3(8.1568, 0.0, -30.4538)
+rotation = Vector3(0.0, -2.2234, 0.0)
+
+[node name="Bench1" parent="NavigationRegion3D" instance=ExtResource("35_bench")]
+position = Vector3(-8.4, 0.0, -32.5)
+rotation = Vector3(0.0, -1.5708, 0.0)
+
+[node name="Rubble3" parent="Decor" instance=ExtResource("34_rubble")]
+position = Vector3(-7.8446, 0.0, -36.7602)
+rotation = Vector3(0.0, -1.996, 0.0)
+
+[node name="Rubble4" parent="Decor" instance=ExtResource("34_rubble")]
+position = Vector3(7.2254, 0.0, -42.2349)
+rotation = Vector3(0.0, -0.2689, 0.0)
+
+[node name="Rubble5" parent="Decor" instance=ExtResource("34_rubble")]
+position = Vector3(-8.104, 0.0, -49.9126)
+rotation = Vector3(0.0, 1.0971, 0.0)
+
+[node name="TrashCan1" parent="NavigationRegion3D" instance=ExtResource("36_trash_can")]
+position = Vector3(8.4, 0.0, -50.5)
+rotation = Vector3(0.0, 1.5708, 0.0)
+
+[node name="TyreFlat2" parent="Decor" instance=ExtResource("32_tyre_flat")]
+position = Vector3(4.0214, 0.0, -47.0)
+rotation = Vector3(0.0, 2.8203, 0.0)
+
+[node name="Suitcase1" parent="Decor" instance=ExtResource("37_suitcase")]
+position = Vector3(7.5587, 0.0, -54.881)
+rotation = Vector3(0.0, -1.7185, 0.0)
+
+[node name="Newspaper2" parent="Decor" instance=ExtResource("29_newspaper")]
+position = Vector3(-7.9035, 0.0, -59.5114)
+rotation = Vector3(0.0, 0.077, 0.0)
+
+[node name="Rubble6" parent="Decor" instance=ExtResource("34_rubble")]
+position = Vector3(6.8997, 0.0, -65.6061)
+rotation = Vector3(0.0, -2.3246, 0.0)
+
+[node name="BoxPile3" parent="NavigationRegion3D" instance=ExtResource("30_box_pile")]
+position = Vector3(-8.4, 0.0, -68.5)
+rotation = Vector3(0.0, -1.5708, 0.0)
+
+[node name="Backpack1" parent="Decor" instance=ExtResource("38_backpack")]
+position = Vector3(-7.3839, 0.0, -70.3685)
+rotation = Vector3(0.0, -1.3189, 0.0)
+
+[node name="Rubble7" parent="Decor" instance=ExtResource("34_rubble")]
+position = Vector3(2.2876, 0.0, -71.0)
+rotation = Vector3(0.0, -1.1403, 0.0)
+
+[node name="SuitcaseOpen4" parent="Decor" instance=ExtResource("31_suitcase_open")]
+position = Vector3(7.142, 0.0, -79.4487)
+rotation = Vector3(0.0, 1.8924, 0.0)
+
+[node name="TrashBags1" parent="Decor" instance=ExtResource("39_trash_bags")]
+position = Vector3(-7.532, 0.0, -85.6587)
+rotation = Vector3(0.0, -2.534, 0.0)
+
+[node name="BoxPile4" parent="NavigationRegion3D" instance=ExtResource("30_box_pile")]
+position = Vector3(8.4, 0.0, -86.5)
+rotation = Vector3(0.0, 1.5708, 0.0)
+
+[node name="TrashBags2" parent="Decor" instance=ExtResource("39_trash_bags")]
+position = Vector3(7.5158, 0.0, -88.7069)
+rotation = Vector3(0.0, 0.8004, 0.0)
+
+[node name="TyreFlat3" parent="Decor" instance=ExtResource("32_tyre_flat")]
+position = Vector3(-8.224, 0.0, -97.7084)
+rotation = Vector3(0.0, 1.4176, 0.0)
+
+[node name="Rubble8" parent="Decor" instance=ExtResource("34_rubble")]
+position = Vector3(4.4781, 0.0, -95.0)
+rotation = Vector3(0.0, 1.5806, 0.0)
+
+[node name="Suitcase2" parent="Decor" instance=ExtResource("37_suitcase")]
+position = Vector3(7.4028, 0.0, -102.7842)
+rotation = Vector3(0.0, -2.2699, 0.0)
+
+[node name="BoxPile5" parent="NavigationRegion3D" instance=ExtResource("30_box_pile")]
+position = Vector3(-8.4, 0.0, -104.5)
+rotation = Vector3(0.0, -1.5708, 0.0)
+
+[node name="Suitcase3" parent="Decor" instance=ExtResource("37_suitcase")]
+position = Vector3(-6.9596, 0.0, -106.1832)
+rotation = Vector3(0.0, -1.0854, 0.0)
+
+[node name="TyreFlat4" parent="Decor" instance=ExtResource("32_tyre_flat")]
+position = Vector3(7.9176, 0.0, -115.1493)
+rotation = Vector3(0.0, -0.9003, 0.0)
+
+[node name="SuitcaseOpen5" parent="Decor" instance=ExtResource("31_suitcase_open")]
+position = Vector3(-6.9222, 0.0, -119.3986)
+rotation = Vector3(0.0, -3.0528, 0.0)
+
+[node name="Bench2" parent="NavigationRegion3D" instance=ExtResource("35_bench")]
+position = Vector3(8.4, 0.0, -122.5)
+rotation = Vector3(0.0, 1.5708, 0.0)
+
+[node name="Papers3" parent="Decor" instance=ExtResource("33_papers")]
+position = Vector3(-2.6502, 0.0, -119.0)
+rotation = Vector3(0.0, -1.5694, 0.0)
+
+[node name="TrafficCone1" parent="Decor" instance=ExtResource("40_traffic_cone")]
+position = Vector3(-4.5, 0.0, -114.2)
+rotation = Vector3(0.0, 1.9767, 0.0)
+
+[node name="TrafficCone2" parent="Decor" instance=ExtResource("40_traffic_cone")]
+position = Vector3(4.6, 0.0, -114.4)
+rotation = Vector3(0.0, -0.1627, 0.0)
+
+[node name="TrafficCone3" parent="Decor" instance=ExtResource("40_traffic_cone")]
+position = Vector3(-6.3, 0.0, -117.0)
+rotation = Vector3(0.0, -1.0138, 0.0)
+
+[node name="TrafficCone4" parent="Decor" instance=ExtResource("40_traffic_cone")]
+position = Vector3(6.4, 0.0, -116.8)
+rotation = Vector3(0.0, -0.3819, 0.0)
+
+[node name="TrafficCone5" parent="Decor" instance=ExtResource("40_traffic_cone")]
+position = Vector3(3.6, 0.0, -42.0)
+rotation = Vector3(0.0, 1.2749, 0.0)
+
+[node name="TrafficCone6" parent="Decor" instance=ExtResource("40_traffic_cone")]
+position = Vector3(5.2, 0.0, -41.0)
+rotation = Vector3(0.0, -0.7131, 0.0)
+
+[node name="Barrier1" parent="NavigationRegion3D" instance=ExtResource("41_barrier")]
+position = Vector3(-2.2, 0.0, -110.0)
+rotation = Vector3(0.0, 0.15, 0.0)
+
+[node name="Barrier2" parent="NavigationRegion3D" instance=ExtResource("41_barrier")]
+position = Vector3(2.4, 0.0, -110.4)
+rotation = Vector3(0.0, -0.2, 0.0)
+
+[node name="Dumpster5" parent="NavigationRegion3D" instance=ExtResource("16_dumpster")]
+position = Vector3(11.0, 0.0, -67.2)
+
+[node name="Dumpster6" parent="NavigationRegion3D" instance=ExtResource("16_dumpster")]
+position = Vector3(-11.2, 0.0, -72.8)
+rotation = Vector3(0.0, 3.1416, 0.0)
+
+[node name="TrashBags3" parent="Decor" instance=ExtResource("39_trash_bags")]
+position = Vector3(13.0, 0.0, -67.0)
+rotation = Vector3(0.0, -0.7816, 0.0)
+
+[node name="TrashBags4" parent="Decor" instance=ExtResource("39_trash_bags")]
+position = Vector3(-13.4, 0.0, -73.0)
+rotation = Vector3(0.0, 2.3799, 0.0)
+
+[node name="TrashBags5" parent="Decor" instance=ExtResource("39_trash_bags")]
+position = Vector3(15.0, 0.0, -73.0)
+rotation = Vector3(0.0, 2.7282, 0.0)
+
+[node name="TrashBags6" parent="Decor" instance=ExtResource("39_trash_bags")]
+position = Vector3(-15.5, 0.0, -67.5)
+rotation = Vector3(0.0, 2.7068, 0.0)
+
+[node name="BoxPile6" parent="NavigationRegion3D" instance=ExtResource("30_box_pile")]
+position = Vector3(12.6, 0.0, -73.2)
+rotation = Vector3(0.0, 0.8789, 0.0)
+
+[node name="TyreStack1" parent="NavigationRegion3D" instance=ExtResource("42_tyre_stack")]
+position = Vector3(-12.8, 0.0, -67.2)
+rotation = Vector3(0.0, -0.0083, 0.0)
+
+[node name="Pallet1" parent="Decor" instance=ExtResource("43_pallet")]
+position = Vector3(16.5, 0.0, -67.4)
+rotation = Vector3(0.0, 0.1, 0.0)
+
+[node name="StationDoor" parent="Doors" instance=ExtResource("44_door")]
 position = Vector3(0.0, 1.5, -129.6)
 size = Vector3(3.0, 3.0, 0.2)
 material = ExtResource("27_police_blue")
@@ -1627,114 +1868,114 @@ cast_shadow = 0
 mesh = SubResource("BoxMesh_13")
 position = Vector3(0.72, -0.15, 0.16)
 
-[node name="Walker1" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker1" parent="Zombies" instance=ExtResource("47_walker")]
 position = Vector3(-2.0, 0.0, -14.0)
-rotation = Vector3(0.0, 0.8813, 0.0)
+rotation = Vector3(0.0, 1.4404, 0.0)
 
-[node name="Walker2" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker2" parent="Zombies" instance=ExtResource("47_walker")]
 position = Vector3(2.5, 0.0, -22.0)
-rotation = Vector3(0.0, 1.1528, 0.0)
+rotation = Vector3(0.0, -1.773, 0.0)
 
-[node name="Walker3" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker3" parent="Zombies" instance=ExtResource("47_walker")]
 position = Vector3(-4.5, 0.0, -31.0)
-rotation = Vector3(0.0, 1.6096, 0.0)
+rotation = Vector3(0.0, -2.6256, 0.0)
 
-[node name="Walker4" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker4" parent="Zombies" instance=ExtResource("47_walker")]
 position = Vector3(0.0, 0.0, -44.0)
-rotation = Vector3(0.0, 2.2705, 0.0)
+rotation = Vector3(0.0, -1.2617, 0.0)
 
-[node name="Walker5" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker5" parent="Zombies" instance=ExtResource("47_walker")]
 position = Vector3(-5.0, 0.0, -47.0)
-rotation = Vector3(0.0, 1.6064, 0.0)
+rotation = Vector3(0.0, -0.4375, 0.0)
 
-[node name="Runner1" parent="Zombies" instance=ExtResource("33_runner")]
+[node name="Runner1" parent="Zombies" instance=ExtResource("48_runner")]
 position = Vector3(4.5, 0.0, -46.0)
-rotation = Vector3(0.0, -1.3646, 0.0)
+rotation = Vector3(0.0, -1.2285, 0.0)
 
-[node name="Walker6" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker6" parent="Zombies" instance=ExtResource("47_walker")]
 position = Vector3(1.5, 0.0, -60.0)
-rotation = Vector3(0.0, 0.9165, 0.0)
+rotation = Vector3(0.0, -2.7661, 0.0)
 
-[node name="Walker7" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker7" parent="Zombies" instance=ExtResource("47_walker")]
 position = Vector3(-6.5, 0.0, -58.0)
-rotation = Vector3(0.0, -0.3777, 0.0)
+rotation = Vector3(0.0, -0.7647, 0.0)
 
-[node name="Walker8" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker8" parent="Zombies" instance=ExtResource("47_walker")]
 position = Vector3(-1.0, 0.0, -80.0)
-rotation = Vector3(0.0, 0.2872, 0.0)
+rotation = Vector3(0.0, 1.9022, 0.0)
 
-[node name="Walker9" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker9" parent="Zombies" instance=ExtResource("47_walker")]
 position = Vector3(5.0, 0.0, -82.0)
-rotation = Vector3(0.0, 1.1365, 0.0)
+rotation = Vector3(0.0, -2.5234, 0.0)
 
-[node name="Runner2" parent="Zombies" instance=ExtResource("33_runner")]
+[node name="Runner2" parent="Zombies" instance=ExtResource("48_runner")]
 position = Vector3(-6.0, 0.0, -84.0)
-rotation = Vector3(0.0, -0.67, 0.0)
+rotation = Vector3(0.0, 2.3574, 0.0)
 
-[node name="Walker10" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker10" parent="Zombies" instance=ExtResource("47_walker")]
 position = Vector3(4.0, 0.0, -96.0)
-rotation = Vector3(0.0, -0.3894, 0.0)
+rotation = Vector3(0.0, -2.0063, 0.0)
 
-[node name="Walker11" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker11" parent="Zombies" instance=ExtResource("47_walker")]
 position = Vector3(-3.0, 0.0, -98.0)
-rotation = Vector3(0.0, 2.5643, 0.0)
+rotation = Vector3(0.0, 1.2857, 0.0)
 
-[node name="Walker12" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker12" parent="Zombies" instance=ExtResource("47_walker")]
 position = Vector3(0.0, 0.0, -110.0)
-rotation = Vector3(0.0, 1.4573, 0.0)
+rotation = Vector3(0.0, -0.9128, 0.0)
 
-[node name="Walker13" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker13" parent="Zombies" instance=ExtResource("47_walker")]
 position = Vector3(6.0, 0.0, -119.0)
-rotation = Vector3(0.0, 2.3514, 0.0)
+rotation = Vector3(0.0, 0.9289, 0.0)
 
-[node name="Walker14" parent="Zombies" instance=ExtResource("32_walker")]
+[node name="Walker14" parent="Zombies" instance=ExtResource("47_walker")]
 position = Vector3(-6.5, 0.0, -125.0)
-rotation = Vector3(0.0, -2.0856, 0.0)
+rotation = Vector3(0.0, -1.6578, 0.0)
 
-[node name="Butcher" parent="Zombies" instance=ExtResource("34_butcher")]
+[node name="Butcher" parent="Zombies" instance=ExtResource("49_butcher")]
 position = Vector3(0.0, 0.0, -125.0)
 rotation = Vector3(0.0, 3.1416, 0.0)
 sight_range = 14.0
 alert_event = NodePath("../../Story/ButcherAppears")
 death_event = NodePath("../../Story/ButcherDead")
 
-[node name="AmmoPistol1" parent="Pickups" instance=ExtResource("35_ammo_pistol")]
+[node name="AmmoPistol1" parent="Pickups" instance=ExtResource("50_ammo_pistol")]
 position = Vector3(7.0, 0.0, -12.0)
 
-[node name="Medkit1" parent="Pickups" instance=ExtResource("36_medkit")]
+[node name="Medkit1" parent="Pickups" instance=ExtResource("51_medkit")]
 position = Vector3(-7.5, 0.0, -50.0)
 
-[node name="WeaponRifle1" parent="Pickups" instance=ExtResource("37_weapon_rifle")]
+[node name="WeaponRifle1" parent="Pickups" instance=ExtResource("52_weapon_rifle")]
 position = Vector3(2.0, 0.0, -54.5)
 event = NodePath("../../Story/RifleFound")
 
-[node name="AmmoRifle1" parent="Pickups" instance=ExtResource("38_ammo_rifle")]
+[node name="AmmoRifle1" parent="Pickups" instance=ExtResource("53_ammo_rifle")]
 position = Vector3(-13.0, 0.0, -71.0)
 
-[node name="AmmoPistol2" parent="Pickups" instance=ExtResource("35_ammo_pistol")]
+[node name="AmmoPistol2" parent="Pickups" instance=ExtResource("50_ammo_pistol")]
 position = Vector3(-7.2, 0.0, -90.0)
 
-[node name="Medkit2" parent="Pickups" instance=ExtResource("36_medkit")]
+[node name="Medkit2" parent="Pickups" instance=ExtResource("51_medkit")]
 position = Vector3(7.3, 0.0, -104.0)
 
-[node name="AmmoRifle2" parent="Pickups" instance=ExtResource("38_ammo_rifle")]
+[node name="AmmoRifle2" parent="Pickups" instance=ExtResource("53_ammo_rifle")]
 position = Vector3(0.5, 0.0, -120.0)
 
-[node name="AmmoPistol3" parent="Pickups" instance=ExtResource("35_ammo_pistol")]
+[node name="AmmoPistol3" parent="Pickups" instance=ExtResource("50_ammo_pistol")]
 position = Vector3(-7.6, 0.0, -121.0)
 
-[node name="AmmoRifle3" parent="Pickups" instance=ExtResource("38_ammo_rifle")]
+[node name="AmmoRifle3" parent="Pickups" instance=ExtResource("53_ammo_rifle")]
 position = Vector3(7.6, 0.0, -112.0)
 
 [node name="Intro" type="Node" parent="Story"]
-script = ExtResource("39_story_event")
+script = ExtResource("54_story_event")
 speaker = "Диспетчер"
 message = "…если кто-то слышит — эвакуация со стадиона «Динамо» на рассвете. Повторяю: стадион, на рассвете."
 message_duration = 7.0
 targets = Array[NodePath]([NodePath("../Intro2")])
 
 [node name="Intro2" type="Node" parent="Story"]
-script = ExtResource("39_story_event")
+script = ExtResource("54_story_event")
 delay = 7.5
 speaker = "Диспетчер"
 message = "Ты меня слышишь? Хорошо. Через центр не пройти — иди по Садовой к полицейскому участку. Там оружейная, она тебе понадобится."
@@ -1745,20 +1986,20 @@ position = Vector3(0.0, 1.5, -9.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("40_story_trigger")
+script = ExtResource("55_story_trigger")
 event = NodePath("../KnifeHint")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/KnifeHintTrigger"]
 shape = SubResource("BoxShape3D_14")
 
 [node name="KnifeHint" type="Node" parent="Story"]
-script = ExtResource("39_story_event")
+script = ExtResource("54_story_event")
 speaker = "Диспетчер"
 message = "Совет: нож бьёт бесшумно. Выстрелы слышно на весь квартал — мертвецы сбегутся."
 message_duration = 7.0
 
 [node name="RifleFound" type="Node" parent="Story"]
-script = ExtResource("39_story_event")
+script = ExtResource("54_story_event")
 objective = "Отбейся от толпы из переулков"
 speaker = "Диспетчер"
 message = "Автомат? Отличная находка. Только… слышишь? Они лезут из переулков!"
@@ -1766,8 +2007,8 @@ message_duration = 7.0
 targets = Array[NodePath]([NodePath("../AlleyLeft"), NodePath("../AlleyRight")])
 
 [node name="AlleyLeft" type="Node3D" parent="Story"]
-script = ExtResource("41_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("32_walker"), ExtResource("32_walker"), ExtResource("33_runner")])
+script = ExtResource("56_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("47_walker"), ExtResource("47_walker"), ExtResource("48_runner")])
 count = 6
 interval = 1.0
 max_alive = 10
@@ -1779,8 +2020,8 @@ position = Vector3(-17.0, 0.0, -70.0)
 position = Vector3(-19.0, 0.0, -68.0)
 
 [node name="AlleyRight" type="Node3D" parent="Story"]
-script = ExtResource("41_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("32_walker"), ExtResource("32_walker"), ExtResource("33_runner")])
+script = ExtResource("56_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("47_walker"), ExtResource("47_walker"), ExtResource("48_runner")])
 count = 6
 interval = 1.1
 max_alive = 10
@@ -1793,7 +2034,7 @@ position = Vector3(17.0, 0.0, -70.0)
 position = Vector3(19.0, 0.0, -72.0)
 
 [node name="AlleyCleared" type="Node" parent="Story"]
-script = ExtResource("39_story_event")
+script = ExtResource("54_story_event")
 objective = "Доберись до полицейского участка"
 speaker = "Диспетчер"
 message = "Тихо? Двигай дальше, участок сразу за автобусом."
@@ -1804,14 +2045,14 @@ position = Vector3(0.0, 1.5, -104.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("40_story_trigger")
+script = ExtResource("55_story_trigger")
 event = NodePath("../Ambush")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/AmbushTrigger"]
 shape = SubResource("BoxShape3D_15")
 
 [node name="Ambush" type="Node" parent="Story"]
-script = ExtResource("39_story_event")
+script = ExtResource("54_story_event")
 objective = "Беги к полицейскому участку"
 speaker = "Диспетчер"
 message = "Сзади! Целая толпа — беги к участку!"
@@ -1819,8 +2060,8 @@ message_duration = 6.0
 targets = Array[NodePath]([NodePath("../Horde")])
 
 [node name="Horde" type="Node3D" parent="Story"]
-script = ExtResource("41_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("33_runner"), ExtResource("32_walker"), ExtResource("32_walker")])
+script = ExtResource("56_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("48_runner"), ExtResource("47_walker"), ExtResource("47_walker")])
 count = 6
 interval = 0.9
 max_alive = 10
@@ -1839,25 +2080,25 @@ position = Vector3(0.0, 1.5, -112.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("40_story_trigger")
+script = ExtResource("55_story_trigger")
 event = NodePath("../WakeButcher")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/ButcherTrigger"]
 shape = SubResource("BoxShape3D_16")
 
 [node name="WakeButcher" type="Node" parent="Story"]
-script = ExtResource("39_story_event")
+script = ExtResource("54_story_event")
 targets = Array[NodePath]([NodePath("../../Zombies/Butcher")])
 
 [node name="ButcherAppears" type="Node" parent="Story"]
-script = ExtResource("39_story_event")
+script = ExtResource("54_story_event")
 objective = "Убей Мясника"
 speaker = "Диспетчер"
 message = "У входа в участок… повар с тесаком? Он не человек уже. Осторожно, он бросается с разбега — отходи в сторону, а если врежется в стену, бей!"
 message_duration = 8.0
 
 [node name="ButcherDead" type="Node" parent="Story"]
-script = ExtResource("39_story_event")
+script = ExtResource("54_story_event")
 objective = "Войди в полицейский участок"
 speaker = "Диспетчер"
 message = "Готов! Заходи в участок, пока толпа не догнала."
@@ -1865,16 +2106,16 @@ message_duration = 6.0
 targets = Array[NodePath]([NodePath("../../Doors/StationDoor")])
 
 [node name="Exit" type="Node" parent="Story"]
-script = ExtResource("39_story_event")
+script = ExtResource("54_story_event")
 complete_level = true
 
-[node name="Player" parent="." instance=ExtResource("42_player")]
+[node name="Player" parent="." instance=ExtResource("57_player")]
 position = Vector3(0.0, 0.0, 8.0)
 rotation = Vector3(0.0, 0.0, 0.0)
 
-[node name="HUD" parent="." instance=ExtResource("43_hud")]
+[node name="HUD" parent="." instance=ExtResource("58_hud")]
 
 [node name="Ambience" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("44_ambience")
+stream = ExtResource("59_ambience")
 autoplay = true
 volume_db = -8.0

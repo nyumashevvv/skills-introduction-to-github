@@ -1,0 +1,80 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/cork.tres" id="1_cork"]
+
+[ext_resource type="Material" path="res://materials/wood.tres" id="2_wood"]
+
+[ext_resource type="Material" path="res://materials/paper.tres" id="3_paper"]
+
+[ext_resource type="Material" path="res://materials/paint_yellow.tres" id="4_paint_yellow"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+size = Vector3(1.4, 0.9, 0.03)
+material = ExtResource("1_cork")
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(1.46, 0.96, 0.02)
+material = ExtResource("2_wood")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.2851, 0.3348, 0.005)
+material = ExtResource("3_paper")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.2236, 0.3364, 0.005)
+material = ExtResource("3_paper")
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(0.2822, 0.3043, 0.005)
+material = ExtResource("3_paper")
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.2367, 0.3447, 0.005)
+material = ExtResource("3_paper")
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(0.2062, 0.3196, 0.005)
+material = ExtResource("3_paper")
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(0.22, 0.28, 0.006)
+material = ExtResource("4_paint_yellow")
+
+[node name="Noticeboard" type="Node3D"]
+
+[node name="P0" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_1")
+position = Vector3(0.0, 0.0, 0.0)
+
+[node name="P1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.0, 0.01)
+
+[node name="P2" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(-0.5175, -0.1996, -0.018)
+rotation = Vector3(0.0, 0.0, 0.0982)
+
+[node name="P3" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(-0.2587, -0.0143, -0.018)
+rotation = Vector3(0.0, 0.0, -0.0717)
+
+[node name="P4" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.0009, 0.1058, -0.018)
+rotation = Vector3(0.0, 0.0, 0.0685)
+
+[node name="P5" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_6")
+position = Vector3(0.2689, 0.0653, -0.018)
+rotation = Vector3(0.0, 0.0, 0.098)
+
+[node name="P6" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(0.491, -0.1429, -0.018)
+rotation = Vector3(0.0, 0.0, -0.0628)
+
+[node name="P7" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(0.45, 0.22, -0.02)

@@ -1,0 +1,90 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/chrome.tres" id="1_chrome"]
+
+[ext_resource type="Material" path="res://materials/sheet.tres" id="2_sheet"]
+
+[ext_resource type="Material" path="res://materials/z_blood.tres" id="3_z_blood"]
+
+[ext_resource type="Material" path="res://materials/dark.tres" id="4_dark"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.7, 0.9, 2.0)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(0.7, 0.08, 2.0)
+material = ExtResource("1_chrome")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.65, 0.1, 1.9)
+material = ExtResource("2_sheet")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.4, 0.02, 0.6)
+material = ExtResource("3_z_blood")
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(0.03, 0.72, 0.03)
+material = ExtResource("1_chrome")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_6"]
+top_radius = 0.05
+bottom_radius = 0.05
+height = 0.03
+radial_segments = 12
+rings = 1
+material = ExtResource("4_dark")
+
+[node name="Gurney" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.45, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="P0" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.75, 0.0)
+
+[node name="P1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.0, 0.84, 0.0)
+
+[node name="P2" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(0.05, 0.9, -0.2)
+
+[node name="P3" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(-0.3, 0.38, -0.9)
+
+[node name="P4" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(-0.3, 0.38, 0.9)
+
+[node name="P5" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.3, 0.38, -0.9)
+
+[node name="P6" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.3, 0.38, 0.9)
+
+[node name="P7" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_6")
+position = Vector3(-0.3, 0.05, -0.9)
+rotation = Vector3(0.0, 0.0, 1.5708)
+
+[node name="P8" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_6")
+position = Vector3(-0.3, 0.05, 0.9)
+rotation = Vector3(0.0, 0.0, 1.5708)
+
+[node name="P9" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_6")
+position = Vector3(0.3, 0.05, -0.9)
+rotation = Vector3(0.0, 0.0, 1.5708)
+
+[node name="P10" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_6")
+position = Vector3(0.3, 0.05, 0.9)
+rotation = Vector3(0.0, 0.0, 1.5708)

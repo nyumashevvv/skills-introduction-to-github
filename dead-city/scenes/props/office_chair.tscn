@@ -1,0 +1,72 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/dark.tres" id="1_dark"]
+
+[ext_resource type="Material" path="res://materials/chrome.tres" id="2_chrome"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.55, 1.0, 0.55)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(0.5, 0.08, 0.5)
+material = ExtResource("1_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.48, 0.55, 0.07)
+material = ExtResource("1_dark")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_4"]
+top_radius = 0.03
+bottom_radius = 0.03
+height = 0.42
+radial_segments = 12
+rings = 1
+material = ExtResource("2_chrome")
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(0.35, 0.03, 0.05)
+material = ExtResource("1_dark")
+
+[node name="OfficeChair" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.5, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="P0" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.5, 0.0)
+
+[node name="P1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.0, 0.85, 0.24)
+rotation = Vector3(-0.15, 0.0, 0.0)
+
+[node name="P2" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_4")
+position = Vector3(0.0, 0.27, 0.0)
+
+[node name="P3" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.0, 0.05, 0.17)
+rotation = Vector3(0.0, 1.5708, 0.0)
+
+[node name="P4" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.1617, 0.05, 0.0525)
+rotation = Vector3(0.0, 2.8274, 0.0)
+
+[node name="P5" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.0999, 0.05, -0.1375)
+rotation = Vector3(0.0, 4.0841, 0.0)
+
+[node name="P6" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(-0.0999, 0.05, -0.1375)
+rotation = Vector3(0.0, 5.3407, 0.0)
+
+[node name="P7" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(-0.1617, 0.05, 0.0525)
+rotation = Vector3(0.0, 6.5973, 0.0)

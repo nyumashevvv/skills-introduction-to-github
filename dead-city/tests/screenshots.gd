@@ -85,6 +85,10 @@ func _run() -> void:
 		await _gallery()
 	if "bosses" in sections:
 		await _bosses()
+	if "props" in sections:
+		await _props()
+	if "tour" in sections:
+		await _tour()
 	if "street" in sections:
 		await _street()
 	if "doors" in sections:
@@ -244,6 +248,64 @@ func _bosses() -> void:
 	await snap("00_bosses")
 	level.hud.gameplay.visible = true
 	player.holder.visible = true
+
+
+## Every clutter prop in a grid in the lit hospital lobby.
+func _props() -> void:
+	var level := await load_level("res://scenes/levels/level_3_hospital.tscn")
+	var player := await play(level)
+	level.get_node("Story/PowerOn").call("fire")
+	await get_tree().create_timer(1.0).timeout
+	for z in get_tree().get_nodes_in_group("zombies"):
+		z.queue_free()
+	for spawner: String in ["Story/WardHorde", "Story/LobbyHorde"]:
+		(level.get_node(spawner) as ZombieSpawner).deactivate()
+	var files := Array(DirAccess.get_files_at("res://scenes/props")).filter(func(f: String) -> bool: return f.ends_with(".tscn"))
+	var index := 0
+	for f: String in files:
+		var node := (load("res://scenes/props/" + f) as PackedScene).instantiate() as Node3D
+		node.position = Vector3(-9.0 + (index % 10) * 2.0, 1.2 if f.begins_with("wall") or f.begins_with("notice") or f.begins_with("wanted") else 0.0, -13.0 + (index / 10) * 2.2)
+		node.rotation.y = PI
+		level.add_child(node)
+		index += 1
+	level.hud.gameplay.visible = false
+	player.holder.visible = false
+	await pose(player, Vector3(0, 0, 0.5), 0, -32)
+	player.global_position.y = 3.0
+	await frames(10)
+	await snap("19_props")
+
+
+## Views of every chapter's rooms (no HUD, no zombies) to check how furnished they look.
+func _tour() -> void:
+	var views := {
+		"res://scenes/levels/level_2_station.tscn": [["station_lobby", Vector3(0, 0, -1), 0, -8],
+			["station_office", Vector3(-3, 0, -21), 60, -12], ["station_lockers", Vector3(-3, 0, -39), 70, -10],
+			["station_cells", Vector3(3, 0, -19), -110, -8], ["station_garage", Vector3(4, 0, -42), -110, -8],
+			["station_armory", Vector3(0, 0, -51), 0, -12], ["station_yard", Vector3(21, 0, -48), -90, -6]],
+		"res://scenes/levels/level_1_outskirts.tscn": [["street_a", Vector3(0, 0, -20), 0, -6],
+			["street_alley", Vector3(4, 0, -70), -90, -6]],
+		"res://scenes/levels/level_3_hospital.tscn": [["hospital_lobby", Vector3(0, 0, -1), 0, -8],
+			["hospital_corridor", Vector3(-22, 0, -16.5), -90, -6], ["hospital_ward", Vector3(-6, 0, -20), 0, -14]],
+		"res://scenes/levels/level_4_subway.tscn": [["subway_platform", Vector3(0, 0, -13), 0, -6],
+			["subway_dinamo", Vector3(0, 0, -132), 0, -6]],
+		"res://scenes/levels/level_5_stadium.tscn": [["stadium_field", Vector3(-10, 0, 25), -160, -6]],
+	}
+	for path: String in views:
+		var level := await load_level(path)
+		var player := await play(level)
+		for z in get_tree().get_nodes_in_group("zombies"):
+			z.queue_free()
+		if level.has_node("Story/PowerOn"):
+			level.get_node("Story/PowerOn").call("fire")
+			for spawner: String in ["Story/WardHorde", "Story/LobbyHorde"]:
+				(level.get_node(spawner) as ZombieSpawner).deactivate()
+		level.hud.gameplay.visible = false
+		player.holder.visible = false
+		player.flashlight.visible = true
+		for view: Array in views[path]:
+			await pose(player, view[1], view[2], view[3])
+			await snap("tour_" + view[0])
 
 
 func _hospital() -> void:

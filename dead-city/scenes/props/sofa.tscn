@@ -1,0 +1,59 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/leather.tres" id="1_leather"]
+
+[ext_resource type="Material" path="res://materials/fabric_red.tres" id="2_fabric_red"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(2.0, 0.9, 0.85)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(2.0, 0.4, 0.85)
+material = ExtResource("1_leather")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(2.0, 0.5, 0.2)
+material = ExtResource("1_leather")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.2, 0.3, 0.85)
+material = ExtResource("1_leather")
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(0.85, 0.12, 0.6)
+material = ExtResource("1_leather")
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(0.4, 0.12, 0.4)
+material = ExtResource("2_fabric_red")
+
+[node name="Sofa" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.45, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="P0" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.25, 0.0)
+
+[node name="P1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.0, 0.65, 0.33)
+
+[node name="P2" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(-0.95, 0.55, 0.0)
+
+[node name="P3" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(0.95, 0.55, 0.0)
+
+[node name="P4" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(-0.45, 0.5, -0.05)
+
+[node name="P5" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_6")
+position = Vector3(0.5, 0.52, 0.0)
+rotation = Vector3(0.3, 0.4, 0.0)

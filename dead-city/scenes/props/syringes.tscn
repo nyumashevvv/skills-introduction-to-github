@@ -1,0 +1,112 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/chrome.tres" id="1_chrome"]
+
+[ext_resource type="Material" path="res://materials/plastic_white.tres" id="2_plastic_white"]
+
+[ext_resource type="Material" path="res://materials/liquid.tres" id="3_liquid"]
+
+[ext_resource type="Material" path="res://materials/dark.tres" id="4_dark"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+size = Vector3(0.35, 0.015, 0.25)
+material = ExtResource("1_chrome")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_2"]
+top_radius = 0.008
+bottom_radius = 0.008
+height = 0.09
+radial_segments = 12
+rings = 1
+material = ExtResource("2_plastic_white")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 0.0015
+bottom_radius = 0.0015
+height = 0.04
+radial_segments = 12
+rings = 1
+material = ExtResource("1_chrome")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_4"]
+top_radius = 0.012
+bottom_radius = 0.012
+height = 0.004
+radial_segments = 12
+rings = 1
+material = ExtResource("2_plastic_white")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_5"]
+top_radius = 0.02
+bottom_radius = 0.02
+height = 0.06
+radial_segments = 12
+rings = 1
+material = ExtResource("3_liquid")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_6"]
+top_radius = 0.012
+bottom_radius = 0.012
+height = 0.012
+radial_segments = 12
+rings = 1
+material = ExtResource("4_dark")
+
+[node name="Syringes" type="Node3D"]
+
+[node name="P0" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_1")
+position = Vector3(0.0, 0.0075, 0.0)
+
+[node name="P1" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_2")
+position = Vector3(-0.1, 0.027, 0.0)
+rotation = Vector3(1.5708, 0.0, 0.0)
+
+[node name="P2" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_3")
+position = Vector3(-0.1, 0.027, 0.065)
+rotation = Vector3(1.5708, 0.0, 0.0)
+
+[node name="P3" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_4")
+position = Vector3(-0.1, 0.027, -0.05)
+rotation = Vector3(1.5708, 0.0, 0.0)
+
+[node name="P4" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_2")
+position = Vector3(0.0, 0.027, 0.0)
+rotation = Vector3(1.5708, 0.2, 0.0)
+
+[node name="P5" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_3")
+position = Vector3(0.0129, 0.027, 0.0637)
+rotation = Vector3(1.5708, 0.2, 0.0)
+
+[node name="P6" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_4")
+position = Vector3(-0.0099, 0.027, -0.049)
+rotation = Vector3(1.5708, 0.2, 0.0)
+
+[node name="P7" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_2")
+position = Vector3(0.1, 0.027, 0.0)
+rotation = Vector3(1.5708, 0.4, 0.0)
+
+[node name="P8" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_3")
+position = Vector3(0.1253, 0.027, 0.0599)
+rotation = Vector3(1.5708, 0.4, 0.0)
+
+[node name="P9" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_4")
+position = Vector3(0.0805, 0.027, -0.0461)
+rotation = Vector3(1.5708, 0.4, 0.0)
+
+[node name="P10" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_5")
+position = Vector3(0.12, 0.045, 0.07)
+
+[node name="P11" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_6")
+position = Vector3(0.12, 0.081, 0.07)

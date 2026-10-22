@@ -1,0 +1,43 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/military.tres" id="1_military"]
+
+[ext_resource type="Material" path="res://materials/paint_yellow.tres" id="2_paint_yellow"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.05, 1.2, 1.25)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(1.0, 0.6, 0.6)
+material = ExtResource("1_military")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.9, 0.08, 0.02)
+material = ExtResource("2_paint_yellow")
+
+[node name="CrateStack" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.02, 0.6, 0.32)
+shape = SubResource("BoxShape3D_1")
+
+[node name="P0" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.3, 0.0)
+
+[node name="P1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.05, 0.9, 0.0)
+rotation = Vector3(0.0, 0.08, 0.0)
+
+[node name="P2" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.3, 0.65)
+
+[node name="P3" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.0, 0.45, -0.305)
+
+[node name="P4" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.05, 1.05, -0.305)

@@ -1,0 +1,64 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/ceramic.tres" id="1_ceramic"]
+
+[ext_resource type="Material" path="res://materials/plant_dry.tres" id="2_plant_dry"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+top_radius = 0.07
+bottom_radius = 0.09
+height = 0.18
+radial_segments = 12
+rings = 1
+material = ExtResource("1_ceramic")
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(0.08, 0.01, 0.06)
+material = ExtResource("1_ceramic")
+
+[sub_resource type="SphereMesh" id="SphereMesh_3"]
+radius = 0.03
+height = 0.06
+radial_segments = 12
+rings = 6
+material = ExtResource("2_plant_dry")
+
+[node name="VaseBroken" type="Node3D"]
+
+[node name="P0" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_1")
+position = Vector3(0.0, 0.09, 0.0)
+
+[node name="P1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.2609, 0.005, 0.0345)
+rotation = Vector3(0.0, 0.1834, 0.0)
+
+[node name="P2" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(-0.212, 0.005, -0.05)
+rotation = Vector3(0.0, 2.8749, 0.0)
+
+[node name="P3" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(-0.2879, 0.005, 0.162)
+rotation = Vector3(0.0, 0.6204, 0.0)
+
+[node name="P4" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(-0.1282, 0.005, -0.2836)
+rotation = Vector3(0.0, 2.3212, 0.0)
+
+[node name="P5" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0664, 0.005, 0.2178)
+rotation = Vector3(0.0, 2.8229, 0.0)
+
+[node name="P6" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(-0.0521, 0.005, 0.2812)
+rotation = Vector3(0.0, 0.0434, 0.0)
+
+[node name="P7" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_3")
+position = Vector3(0.2, 0.02, 0.1)

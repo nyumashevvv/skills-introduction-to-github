@@ -1,0 +1,61 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/book_cream.tres" id="1_book_cream"]
+
+[ext_resource type="Material" path="res://materials/book_brown.tres" id="2_book_brown"]
+
+[ext_resource type="Material" path="res://materials/book_blue.tres" id="3_book_blue"]
+
+[ext_resource type="Material" path="res://materials/book_red.tres" id="4_book_red"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_1"]
+size = Vector3(0.18, 0.04, 0.25)
+material = ExtResource("1_book_cream")
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(0.18, 0.04, 0.25)
+material = ExtResource("2_book_brown")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.18, 0.04, 0.25)
+material = ExtResource("3_book_blue")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.18, 0.04, 0.25)
+material = ExtResource("4_book_red")
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(0.36, 0.02, 0.25)
+material = ExtResource("1_book_cream")
+
+[node name="BooksFloor" type="Node3D"]
+
+[node name="P0" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_1")
+position = Vector3(0.1815, 0.02, -0.2428)
+rotation = Vector3(0.0, 1.8178, 0.0)
+
+[node name="P1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.1045, 0.02, -0.2136)
+rotation = Vector3(0.0, 2.3843, 0.0)
+
+[node name="P2" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(-0.3054, 0.02, -0.1098)
+rotation = Vector3(0.0, 1.383, 0.0)
+
+[node name="P3" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(-0.0527, 0.02, -0.0351)
+rotation = Vector3(0.0, 1.5978, 0.0)
+
+[node name="P4" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(0.3757, 0.02, 0.0576)
+rotation = Vector3(0.0, 0.3806, 0.0)
+
+[node name="P5" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.1, 0.012, 0.1)
+rotation = Vector3(0.0, 0.5, 0.0)

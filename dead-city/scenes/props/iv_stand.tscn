@@ -1,0 +1,78 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/chrome.tres" id="1_chrome"]
+
+[ext_resource type="Material" path="res://materials/water_blue.tres" id="2_water_blue"]
+
+[ext_resource type="Material" path="res://materials/plastic_white.tres" id="3_plastic_white"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+top_radius = 0.012
+bottom_radius = 0.012
+height = 1.9
+radial_segments = 12
+rings = 1
+material = ExtResource("1_chrome")
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(0.3, 0.012, 0.012)
+material = ExtResource("1_chrome")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.12, 0.2, 0.04)
+material = ExtResource("2_water_blue")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_4"]
+top_radius = 0.003
+bottom_radius = 0.003
+height = 0.9
+radial_segments = 12
+rings = 1
+material = ExtResource("3_plastic_white")
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(0.3, 0.02, 0.03)
+material = ExtResource("1_chrome")
+
+[node name="IvStand" type="Node3D"]
+
+[node name="P0" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_1")
+position = Vector3(0.0, 0.95, 0.0)
+
+[node name="P1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 1.85, 0.0)
+
+[node name="P2" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.12, 1.68, 0.0)
+
+[node name="P3" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_4")
+position = Vector3(0.12, 1.15, 0.0)
+
+[node name="P4" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.0, 0.05, 0.15)
+rotation = Vector3(0.0, 1.5708, 0.0)
+
+[node name="P5" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.1427, 0.05, 0.0464)
+rotation = Vector3(0.0, 2.8274, 0.0)
+
+[node name="P6" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.0882, 0.05, -0.1214)
+rotation = Vector3(0.0, 4.0841, 0.0)
+
+[node name="P7" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(-0.0882, 0.05, -0.1214)
+rotation = Vector3(0.0, 5.3407, 0.0)
+
+[node name="P8" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(-0.1427, 0.05, 0.0464)
+rotation = Vector3(0.0, 6.5973, 0.0)

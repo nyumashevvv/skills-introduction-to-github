@@ -1,0 +1,30 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/cardboard.tres" id="1_cardboard"]
+
+[ext_resource type="Material" path="res://materials/paint_yellow.tres" id="2_paint_yellow"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.6, 0.45, 0.45)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(0.6, 0.45, 0.45)
+material = ExtResource("1_cardboard")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(0.61, 0.02, 0.08)
+material = ExtResource("2_paint_yellow")
+
+[node name="CardboardBox" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.225, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="P0" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.225, 0.0)
+
+[node name="P1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.0, 0.45, 0.0)

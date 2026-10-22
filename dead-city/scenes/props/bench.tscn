@@ -1,0 +1,43 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/wood.tres" id="1_wood"]
+
+[ext_resource type="Material" path="res://materials/metal.tres" id="2_metal"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.8, 0.95, 0.5)
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(1.8, 0.06, 0.45)
+material = ExtResource("1_wood")
+
+[sub_resource type="BoxMesh" id="BoxMesh_3"]
+size = Vector3(1.8, 0.4, 0.05)
+material = ExtResource("1_wood")
+
+[sub_resource type="BoxMesh" id="BoxMesh_4"]
+size = Vector3(0.06, 0.45, 0.45)
+material = ExtResource("2_metal")
+
+[node name="Bench" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.47, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="P0" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.0, 0.45, 0.0)
+
+[node name="P1" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.0, 0.72, 0.22)
+rotation = Vector3(-0.15, 0.0, 0.0)
+
+[node name="P2" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(-0.8, 0.22, 0.0)
+
+[node name="P3" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_4")
+position = Vector3(0.8, 0.22, 0.0)

@@ -1,0 +1,75 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/ceramic_blue.tres" id="1_ceramic_blue"]
+
+[ext_resource type="Material" path="res://materials/plant.tres" id="2_plant"]
+
+[ext_resource type="Material" path="res://materials/book_red.tres" id="3_book_red"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_1"]
+top_radius = 0.05
+bottom_radius = 0.09
+height = 0.3
+radial_segments = 12
+rings = 1
+material = ExtResource("1_ceramic_blue")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_2"]
+top_radius = 0.07
+bottom_radius = 0.05
+height = 0.08
+radial_segments = 12
+rings = 1
+material = ExtResource("1_ceramic_blue")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 0.006
+bottom_radius = 0.006
+height = 0.35
+radial_segments = 12
+rings = 1
+material = ExtResource("2_plant")
+
+[sub_resource type="SphereMesh" id="SphereMesh_4"]
+radius = 0.035
+height = 0.07
+radial_segments = 12
+rings = 6
+material = ExtResource("3_book_red")
+
+[node name="Vase" type="Node3D"]
+
+[node name="P0" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_1")
+position = Vector3(0.0, 0.15, 0.0)
+
+[node name="P1" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_2")
+position = Vector3(0.0, 0.33, 0.0)
+
+[node name="P2" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_3")
+position = Vector3(0.0, 0.5, 0.03)
+rotation = Vector3(0.0, 0.0, 0.3)
+
+[node name="P3" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_3")
+position = Vector3(0.0273, 0.5, -0.0125)
+rotation = Vector3(0.2728, 0.0, -0.1248)
+
+[node name="P4" type="MeshInstance3D" parent="."]
+mesh = SubResource("CylinderMesh_3")
+position = Vector3(-0.0227, 0.5, -0.0196)
+rotation = Vector3(-0.227, 0.0, -0.1961)
+
+[node name="P5" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_4")
+position = Vector3(0.0, 0.66, 0.08)
+
+[node name="P6" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_4")
+position = Vector3(0.0727, 0.66, -0.0333)
+
+[node name="P7" type="MeshInstance3D" parent="."]
+mesh = SubResource("SphereMesh_4")
+position = Vector3(-0.0605, 0.66, -0.0523)
