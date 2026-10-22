@@ -237,14 +237,38 @@ def hospital_clutter(L):
     H = math.pi / 2
     for pos in [(-11.3, 0, -0.8), (11.3, 0, -0.8), (-11.3, 0, -13.2)]:
         c('potted_plant', pos)
-    c('wheelchair', (-10.4, 0, -6.2), 0.8); c('water_cooler', (-11.5, 0, -12.2), -H); c('vending_machine', (-11.4, 0, -9.5), -H)
+    c('wheelchair', (-6.6, 0, -9.6), 0.8); c('water_cooler', (-11.5, 0, -12.2), -H); c('vending_machine', (-11.4, 0, -9.5), -H)
     c('vase', (2.2, 1.1, -7.1)); c('pills', (-1.5, 1.1, -7.2)); c('phone', (0.6, 1.1, -7.2), 0.2)
     c('office_chair', (0.5, 0, -8.2), math.pi); c('chair_fallen', (4, 0, -4.5)); c('trash_can', (11.4, 0, -13.2))
     for pos in [(-7, 0, -4.5), (3, 0, -11.5), (-4.5, 0, -12)]:
         c(L.rnd.choice(['papers', 'newspaper', 'books_floor']), pos)
     w('noticeboard', (-6, 1.7, -13.83), '+z'); w('wall_clock', (6, 3.0, -13.82), '+z')
-    c('lounge_sofa', (9.6, 0, -0.65), 0.0); c('lounge_chair', (-11.0, 0, -3.6), -H); c('table_round', (8.0, 0, -4.8), 0.4)
+    c('lounge_sofa', (9.6, 0, -0.65), 0.0); c('lounge_chair', (-8.6, 0, -4.4), -H + 0.3); c('table_round', (8.0, 0, -4.8), 0.4)
     c('plant_tall', (-4.8, 0, -13.3)); c('coffee_machine', (-2.6, 1.1, -7.3), math.pi); c('tv_old', (-9.0, 0, -13.3), 0.0)
+    # staff canteen (west side room)
+    for i, z in enumerate((-1.2, -2.15, -3.1, -4.05)):
+        c(['fridge', 'kitchen_stove', 'kitchen_sink', 'kitchen_cabinet'][i], (-23.35 if i == 0 else -23.4, 0, z), -H)
+    c('microwave', (-23.4, 0.95, -4.05), -H); c('coffee_machine', (-23.4, 0.95, -3.1 + 0.5), -H)
+    for tx, tz in [(-19, -5), (-15.5, -5), (-19, -10.5)]:
+        c('table_round', (tx, 0, tz), L.rnd.uniform(0, 3))
+        for a in (0.3, 2.0, 3.8):
+            c('chair_cushion' if L.rnd.random() < 0.7 else 'chair_fallen', (tx + math.cos(a) * 1.1, 0, tz + math.sin(a) * 1.1), -a - H)
+        c('mug', (tx + 0.2, 0.77, tz)); c('papers', (tx + 1.5, 0, tz + 1.2))
+    c('lounge_sofa', (-15.0, 0, -13.4), math.pi); c('coffee_table', (-15.0, 0, -12.2), 0.0)
+    c('vending_machine', (-23.4, 0, -8.0), -H); c('water_cooler', (-23.6, 0, -9.6), -H); c('trash_can', (-13.0, 0, -1.0))
+    c('plant_tall', (-23.4, 0, -13.4)); c('tv_cabinet', (-20.0, 0, -13.6), math.pi); c('tv_old', (-20.0, 0.65, -13.6), math.pi)
+    w('noticeboard', (-18.0, 1.7, -0.17), '-z'); w('wall_clock', (-23.83, 3.0, -11.0), '+x')
+    # records office (east side room)
+    for z in (-1.3, -3.1, -9.6, -11.4):
+        c('bookcase_wide', (23.65, 0, z), H)
+    for x in (14.0, 14.55, 15.1, 15.65):
+        c('filing_cabinet', (x, 0, -0.5), 0.0)
+    c('workstation', (18.0, 0, -6.5), 0.0); c('workstation', (18.0, 0, -11.5), 0.0); c('desk_corner', (13.5, 0, -12.6), math.pi)
+    c('box_pile', (22.4, 0, -6.2), 0.4); c('box_open', (20.6, 0, -2.6), 0.5); c('box_closed', (21.2, 0, -3.3), 0.1)
+    c('office_chair_fallen', (15.8, 0, -8.5)); c('chair_fallen', (21.0, 0, -9.0))
+    for pos in [(16, 0, -3), (20, 0, -8.5), (14.5, 0, -6.5), (19, 0, -12.8)]:
+        c(L.rnd.choice(['papers', 'books_floor', 'papers']), pos)
+    w('whiteboard', (18.0, 1.6, -13.83), '+z'); w('wall_clock', (12.17, 3.0, -9.0), '+x')
     # corridor: gurneys along the wall, a wheelchair, drips, rubbish on the floor
     for x in (-15, 3.5, 14):
         c('gurney', (x, 0, -14.6), H)
@@ -902,7 +926,9 @@ def level_hospital():
     L.floor('linoleum', -24, 24, 0, -31)
     L.floor('concrete', -24.15, 24.15, 0.15, -31.15, top=4.4, thick=0.4)
     L.wall_z(0, -24, -2.5, 'plaster'); L.wall_z(0, 2.5, 24, 'plaster')
-    L.wall_x(-12, 0, -14, H); L.wall_x(12, 0, -14, H)
+    # side rooms off the lobby (staff canteen west, records office east), closed to the outside
+    L.wall_x(-12, 0, -4, H); L.wall_x(-12, -6, -14, H); L.wall_x(12, 0, -3.5, H); L.wall_x(12, -5.5, -14, H)
+    L.wall_x(-24, 0.15, -14, H); L.wall_x(24, 0.15, -14, H)
     L.wall_z(-14, -24, -3, H); L.wall_z(-14, 3, 24, H)
     L.wall_x(-24, -14, -15.5, H); L.wall_x(-24, -17.5, -31, H); L.wall_x(24, -14, -31, H)
     for x0, x1 in ((-24, -19), (-17, -7), (-5, 5), (7, 17), (19, 24)):
@@ -953,10 +979,10 @@ def level_hospital():
 
     hospital_clutter(L)
     # light: dim red emergency lamps now, ceiling lights when the power is back
-    for pos in [(0, 3.6, -10), (-18, 3.6, -16.5), (0, 3.6, -16.5), (18, 3.6, -16.5), (21, 3.6, -25)]:
+    for pos in [(-18, 3.6, -7), (18, 3.6, -7), (0, 3.6, -10), (-18, 3.6, -16.5), (0, 3.6, -16.5), (18, 3.6, -16.5), (21, 3.6, -25)]:
         L.omni(pos, (1, 0.15, 0.1), 0.8, 7, flicker=True)
     power = []
-    for x, z in [(-6, -4), (6, -4), (-6, -10), (6, -10), (-20, -16.5), (-12, -16.5), (-4, -16.5), (4, -16.5),
+    for x, z in [(-18, -4), (-18, -10), (18, -4), (18, -10), (-6, -4), (6, -4), (-6, -10), (6, -10), (-20, -16.5), (-12, -16.5), (-4, -16.5), (4, -16.5),
                  (12, -16.5), (20, -16.5), (-18, -25), (-6, -25), (6, -25), (18, -25)]:
         name = f'Ceiling{len(power) + 1}'
         L.ceiling_lamp(x, z, energy=2.0, rng=9.0, name=name, power=True)

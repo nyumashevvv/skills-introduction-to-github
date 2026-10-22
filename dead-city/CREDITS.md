@@ -13,6 +13,7 @@
 | Мебель (шкафы, кухня, диваны, лампы, телевизоры, душ, раковины) | [Furniture Kit](https://kenney.nl/assets/furniture-kit) | Kenney |
 | Светофоры, знаки, столбы, стройограждения | [City Kit (Roads)](https://kenney.nl/assets/city-kit-roads) | Kenney |
 | Палатки, костёр, ящики, заборы, инструменты | [Survival Kit](https://kenney.nl/assets/survival-kit) | Kenney |
+| Шрифты интерфейса | [Russo One](https://fonts.google.com/specimen/Russo+One) (Jovanny Lemonad), [Oswald](https://fonts.google.com/specimen/Oswald) (The Oswald Project Authors) | SIL Open Font License 1.1, тексты лицензий в `fonts/` |
 | Руки от первого лица | [fps arms (rigged only)](https://opengameart.org/content/fps-arms-rigged-only) | para |
 | Голоса зомби | [Zombie noises and moans](https://opengameart.org/content/zombie-noises-and-moans) | ianzazz |
 | | [Zombies Sound Pack](https://opengameart.org/content/zombies-sound-pack) | artisticdude |
@@ -23,7 +24,7 @@
 | Музыка боссов: Надзиратель, Пациент Ноль | [Determined Pursuit (Epic Orchestra Loop)](https://opengameart.org/content/determined-pursuit-epic-orchestra-loop) | Emma_MA |
 | Музыка боссов: Колосс | [Epic Boss Battle](https://opengameart.org/content/boss-battle-music) | Juhani Junkala |
 
-Нож и снаряжение боссов (тесак, щит и дубинка, кувалда, наросты, костяные шипы) смоделированы скриптом в Blender
+Нож, автомат АК и снаряжение боссов (тесак, щит и дубинка, кувалда, наросты, костяные шипы) смоделированы скриптом в Blender
 (`tools/blender/build_assets.py`) и прикреплены к костям рук и туловища. Автобус тоже смоделирован там, а модели
 Kenney пропущены через Blender: реальный масштаб, пропорции машин, «грязные» и обгоревшие текстуры. Позы рук, перекраска, сборка
 оружия и экспорт в glTF тоже делаются этим скриптом. Остальная графика, текстуры и звуки

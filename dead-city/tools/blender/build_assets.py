@@ -868,6 +868,86 @@ def model_knife():
     return parts
 
 
+def model_ak():
+    """An AK-style rifle modelled from scratch (y forward from the butt to the muzzle, z up), real-life size."""
+    metal = material("AkMetal", (0.07, 0.07, 0.075), metallic=0.7, roughness=0.4)
+    dark = material("AkDark", (0.03, 0.03, 0.033), metallic=0.4, roughness=0.6)
+    wood = material("AkWood", (0.33, 0.14, 0.05), roughness=0.5)
+    mag_mat = material("AkMag", (0.24, 0.09, 0.03), roughness=0.45)
+    parts = []
+
+    def prism(name, profile, width, mat, x=0.0):
+        """A polygon in the YZ plane extruded along x."""
+        bm = bmesh.new()
+        a = [bm.verts.new((x + width / 2, y, z)) for y, z in profile]
+        b = [bm.verts.new((x - width / 2, y, z)) for y, z in profile]
+        bm.faces.new(a)
+        bm.faces.new(list(reversed(b)))
+        for i in range(len(profile)):
+            j = (i + 1) % len(profile)
+            bm.faces.new((a[i], b[i], b[j], a[j]))
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        me = bpy.data.meshes.new(name)
+        bm.to_mesh(me)
+        bm.free()
+        o = bpy.data.objects.new(name, me)
+        o.data.materials.append(mat)
+        bpy.context.scene.collection.objects.link(o)
+        parts.append(o)
+        return o
+
+    def box(name, size, loc, mat, rot=(0, 0, 0), bevel=0.0):
+        bpy.ops.mesh.primitive_cube_add(size=1.0, location=loc, rotation=rot)
+        o = bpy.context.object
+        o.name = name
+        o.scale = size
+        bpy.ops.object.transform_apply(scale=True)
+        if bevel:
+            md = o.modifiers.new("Bevel", 'BEVEL')
+            md.width, md.segments = bevel, 2
+            bpy.ops.object.modifier_apply(modifier=md.name)
+        o.data.materials.append(mat)
+        parts.append(o)
+        return o
+
+    def tube(name, radius, y0, y1, z, mat, x=0.0):
+        bpy.ops.mesh.primitive_cylinder_add(vertices=12, radius=radius, depth=y1 - y0,
+                                            location=(x, (y0 + y1) / 2, z), rotation=(math.pi / 2, 0, 0))
+        o = bpy.context.object
+        o.name = name
+        o.data.materials.append(mat)
+        o.data.polygons.foreach_set("use_smooth", [True] * len(o.data.polygons))
+        parts.append(o)
+        return o
+
+    prism("Stock", [(0.0, -0.115), (0.0, 0.025), (0.03, 0.03), (0.25, 0.022), (0.25, -0.03), (0.07, -0.115)], 0.038, wood)
+    box("ButtPlate", (0.04, 0.012, 0.14), (0, 0.004, -0.045), dark)
+    box("Receiver", (0.046, 0.3, 0.066), (0, 0.4, -0.002), metal, bevel=0.004)
+    box("DustCover", (0.04, 0.27, 0.022), (0, 0.41, 0.04), metal, bevel=0.008)
+    prism("Grip", [(0.29, -0.034), (0.335, -0.034), (0.315, -0.135), (0.275, -0.13)], 0.032, mag_mat)
+    box("TriggerGuard", (0.012, 0.075, 0.006), (0, 0.355, -0.07), dark)
+    box("Trigger", (0.008, 0.008, 0.025), (0, 0.35, -0.05), dark, rot=(0.3, 0, 0))
+    # curved magazine: segments bending forward
+    y, z, angle = 0.4, -0.035, 0.0
+    for i in range(5):
+        angle += math.radians(7)
+        seg = box(f"Mag{i}", (0.03, 0.068, 0.046), (0, y + math.sin(angle) * 0.023, z - math.cos(angle) * 0.023),
+                  mag_mat, rot=(angle, 0, 0))
+        y += math.sin(angle) * 0.044
+        z -= math.cos(angle) * 0.044
+    box("HandguardLow", (0.05, 0.19, 0.045), (0, 0.645, -0.018), wood, bevel=0.01)
+    box("HandguardUp", (0.04, 0.15, 0.03), (0, 0.63, 0.035), wood, bevel=0.01)
+    box("RearSight", (0.03, 0.04, 0.02), (0, 0.555, 0.055), metal)
+    tube("Barrel", 0.011, 0.55, 0.89, -0.002, metal)
+    tube("GasTube", 0.009, 0.7, 0.77, 0.03, metal)
+    box("GasBlock", (0.03, 0.03, 0.055), (0, 0.77, 0.012), metal)
+    box("FrontSight", (0.024, 0.02, 0.05), (0, 0.85, 0.022), metal)
+    tube("MuzzleBrake", 0.015, 0.88, 0.925, -0.002, dark)
+    tube("ChargingHandle", 0.006, 0.47, 0.5, 0.015, metal, x=0.03)
+    box("Selector", (0.004, 0.11, 0.012), (-0.026, 0.42, 0.02), metal)
+    return parts
+
+
 PISTOL_COLORS = {"Metal": (0.16, 0.16, 0.17), "DarkerMetal": (0.06, 0.06, 0.065), "Muzzle": (0.12, 0.12, 0.13),
                  "Wood": (0.32, 0.16, 0.07), "Magazine": (0.09, 0.09, 0.1), "Material.003": (0.2, 0.2, 0.21)}
 SHOTGUN_COLORS = {"Barrels": (0.13, 0.13, 0.14), "Black": (0.035, 0.035, 0.04), "DarkMetal": (0.07, 0.07, 0.075),
@@ -878,9 +958,9 @@ WEAPONS = {
     "pistol": dict(src="guns/FPS Pack/Blends/Pistol.blend", length=0.24, grip=(0.5, 0.17, 0.3), at=(0.09, 0.32, -0.17), yaw=6,
                    right=((0.5, 0.17, 0.3), (0, 1, -0.25), (-1, 0, 0)),
                    left=((0.0, 0.14, 0.15), (0.3, 0.8, -0.3), (1, 0.2, 0.3)), colors=PISTOL_COLORS),
-    "rifle": dict(src="guns/GunPack Vol.1/Blends/ak47.blend", length=0.8, grip=(0.5, 0.36, 0.3), at=(0.13, 0.48, -0.28), yaw=12,
-                  right=((0.5, 0.36, 0.3), (0, 1, -0.3), (-1, 0, 0)),
-                  left=((0.5, 0.68, 0.66), (0.6, 0.8, 0), (0, 0, 1)), colors={}),
+    "rifle": dict(src="model:ak", length=0.72, grip=(0.5, 0.33, 0.45), at=(0.165, 0.4, -0.265), yaw=8,
+                  right=((0.5, 0.33, 0.45), (0, 1, -0.3), (-1, 0, 0)),
+                  left=((0.5, 0.7, 0.66), (0.6, 0.8, 0), (0, 0, 1)), colors={}),
     "shotgun": dict(src="guns/FPS Pack/Blends/Shotgun.blend", length=0.98, grip=(0.5, 0.33, 0.5), at=(0.12, 0.38, -0.21), yaw=9,
                     right=((0.5, 0.33, 0.5), (0, 1, -0.35), (-1, 0, 0)),
                     left=((0.5, 0.62, 0.7), (0.6, 0.8, 0), (0, 0, 1)), colors=SHOTGUN_COLORS),
@@ -896,9 +976,12 @@ def build_viewmodels(only=()):
         if only and name not in only:
             continue
         reset()
-        objs = import_any(os.path.join(SRC, w["src"]))
-        fix_flat_materials(objs, w["colors"], [os.path.dirname(os.path.join(SRC, w["src"])), os.path.join(SRC, "guns")])
-        objs = bake_skinned(objs)
+        if w["src"] == "model:ak":
+            objs = model_ak()
+        else:
+            objs = import_any(os.path.join(SRC, w["src"]))
+            fix_flat_materials(objs, w["colors"], [os.path.dirname(os.path.join(SRC, w["src"])), os.path.join(SRC, "guns")])
+            objs = bake_skinned(objs)
         for o in objs:
             if o.name.startswith("Muzzle"):
                 o.name = "Gun"  # the marker below owns the name

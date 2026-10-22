@@ -1,5 +1,7 @@
 [gd_resource type="Theme" format=3]
 
+[ext_resource type="FontFile" path="res://fonts/Oswald.ttf" id="1_font"]
+
 [sub_resource type="StyleBoxFlat" id="normal"]
 content_margin_left = 22.0
 content_margin_top = 10.0
@@ -75,6 +77,7 @@ bg_color = Color(0, 0, 0, 0.55)
 bg_color = Color(1, 1, 1, 1)
 
 [resource]
+default_font = ExtResource("1_font")
 default_font_size = 22
 Button/colors/font_hover_color = Color(1, 1, 1, 1)
 Button/styles/focus = SubResource("hover")

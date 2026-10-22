@@ -38,6 +38,8 @@ var _pump_left := 0.0
 
 
 func _setup() -> void:
+	# The hands hold the gun about a third of the way back from the muzzle.
+	pivot = muzzle.position * Vector3(1.0, 1.0, 0.55) + Vector3(0.0, -0.06, 0.0)
 	flash.position = muzzle.position
 	flash.visible = false
 

@@ -312,13 +312,13 @@ def track(name):
 def bosses():
     # Chapter 1: a cook with a cleaver who charges across the street.
     boss('butcher', 'Butcher', 'Мясник', 'boss_butcher',
-         dict(music=track('boss_metal'), max_health=1100, chase_speed=2.6, turn_speed=5.0, attack_damage=28, attack_range=2.1,
+         dict(music=track('boss_metal'), max_health=800, chase_speed=2.6, turn_speed=5.0, attack_damage=28, attack_range=2.1,
               attack_windup=0.55, attack_recovery=0.7, knockback=5.0, charge_speed=12.0, charge_cooldown=6.0,
               charge_damage=32, drops=scenes('pickups/medkit', 'pickups/ammo_rifle')),
          0.78, 0.5, 2.5, (0.5, 0.56, 0.45))
     # Chapter 2: riot police; the shield stops bullets from the front, the head is open.
     boss('warden', 'Warden', 'Надзиратель', 'boss_warden',
-         dict(music=track('boss_pursuit'), max_health=1300, chase_speed=2.4, turn_speed=3.2, attack_damage=30, attack_range=2.0,
+         dict(music=track('boss_pursuit'), max_health=1500, chase_speed=2.4, turn_speed=3.2, attack_damage=30, attack_range=2.0,
               attack_windup=0.5, attack_recovery=0.6, knockback=8.0, front_armor=0.1, charge_speed=10.0,
               charge_cooldown=8.0, charge_damage=26, drops=scenes('pickups/medkit', 'pickups/ammo_rocket')),
          0.76, 0.5, 2.45, (0.45, 0.5, 0.48),
@@ -748,7 +748,7 @@ corner_radius_top_right = 3
 corner_radius_bottom_right = 3
 corner_radius_bottom_left = 3
 {extra}'''
-    theme = '[gd_resource type="Theme" format=3]\n\n' + '\n\n'.join([
+    theme = '[gd_resource type="Theme" format=3]\n\n[ext_resource type="FontFile" path="res://fonts/Oswald.ttf" id="1_font"]\n\n' + '\n\n'.join([
         stylebox('normal', C(0.06, 0.05, 0.05, 0.92), C(0.55, 0.1, 0.08, 0.6)),
         stylebox('hover', C(0.2, 0.05, 0.04, 0.95), C(0.85, 0.15, 0.1, 1)),
         stylebox('pressed', C(0.45, 0.07, 0.05, 1), C(1, 0.3, 0.2, 1)),
@@ -758,6 +758,7 @@ corner_radius_bottom_left = 3
     ]) + '''
 
 [resource]
+default_font = ExtResource("1_font")
 default_font_size = 22
 Button/colors/font_hover_color = Color(1, 1, 1, 1)
 Button/styles/focus = SubResource("hover")
@@ -773,6 +774,9 @@ RichTextLabel/colors/font_outline_color = Color(0, 0, 0, 1)
 RichTextLabel/constants/outline_size = 4
 '''
     open('scenes/ui/theme.tres', 'w').write(theme)
+
+
+RUSSO = 'res://fonts/RussoOne-Regular.ttf'
 
 
 def label(s, name, parent, text='', size=None, color=None, align=None, **props):
@@ -792,7 +796,8 @@ def menu_screen(s, name, title, title_color, buttons, labels=(), parent='.', bg=
     s.node('VBox', 'VBoxContainer', f'{base}/Center', **{'theme_override_constants/separation': 14})
     vb = f'{base}/Center/VBox'
     if title is not None:
-        label(s, 'Title', vb, title, 64, title_color, 1, **{'theme_override_constants/outline_size': 10})
+        label(s, 'Title', vb, title, 64, title_color, 1, **{'theme_override_constants/outline_size': 10,
+                                                            'theme_override_fonts/font': s.ext_res('FontFile', RUSSO)})
     for lname, text, size, extra in labels:
         label(s, lname, vb, text, size, None, 1, **extra)
     s.node('Spacer', 'Control', vb, custom_minimum_size=V2(0, 10))
@@ -816,36 +821,65 @@ def hud():
     label(s, 'PickupLabel', g, '', 20, C(0.7, 1, 0.6), 1, anchors_preset=8, anchor_left=0.5, anchor_top=0.5,
           anchor_right=0.5, anchor_bottom=0.5, offset_left=-300.0, offset_top=75.0, offset_right=300.0,
           offset_bottom=105.0, grow_horizontal=2)
-    label(s, 'TimerLabel', g, '', 34, C(1, 0.85, 0.5), 1, anchors_preset=5, anchor_left=0.5, anchor_right=0.5,
-          offset_left=-300.0, offset_top=16.0, offset_right=300.0, offset_bottom=60.0, grow_horizontal=2)
-    s.node('BossBox', 'VBoxContainer', g, anchors_preset=5, anchor_left=0.5, anchor_right=0.5, offset_left=-280.0,
-           offset_top=64.0, offset_right=280.0, offset_bottom=110.0, grow_horizontal=2, mouse_filter=2)
-    label(s, 'BossLabel', f'{g}/BossBox', '', 22, C(1, 0.55, 0.45), 1)
-    s.node('BossBar', 'ProgressBar', f'{g}/BossBox', custom_minimum_size=V2(0, 14), value=100.0,
-           show_percentage=False, mouse_filter=2, modulate=C(1, 0.3, 0.25))
-    s.node('ObjectiveBox', 'VBoxContainer', g, offset_left=24.0, offset_top=20.0, offset_right=520.0,
-           offset_bottom=110.0, mouse_filter=2)
-    label(s, 'Header', f'{g}/ObjectiveBox', 'ЦЕЛЬ', 15, C(0.9, 0.3, 0.2))
-    label(s, 'ObjectiveLabel', f'{g}/ObjectiveBox', '', 20, None, None, autowrap_mode=3)
+    russo = s.ext_res('FontFile', RUSSO)
+    RF = {'theme_override_fonts/font': russo}
+
+    def panel_style(accent_side='left', alpha=0.5, accent=(0.85, 0.2, 0.14)):
+        p = dict(bg_color=C(0.02, 0.02, 0.025, alpha), content_margin_left=14.0, content_margin_right=14.0,
+                 content_margin_top=8.0, content_margin_bottom=10.0, border_color=C(*accent, 0.95))
+        p[f'border_width_{accent_side}'] = 4
+        return s.sub_res('StyleBoxFlat', **p)
+    label(s, 'TimerLabel', g, '', 30, C(1, 0.85, 0.5), 1, anchors_preset=5, anchor_left=0.5, anchor_right=0.5,
+          offset_left=-300.0, offset_top=16.0, offset_right=300.0, offset_bottom=60.0, grow_horizontal=2, **RF)
+    # boss: name over a thin red strip, top centre
+    s.node('BossBox', 'VBoxContainer', g, anchors_preset=5, anchor_left=0.5, anchor_right=0.5, offset_left=-300.0,
+           offset_top=62.0, offset_right=300.0, offset_bottom=112.0, grow_horizontal=2, mouse_filter=2,
+           **{'theme_override_constants/separation': 4})
+    label(s, 'BossLabel', f'{g}/BossBox', '', 20, C(1, 0.5, 0.4), 1, **RF)
+    s.node('BossBar', 'Control', f'{g}/BossBox', custom_minimum_size=V2(600, 12), mouse_filter=2, segments=0,
+           fill_color=C(0.85, 0.12, 0.08), script=s.ext_res('Script', 'res://scripts/ui/segment_bar.gd'))
+    # objective: dark panel with a red edge, top left
+    s.node('ObjectiveBox', 'PanelContainer', g, offset_left=24.0, offset_top=20.0, offset_right=440.0, offset_bottom=90.0,
+           mouse_filter=2, **{'theme_override_styles/panel': panel_style()})
+    s.node('VBox', 'VBoxContainer', f'{g}/ObjectiveBox', mouse_filter=2, **{'theme_override_constants/separation': 2})
+    label(s, 'Header', f'{g}/ObjectiveBox/VBox', 'ЦЕЛЬ', 14, C(0.95, 0.3, 0.2), None, **RF)
+    label(s, 'ObjectiveLabel', f'{g}/ObjectiveBox/VBox', '', 21, C(0.93, 0.91, 0.86), None, autowrap_mode=3,
+          custom_minimum_size=V2(390, 0), **{'theme_override_constants/outline_size': 3})
+    # radio subtitles
     s.node('Subtitle', 'PanelContainer', g, anchors_preset=7, anchor_left=0.5, anchor_top=1.0, anchor_right=0.5,
-           anchor_bottom=1.0, offset_left=-380.0, offset_top=-200.0, offset_right=380.0, offset_bottom=-130.0,
-           grow_horizontal=2, grow_vertical=0, mouse_filter=2)
+           anchor_bottom=1.0, offset_left=-390.0, offset_top=-210.0, offset_right=390.0, offset_bottom=-140.0,
+           grow_horizontal=2, grow_vertical=0, mouse_filter=2,
+           **{'theme_override_styles/panel': panel_style(alpha=0.6, accent=(0.9, 0.72, 0.35))})
     s.node('Text', 'RichTextLabel', f'{g}/Subtitle', bbcode_enabled=True, fit_content=True, scroll_active=False,
            mouse_filter=2, **{'theme_override_font_sizes/normal_font_size': 20})
-    s.node('HealthBox', 'VBoxContainer', g, anchors_preset=2, anchor_top=1.0, anchor_bottom=1.0, offset_left=24.0,
-           offset_top=-90.0, offset_right=300.0, offset_bottom=-24.0, grow_vertical=0, alignment=2, mouse_filter=2)
-    label(s, 'HealthLabel', f'{g}/HealthBox', '+ 100', 32)
-    s.node('HealthBar', 'ProgressBar', f'{g}/HealthBox', custom_minimum_size=V2(0, 12), value=100.0,
-           show_percentage=False, mouse_filter=2)
-    s.node('WeaponBox', 'VBoxContainer', g, anchors_preset=3, anchor_left=1.0, anchor_top=1.0, anchor_right=1.0,
-           anchor_bottom=1.0, offset_left=-344.0, offset_top=-130.0, offset_right=-24.0, offset_bottom=-24.0,
-           grow_horizontal=0, grow_vertical=0, alignment=2, mouse_filter=2)
-    label(s, 'ReloadLabel', f'{g}/WeaponBox', 'ПЕРЕЗАРЯДКА...', 18, C(1, 0.8, 0.3), 2)
-    label(s, 'WeaponLabel', f'{g}/WeaponBox', '', 18, C(0.85, 0.85, 0.8), 2)
-    label(s, 'AmmoLabel', f'{g}/WeaponBox', '', 42, None, 2)
+    # health: cross, number, segmented bar
+    s.node('HealthBox', 'PanelContainer', g, anchors_preset=2, anchor_top=1.0, anchor_bottom=1.0, offset_left=24.0,
+           offset_top=-96.0, offset_right=290.0, offset_bottom=-24.0, grow_vertical=0, mouse_filter=2,
+           **{'theme_override_styles/panel': panel_style()})
+    s.node('HBox', 'HBoxContainer', f'{g}/HealthBox', mouse_filter=2, **{'theme_override_constants/separation': 12})
+    hb = f'{g}/HealthBox/HBox'
+    label(s, 'Cross', hb, '+', 46, C(0.9, 0.22, 0.16), None, vertical_alignment=1, **RF)
+    s.node('VBox', 'VBoxContainer', hb, mouse_filter=2, alignment=1, **{'theme_override_constants/separation': 2})
+    label(s, 'HealthLabel', f'{hb}/VBox', '100', 34, None, None, **RF)
+    s.node('HealthBar', 'Control', f'{hb}/VBox', custom_minimum_size=V2(190, 9), mouse_filter=2, segments=10,
+           script=s.ext_res('Script', 'res://scripts/ui/segment_bar.gd'))
+    # weapon: magazine, reserve, name, round marks
+    s.node('WeaponBox', 'PanelContainer', g, anchors_preset=3, anchor_left=1.0, anchor_top=1.0, anchor_right=1.0,
+           anchor_bottom=1.0, offset_left=-300.0, offset_top=-120.0, offset_right=-24.0, offset_bottom=-24.0,
+           grow_horizontal=0, grow_vertical=0, mouse_filter=2, **{'theme_override_styles/panel': panel_style('right')})
+    s.node('VBox', 'VBoxContainer', f'{g}/WeaponBox', mouse_filter=2, **{'theme_override_constants/separation': 4})
+    wb = f'{g}/WeaponBox/VBox'
+    label(s, 'ReloadLabel', wb, 'ПЕРЕЗАРЯДКА', 14, C(1, 0.75, 0.3), 2, **RF)
+    s.node('Row', 'HBoxContainer', wb, mouse_filter=2, alignment=2, **{'theme_override_constants/separation': 10})
+    label(s, 'AmmoLabel', f'{wb}/Row', '', 50, None, 2, **RF)
+    s.node('Side', 'VBoxContainer', f'{wb}/Row', mouse_filter=2, alignment=1, **{'theme_override_constants/separation': 0})
+    label(s, 'ReserveLabel', f'{wb}/Row/Side', '', 22, C(0.75, 0.74, 0.7), None, **RF)
+    label(s, 'WeaponLabel', f'{wb}/Row/Side', '', 15, C(0.95, 0.3, 0.2), None)
+    s.node('AmmoPips', 'Control', wb, custom_minimum_size=V2(230, 8), mouse_filter=2,
+           script=s.ext_res('Script', 'res://scripts/ui/ammo_pips.gd'))
     s.node('Slots', 'HBoxContainer', g, anchors_preset=7, anchor_left=0.5, anchor_top=1.0, anchor_right=0.5,
-           anchor_bottom=1.0, offset_left=-300.0, offset_top=-44.0, offset_right=300.0, offset_bottom=-16.0,
-           grow_horizontal=2, grow_vertical=0, alignment=1, mouse_filter=2, **{'theme_override_constants/separation': 24})
+           anchor_bottom=1.0, offset_left=-320.0, offset_top=-58.0, offset_right=320.0, offset_bottom=-24.0,
+           grow_horizontal=2, grow_vertical=0, alignment=1, mouse_filter=2, **{'theme_override_constants/separation': 6})
 
     s.node('IntroScreen', 'Control', '.', **FULL)
     s.node('Background', 'ColorRect', 'IntroScreen', color=C(0, 0, 0, 0.92), **FULL)
@@ -853,8 +887,8 @@ def hud():
     s.node('VBox', 'VBoxContainer', 'IntroScreen/Center', custom_minimum_size=V2(760, 0),
            **{'theme_override_constants/separation': 14})
     vb = 'IntroScreen/Center/VBox'
-    label(s, 'Chapter', vb, '', 22, C(0.8, 0.2, 0.15), 1)
-    label(s, 'Title', vb, '', 60, None, 1, **{'theme_override_constants/outline_size': 10})
+    label(s, 'Chapter', vb, '', 22, C(0.8, 0.2, 0.15), 1, **RF)
+    label(s, 'Title', vb, '', 60, None, 1, **{'theme_override_constants/outline_size': 10, **RF})
     label(s, 'Story', vb, '', 21, C(0.85, 0.82, 0.78), 1, autowrap_mode=3)
     s.node('Spacer', 'Control', vb, custom_minimum_size=V2(0, 16))
     s.node('ContinueButton', 'Button', vb, custom_minimum_size=V2(300, 0), size_flags_horizontal=4, text=S('Начать'))

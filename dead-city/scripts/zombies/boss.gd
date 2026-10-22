@@ -33,7 +33,10 @@ const RAGE_COOLDOWN := 0.65
 @export var music: AudioStream
 ## Pickups left where it falls.
 @export var drops: Array[PackedScene] = []
-@export_group("Shield")
+@export_group("Armour")
+## Bosses shrug off bullets but explosions tear into them: the RPG is the boss weapon.
+@export var bullet_multiplier := 0.6
+@export var explosive_multiplier := 2.0
 ## Damage multiplier for hits from the front, except headshots and explosions. 1 = no shield.
 @export_range(0.0, 1.0) var front_armor := 1.0
 @export_group("Charge")
@@ -117,16 +120,18 @@ func take_damage(amount: int, direction: Vector3, hit_point: Vector3, explosive 
 
 
 func _damage_scale(direction: Vector3, hit_point: Vector3, explosive: bool) -> float:
-	if front_armor >= 1.0 or explosive or is_headshot(hit_point) or _stunned:
-		return 1.0
+	if explosive:
+		return explosive_multiplier
+	if front_armor >= 1.0 or is_headshot(hit_point) or _stunned:
+		return bullet_multiplier
 	# A hit travelling against the way it faces lands on the shield.
 	if direction.dot(-global_basis.z) > -0.35:
-		return 1.0
+		return bullet_multiplier
 	Effects.spawn(SPARKS_SCENE, self, hit_point, -direction)
 	if shield_sound != null:
 		shield_sound.pitch_scale = randf_range(0.9, 1.1)
 		shield_sound.play()
-	return front_armor
+	return bullet_multiplier * front_armor
 
 
 func _update_bar() -> void:

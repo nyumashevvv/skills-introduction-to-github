@@ -89,6 +89,8 @@ func _run() -> void:
 		await _props()
 	if "tour" in sections:
 		await _tour()
+	if "reload" in sections:
+		await _reload()
 	if "street" in sections:
 		await _street()
 	if "doors" in sections:
@@ -287,7 +289,8 @@ func _tour() -> void:
 			["street_b", Vector3(-1, 0, -30), 0, -8], ["street_c", Vector3(2, 0, -60), 15, -8],
 			["street_d", Vector3(0, 0, -96), 0, -6]],
 		"res://scenes/levels/level_3_hospital.tscn": [["hospital_lobby", Vector3(0, 0, -1), 0, -8],
-			["hospital_corridor", Vector3(-22, 0, -16.5), -90, -6], ["hospital_ward", Vector3(-6, 0, -20), 0, -14]],
+			["hospital_corridor", Vector3(-22, 0, -16.5), -90, -6], ["hospital_ward", Vector3(-6, 0, -20), 0, -14],
+			["hospital_canteen", Vector3(-12.6, 0, -5), 75, -12], ["hospital_records", Vector3(12.6, 0, -4.5), -75, -12]],
 		"res://scenes/levels/level_4_subway.tscn": [["subway_platform", Vector3(0, 0, -13), 0, -6],
 			["subway_dinamo", Vector3(0, 0, -132), 0, -6]],
 		"res://scenes/levels/level_5_stadium.tscn": [["stadium_field", Vector3(-10, 0, 25), -160, -6],
@@ -308,6 +311,23 @@ func _tour() -> void:
 		for view: Array in views[path]:
 			await pose(player, view[1], view[2], view[3])
 			await snap("tour_" + view[0])
+
+
+## Each gun at rest and halfway through its reload.
+func _reload() -> void:
+	var level := await load_level("res://scenes/levels/level_2_station.tscn")
+	var player := await play(level)
+	freeze_zombies()
+	await pose(player, Vector3(0, 0, -51), 0, -6)
+	for id: String in ["pistol", "rifle", "shotgun", "bazooka"]:
+		await equip(player, id)
+		player.holder.add_ammo(player.holder.current.ammo_type, 30)
+		await snap("reload_%s_idle" % id)
+		player.holder.current.ammo = 0
+		player.holder.current.start_reload()
+		await get_tree().create_timer(minf(player.holder.current.reload_time * 0.5, 0.6)).timeout
+		await snap("reload_%s_mid" % id)
+		await get_tree().create_timer(player.holder.current.reload_time * 4.0).timeout
 
 
 func _hospital() -> void:

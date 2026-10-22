@@ -40,8 +40,14 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
   `alert_event` / `death_event`; spawned ones (subway, stadium) are tracked by `Holdout.boss_spawner`, which
   keeps the exit shut until they die. Boss models are `models/characters/boss_*.glb` (props parented to bones).
   `Boss.music` (CC0 loops in `music/`) plays through `Level.play_music` / `stop_music` during the fight.
+  Bosses take `bullet_multiplier` (0.6) from bullets and `explosive_multiplier` (2.0) from blasts;
+  `Effects.apply_blast` measures distance to the nearest point of a zombie's capsule.
 - Weapon scenes instance `models/weapons/<name>_fp.glb` as `Model` (gun + posed arms in camera space,
   plus a `Muzzle` marker); `Weapon._ready` moves their meshes to render layer 2 (viewmodel layer).
+  Pose offsets/rotations (equip, kick, reload tilt) turn around `Weapon.pivot` (the grip, set by `Gun`), never
+  around the camera, so the arms stay out of the screen. The rifle is an AK modelled in `build_assets.py`.
+- HUD (`scenes/ui/hud.tscn`, generated): panels with an accent edge, Russo One numbers / Oswald text (`fonts/`,
+  OFL; Oswald is the theme default), `SegmentBar` (health, boss) and `AmmoPips` (rounds in the magazine).
 - `Effects` static helpers: spawn one-shot effects, tracers, `apply_blast` for explosions.
 
 ## Physics layers

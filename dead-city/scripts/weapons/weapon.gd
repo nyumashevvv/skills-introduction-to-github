@@ -36,6 +36,12 @@ var movement_factor := 0.0
 ## Extra pose a subclass wants this frame (e.g. a knife swing).
 var pose_offset := Vector3.ZERO
 var pose_rotation := Vector3.ZERO
+## Point (in the model's rest space) the pose rotates around: the hands on the grip for guns, so
+## tilting the gun for a reload does not swing the arms across the screen. Zero = the camera.
+var pivot := Vector3.ZERO
+
+var _pose_position := Vector3.ZERO
+var _pose_euler := Vector3.ZERO
 
 var _reload_left := 0.0
 var _equip_left := 0.0
@@ -47,6 +53,7 @@ var _equip_left := 0.0
 
 
 func _ready() -> void:
+	_pose_position = _model_rest
 	# First-person meshes live on render layer 2: no shadows, the flashlight skips them
 	# and a dedicated fill light keeps them visible in the dark.
 	for node in model.find_children("*", "MeshInstance3D"):
@@ -99,8 +106,8 @@ func uses_ammo() -> bool:
 func equip() -> void:
 	visible = true
 	_equip_left = equip_time
-	model.position = _model_rest + Vector3(0.0, -0.35, 0.1)
-	model.rotation = Vector3(-0.6, 0.0, 0.0)
+	_pose_position = _model_rest + Vector3(0.0, -0.35, 0.1)
+	_pose_euler = Vector3(-0.6, 0.0, 0.0)
 
 
 func unequip() -> void:
@@ -177,8 +184,8 @@ func aim_direction(spread_degrees: float) -> Vector3:
 
 ## Immediately pushes the model back; it springs back to rest in [method _animate].
 func kick(back: float, up: float) -> void:
-	model.position.z += back
-	model.rotation.x += up
+	_pose_position.z += back
+	_pose_euler.x += up
 
 
 func _finish_reload() -> void:
@@ -206,11 +213,14 @@ func _animate(delta: float) -> void:
 	var target_position := _model_rest + pose_offset
 	var target_rotation := pose_rotation
 	if is_reloading:
-		target_position += Vector3(-0.05, -0.1, 0.05)
-		target_rotation += Vector3(-0.5, 0.4, 0.5)
+		# Gun dips and rolls to show its side, still in the hands.
+		target_position += Vector3(-0.03, -0.07, 0.03)
+		target_rotation += Vector3(0.18, 0.22, 0.42)
 	var time := Time.get_ticks_msec() * 0.001
 	target_position.x += sin(time * 7.0) * 0.006 * movement_factor
 	target_position.y += absf(cos(time * 7.0)) * 0.01 * movement_factor + sin(time * 1.5) * 0.002
 	var weight := clampf(delta * 12.0, 0.0, 1.0)
-	model.position = model.position.lerp(target_position, weight)
-	model.rotation = model.rotation.lerp(target_rotation, weight)
+	_pose_position = _pose_position.lerp(target_position, weight)
+	_pose_euler = _pose_euler.lerp(target_rotation, weight)
+	var turn := Basis.from_euler(_pose_euler)
+	model.transform = Transform3D(turn, _pose_position + pivot - turn * pivot)

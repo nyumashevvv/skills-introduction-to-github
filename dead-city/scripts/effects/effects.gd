@@ -39,8 +39,13 @@ static func apply_blast(context: Node, at: Vector3, damage: int, radius: float, 
 		var zombie := node as Zombie
 		if zombie.state == Zombie.State.DEAD:
 			continue
-		var center := zombie.global_position + Vector3.UP
-		var distance := center.distance_to(at)
+		# Distance to the nearest point of the body (a vertical segment as tall as its capsule),
+		# so a rocket in a giant's chest counts as a direct hit.
+		var shape := zombie.collision.shape as CapsuleShape3D
+		var height := shape.height if shape != null else 1.8
+		var base := zombie.global_position
+		var center := Vector3(base.x, clampf(at.y, base.y + 0.3, base.y + height - 0.3), base.z)
+		var distance := maxf(center.distance_to(at) - (shape.radius if shape != null else 0.35), 0.0)
 		if distance > radius:
 			continue
 		var amount := roundi(damage * (1.0 - 0.7 * distance / radius))

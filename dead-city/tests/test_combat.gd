@@ -218,7 +218,7 @@ func test_bosses() -> void:
 	rifle._cooldown = 0.0
 	rifle._handle_input(true, true)
 	await frames(2)
-	check(warden.health == warden.max_health - 3, "shield blocks a body shot (%d damage)" % (warden.max_health - warden.health))
+	check(warden.health == warden.max_health - 2, "shield blocks a body shot (%d damage)" % (warden.max_health - warden.health))
 	check(level.hud.boss_box.visible and level.hud.boss_label.text == "Надзиратель", "shooting the Warden shows its health bar")
 	check(level.is_music_playing() and level._music.stream == warden.music, "boss music starts")
 	var before := warden.health
@@ -226,7 +226,7 @@ func test_bosses() -> void:
 	rifle._cooldown = 0.0
 	rifle._handle_input(true, true)
 	await frames(2)
-	check(before - warden.health == 75, "headshot goes over the shield (%d damage)" % (before - warden.health))
+	check(before - warden.health == 45, "headshot goes over the shield, bullets do 60%% to bosses (%d damage)" % (before - warden.health))
 	warden.rotation.y = 0.0  # back to the player
 	await frames(2)
 	before = warden.health
@@ -234,7 +234,10 @@ func test_bosses() -> void:
 	rifle._cooldown = 0.0
 	rifle._handle_input(true, true)
 	await frames(2)
-	check(before - warden.health == 30, "full damage from behind (%d)" % (before - warden.health))
+	check(before - warden.health == 18, "no shield from behind (%d)" % (before - warden.health))
+	before = warden.health
+	warden.take_damage(220, Vector3.FORWARD, warden.global_position + Vector3.UP, true)
+	check(before - warden.health == 440, "explosions do double damage to bosses (%d)" % (before - warden.health))
 	warden.take_damage(99999, Vector3.FORWARD, warden.global_position)
 	await frames(3)
 	check(not level.hud.boss_box.visible, "boss bar hidden when the boss dies")
@@ -296,7 +299,7 @@ func test_bosses() -> void:
 	await reset_player()
 	var colossus := dummy(COLOSSUS, Vector3(0, 0, -20)) as Boss
 	var speed := colossus.chase_speed
-	colossus.take_damage(colossus.max_health / 2 + 10, Vector3.FORWARD, colossus.global_position + Vector3.UP)
+	colossus.take_damage(colossus.max_health / 4 + 10, Vector3.FORWARD, colossus.global_position + Vector3.UP, true)
 	check(colossus.enraged and colossus.chase_speed > speed, "the Colossus is enraged below half health")
 	check(level.hud.boss_label.text.contains("ярости"), "boss bar says it: " + level.hud.boss_label.text)
 	colossus.take_damage(99999, Vector3.FORWARD, colossus.global_position + Vector3.UP)

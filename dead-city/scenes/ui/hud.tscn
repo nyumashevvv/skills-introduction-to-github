@@ -8,11 +8,53 @@
 
 [ext_resource type="Script" path="res://scripts/ui/hit_marker.gd" id="4_hit_marker"]
 
-[ext_resource type="AudioStream" path="res://sounds/radio.wav" id="5_radio"]
+[ext_resource type="FontFile" path="res://fonts/RussoOne-Regular.ttf" id="5_RussoOne-Regular"]
+
+[ext_resource type="Script" path="res://scripts/ui/segment_bar.gd" id="6_segment_bar"]
+
+[ext_resource type="Script" path="res://scripts/ui/ammo_pips.gd" id="7_ammo_pips"]
+
+[ext_resource type="AudioStream" path="res://sounds/radio.wav" id="8_radio"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_1"]
 shader = ExtResource("1_vignette")
 shader_parameter/intensity = 0.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2"]
+bg_color = Color(0.02, 0.02, 0.025, 0.5)
+content_margin_left = 14.0
+content_margin_right = 14.0
+content_margin_top = 8.0
+content_margin_bottom = 10.0
+border_color = Color(0.85, 0.2, 0.14, 0.95)
+border_width_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3"]
+bg_color = Color(0.02, 0.02, 0.025, 0.6)
+content_margin_left = 14.0
+content_margin_right = 14.0
+content_margin_top = 8.0
+content_margin_bottom = 10.0
+border_color = Color(0.9, 0.72, 0.35, 0.95)
+border_width_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_4"]
+bg_color = Color(0.02, 0.02, 0.025, 0.5)
+content_margin_left = 14.0
+content_margin_right = 14.0
+content_margin_top = 8.0
+content_margin_bottom = 10.0
+border_color = Color(0.85, 0.2, 0.14, 0.95)
+border_width_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_5"]
+bg_color = Color(0.02, 0.02, 0.025, 0.5)
+content_margin_left = 14.0
+content_margin_right = 14.0
+content_margin_top = 8.0
+content_margin_bottom = 10.0
+border_color = Color(0.85, 0.2, 0.14, 0.95)
+border_width_right = 4
 
 [node name="HUD" type="CanvasLayer"]
 process_mode = 3
@@ -96,7 +138,8 @@ offset_top = 16.0
 offset_right = 300.0
 offset_bottom = 60.0
 grow_horizontal = 2
-theme_override_font_sizes/font_size = 34
+theme_override_fonts/font = ExtResource("5_RussoOne-Regular")
+theme_override_font_sizes/font_size = 30
 theme_override_colors/font_color = Color(1.0, 0.85, 0.5, 1.0)
 horizontal_alignment = 1
 
@@ -104,40 +147,51 @@ horizontal_alignment = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -280.0
-offset_top = 64.0
-offset_right = 280.0
-offset_bottom = 110.0
+offset_left = -300.0
+offset_top = 62.0
+offset_right = 300.0
+offset_bottom = 112.0
 grow_horizontal = 2
 mouse_filter = 2
+theme_override_constants/separation = 4
 
 [node name="BossLabel" type="Label" parent="Gameplay/BossBox"]
-theme_override_font_sizes/font_size = 22
-theme_override_colors/font_color = Color(1.0, 0.55, 0.45, 1.0)
+theme_override_fonts/font = ExtResource("5_RussoOne-Regular")
+theme_override_font_sizes/font_size = 20
+theme_override_colors/font_color = Color(1.0, 0.5, 0.4, 1.0)
 horizontal_alignment = 1
 
-[node name="BossBar" type="ProgressBar" parent="Gameplay/BossBox"]
-custom_minimum_size = Vector2(0.0, 14.0)
-value = 100.0
-show_percentage = false
+[node name="BossBar" type="Control" parent="Gameplay/BossBox"]
+custom_minimum_size = Vector2(600.0, 12.0)
 mouse_filter = 2
-modulate = Color(1.0, 0.3, 0.25, 1.0)
+segments = 0
+fill_color = Color(0.85, 0.12, 0.08, 1.0)
+script = ExtResource("6_segment_bar")
 
-[node name="ObjectiveBox" type="VBoxContainer" parent="Gameplay"]
+[node name="ObjectiveBox" type="PanelContainer" parent="Gameplay"]
 offset_left = 24.0
 offset_top = 20.0
-offset_right = 520.0
-offset_bottom = 110.0
+offset_right = 440.0
+offset_bottom = 90.0
 mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_2")
 
-[node name="Header" type="Label" parent="Gameplay/ObjectiveBox"]
+[node name="VBox" type="VBoxContainer" parent="Gameplay/ObjectiveBox"]
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="Header" type="Label" parent="Gameplay/ObjectiveBox/VBox"]
+theme_override_fonts/font = ExtResource("5_RussoOne-Regular")
 text = "ЦЕЛЬ"
-theme_override_font_sizes/font_size = 15
-theme_override_colors/font_color = Color(0.9, 0.3, 0.2, 1.0)
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.95, 0.3, 0.2, 1.0)
 
-[node name="ObjectiveLabel" type="Label" parent="Gameplay/ObjectiveBox"]
+[node name="ObjectiveLabel" type="Label" parent="Gameplay/ObjectiveBox/VBox"]
 autowrap_mode = 3
-theme_override_font_sizes/font_size = 20
+custom_minimum_size = Vector2(390.0, 0.0)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 21
+theme_override_colors/font_color = Color(0.93, 0.91, 0.86, 1.0)
 
 [node name="Subtitle" type="PanelContainer" parent="Gameplay"]
 anchors_preset = 7
@@ -145,13 +199,14 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -380.0
-offset_top = -200.0
-offset_right = 380.0
-offset_bottom = -130.0
+offset_left = -390.0
+offset_top = -210.0
+offset_right = 390.0
+offset_bottom = -140.0
 grow_horizontal = 2
 grow_vertical = 0
 mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_3")
 
 [node name="Text" type="RichTextLabel" parent="Gameplay/Subtitle"]
 bbcode_enabled = true
@@ -160,57 +215,99 @@ scroll_active = false
 mouse_filter = 2
 theme_override_font_sizes/normal_font_size = 20
 
-[node name="HealthBox" type="VBoxContainer" parent="Gameplay"]
+[node name="HealthBox" type="PanelContainer" parent="Gameplay"]
 anchors_preset = 2
 anchor_top = 1.0
 anchor_bottom = 1.0
 offset_left = 24.0
-offset_top = -90.0
-offset_right = 300.0
+offset_top = -96.0
+offset_right = 290.0
 offset_bottom = -24.0
 grow_vertical = 0
-alignment = 2
 mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_4")
 
-[node name="HealthLabel" type="Label" parent="Gameplay/HealthBox"]
-text = "+ 100"
-theme_override_font_sizes/font_size = 32
-
-[node name="HealthBar" type="ProgressBar" parent="Gameplay/HealthBox"]
-custom_minimum_size = Vector2(0.0, 12.0)
-value = 100.0
-show_percentage = false
+[node name="HBox" type="HBoxContainer" parent="Gameplay/HealthBox"]
 mouse_filter = 2
+theme_override_constants/separation = 12
 
-[node name="WeaponBox" type="VBoxContainer" parent="Gameplay"]
+[node name="Cross" type="Label" parent="Gameplay/HealthBox/HBox"]
+vertical_alignment = 1
+theme_override_fonts/font = ExtResource("5_RussoOne-Regular")
+text = "+"
+theme_override_font_sizes/font_size = 46
+theme_override_colors/font_color = Color(0.9, 0.22, 0.16, 1.0)
+
+[node name="VBox" type="VBoxContainer" parent="Gameplay/HealthBox/HBox"]
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 2
+
+[node name="HealthLabel" type="Label" parent="Gameplay/HealthBox/HBox/VBox"]
+theme_override_fonts/font = ExtResource("5_RussoOne-Regular")
+text = "100"
+theme_override_font_sizes/font_size = 34
+
+[node name="HealthBar" type="Control" parent="Gameplay/HealthBox/HBox/VBox"]
+custom_minimum_size = Vector2(190.0, 9.0)
+mouse_filter = 2
+segments = 10
+script = ExtResource("6_segment_bar")
+
+[node name="WeaponBox" type="PanelContainer" parent="Gameplay"]
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -344.0
-offset_top = -130.0
+offset_left = -300.0
+offset_top = -120.0
 offset_right = -24.0
 offset_bottom = -24.0
 grow_horizontal = 0
 grow_vertical = 0
-alignment = 2
 mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_5")
 
-[node name="ReloadLabel" type="Label" parent="Gameplay/WeaponBox"]
-text = "ПЕРЕЗАРЯДКА..."
-theme_override_font_sizes/font_size = 18
-theme_override_colors/font_color = Color(1.0, 0.8, 0.3, 1.0)
+[node name="VBox" type="VBoxContainer" parent="Gameplay/WeaponBox"]
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="ReloadLabel" type="Label" parent="Gameplay/WeaponBox/VBox"]
+theme_override_fonts/font = ExtResource("5_RussoOne-Regular")
+text = "ПЕРЕЗАРЯДКА"
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(1.0, 0.75, 0.3, 1.0)
 horizontal_alignment = 2
 
-[node name="WeaponLabel" type="Label" parent="Gameplay/WeaponBox"]
-theme_override_font_sizes/font_size = 18
-theme_override_colors/font_color = Color(0.85, 0.85, 0.8, 1.0)
+[node name="Row" type="HBoxContainer" parent="Gameplay/WeaponBox/VBox"]
+mouse_filter = 2
+alignment = 2
+theme_override_constants/separation = 10
+
+[node name="AmmoLabel" type="Label" parent="Gameplay/WeaponBox/VBox/Row"]
+theme_override_fonts/font = ExtResource("5_RussoOne-Regular")
+theme_override_font_sizes/font_size = 50
 horizontal_alignment = 2
 
-[node name="AmmoLabel" type="Label" parent="Gameplay/WeaponBox"]
-theme_override_font_sizes/font_size = 42
-horizontal_alignment = 2
+[node name="Side" type="VBoxContainer" parent="Gameplay/WeaponBox/VBox/Row"]
+mouse_filter = 2
+alignment = 1
+theme_override_constants/separation = 0
+
+[node name="ReserveLabel" type="Label" parent="Gameplay/WeaponBox/VBox/Row/Side"]
+theme_override_fonts/font = ExtResource("5_RussoOne-Regular")
+theme_override_font_sizes/font_size = 22
+theme_override_colors/font_color = Color(0.75, 0.74, 0.7, 1.0)
+
+[node name="WeaponLabel" type="Label" parent="Gameplay/WeaponBox/VBox/Row/Side"]
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.95, 0.3, 0.2, 1.0)
+
+[node name="AmmoPips" type="Control" parent="Gameplay/WeaponBox/VBox"]
+custom_minimum_size = Vector2(230.0, 8.0)
+mouse_filter = 2
+script = ExtResource("7_ammo_pips")
 
 [node name="Slots" type="HBoxContainer" parent="Gameplay"]
 anchors_preset = 7
@@ -218,15 +315,15 @@ anchor_left = 0.5
 anchor_top = 1.0
 anchor_right = 0.5
 anchor_bottom = 1.0
-offset_left = -300.0
-offset_top = -44.0
-offset_right = 300.0
-offset_bottom = -16.0
+offset_left = -320.0
+offset_top = -58.0
+offset_right = 320.0
+offset_bottom = -24.0
 grow_horizontal = 2
 grow_vertical = 0
 alignment = 1
 mouse_filter = 2
-theme_override_constants/separation = 24
+theme_override_constants/separation = 6
 
 [node name="IntroScreen" type="Control" parent="."]
 anchors_preset = 15
@@ -255,12 +352,14 @@ custom_minimum_size = Vector2(760.0, 0.0)
 theme_override_constants/separation = 14
 
 [node name="Chapter" type="Label" parent="IntroScreen/Center/VBox"]
+theme_override_fonts/font = ExtResource("5_RussoOne-Regular")
 theme_override_font_sizes/font_size = 22
 theme_override_colors/font_color = Color(0.8, 0.2, 0.15, 1.0)
 horizontal_alignment = 1
 
 [node name="Title" type="Label" parent="IntroScreen/Center/VBox"]
 theme_override_constants/outline_size = 10
+theme_override_fonts/font = ExtResource("5_RussoOne-Regular")
 theme_override_font_sizes/font_size = 60
 horizontal_alignment = 1
 
@@ -311,6 +410,7 @@ theme_override_constants/separation = 14
 
 [node name="Title" type="Label" parent="PauseMenu/Center/VBox"]
 theme_override_constants/outline_size = 10
+theme_override_fonts/font = ExtResource("5_RussoOne-Regular")
 text = "ПАУЗА"
 theme_override_font_sizes/font_size = 64
 theme_override_colors/font_color = Color(1.0, 1.0, 1.0, 1.0)
@@ -361,6 +461,7 @@ theme_override_constants/separation = 14
 
 [node name="Title" type="Label" parent="DeathScreen/Center/VBox"]
 theme_override_constants/outline_size = 10
+theme_override_fonts/font = ExtResource("5_RussoOne-Regular")
 text = "ВЫ ПОГИБЛИ"
 theme_override_font_sizes/font_size = 64
 theme_override_colors/font_color = Color(0.75, 0.08, 0.06, 1.0)
@@ -389,5 +490,5 @@ grow_horizontal = 2
 grow_vertical = 2
 
 [node name="RadioSound" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("5_radio")
+stream = ExtResource("8_radio")
 volume_db = -8.0
