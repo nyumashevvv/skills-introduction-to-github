@@ -87,6 +87,8 @@ func _run() -> void:
 		await _bosses()
 	if "street" in sections:
 		await _street()
+	if "doors" in sections:
+		await _doors()
 	if "station" in sections:
 		await _station()
 	if "hospital" in sections:
@@ -119,6 +121,22 @@ func _street() -> void:
 	await equip(player, "rifle")
 	await pose(player, Vector3(0, 0, -20), 0)
 	await snap("04_zombies_rifle")
+
+
+## The doors the story sends you through: the station entrance at night and the armory.
+func _doors() -> void:
+	var level := await load_level("res://scenes/levels/level_1_outskirts.tscn")
+	var player := await play(level)
+	freeze_zombies()
+	player.holder.visible = false
+	await pose(player, Vector3(0, 0, -114), 0, 4)
+	await snap("15_station_entrance")
+	level = await load_level("res://scenes/levels/level_2_station.tscn")
+	player = await play(level)
+	freeze_zombies()
+	player.holder.visible = false
+	await pose(player, Vector3(0, 0, -41), 0, 2)
+	await snap("16_armory_door")
 
 
 func _station() -> void:

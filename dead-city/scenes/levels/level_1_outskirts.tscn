@@ -48,37 +48,45 @@
 
 [ext_resource type="Material" path="res://materials/dark.tres" id="24_dark"]
 
-[ext_resource type="Material" path="res://materials/police_blue.tres" id="25_police_blue"]
+[ext_resource type="Material" path="res://materials/door_steel.tres" id="25_door_steel"]
 
-[ext_resource type="Script" path="res://scripts/world/flicker_light.gd" id="26_flicker_light"]
+[ext_resource type="Material" path="res://materials/lamp_glow.tres" id="26_lamp_glow"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/door.tscn" id="27_door"]
+[ext_resource type="Material" path="res://materials/police_blue.tres" id="27_police_blue"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/walker.tscn" id="28_walker"]
+[ext_resource type="Script" path="res://scripts/world/flicker_light.gd" id="28_flicker_light"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/runner.tscn" id="29_runner"]
+[ext_resource type="PackedScene" path="res://scenes/world/door.tscn" id="29_door"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/butcher.tscn" id="30_butcher"]
+[ext_resource type="Material" path="res://materials/door_glass_lit.tres" id="30_door_glass_lit"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_pistol.tscn" id="31_ammo_pistol"]
+[ext_resource type="Material" path="res://materials/chrome.tres" id="31_chrome"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="32_medkit"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/walker.tscn" id="32_walker"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/weapon_rifle.tscn" id="33_weapon_rifle"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/runner.tscn" id="33_runner"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rifle.tscn" id="34_ammo_rifle"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/butcher.tscn" id="34_butcher"]
 
-[ext_resource type="Script" path="res://scripts/story/story_event.gd" id="35_story_event"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_pistol.tscn" id="35_ammo_pistol"]
 
-[ext_resource type="Script" path="res://scripts/story/story_trigger.gd" id="36_story_trigger"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="36_medkit"]
 
-[ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="37_zombie_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/weapon_rifle.tscn" id="37_weapon_rifle"]
 
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="38_player"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rifle.tscn" id="38_ammo_rifle"]
 
-[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="39_hud"]
+[ext_resource type="Script" path="res://scripts/story/story_event.gd" id="39_story_event"]
 
-[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="40_ambience"]
+[ext_resource type="Script" path="res://scripts/story/story_trigger.gd" id="40_story_trigger"]
+
+[ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="41_zombie_spawner"]
+
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="42_player"]
+
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="43_hud"]
+
+[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="44_ambience"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.01, 0.012, 0.03, 1.0)
@@ -132,16 +140,32 @@ size = Vector3(4.0, 3.2, 0.3)
 material = ExtResource("24_dark")
 
 [sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(3.8, 0.12, 1.0)
+material = ExtResource("25_door_steel")
+
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
+size = Vector3(3.0, 0.03, 0.5)
+material = ExtResource("26_lamp_glow")
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
 size = Vector3(42.2, 0.6, 0.4)
-material = ExtResource("25_police_blue")
+material = ExtResource("27_police_blue")
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_10"]
+[sub_resource type="BoxMesh" id="BoxMesh_12"]
+size = Vector3(1.2, 2.3, 0.02)
+material = ExtResource("30_door_glass_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_13"]
+size = Vector3(0.7, 0.06, 0.06)
+material = ExtResource("31_chrome")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_14"]
 size = Vector3(18.0, 3.0, 2.0)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_11"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_15"]
 size = Vector3(18.0, 3.0, 2.0)
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_12"]
+[sub_resource type="BoxShape3D" id="BoxShape3D_16"]
 size = Vector3(18.0, 3.0, 2.0)
 
 [node name="Outskirts" type="Node3D"]
@@ -1533,6 +1557,23 @@ position = Vector3(0.0, 1.6, -129.9)
 
 [node name="D198" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_9")
+position = Vector3(0.0, 3.25, -129.3)
+
+[node name="D199" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(0.0, 3.18, -129.2)
+cast_shadow = 0
+
+[node name="EntranceSign" type="Label3D" parent="Decor"]
+position = Vector3(0.0, 3.75, -129.7)
+text = "ВХОД"
+font_size = 90
+pixel_size = 0.01
+modulate = Color(0.45, 1.0, 0.55, 1.0)
+outline_size = 0
+
+[node name="D200" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_11")
 position = Vector3(0.0, 9.7, -129.9)
 
 [node name="Sign" type="Label3D" parent="Decor"]
@@ -1548,18 +1589,18 @@ position = Vector3(0.0, 6.0, -128.0)
 light_color = Color(0.4, 0.6, 1.0, 1.0)
 light_energy = 2.0
 omni_range = 10
-script = ExtResource("26_flicker_light")
+script = ExtResource("28_flicker_light")
 
 [node name="Light2" type="OmniLight3D" parent="Lights"]
-position = Vector3(0.0, 3.5, -127.0)
-light_color = Color(1.0, 0.85, 0.6, 1.0)
-light_energy = 1.5
-omni_range = 8
+position = Vector3(0.0, 2.9, -128.2)
+light_color = Color(1.0, 0.9, 0.7, 1.0)
+light_energy = 3.0
+omni_range = 9
 
-[node name="StationDoor" parent="Doors" instance=ExtResource("27_door")]
+[node name="StationDoor" parent="Doors" instance=ExtResource("29_door")]
 position = Vector3(0.0, 1.5, -129.6)
 size = Vector3(3.0, 3.0, 0.2)
-material = ExtResource("25_police_blue")
+material = ExtResource("27_police_blue")
 prompt = "Войти в участок"
 open_offset = "Vector3(0.0, 0.0, -0.01)"
 open_time = 0.1
@@ -1568,114 +1609,132 @@ event_unlocks = true
 locked_message = "Сначала разберись с Мясником"
 event = NodePath("../../Story/Exit")
 
-[node name="Walker1" parent="Zombies" instance=ExtResource("28_walker")]
+[node name="Pane1" type="MeshInstance3D" parent="Doors/StationDoor"]
+mesh = SubResource("BoxMesh_12")
+position = Vector3(-0.72, 0.15, 0.11)
+cast_shadow = 0
+
+[node name="Handle1" type="MeshInstance3D" parent="Doors/StationDoor"]
+mesh = SubResource("BoxMesh_13")
+position = Vector3(-0.72, -0.15, 0.16)
+
+[node name="Pane2" type="MeshInstance3D" parent="Doors/StationDoor"]
+mesh = SubResource("BoxMesh_12")
+position = Vector3(0.72, 0.15, 0.11)
+cast_shadow = 0
+
+[node name="Handle2" type="MeshInstance3D" parent="Doors/StationDoor"]
+mesh = SubResource("BoxMesh_13")
+position = Vector3(0.72, -0.15, 0.16)
+
+[node name="Walker1" parent="Zombies" instance=ExtResource("32_walker")]
 position = Vector3(-2.0, 0.0, -14.0)
 rotation = Vector3(0.0, 0.8813, 0.0)
 
-[node name="Walker2" parent="Zombies" instance=ExtResource("28_walker")]
+[node name="Walker2" parent="Zombies" instance=ExtResource("32_walker")]
 position = Vector3(2.5, 0.0, -22.0)
 rotation = Vector3(0.0, 1.1528, 0.0)
 
-[node name="Walker3" parent="Zombies" instance=ExtResource("28_walker")]
+[node name="Walker3" parent="Zombies" instance=ExtResource("32_walker")]
 position = Vector3(-4.5, 0.0, -31.0)
 rotation = Vector3(0.0, 1.6096, 0.0)
 
-[node name="Walker4" parent="Zombies" instance=ExtResource("28_walker")]
+[node name="Walker4" parent="Zombies" instance=ExtResource("32_walker")]
 position = Vector3(0.0, 0.0, -44.0)
 rotation = Vector3(0.0, 2.2705, 0.0)
 
-[node name="Walker5" parent="Zombies" instance=ExtResource("28_walker")]
+[node name="Walker5" parent="Zombies" instance=ExtResource("32_walker")]
 position = Vector3(-5.0, 0.0, -47.0)
 rotation = Vector3(0.0, 1.6064, 0.0)
 
-[node name="Runner1" parent="Zombies" instance=ExtResource("29_runner")]
+[node name="Runner1" parent="Zombies" instance=ExtResource("33_runner")]
 position = Vector3(4.5, 0.0, -46.0)
 rotation = Vector3(0.0, -1.3646, 0.0)
 
-[node name="Walker6" parent="Zombies" instance=ExtResource("28_walker")]
+[node name="Walker6" parent="Zombies" instance=ExtResource("32_walker")]
 position = Vector3(1.5, 0.0, -60.0)
 rotation = Vector3(0.0, 0.9165, 0.0)
 
-[node name="Walker7" parent="Zombies" instance=ExtResource("28_walker")]
+[node name="Walker7" parent="Zombies" instance=ExtResource("32_walker")]
 position = Vector3(-6.5, 0.0, -58.0)
 rotation = Vector3(0.0, -0.3777, 0.0)
 
-[node name="Walker8" parent="Zombies" instance=ExtResource("28_walker")]
+[node name="Walker8" parent="Zombies" instance=ExtResource("32_walker")]
 position = Vector3(-1.0, 0.0, -80.0)
 rotation = Vector3(0.0, 0.2872, 0.0)
 
-[node name="Walker9" parent="Zombies" instance=ExtResource("28_walker")]
+[node name="Walker9" parent="Zombies" instance=ExtResource("32_walker")]
 position = Vector3(5.0, 0.0, -82.0)
 rotation = Vector3(0.0, 1.1365, 0.0)
 
-[node name="Runner2" parent="Zombies" instance=ExtResource("29_runner")]
+[node name="Runner2" parent="Zombies" instance=ExtResource("33_runner")]
 position = Vector3(-6.0, 0.0, -84.0)
 rotation = Vector3(0.0, -0.67, 0.0)
 
-[node name="Walker10" parent="Zombies" instance=ExtResource("28_walker")]
+[node name="Walker10" parent="Zombies" instance=ExtResource("32_walker")]
 position = Vector3(4.0, 0.0, -96.0)
 rotation = Vector3(0.0, -0.3894, 0.0)
 
-[node name="Walker11" parent="Zombies" instance=ExtResource("28_walker")]
+[node name="Walker11" parent="Zombies" instance=ExtResource("32_walker")]
 position = Vector3(-3.0, 0.0, -98.0)
 rotation = Vector3(0.0, 2.5643, 0.0)
 
-[node name="Walker12" parent="Zombies" instance=ExtResource("28_walker")]
+[node name="Walker12" parent="Zombies" instance=ExtResource("32_walker")]
 position = Vector3(0.0, 0.0, -110.0)
 rotation = Vector3(0.0, 1.4573, 0.0)
 
-[node name="Walker13" parent="Zombies" instance=ExtResource("28_walker")]
+[node name="Walker13" parent="Zombies" instance=ExtResource("32_walker")]
 position = Vector3(6.0, 0.0, -119.0)
 rotation = Vector3(0.0, 2.3514, 0.0)
 
-[node name="Walker14" parent="Zombies" instance=ExtResource("28_walker")]
+[node name="Walker14" parent="Zombies" instance=ExtResource("32_walker")]
 position = Vector3(-6.5, 0.0, -125.0)
 rotation = Vector3(0.0, -2.0856, 0.0)
 
-[node name="Butcher" parent="Zombies" instance=ExtResource("30_butcher")]
+[node name="Butcher" parent="Zombies" instance=ExtResource("34_butcher")]
 position = Vector3(0.0, 0.0, -125.0)
 rotation = Vector3(0.0, 3.1416, 0.0)
 sight_range = 14.0
 alert_event = NodePath("../../Story/ButcherAppears")
 death_event = NodePath("../../Story/ButcherDead")
 
-[node name="AmmoPistol1" parent="Pickups" instance=ExtResource("31_ammo_pistol")]
+[node name="AmmoPistol1" parent="Pickups" instance=ExtResource("35_ammo_pistol")]
 position = Vector3(7.0, 0.0, -12.0)
 
-[node name="Medkit1" parent="Pickups" instance=ExtResource("32_medkit")]
+[node name="Medkit1" parent="Pickups" instance=ExtResource("36_medkit")]
 position = Vector3(-7.5, 0.0, -50.0)
 
-[node name="WeaponRifle1" parent="Pickups" instance=ExtResource("33_weapon_rifle")]
+[node name="WeaponRifle1" parent="Pickups" instance=ExtResource("37_weapon_rifle")]
 position = Vector3(2.0, 0.0, -54.5)
 event = NodePath("../../Story/RifleFound")
 
-[node name="AmmoRifle1" parent="Pickups" instance=ExtResource("34_ammo_rifle")]
+[node name="AmmoRifle1" parent="Pickups" instance=ExtResource("38_ammo_rifle")]
 position = Vector3(-13.0, 0.0, -71.0)
 
-[node name="AmmoPistol2" parent="Pickups" instance=ExtResource("31_ammo_pistol")]
+[node name="AmmoPistol2" parent="Pickups" instance=ExtResource("35_ammo_pistol")]
 position = Vector3(-7.2, 0.0, -90.0)
 
-[node name="Medkit2" parent="Pickups" instance=ExtResource("32_medkit")]
+[node name="Medkit2" parent="Pickups" instance=ExtResource("36_medkit")]
 position = Vector3(7.3, 0.0, -104.0)
 
-[node name="AmmoRifle2" parent="Pickups" instance=ExtResource("34_ammo_rifle")]
+[node name="AmmoRifle2" parent="Pickups" instance=ExtResource("38_ammo_rifle")]
 position = Vector3(0.5, 0.0, -120.0)
 
-[node name="AmmoPistol3" parent="Pickups" instance=ExtResource("31_ammo_pistol")]
+[node name="AmmoPistol3" parent="Pickups" instance=ExtResource("35_ammo_pistol")]
 position = Vector3(-7.6, 0.0, -121.0)
 
-[node name="AmmoRifle3" parent="Pickups" instance=ExtResource("34_ammo_rifle")]
+[node name="AmmoRifle3" parent="Pickups" instance=ExtResource("38_ammo_rifle")]
 position = Vector3(7.6, 0.0, -112.0)
 
 [node name="Intro" type="Node" parent="Story"]
-script = ExtResource("35_story_event")
+script = ExtResource("39_story_event")
 speaker = "Диспетчер"
 message = "…если кто-то слышит — эвакуация со стадиона «Динамо» на рассвете. Повторяю: стадион, на рассвете."
 message_duration = 7.0
 targets = Array[NodePath]([NodePath("../Intro2")])
 
 [node name="Intro2" type="Node" parent="Story"]
-script = ExtResource("35_story_event")
+script = ExtResource("39_story_event")
 delay = 7.5
 speaker = "Диспетчер"
 message = "Ты меня слышишь? Хорошо. Через центр не пройти — иди по Садовой к полицейскому участку. Там оружейная, она тебе понадобится."
@@ -1686,20 +1745,20 @@ position = Vector3(0.0, 1.5, -9.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("36_story_trigger")
+script = ExtResource("40_story_trigger")
 event = NodePath("../KnifeHint")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/KnifeHintTrigger"]
-shape = SubResource("BoxShape3D_10")
+shape = SubResource("BoxShape3D_14")
 
 [node name="KnifeHint" type="Node" parent="Story"]
-script = ExtResource("35_story_event")
+script = ExtResource("39_story_event")
 speaker = "Диспетчер"
 message = "Совет: нож бьёт бесшумно. Выстрелы слышно на весь квартал — мертвецы сбегутся."
 message_duration = 7.0
 
 [node name="RifleFound" type="Node" parent="Story"]
-script = ExtResource("35_story_event")
+script = ExtResource("39_story_event")
 objective = "Отбейся от толпы из переулков"
 speaker = "Диспетчер"
 message = "Автомат? Отличная находка. Только… слышишь? Они лезут из переулков!"
@@ -1707,8 +1766,8 @@ message_duration = 7.0
 targets = Array[NodePath]([NodePath("../AlleyLeft"), NodePath("../AlleyRight")])
 
 [node name="AlleyLeft" type="Node3D" parent="Story"]
-script = ExtResource("37_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("28_walker"), ExtResource("28_walker"), ExtResource("29_runner")])
+script = ExtResource("41_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("32_walker"), ExtResource("32_walker"), ExtResource("33_runner")])
 count = 6
 interval = 1.0
 max_alive = 10
@@ -1720,8 +1779,8 @@ position = Vector3(-17.0, 0.0, -70.0)
 position = Vector3(-19.0, 0.0, -68.0)
 
 [node name="AlleyRight" type="Node3D" parent="Story"]
-script = ExtResource("37_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("28_walker"), ExtResource("28_walker"), ExtResource("29_runner")])
+script = ExtResource("41_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("32_walker"), ExtResource("32_walker"), ExtResource("33_runner")])
 count = 6
 interval = 1.1
 max_alive = 10
@@ -1734,7 +1793,7 @@ position = Vector3(17.0, 0.0, -70.0)
 position = Vector3(19.0, 0.0, -72.0)
 
 [node name="AlleyCleared" type="Node" parent="Story"]
-script = ExtResource("35_story_event")
+script = ExtResource("39_story_event")
 objective = "Доберись до полицейского участка"
 speaker = "Диспетчер"
 message = "Тихо? Двигай дальше, участок сразу за автобусом."
@@ -1745,14 +1804,14 @@ position = Vector3(0.0, 1.5, -104.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("36_story_trigger")
+script = ExtResource("40_story_trigger")
 event = NodePath("../Ambush")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/AmbushTrigger"]
-shape = SubResource("BoxShape3D_11")
+shape = SubResource("BoxShape3D_15")
 
 [node name="Ambush" type="Node" parent="Story"]
-script = ExtResource("35_story_event")
+script = ExtResource("39_story_event")
 objective = "Беги к полицейскому участку"
 speaker = "Диспетчер"
 message = "Сзади! Целая толпа — беги к участку!"
@@ -1760,8 +1819,8 @@ message_duration = 6.0
 targets = Array[NodePath]([NodePath("../Horde")])
 
 [node name="Horde" type="Node3D" parent="Story"]
-script = ExtResource("37_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("29_runner"), ExtResource("28_walker"), ExtResource("28_walker")])
+script = ExtResource("41_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("33_runner"), ExtResource("32_walker"), ExtResource("32_walker")])
 count = 6
 interval = 0.9
 max_alive = 10
@@ -1780,25 +1839,25 @@ position = Vector3(0.0, 1.5, -112.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("36_story_trigger")
+script = ExtResource("40_story_trigger")
 event = NodePath("../WakeButcher")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/ButcherTrigger"]
-shape = SubResource("BoxShape3D_12")
+shape = SubResource("BoxShape3D_16")
 
 [node name="WakeButcher" type="Node" parent="Story"]
-script = ExtResource("35_story_event")
+script = ExtResource("39_story_event")
 targets = Array[NodePath]([NodePath("../../Zombies/Butcher")])
 
 [node name="ButcherAppears" type="Node" parent="Story"]
-script = ExtResource("35_story_event")
+script = ExtResource("39_story_event")
 objective = "Убей Мясника"
 speaker = "Диспетчер"
 message = "У входа в участок… повар с тесаком? Он не человек уже. Осторожно, он бросается с разбега — отходи в сторону, а если врежется в стену, бей!"
 message_duration = 8.0
 
 [node name="ButcherDead" type="Node" parent="Story"]
-script = ExtResource("35_story_event")
+script = ExtResource("39_story_event")
 objective = "Войди в полицейский участок"
 speaker = "Диспетчер"
 message = "Готов! Заходи в участок, пока толпа не догнала."
@@ -1806,16 +1865,16 @@ message_duration = 6.0
 targets = Array[NodePath]([NodePath("../../Doors/StationDoor")])
 
 [node name="Exit" type="Node" parent="Story"]
-script = ExtResource("35_story_event")
+script = ExtResource("39_story_event")
 complete_level = true
 
-[node name="Player" parent="." instance=ExtResource("38_player")]
+[node name="Player" parent="." instance=ExtResource("42_player")]
 position = Vector3(0.0, 0.0, 8.0)
 rotation = Vector3(0.0, 0.0, 0.0)
 
-[node name="HUD" parent="." instance=ExtResource("39_hud")]
+[node name="HUD" parent="." instance=ExtResource("43_hud")]
 
 [node name="Ambience" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("40_ambience")
+stream = ExtResource("44_ambience")
 autoplay = true
 volume_db = -8.0

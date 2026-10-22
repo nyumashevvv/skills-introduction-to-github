@@ -53,6 +53,8 @@ def mats():
     material(T + 'military.tres', (0.22, 0.26, 0.17), roughness=0.85)
     material(T + 'tent.tres', (0.3, 0.33, 0.22), roughness=1.0)
     material(T + 'fire_glow.tres', (0, 0, 0), emission=(1.0, 0.45, 0.1), energy=4.0)
+    material(T + 'door_steel.tres', (0.78, 0.8, 0.83), metallic=0.5, roughness=0.45, texture='metal', uv_scale=0.6)
+    material(T + 'door_glass_lit.tres', (0.1, 0.12, 0.14), roughness=0.1, emission=(0.8, 0.88, 0.95), energy=0.8)
     material(T + 'acid_glow.tres', (0, 0, 0), emission=(0.45, 1.0, 0.15), energy=3.0)
     # weapons & hands
     material(T + 'gun_black.tres', (0.05, 0.05, 0.055), metallic=0.3, roughness=0.55)
@@ -303,16 +305,20 @@ def scene(name):
     return lambda s: s.ext_res('PackedScene', f'res://scenes/{name}.tscn')
 
 
+def track(name):
+    return lambda s: s.ext_res('AudioStream', f'res://music/{name}.ogg')
+
+
 def bosses():
     # Chapter 1: a cook with a cleaver who charges across the street.
     boss('butcher', 'Butcher', 'Мясник', 'boss_butcher',
-         dict(max_health=1100, chase_speed=2.6, turn_speed=5.0, attack_damage=28, attack_range=2.1,
+         dict(music=track('boss_metal'), max_health=1100, chase_speed=2.6, turn_speed=5.0, attack_damage=28, attack_range=2.1,
               attack_windup=0.55, attack_recovery=0.7, knockback=5.0, charge_speed=12.0, charge_cooldown=6.0,
               charge_damage=32, drops=scenes('pickups/medkit', 'pickups/ammo_rifle')),
          0.78, 0.5, 2.5, (0.5, 0.56, 0.45))
     # Chapter 2: riot police; the shield stops bullets from the front, the head is open.
     boss('warden', 'Warden', 'Надзиратель', 'boss_warden',
-         dict(max_health=1300, chase_speed=2.4, turn_speed=3.2, attack_damage=30, attack_range=2.0,
+         dict(music=track('boss_pursuit'), max_health=1300, chase_speed=2.4, turn_speed=3.2, attack_damage=30, attack_range=2.0,
               attack_windup=0.5, attack_recovery=0.6, knockback=8.0, front_armor=0.1, charge_speed=10.0,
               charge_cooldown=8.0, charge_damage=26, drops=scenes('pickups/medkit', 'pickups/ammo_rocket')),
          0.76, 0.5, 2.45, (0.45, 0.5, 0.48),
@@ -320,7 +326,7 @@ def bosses():
                                 position=V3(0, 1.2, 0), unit_size=5.0, max_polyphony=3))
     # Chapter 3: the first infected; spits acid and calls the patients.
     boss('patient_zero', 'PatientZero', 'Пациент Ноль', 'boss_patient',
-         dict(max_health=1200, chase_speed=2.2, attack_damage=22, attack_range=1.8, attack_windup=0.45,
+         dict(music=track('boss_pursuit'), max_health=1200, chase_speed=2.2, attack_damage=22, attack_range=1.8, attack_windup=0.45,
               attack_animation=S('Punch'), projectile=scene('zombies/acid_spit'), projectile_count=3,
               throw_cooldown=3.2, throw_distance=V2(4, 26), throw_animation=S('Shoot_OneHanded'),
               minion=scene('zombies/walker'), summon_count=3, summon_cooldown=16.0, max_minions=5, voice_pitch=1.1,
@@ -328,14 +334,14 @@ def bosses():
          0.72, 0.45, 2.3, (0.55, 0.62, 0.38))
     # Chapter 4: a track worker with a sledgehammer; slams the ground and calls runners from the tunnel.
     boss('lineman', 'Lineman', 'Обходчик', 'boss_lineman',
-         dict(max_health=1600, chase_speed=2.5, turn_speed=4.0, attack_damage=34, attack_range=2.3,
+         dict(music=track('boss_metal'), max_health=1600, chase_speed=2.5, turn_speed=4.0, attack_damage=34, attack_range=2.3,
               attack_windup=0.6, attack_recovery=0.8, knockback=8.0, slam_radius=7.0, slam_damage=34,
               slam_cooldown=6.5, minion=scene('zombies/runner'), summon_count=2, summon_cooldown=20.0,
               max_minions=4, drops=scenes('pickups/medkit', 'pickups/ammo_shells', 'pickups/ammo_rifle')),
          0.8, 0.5, 2.6, (0.42, 0.47, 0.4))
     # Chapter 5: a giant; throws rubble, slams, charges and goes berserk at half health.
     boss('colossus', 'Colossus', 'Колосс', 'boss_colossus',
-         dict(max_health=4000, chase_speed=2.3, turn_speed=2.8, attack_damage=40, attack_range=3.4,
+         dict(music=track('boss_epic'), max_health=4000, chase_speed=2.3, turn_speed=2.8, attack_damage=40, attack_range=3.4,
               attack_windup=0.8, attack_recovery=0.9, knockback=10.0, projectile=scene('zombies/debris'),
               throw_cooldown=5.0, throw_distance=V2(8, 40), slam_radius=9.0, slam_damage=40, slam_cooldown=7.0,
               charge_speed=11.0, charge_cooldown=9.0, charge_damage=40, charge_distance=V2(8, 26),

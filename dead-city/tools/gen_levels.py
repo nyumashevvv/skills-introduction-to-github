@@ -231,14 +231,22 @@ def level_1():
     # police station
     L.blk('plaster_gray', (42, 10, 22), (0, 5, -141))
     L.decor((4.0, 3.2, 0.3), (0, 1.6, -129.9), 'dark')
+    L.decor((3.8, 0.12, 1.0), (0, 3.25, -129.3), 'door_steel')                    # canopy with a lamp under it
+    L.decor((3.0, 0.03, 0.5), (0, 3.18, -129.2), 'lamp_glow', cast_shadow=0)
+    L.node('EntranceSign', 'Label3D', 'Decor', position=V3(0, 3.75, -129.7), text=S('ВХОД'), font_size=90,
+           pixel_size=0.01, modulate=C(0.45, 1.0, 0.55), outline_size=0)
     L.decor((42.2, 0.6, 0.4), (0, 9.7, -129.9), 'police_blue')
     L.node('Sign', 'Label3D', 'Decor', position=V3(0, 6.5, -129.8), text=S('ПОЛИЦИЯ'), font_size=200,
            pixel_size=0.01, modulate=C(0.45, 0.65, 1.0), outline_size=0)
     L.omni((0, 6, -128), (0.4, 0.6, 1.0), 2.0, 10, flicker=True)
-    L.omni((0, 3.5, -127), (1, 0.85, 0.6), 1.5, 8)
+    L.omni((0, 2.9, -128.2), (1, 0.9, 0.7), 3.0, 9)
     L.door('StationDoor', (3.0, 3.0, 0.2), (0, 1.5, -129.6), 'police_blue', event='Exit',
            prompt='Войти в участок', open_offset=V3(0, 0, -0.01), open_time=0.1, player_can_open=False,
            event_unlocks=True, locked_message='Сначала разберись с Мясником')
+    # glass double doors with the lit lobby behind them
+    for x in (-0.72, 0.72):
+        L.box(L.uid('Pane'), 'Doors/StationDoor', (1.2, 2.3, 0.02), (x, 0.15, 0.11), 'door_glass_lit', cast_shadow=0)
+        L.box(L.uid('Handle'), 'Doors/StationDoor', (0.7, 0.06, 0.06), (x, -0.15, 0.16), 'chrome')
 
     # zombies
     for kind, pos in [('walker', (-2, 0, -14)), ('walker', (2.5, 0, -22)), ('walker', (-4.5, 0, -31)),
@@ -341,6 +349,18 @@ def level_2():
            locked_message='Снаружи слишком много мертвецов')
     L.door('ArmoryDoor', (4.0, 3.2, 0.25), (0, 1.6, -50), 'metal', event='ArmoryOpened', required_key='armory',
            locked_message='Нужна ключ-карта оружейной', prompt='Открыть оружейную', open_offset=V3(0, 3.0, 0))
+    # make the armory door stand out: hazard stripes, a sign, a card reader and its own lamp
+    A = 'Doors/ArmoryDoor'
+    for y in (-1.35, 1.35):
+        L.box(L.uid('Band'), A, (4.0, 0.36, 0.02), (0, y, 0.135), 'paint_yellow', cast_shadow=0)
+        for i in range(8):
+            L.box(L.uid('Slash'), A, (0.16, 0.36, 0.022), (-1.75 + i * 0.5, y, 0.137), 'dark', rot=(0, 0, 0.6),
+                  cast_shadow=0)
+    L.node('Sign', 'Label3D', A, position=V3(0, 0.45, 0.14), text=S('ОРУЖЕЙНАЯ'), font_size=60, pixel_size=0.008,
+           modulate=C(1.0, 0.85, 0.3), outline_size=8)
+    L.box('Reader', A, (0.22, 0.32, 0.06), (1.55, -0.1, 0.16), 'dark')
+    L.box('ReaderLight', A, (0.1, 0.05, 0.02), (1.55, 0.0, 0.2), 'taillight', cast_shadow=0)
+    L.ceiling_lamp(0, -48.4, energy=2.4, rng=7.0)
     L.door('GarageDoor', (0.25, 3.2, 2.5), (2, 1.6, -41.25), 'metal', player_can_open=False,
            locked_message='Заблокировано', open_offset=V3(0, 3.0, 0))
     for i, (z0, z1) in enumerate([(-14.6, -20.6), (-20.6, -27.3), (-27.3, -33.4)]):

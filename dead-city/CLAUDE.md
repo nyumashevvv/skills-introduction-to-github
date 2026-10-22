@@ -36,6 +36,7 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
   `_damage_scale` hooks in `Zombie`. Bosses ignore noise (`wakes_from_noise = false`). Placed bosses fire
   `alert_event` / `death_event`; spawned ones (subway, stadium) are tracked by `Holdout.boss_spawner`, which
   keeps the exit shut until they die. Boss models are `models/characters/boss_*.glb` (props parented to bones).
+  `Boss.music` (CC0 loops in `music/`) plays through `Level.play_music` / `stop_music` during the fight.
 - Weapon scenes instance `models/weapons/<name>_fp.glb` as `Model` (gun + posed arms in camera space,
   plus a `Muzzle` marker); `Weapon._ready` moves their meshes to render layer 2 (viewmodel layer).
 - `Effects` static helpers: spawn one-shot effects, tracers, `apply_blast` for explosions.

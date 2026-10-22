@@ -48,4 +48,15 @@ roar() { ffmpeg -v error -y -i "$1" -ac 1 \
   -af "asetrate=44100*0.62,aresample=22050,aecho=0.8:0.5:70:0.35,highpass=f=50,lowpass=f=3000,loudnorm=I=-18:TP=-2:LRA=11" \
   -c:a libvorbis -q:a 4 "$OUT/$2.ogg"; }
 roar "$VE/zombieYell1.wav" roar1; roar "$VE/zombieYell6.wav" roar2; roar "$VE/zombieYell9.wav" roar3
+
+# Boss music (CC0): nene "Boss Battle #9 Metal", emmama "Determined Pursuit",
+# Juhani Junkala "Epic Boss Battle". Seamless loops; only a constant gain is applied.
+MUS="$PROJECT/music"
+mkdir -p "$MUS"
+get boss_battle_9_metal_loop.wav metal.wav
+get determined_pursuit_loop.wav pursuit.wav
+get "Juhani%20Junkala%20-%20Epic%20Boss%20Battle%20%5BSeamlessly%20Looping%5D.wav" epic.wav
+ffmpeg -v error -y -i metal.wav -af volume=-6.3dB -c:a libvorbis -q:a 3 "$MUS/boss_metal.ogg"
+ffmpeg -v error -y -i pursuit.wav -c:a libvorbis -q:a 3 "$MUS/boss_pursuit.ogg"
+ffmpeg -v error -y -i epic.wav -af volume=-6.5dB -c:a libvorbis -q:a 3 "$MUS/boss_epic.ogg"
 echo "Sources ready in $SRC"

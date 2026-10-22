@@ -220,6 +220,7 @@ func test_bosses() -> void:
 	await frames(2)
 	check(warden.health == warden.max_health - 3, "shield blocks a body shot (%d damage)" % (warden.max_health - warden.health))
 	check(level.hud.boss_box.visible and level.hud.boss_label.text == "Надзиратель", "shooting the Warden shows its health bar")
+	check(level.is_music_playing() and level._music.stream == warden.music, "boss music starts")
 	var before := warden.health
 	await aim_at(warden.global_position + Vector3.UP * 2.1)
 	rifle._cooldown = 0.0
@@ -237,6 +238,8 @@ func test_bosses() -> void:
 	warden.take_damage(99999, Vector3.FORWARD, warden.global_position)
 	await frames(3)
 	check(not level.hud.boss_box.visible, "boss bar hidden when the boss dies")
+	await get_tree().create_timer(3.3).timeout
+	check(not level.is_music_playing(), "boss music fades out after its death")
 	var drops := level.get_children().filter(func(n: Node) -> bool: return n is Pickup)
 	check(drops.size() == warden.drops.size(), "the Warden dropped %d pickups" % drops.size())
 	for drop: Node in drops:

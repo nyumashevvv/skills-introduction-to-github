@@ -29,6 +29,8 @@ const RAGE_COOLDOWN := 0.65
 @export var alert_event: NodePath
 ## StoryEvent fired when the boss dies.
 @export var death_event: NodePath
+## Played (looping) from the moment it notices the player until it dies.
+@export var music: AudioStream
 ## Pickups left where it falls.
 @export var drops: Array[PackedScene] = []
 @export_group("Shield")
@@ -91,6 +93,9 @@ func alert(spread := true) -> void:
 	if was_idle and state != State.IDLE:
 		roar()
 		_update_bar()
+		var level := get_tree().current_scene as Level
+		if level != null and music != null:
+			level.play_music(music)
 		if not alert_event.is_empty():
 			get_node(alert_event).call("fire")
 
@@ -322,6 +327,9 @@ func _die(headshot: bool) -> void:
 	super._die(headshot)
 	ability = Ability.NONE
 	_update_bar()
+	var level := get_tree().current_scene as Level
+	if level != null:
+		level.stop_music()
 	for i in drops.size():
 		var pickup := drops[i].instantiate() as Node3D
 		var angle := TAU * i / drops.size()

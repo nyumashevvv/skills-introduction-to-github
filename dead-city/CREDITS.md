@@ -15,6 +15,9 @@
 | | [Undead Moans](https://opengameart.org/content/undead-moans) | AntumDeluge |
 | | [Zombie / Skeleton / Monster Voice Effects](https://opengameart.org/content/zombie-skeleton-monster-voice-effects) | ArcadeParty |
 | Рёв боссов (те же голоса, понижены и обработаны) | Zombie / Skeleton / Monster Voice Effects | ArcadeParty |
+| Музыка боссов: Мясник, Обходчик | [Boss Battle #9 Metal](https://opengameart.org/content/boss-battle-9-metal) | nene |
+| Музыка боссов: Надзиратель, Пациент Ноль | [Determined Pursuit (Epic Orchestra Loop)](https://opengameart.org/content/determined-pursuit-epic-orchestra-loop) | Emma_MA |
+| Музыка боссов: Колосс | [Epic Boss Battle](https://opengameart.org/content/boss-battle-music) | Juhani Junkala |
 
 Нож и снаряжение боссов (тесак, щит и дубинка, кувалда, наросты, костяные шипы) смоделированы скриптом в Blender
 (`tools/blender/build_assets.py`) и прикреплены к костям рук и туловища. Позы рук, перекраска, сборка

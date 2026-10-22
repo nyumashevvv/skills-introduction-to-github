@@ -2,23 +2,25 @@
 
 [ext_resource type="Script" path="res://scripts/zombies/boss.gd" id="1_boss"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/acid_spit.tscn" id="2_acid_spit"]
+[ext_resource type="AudioStream" path="res://music/boss_pursuit.ogg" id="2_boss_pursuit"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/walker.tscn" id="3_walker"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/acid_spit.tscn" id="3_acid_spit"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="4_medkit"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/walker.tscn" id="4_walker"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_shells.tscn" id="5_ammo_shells"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="5_medkit"]
 
-[ext_resource type="PackedScene" path="res://models/characters/boss_patient.glb" id="6_boss_patient"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_shells.tscn" id="6_ammo_shells"]
 
-[ext_resource type="AudioStream" path="res://sounds/zombie/groan1.ogg" id="7_groan1"]
+[ext_resource type="PackedScene" path="res://models/characters/boss_patient.glb" id="7_boss_patient"]
 
-[ext_resource type="AudioStream" path="res://sounds/zombie/attack1.ogg" id="8_attack1"]
+[ext_resource type="AudioStream" path="res://sounds/zombie/groan1.ogg" id="8_groan1"]
 
-[ext_resource type="AudioStream" path="res://sounds/zombie/death1.ogg" id="9_death1"]
+[ext_resource type="AudioStream" path="res://sounds/zombie/attack1.ogg" id="9_attack1"]
 
-[ext_resource type="AudioStream" path="res://sounds/zombie/roar1.ogg" id="10_roar1"]
+[ext_resource type="AudioStream" path="res://sounds/zombie/death1.ogg" id="10_death1"]
+
+[ext_resource type="AudioStream" path="res://sounds/zombie/roar1.ogg" id="11_roar1"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 radius = 0.45
@@ -36,22 +38,23 @@ reach_arms = false
 wakes_from_noise = false
 attack_animation = "Punch"
 voice_pitch = 1.1
+music = ExtResource("2_boss_pursuit")
 max_health = 1200
 chase_speed = 2.2
 attack_damage = 22
 attack_range = 1.8
 attack_windup = 0.45
-projectile = ExtResource("2_acid_spit")
+projectile = ExtResource("3_acid_spit")
 projectile_count = 3
 throw_cooldown = 3.2
 throw_distance = Vector2(4.0, 26.0)
 throw_animation = "Shoot_OneHanded"
-minion = ExtResource("3_walker")
+minion = ExtResource("4_walker")
 summon_count = 3
 summon_cooldown = 16.0
 max_minions = 5
-drops = Array[PackedScene]([ExtResource("4_medkit"), ExtResource("5_ammo_shells")])
-bodies = Array[PackedScene]([ExtResource("6_boss_patient")])
+drops = Array[PackedScene]([ExtResource("5_medkit"), ExtResource("6_ammo_shells")])
+bodies = Array[PackedScene]([ExtResource("7_boss_patient")])
 body_scale = 0.72
 skin_colors = Array[Color]([Color(0.55, 0.62, 0.38, 1.0)])
 
@@ -69,28 +72,28 @@ height = 2.3
 radius = 0.45
 
 [node name="GroanSound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("7_groan1")
+stream = ExtResource("8_groan1")
 position = Vector3(0.0, 1.9862, 0.0)
 volume_db = -8.0
 unit_size = 3.0
 max_distance = 30.0
 
 [node name="AttackSound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("8_attack1")
+stream = ExtResource("9_attack1")
 position = Vector3(0.0, 1.9862, 0.0)
 volume_db = -3.0
 unit_size = 3.0
 max_distance = 30.0
 
 [node name="DeathSound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("9_death1")
+stream = ExtResource("10_death1")
 position = Vector3(0.0, 1.9862, 0.0)
 volume_db = -4.0
 unit_size = 3.0
 max_distance = 30.0
 
 [node name="RoarSound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("10_roar1")
+stream = ExtResource("11_roar1")
 position = Vector3(0.0, 1.84, 0.0)
 volume_db = 2.0
 unit_size = 8.0

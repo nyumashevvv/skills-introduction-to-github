@@ -5,6 +5,9 @@ extends Node3D
 
 enum State { INTRO, PLAYING, PAUSED, DEAD, COMPLETE }
 
+const MUSIC_DB := -7.0
+const SILENT_DB := -40.0
+
 @export var chapter_number := 1
 @export var chapter_title := ""
 @export_multiline var intro_text := ""
@@ -16,6 +19,9 @@ enum State { INTRO, PLAYING, PAUSED, DEAD, COMPLETE }
 @export var default_ammo := {"pistol": 24}
 
 var state := State.INTRO
+
+var _music: AudioStreamPlayer
+var _music_tween: Tween
 
 @onready var player: Player = $Player
 @onready var hud: Hud = $HUD
@@ -83,6 +89,40 @@ func set_objective(text: String) -> void:
 
 func radio(speaker: String, text: String, duration := 6.0) -> void:
 	hud.show_subtitle(speaker, text, duration)
+
+
+## Fades in a looping track (boss fights). Playing the same track again does nothing.
+func play_music(stream: AudioStream, fade := 1.5) -> void:
+	if _music == null:
+		_music = AudioStreamPlayer.new()
+		_music.name = "Music"
+		add_child(_music)
+	if _music.stream == stream and _music.playing:
+		return
+	if stream is AudioStreamOggVorbis:
+		(stream as AudioStreamOggVorbis).loop = true
+	_music.stream = stream
+	_music.volume_db = SILENT_DB
+	_music.play()
+	_fade_music(MUSIC_DB, fade)
+
+
+func stop_music(fade := 3.0) -> void:
+	if _music == null or not _music.playing:
+		return
+	_fade_music(SILENT_DB, fade)
+	_music_tween.tween_callback(_music.stop)
+
+
+func is_music_playing() -> bool:
+	return _music != null and _music.playing
+
+
+func _fade_music(volume_db: float, duration: float) -> void:
+	if _music_tween != null:
+		_music_tween.kill()
+	_music_tween = create_tween()
+	_music_tween.tween_property(_music, "volume_db", volume_db, duration)
 
 
 func show_pickup(text: String) -> void:

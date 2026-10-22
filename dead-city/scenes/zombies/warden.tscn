@@ -2,21 +2,23 @@
 
 [ext_resource type="Script" path="res://scripts/zombies/boss.gd" id="1_boss"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="2_medkit"]
+[ext_resource type="AudioStream" path="res://music/boss_pursuit.ogg" id="2_boss_pursuit"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rocket.tscn" id="3_ammo_rocket"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="3_medkit"]
 
-[ext_resource type="PackedScene" path="res://models/characters/boss_warden.glb" id="4_boss_warden"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rocket.tscn" id="4_ammo_rocket"]
 
-[ext_resource type="AudioStream" path="res://sounds/zombie/groan1.ogg" id="5_groan1"]
+[ext_resource type="PackedScene" path="res://models/characters/boss_warden.glb" id="5_boss_warden"]
 
-[ext_resource type="AudioStream" path="res://sounds/zombie/attack1.ogg" id="6_attack1"]
+[ext_resource type="AudioStream" path="res://sounds/zombie/groan1.ogg" id="6_groan1"]
 
-[ext_resource type="AudioStream" path="res://sounds/zombie/death1.ogg" id="7_death1"]
+[ext_resource type="AudioStream" path="res://sounds/zombie/attack1.ogg" id="7_attack1"]
 
-[ext_resource type="AudioStream" path="res://sounds/zombie/roar1.ogg" id="8_roar1"]
+[ext_resource type="AudioStream" path="res://sounds/zombie/death1.ogg" id="8_death1"]
 
-[ext_resource type="AudioStream" path="res://sounds/shield_hit.wav" id="9_shield_hit"]
+[ext_resource type="AudioStream" path="res://sounds/zombie/roar1.ogg" id="9_roar1"]
+
+[ext_resource type="AudioStream" path="res://sounds/shield_hit.wav" id="10_shield_hit"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
 radius = 0.5
@@ -34,6 +36,7 @@ reach_arms = false
 wakes_from_noise = false
 attack_animation = "SwordSlash"
 voice_pitch = 0.8
+music = ExtResource("2_boss_pursuit")
 max_health = 1300
 chase_speed = 2.4
 turn_speed = 3.2
@@ -46,8 +49,8 @@ front_armor = 0.1
 charge_speed = 10.0
 charge_cooldown = 8.0
 charge_damage = 26
-drops = Array[PackedScene]([ExtResource("2_medkit"), ExtResource("3_ammo_rocket")])
-bodies = Array[PackedScene]([ExtResource("4_boss_warden")])
+drops = Array[PackedScene]([ExtResource("3_medkit"), ExtResource("4_ammo_rocket")])
+bodies = Array[PackedScene]([ExtResource("5_boss_warden")])
 body_scale = 0.76
 skin_colors = Array[Color]([Color(0.45, 0.5, 0.48, 1.0)])
 
@@ -65,35 +68,35 @@ height = 2.45
 radius = 0.5
 
 [node name="GroanSound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("5_groan1")
+stream = ExtResource("6_groan1")
 position = Vector3(0.0, 2.0966, 0.0)
 volume_db = -8.0
 unit_size = 3.0
 max_distance = 30.0
 
 [node name="AttackSound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("6_attack1")
+stream = ExtResource("7_attack1")
 position = Vector3(0.0, 2.0966, 0.0)
 volume_db = -3.0
 unit_size = 3.0
 max_distance = 30.0
 
 [node name="DeathSound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("7_death1")
+stream = ExtResource("8_death1")
 position = Vector3(0.0, 2.0966, 0.0)
 volume_db = -4.0
 unit_size = 3.0
 max_distance = 30.0
 
 [node name="RoarSound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("8_roar1")
+stream = ExtResource("9_roar1")
 position = Vector3(0.0, 1.96, 0.0)
 volume_db = 2.0
 unit_size = 8.0
 max_distance = 60.0
 
 [node name="ShieldSound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("9_shield_hit")
+stream = ExtResource("10_shield_hit")
 position = Vector3(0.0, 1.2, 0.0)
 unit_size = 5.0
 max_polyphony = 3
