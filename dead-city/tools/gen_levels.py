@@ -5,7 +5,8 @@ from tscn import *
 
 ZOMBIE = {k: f'res://scenes/zombies/{k}.tscn' for k in ('walker', 'runner', 'brute')}
 PICKUP = {k: f'res://scenes/pickups/{k}.tscn' for k in
-          ('medkit', 'ammo_pistol', 'ammo_rifle', 'ammo_rocket', 'weapon_rifle', 'weapon_bazooka', 'keycard')}
+          ('medkit', 'ammo_pistol', 'ammo_rifle', 'ammo_rocket', 'ammo_shells', 'weapon_rifle', 'weapon_shotgun',
+           'weapon_bazooka', 'keycard')}
 NAV = 'NavigationRegion3D'
 
 
@@ -84,8 +85,14 @@ class LevelBuilder(Scene):
             props['script'] = self.ext_res('Script', 'res://scripts/world/flicker_light.gd')
         self.node(name or self.uid('Light'), 'OmniLight3D', 'Lights', **props)
 
-    def ceiling_lamp(self, x, z, y=3.95, flicker=False, energy=2.2, rng=9.0, name=None):
-        self.decor((1.0, 0.05, 0.35), (x, y, z), 'lamp_glow', cast_shadow=0)
+    def ceiling_lamp(self, x, z, y=3.95, flicker=False, energy=2.2, rng=9.0, name=None, power=False):
+        """power=True: dark until a StoryEvent activates it (power_light.gd)."""
+        self.decor((1.0, 0.05, 0.35), (x, y, z), 'lamp_off' if power else 'lamp_glow', cast_shadow=0)
+        if power:
+            self.node(name or self.uid('PowerLight'), 'OmniLight3D', 'Lights', position=V3(x, y - 0.4, z),
+                      light_color=C(0.9, 0.95, 1.0), light_energy=energy, omni_range=rng,
+                      script=self.ext_res('Script', 'res://scripts/world/power_light.gd'))
+            return
         self.omni((x, y - 0.4, z), (1, 0.88, 0.7), energy, rng, flicker, name=name)
 
     # -- gameplay
@@ -411,12 +418,12 @@ def level_2():
 # =================================================================== CHAPTER 3
 def level_3():
     L = LevelBuilder('Stadium', dict(
-        chapter_number=3, chapter_title=S('Стадион'),
-        intro_text=S('Угнанная машина заглохла в двух кварталах от стадиона. Дальше — пешком.\n'
+        chapter_number=5, chapter_title=S('Стадион'),
+        intro_text=S('Лестница метро выводит прямо к южным воротам стадиона.\n'
                      'Над трибунами горят прожекторы. Где-то там, в темноте, гудит вертолёт.'),
         start_objective=S('Доберись до вертолётной площадки в центре поля'), start_event=NP('Story/Intro'),
-        default_weapons=PSA(['knife', 'pistol', 'rifle', 'bazooka']),
-        default_ammo='{"pistol": 24, "rifle": 120, "rocket": 3}'))
+        default_weapons=PSA(['knife', 'pistol', 'shotgun', 'rifle', 'bazooka']),
+        default_ammo='{"pistol": 24, "shells": 16, "rifle": 120, "rocket": 3}'))
     L.setup(night_env(L, fog=0.014, ambient=0.9, horizon=(0.14, 0.09, 0.11)),
             dict(MOON, light_energy=0.55))
     # field, running track
@@ -492,7 +499,8 @@ def level_3():
     # supplies (respawning during the siege)
     for kind, pos, t in [('ammo_rifle', (-3, 0, -3), 25.0), ('ammo_rifle', (3, 0, 3), 25.0), ('medkit', (-8, 0, 8), 40.0),
                          ('medkit', (8, 0, -8), 40.0), ('ammo_rocket', (-17, 0, -12), 45.0), ('ammo_pistol', (17, 0, 14), 30.0),
-                         ('ammo_rocket', (21, 0, -12), 45.0)]:
+                         ('ammo_rocket', (21, 0, -12), 45.0), ('ammo_shells', (-17, 0, 14), 30.0),
+                         ('ammo_shells', (12, 0, -20), 30.0)]:
         L.pickup(kind, pos, respawn_time=t)
 
     L.prop('res://scenes/world/helicopter.tscn', (0, 0, 0), 0.0, parent='.', name='Helicopter')
@@ -523,11 +531,282 @@ def level_3():
     L.event('Exit', complete=True)
 
     L.finish((0, 0, 70))
-    L.save('scenes/levels/level_3_stadium.tscn')
+    L.save('scenes/levels/level_5_stadium.tscn')
+
+
+INTERIOR_ENV = dict(background_mode=1, background_color=C(0, 0, 0), ambient_light_source=2,
+                    ambient_light_color=C(0.1, 0.11, 0.14), ambient_light_energy=0.5, tonemap_mode=3, ssao_enabled=True,
+                    glow_enabled=True, glow_intensity=0.8, glow_bloom=0.04, fog_enabled=True,
+                    fog_light_color=C(0.02, 0.02, 0.03), fog_density=0.03)
+
+
+# =================================================================== CHAPTER 3
+def level_hospital():
+    L = LevelBuilder('Hospital', dict(
+        chapter_number=3, chapter_title=S('Больница'),
+        intro_text=S('Машина заглохла у ворот городской больницы. Мост к стадиону забит брошенными машинами — '
+                     'остаётся метро, а вход в него сразу за больницей.\n'
+                     'Внутри темно и тихо. Слишком тихо для места, где лечили сотни людей.'),
+        start_objective=S('Запусти генератор в техническом крыле, чтобы открыть пожарный выход'),
+        start_event=NP('Story/Intro'), default_weapons=PSA(['knife', 'pistol', 'rifle', 'bazooka']),
+        default_ammo='{"pistol": 24, "rifle": 90, "rocket": 2}'))
+    L.setup(night_env(L, fog=0.02, ambient=0.5), MOON)
+    H = 'hospital_wall'
+    # parking lot in front, yard behind the fire exit
+    L.floor('asphalt', -20, 20, 14, 0)
+    L.wall_z(14.5, -20, 20, 'concrete', h=3, t=1)
+    L.wall_x(-20.5, 14, 0, 'concrete', h=3, t=1)
+    L.wall_x(20.5, 14, 0, 'concrete', h=3, t=1)
+    L.floor('asphalt', -36, -24, -8, -26)
+    L.wall_z(-7.5, -36.5, -24, 'brick_dark', h=3.5, t=1)
+    L.wall_z(-26.5, -36.5, -24, 'brick_dark', h=3.5, t=1)
+    L.wall_x(-36.5, -8, -26, 'brick_dark', h=3.5, t=1)
+    # building: floor, ceiling, walls (height 4)
+    L.floor('linoleum', -24, 24, 0, -31)
+    L.floor('concrete', -24.15, 24.15, 0.15, -31.15, top=4.4, thick=0.4)
+    L.wall_z(0, -24, -2.5, 'plaster'); L.wall_z(0, 2.5, 24, 'plaster')
+    L.wall_x(-12, 0, -14, H); L.wall_x(12, 0, -14, H)
+    L.wall_z(-14, -24, -3, H); L.wall_z(-14, 3, 24, H)
+    L.wall_x(-24, -14, -15.5, H); L.wall_x(-24, -17.5, -31, H); L.wall_x(24, -14, -31, H)
+    for x0, x1 in ((-24, -19), (-17, -7), (-5, 5), (7, 17), (19, 24)):
+        L.wall_z(-19, x0, x1, H)
+    for x in (-12, 0, 12):
+        L.wall_x(x, -19, -31, H)
+    L.wall_z(-31, -24, 24, H)
+    L.decor((0.06, 0.6, 2.6), (-23.8, 3.4, -16.5), 'siren_red', cast_shadow=0)  # EXIT sign
+    L.node('ExitSign', 'Label3D', 'Decor', position=V3(-23.7, 3.4, -16.5), rotation=V3(0, math.pi / 2, 0),
+           text=S('ВЫХОД'), font_size=64, pixel_size=0.006, modulate=C(0.4, 1.0, 0.5))
+    L.door('FireDoor', (0.3, 3.0, 2.0), (-24, 1.5, -16.5), 'metal', player_can_open=False,
+           locked_message='Электрозамок — нет питания', open_offset=V3(0, 0, -2.0), open_time=1.0)
+
+    # lobby: reception, benches, security post
+    L.blk('wood', (6, 1.1, 0.8), (0, 0.55, -7), name='Reception')
+    L.blk('wood', (0.8, 1.1, 3), (-3.4, 0.55, -5.5), name='ReceptionSide')
+    for x in (-9, -6, 6):
+        L.blk('wood', (2.4, 0.45, 0.6), (x, 0.22, -2.5))
+    L.prop('res://scenes/world/desk.tscn', (9, 0, -11), math.pi / 2, name='SecurityDesk')
+    L.prop('res://scenes/world/lockers.tscn', (11.6, 0, -8), -math.pi / 2)
+    # wards: three beds each
+    for cx in (-18, -6, 6):
+        for i, dx in enumerate((-3.5, 0, 3.5)):
+            L.prop('res://scenes/world/bed.tscn', (cx + dx, 0, -28.6), math.pi)
+            L.decor((0.04, 2.2, 2.4), (cx + dx + 1.7, 1.3, -28.4), 'sheet', cast_shadow=0)  # curtain
+    # technical wing: generator, shelves, barrels
+    L.blk('metal', (3.0, 1.8, 1.6), (20.5, 0.9, -28.5), name='Generator')
+    L.blk('dark', (0.6, 0.6, 1.6), (18.7, 1.2, -28.5), name='GeneratorPanel')
+    L.door('GeneratorSwitch', (0.12, 0.5, 0.5), (18.35, 1.3, -28.2), 'siren_red', event='PowerOn',
+           prompt='Запустить генератор', open_offset=V3(0, -0.08, 0), open_time=0.3)
+    L.prop('res://scenes/world/shelf.tscn', (23.4, 0, -22), -math.pi / 2)
+    L.prop('res://scenes/world/shelf.tscn', (23.4, 0, -24), -math.pi / 2)
+    for pos in [(14, 0, -30), (14.8, 0, -30.2), (13.5, 0, -21)]:
+        L.prop('res://scenes/world/barrel.tscn', pos)
+    # outside: the car from the station yard, an ambulance, a fire
+    L.prop('res://scenes/world/car_red.tscn', (3, 0, 5), 0.9)
+    L.fire((3, 1.2, 5))
+    L.prop('res://scenes/world/car_white.tscn', (-9, 0, 7), 0.25)
+    L.decor((1.9, 0.25, 4.3), (-9, 1.05, 7), 'siren_red', rot=(0, 0.25, 0))
+    L.prop('res://scenes/world/car_blue.tscn', (12, 0, 9), -1.2)
+    L.prop('res://scenes/world/street_lamp_flicker.tscn', (-15, 0, 12), math.pi)
+    L.prop('res://scenes/world/street_lamp.tscn', (15, 0, 12), math.pi)
+    L.omni((0, 3.4, -1), (1, 0.85, 0.6), 1.2, 8)
+
+    # light: dim red emergency lamps now, ceiling lights when the power is back
+    for pos in [(0, 3.6, -10), (-18, 3.6, -16.5), (0, 3.6, -16.5), (18, 3.6, -16.5), (21, 3.6, -25)]:
+        L.omni(pos, (1, 0.15, 0.1), 0.8, 7, flicker=True)
+    power = []
+    for x, z in [(-6, -4), (6, -4), (-6, -10), (6, -10), (-20, -16.5), (-12, -16.5), (-4, -16.5), (4, -16.5),
+                 (12, -16.5), (20, -16.5), (-18, -25), (-6, -25), (6, -25), (18, -25)]:
+        name = f'Ceiling{len(power) + 1}'
+        L.ceiling_lamp(x, z, energy=2.0, rng=9.0, name=name, power=True)
+        power.append('Lights/' + name)
+    L.node('Alarm', 'AudioStreamPlayer3D', 'Decor', position=V3(0, 3.5, -16.5), stream=L.sound('alarm'),
+           unit_size=25.0, volume_db=-6.0, script=L.ext_res('Script', 'res://scripts/world/sound_trigger.gd'))
+
+    # zombies: the lobby, wards (patients), the technical wing
+    for kind, pos in [('walker', (-6, 0, -9)), ('walker', (7, 0, -4)), ('walker', (-14, 0, -17))]:
+        L.zombie(kind, pos)
+    patients = []
+    for i, (kind, pos) in enumerate([('walker', (-20, 0, -24)), ('walker', (-15, 0, -27)), ('runner', (-8, 0, -23)),
+                                     ('walker', (-3, 0, -26)), ('walker', (4, 0, -24)), ('walker', (9, 0, -27)),
+                                     ('runner', (16, 0, -23)), ('walker', (22, 0, -21))]):
+        L.zombie(kind, pos, name=f'Patient{i + 1}')
+        patients.append(f'Zombies/Patient{i + 1}')
+
+    # pickups
+    L.pickup('weapon_shotgun', (9, 0.8, -11), event=NP('../../Story/ShotgunFound'))
+    L.pickup('ammo_shells', (10.5, 0, -12.8))
+    L.pickup('ammo_shells', (-9.5, 0, -29.5))
+    L.pickup('medkit', (-2.5, 0, -29.5))
+    L.pickup('ammo_pistol', (-2, 1.1, -7))
+    L.pickup('ammo_rifle', (22.5, 0, -30))
+    L.pickup('medkit', (10.5, 0, -29.5))
+
+    D = 'Диспетчер'
+    L.event('Intro', speaker=D, duration=9, targets=['Story/Intro2'],
+            message='Больница? Плохо, но другого пути нет. Пожарный выход в западном крыле на электрозамке — '
+                    'сначала запусти генератор, он в техническом крыле, на востоке.')
+    L.event('Intro2', delay=9.5, speaker=D, duration=6, message='Свет отключён. Фонарик — F. И лишний раз не шуми.')
+    L.event('ShotgunFound', speaker=D, duration=6,
+            message='Дробовик охраны! В тесных коридорах лучше не придумаешь. Клавиша 3.')
+    L.event('PowerOn', speaker=D, duration=8, objective='Беги к пожарному выходу в западном конце коридора',
+            message='Есть питание! Чёрт… сирена подняла всё здание. Пожарная дверь открыта — беги!',
+            targets=power + ['Decor/Alarm', 'Doors/FireDoor', 'Story/WardHorde', 'Story/LobbyHorde'] + patients)
+    L.spawner('WardHorde', [(-18, 0, -23), (-6, 0, -23), (6, 0, -23)], ['walker', 'walker', 'runner'], 7, interval=1.0)
+    L.spawner('LobbyHorde', [(-2, 0, 6), (2, 0, 8)], ['runner', 'walker'], 5, interval=1.3)
+    L.trigger('ExitTrigger', (-31, 1.5, -17), (8, 3, 14), 'Exit')
+    L.event('Exit', complete=True)
+
+    L.finish((0, 0, 9))
+    L.save('scenes/levels/level_3_hospital.tscn')
+
+
+# =================================================================== CHAPTER 4
+def level_subway():
+    L = LevelBuilder('Subway', dict(
+        chapter_number=4, chapter_title=S('Метро'),
+        intro_text=S('Станция «Больничная». Эскалаторы стоят, турникеты погнуты, на стенах — выцветшие объявления '
+                     'об эвакуации.\nДо «Динамо» два перегона по тоннелю. Поезда давно не ходят. Наверное.'),
+        start_objective=S('Пройди по тоннелю до станции «Динамо»'), start_event=NP('Story/Intro'),
+        default_weapons=PSA(['knife', 'pistol', 'shotgun', 'rifle', 'bazooka']),
+        default_ammo='{"pistol": 24, "shells": 16, "rifle": 90, "rocket": 2}'))
+    L.setup(INTERIOR_ENV)
+    T, C_ = 'subway_tile', 'concrete'
+
+    def rails(x, z0, z1):
+        for dx in (-0.75, 0.75):
+            L.decor((0.12, 0.12, abs(z1 - z0)), (x + dx, 0.06, (z0 + z1) / 2), 'rail', cast_shadow=0)
+
+    # vestibule
+    L.floor('concrete', -8, 8, 1, -12)
+    L.wall_z(0.5, -8, 8, C_, t=1)
+    L.wall_x(-8, 0, -12, T); L.wall_x(8, 0, -12, T)
+    for x in (-6, -4, -2, 2, 4, 6):
+        L.blk('metal', (0.3, 1.0, 1.4), (x, 0.5, -8))
+    L.blk('dark', (4, 2.5, 0.5), (0, 1.25, 0.1), name='Rubble')
+    L.node('StationSign', 'Label3D', 'Decor', position=V3(0, 3.2, -11.9), text=S('БОЛЬНИЧНАЯ'), font_size=96,
+           pixel_size=0.01, modulate=C(0.85, 0.85, 0.9))
+    # platform hall "Bolnichnaya": platform in the middle, tracks on both sides
+    L.floor('subway_tile', -4, 4, -12, -60)
+    L.floor('concrete', -10, -4, -12, -60); L.floor('concrete', 4, 10, -12, -60)
+    L.wall_z(-12, -10, -8, T); L.wall_z(-12, 8, 10, T)
+    L.wall_x(-10, -12, -60, T); L.wall_x(10, -12, -60, T)
+    L.wall_z(-60, -4, 10, T)
+    for x in (-4.05, 4.05):
+        L.decor((0.1, 0.02, 48), (x, 0.01, -36), 'paint_yellow', cast_shadow=0)
+    for z in range(-18, -58, -8):
+        for x in (-3.6, 3.6):
+            L.blk('subway_tile', (0.8, 4.0, 0.8), (x, 2.0, z))
+    rails(-7, -12, -60)
+    rails(7, -12, -60)
+    # parked train on the right track
+    L.blk('train_red', (2.9, 3.0, 24), (7, 1.55, -34), name='Train')
+    for z in range(-44, -23, 4):
+        L.decor((0.05, 0.9, 2.4), (5.53, 2.0, z), 'glass', cast_shadow=0)
+    # tunnel along the left track, with a derailed car blocking it
+    L.floor('concrete', -10, -4, -60, -130)
+    L.wall_x(-10, -60, -88, C_); L.wall_x(-10, -90, -102, C_); L.wall_x(-10, -104, -130, C_)
+    L.wall_x(-4, -60, -130, C_)
+    rails(-7, -60, -130)
+    L.blk('train_gray', (5.9, 3.2, 12), (-7, 1.6, -96), rot=(0, 0.04, 0.06), name='Derailed')
+    for z in (-70, -80, -110, -122):
+        L.blk('dark', (1.2, 0.8, 1.6), (-8.6 + (z % 3) * 0.5, 0.4, z), rot=(0, 0.4, 0))
+    # service corridor around the blockage
+    L.floor('concrete', -16, -10, -86, -106)
+    L.wall_x(-16, -86, -106, C_)
+    L.wall_z(-86, -16, -10, C_); L.wall_z(-106, -16, -10, C_)
+    L.door('ServiceDoor', (0.25, 3.0, 2.0), (-10, 1.5, -89), 'metal_rust', event='Bypass',
+           prompt='Открыть служебную дверь', open_offset=V3(0, 2.9, 0), open_time=1.0)
+    for z in (-93, -97):
+        L.prop('res://scenes/world/lockers.tscn', (-15.6, 0, z), math.pi / 2)
+    # station "Dinamo"
+    L.floor('subway_tile', -4, 4, -130, -172)
+    L.floor('concrete', -10, -4, -130, -172); L.floor('concrete', 4, 10, -130, -172)
+    L.wall_z(-130, -4, 10, T)
+    L.wall_x(-10, -130, -172, T)
+    L.wall_x(10, -130, -148, T); L.wall_x(10, -154, -172, T)
+    L.wall_z(-172, -10, -3, T); L.wall_z(-172, 3, 10, T)
+    for z in range(-136, -170, -8):
+        for x in (-3.6, 3.6):
+            L.blk('subway_tile', (0.8, 4.0, 0.8), (x, 2.0, z))
+    rails(-7, -130, -172)
+    rails(7, -130, -172)
+    L.node('DinamoSign', 'Label3D', 'Decor', position=V3(9.9, 3.0, -160), rotation=V3(0, -math.pi / 2, 0),
+           text=S('ДИНАМО'), font_size=110, pixel_size=0.01, modulate=C(0.85, 0.85, 0.9))
+    # side passage (zombies pour in from here during the siege)
+    L.floor('concrete', 10, 16, -147, -155)
+    L.wall_z(-147, 10, 16, C_); L.wall_z(-155, 10, 16, C_); L.wall_x(16, -147, -155, C_)
+    # exit stairs behind the gate
+    L.floor('concrete', -3, 3, -172, -182)
+    L.wall_x(-3, -172, -182, C_); L.wall_x(3, -172, -182, C_); L.wall_z(-182, -3, 3, C_, t=1)
+    L.door('Gate', (6.0, 4.0, 0.12), (0, 2.0, -172), 'bars', player_can_open=False,
+           locked_message='Решётка заперта', open_offset=V3(0, 3.8, 0), open_time=2.0)
+    # one ceiling for everything (tiled)
+    L.floor('concrete', -10.2, 10.2, 1, -60, top=4.4, thick=0.4)
+    L.floor('concrete', -16.2, -3.9, -60, -130, top=4.4, thick=0.4)
+    L.floor('concrete', -10.2, 16.2, -130, -182, top=4.4, thick=0.4)
+
+    # lights
+    for z in (-4, -9):
+        L.ceiling_lamp(-3, z); L.ceiling_lamp(3, z, flicker=(z == -9))
+    for i, z in enumerate(range(-16, -60, -8)):
+        L.ceiling_lamp(0, z, flicker=i % 3 == 1, energy=1.8)
+    for z in range(-66, -130, -12):
+        L.omni((-4.4, 3.4, z), (1, 0.25, 0.15), 1.2, 9, flicker=True)
+    L.omni((-13, 3.5, -96), (1, 0.8, 0.5), 1.2, 8, flicker=True)
+    for i, z in enumerate(range(-134, -172, -8)):
+        L.ceiling_lamp(0, z, flicker=i % 2 == 0, energy=1.8)
+    L.omni((0, 3.5, -178), (1, 0.9, 0.7), 1.5, 8)
+
+    # zombies
+    for kind, pos in [('walker', (-1, 0, -24)), ('walker', (2, 0, -35)), ('walker', (-7, 0, -44)),
+                      ('walker', (-2, 0, -52)), ('walker', (-7, 0, -72)), ('walker', (-6, 0, -84)),
+                      ('walker', (-13, 0, -95)), ('runner', (-13, 0, -101)), ('walker', (-6, 0, -118)),
+                      ('walker', (1, 0, -145)), ('walker', (-6, 0, -158))]:
+        L.zombie(kind, pos)
+
+    # pickups
+    L.pickup('ammo_shells', (-1, 0, -15))
+    L.pickup('medkit', (2.5, 0, -50))
+    L.pickup('ammo_rifle', (-14.5, 0, -100))
+    L.pickup('ammo_shells', (-14.5, 0, -88))
+    L.pickup('medkit', (-5, 0, -126))
+    for kind, pos in [('ammo_shells', (-2, 0, -150)), ('ammo_rifle', (2, 0, -150)), ('medkit', (0, 0, -165))]:
+        L.pickup(kind, pos, respawn_time=25.0)
+    L.pickup('ammo_rocket', (-8.5, 0, -168))
+
+    D = 'Диспетчер'
+    L.event('Intro', speaker=D, duration=8,
+            message='Ты в метро? До «Динамо» два перегона. Иди по левому пути — правый перекрыт составом.')
+    L.trigger('BlockageTrigger', (-7, 1.5, -83), (6, 3, 2), 'Blockage')
+    L.event('Blockage', speaker=D, duration=7, objective='Найди обход завала',
+            message='Впереди сошедший вагон, тоннель перекрыт. Ищи служебную дверь — они есть через каждые сто метров.')
+    L.event('Bypass', objective='Пройди служебным коридором')
+    L.trigger('AmbushTrigger', (-7, 1.5, -108), (6, 3, 2), 'Ambush')
+    L.event('Ambush', speaker=D, duration=6, objective='Беги к станции «Динамо»',
+            message='Слышишь топот? Сзади бегуны — не останавливайся!', targets=['Story/Runners'])
+    L.spawner('Runners', [(-7, 0, -64), (-7, 0, -68)], ['runner', 'runner', 'walker'], 6, interval=0.9)
+    L.trigger('GateTrigger', (0, 1.5, -142), (20, 3, 4), 'GateSiege')
+    L.event('GateSiege', speaker=D, duration=8, objective='Продержись, пока диспетчер открывает решётку',
+            message='Выход перекрыт решёткой. Взламываю систему станции — продержись минуту!', targets=['Story/Holdout'])
+    L.node('Holdout', 'Node', 'Story', script=L.ext_res('Script', 'res://scripts/story/holdout.gd'), duration=60.0,
+           timer_text=S('Решётка откроется через %s'),
+           spawners=NPS(['../TunnelSpawn', '../PassageSpawn']), on_finished=NP('../GateOpen'))
+    mix = ['walker', 'walker', 'runner']
+    L.spawner('TunnelSpawn', [(-7, 0, -122), (-7, 0, -126)], mix, 0, interval=3.0, continuous=True, max_alive=5)
+    L.spawner('PassageSpawn', [(14, 0, -150), (14, 0, -152)], mix, 0, interval=3.5, continuous=True, max_alive=4)
+    L.event('GateOpen', speaker=D, duration=6, objective='Поднимайся к выходу',
+            message='Есть! Решётка поднята — наверх, стадион прямо над тобой!', targets=['Doors/Gate', 'Story/ExitTrigger'])
+    L.trigger('ExitTrigger', (0, 1.5, -179), (6, 3, 5), 'Exit', enabled=False)
+    L.event('Exit', complete=True)
+
+    L.finish((0, 0, -3), ambience_db=-12.0)
+    L.save('scenes/levels/level_4_subway.tscn')
 
 
 if __name__ == '__main__':
     level_1()
     level_2()
+    level_hospital()
+    level_subway()
     level_3()
     print('levels ok')

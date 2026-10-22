@@ -1,6 +1,6 @@
 # Dead City — Godot 4.7 story FPS
 
-Linear zombie shooter in three chapters. GDScript only, Forward+ renderer. UI and story text are Russian.
+Linear zombie shooter in five chapters (outskirts, station, hospital, subway, stadium). GDScript only, Forward+ renderer. UI and story text are Russian.
 
 ## Conventions
 - Static typing everywhere, tabs for indentation; match the comment density of existing scripts.
@@ -19,9 +19,11 @@ Linear zombie shooter in three chapters. GDScript only, Forward+ renderer. UI an
   from static colliders), plus `Decor`, `Lights`, `Doors`, `Zombies`, `Pickups`, `Story`.
 - Story is data-driven: `StoryEvent` (objective + radio message + `targets` with `activate()`),
   `StoryTrigger` (Area3D), `ZombieSpawner`, `Holdout`, `Door`, `Pickup.event`. Anything with `activate()`
-  can be a target (doors, spawners, zombies, flicker lights, `sound_trigger`, other events, helicopter).
+  can be a target (doors, spawners, zombies, flicker lights, `power_light` (dark until powered),
+  `sound_trigger`, other events, helicopter).
 - Player: `Player` → `Head/Camera3D/WeaponHolder` → weapons. `Weapon` base (ammo, reload, equip/idle anim,
-  `fire_ray`) with `Gun` (pistol, rifle), `MeleeWeapon` (knife), `Launcher` (bazooka → `Rocket`).
+  `fire_ray` with distance falloff) with `Gun` (pistol, rifle, pump shotgun: `pellets`, `pump_delay`,
+  `reload_per_round`), `MeleeWeapon` (knife), `Launcher` (RPG-7, id "bazooka" → `Rocket`). Slots 1–5.
 - `Zombie` (one script, scenes walker / runner / brute): IDLE → CHASE → ATTACK, hears weapon noise
   (`hear_noise` via the "zombies" group). Picks a random body from `bodies` (models/characters/*.glb,
   Quaternius rig: Idle/Walk/Run/Punch/RecieveHit/Death) and tints its "Skin" material. `ZombiePose`

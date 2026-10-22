@@ -40,7 +40,7 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not enabled or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		return
-	for slot in range(1, 5):
+	for slot in range(1, 6):
 		if event.is_action_pressed("weapon_%d" % slot):
 			for weapon in weapons:
 				if weapon.slot == slot:

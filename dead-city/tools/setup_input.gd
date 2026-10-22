@@ -30,6 +30,7 @@ func _initialize() -> void:
 		"weapon_2": [key(KEY_2)],
 		"weapon_3": [key(KEY_3)],
 		"weapon_4": [key(KEY_4)],
+		"weapon_5": [key(KEY_5)],
 		"weapon_next": [mouse(MOUSE_BUTTON_WHEEL_DOWN)],
 		"weapon_prev": [mouse(MOUSE_BUTTON_WHEEL_UP)],
 		"pause": [key(KEY_ESCAPE), key(KEY_P)],

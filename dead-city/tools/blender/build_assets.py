@@ -436,6 +436,8 @@ def model_knife():
 
 PISTOL_COLORS = {"Metal": (0.16, 0.16, 0.17), "DarkerMetal": (0.06, 0.06, 0.065), "Muzzle": (0.12, 0.12, 0.13),
                  "Wood": (0.32, 0.16, 0.07), "Magazine": (0.09, 0.09, 0.1), "Material.003": (0.2, 0.2, 0.21)}
+SHOTGUN_COLORS = {"Barrels": (0.13, 0.13, 0.14), "Black": (0.035, 0.035, 0.04), "DarkMetal": (0.07, 0.07, 0.075),
+                  "Trigger": (0.1, 0.1, 0.1), "BulletRed": (0.5, 0.05, 0.03), "BulletYellow": (0.7, 0.5, 0.15)}
 WEAPONS = {
     # source, length (m), grip point (bbox fractions: x, y from the rear, z from the bottom) and where it goes;
     # hands: (grip point as bbox fractions, finger direction, palm direction); material colour overrides
@@ -445,6 +447,9 @@ WEAPONS = {
     "rifle": dict(src="guns/GunPack Vol.1/Blends/ak47.blend", length=0.8, grip=(0.5, 0.36, 0.3), at=(0.13, 0.48, -0.28), yaw=12,
                   right=((0.5, 0.36, 0.3), (0, 1, -0.3), (-1, 0, 0)),
                   left=((0.5, 0.68, 0.66), (0.6, 0.8, 0), (0, 0, 1)), colors={}),
+    "shotgun": dict(src="guns/FPS Pack/Blends/Shotgun.blend", length=0.98, grip=(0.5, 0.33, 0.5), at=(0.12, 0.38, -0.21), yaw=9,
+                    right=((0.5, 0.33, 0.5), (0, 1, -0.35), (-1, 0, 0)),
+                    left=((0.5, 0.62, 0.7), (0.6, 0.8, 0), (0, 0, 1)), colors=SHOTGUN_COLORS),
     "rpg": dict(src="guns/rpg/RPG7.fbx", length=1.0, grip=(0.5, 0.4, 0.1), at=(0.19, 0.36, -0.36), yaw=4,
                 right=((0.5, 0.4, 0.12), (0, 1, -0.2), (-1, 0, 0)),
                 left=((0.5, 0.56, 0.12), (0, 1, -0.2), (1, 0, 0)), colors={}),
@@ -609,5 +614,5 @@ if "armstest" in PARTS:
     render_first_person(os.path.join(SRC, "previews", "arms_test.glb"), os.path.join(SRC, "previews", "arms_test.png"))
 if "previews" in PARTS:
     out = os.path.join(PROJECT, "models", "weapons")
-    for n in ("knife", "pistol", "rifle", "rpg"):
+    for n in ("knife", "pistol", "shotgun", "rifle", "rpg"):
         render_first_person(os.path.join(out, f"{n}_fp.glb"), os.path.join(SRC, "previews", f"{n}_fp.png"))

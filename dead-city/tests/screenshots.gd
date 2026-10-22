@@ -4,7 +4,7 @@ extends Node
 
 var out := "user://"
 ## Optional second argument: comma-separated sections to render (menu, street, station, stadium).
-var sections := PackedStringArray(["menu", "gallery", "street", "station", "stadium"])
+var sections := PackedStringArray(["menu", "gallery", "street", "station", "hospital", "subway", "stadium"])
 
 
 func frames(n: int) -> void:
@@ -87,6 +87,10 @@ func _run() -> void:
 		await _street()
 	if "station" in sections:
 		await _station()
+	if "hospital" in sections:
+		await _hospital()
+	if "subway" in sections:
+		await _subway()
 	if "stadium" in sections:
 		await _stadium()
 	get_tree().quit()
@@ -133,7 +137,7 @@ func _station() -> void:
 
 
 func _stadium() -> void:
-	var level := await load_level("res://scenes/levels/level_3_stadium.tscn")
+	var level := await load_level("res://scenes/levels/level_5_stadium.tscn")
 	var player := await play(level)
 	var brute := (load("res://scenes/zombies/brute.tscn") as PackedScene).instantiate() as Zombie
 	brute.position = Vector3(3, 0, -14)
@@ -182,3 +186,39 @@ func _gallery() -> void:
 	await snap("00_gallery")
 	await pose(player, Vector3(-5.5, 0, -7.0), -60, -8)
 	await snap("00_gallery_side")
+
+
+func _hospital() -> void:
+	var level := await load_level("res://scenes/levels/level_3_hospital.tscn")
+	var player := await play(level)
+	freeze_zombies()
+	await pose(player, Vector3(0, 0, 9), 0, 2)
+	await snap("09_hospital_entrance")
+	await equip(player, "shotgun")
+	player.flashlight.visible = true
+	await pose(player, Vector3(-6, 0, -16.5), 0, -4)
+	await pose(player, Vector3(-6, 0, -16.5), 0, -4)
+	player.rotation.y = deg_to_rad(10)
+	await frames(10)
+	await snap("10_hospital_ward_shotgun")
+	player.flashlight.visible = false
+	level.get_node("Story/PowerOn").call("fire")
+	await get_tree().create_timer(2.0).timeout
+	freeze_zombies()
+	await pose(player, Vector3(16, 0, -16.5), 90, -2)
+	await snap("11_hospital_power_on")
+
+
+func _subway() -> void:
+	var level := await load_level("res://scenes/levels/level_4_subway.tscn")
+	var player := await play(level)
+	freeze_zombies()
+	await equip(player, "shotgun")
+	await pose(player, Vector3(0, 0, -14), 0, -2)
+	await snap("12_subway_platform")
+	player.flashlight.visible = true
+	await pose(player, Vector3(-7, 0, -66), 0, 0)
+	await snap("13_subway_tunnel")
+	player.flashlight.visible = false
+	await pose(player, Vector3(0, 0, -134), 0, 0)
+	await snap("14_subway_dinamo")

@@ -94,6 +94,31 @@ func _run() -> void:
 	check(far.state == Zombie.State.CHASE, "gunshot alerted the distant walker")
 	far.queue_free()
 
+	# Shotgun: devastating up close, weak far away, loads shell by shell.
+	var shotgun := await equip("shotgun") as Gun
+	player.holder.add_ammo("shells", 16)
+	var close := dummy(WALKER, Vector3(0, 0, -3))
+	await aim_at(close.global_position + Vector3.UP * 0.8)
+	shotgun._handle_input(true, true)
+	await frames(2)
+	check(close.state == Zombie.State.DEAD, "shotgun kills a walker at 3 m in one shot")
+	await get_tree().create_timer(1.0).timeout
+	var far_target := dummy(WALKER, Vector3(0, 0, -25))
+	await aim_at(far_target.global_position + Vector3.UP * 0.8)
+	shotgun._cooldown = 0.0
+	shotgun._handle_input(true, true)
+	await frames(2)
+	check(far_target.state != Zombie.State.DEAD and far_target.health > 35,
+		"shotgun is weak at 25 m (health %d)" % far_target.health)
+	far_target.queue_free()
+	await get_tree().create_timer(1.0).timeout
+	var loaded := shotgun.ammo
+	shotgun.start_reload()
+	await get_tree().create_timer(shotgun.reload_time + 0.1).timeout
+	check(shotgun.ammo == loaded + 1 and shotgun.is_reloading, "one shell per reload step (%d -> %d)" % [loaded, shotgun.ammo])
+	await get_tree().create_timer(shotgun.reload_time * 3).timeout
+	check(shotgun.ammo == shotgun.magazine_size and not shotgun.is_reloading, "reload continues until the tube is full")
+
 	# Rifle body shots.
 	var rifle := await equip("rifle")
 	target = dummy(WALKER, Vector3(0, 0, -8))
@@ -153,7 +178,7 @@ func _run() -> void:
 	check(player.holder.add_ammo("pistol", 24) and pistol_weapon.reserve == mini(before + 24, pistol_weapon.max_reserve),
 		"pistol ammo pickup")
 	var state := player.get_state()
-	check(state["weapons"]["owned"].size() == 4, "state lists four weapons")
+	check(state["weapons"]["owned"].size() == 5, "state lists five weapons")
 
 	print("FAILURES: %d" % failures)
 	get_tree().quit(failures)

@@ -151,12 +151,65 @@ func _run() -> void:
 	await get_tree().create_timer(3.0).timeout
 	await teleport(level, Vector3(30, 0.1, -48))
 
-	# ---------------------------------------------------------------- chapter 3
-	level = await wait_scene("Stadium")
-	check(level != null and Game.current_level == 2, "chapter 3 loaded")
+	# ---------------------------------------------------------------- chapter 3: hospital
+	level = await wait_scene("Hospital")
+	check(level != null and Game.current_level == 2, "chapter 3 (hospital) loaded")
 	await start(level)
 	p = level.player
-	check(p.holder.get_weapon("bazooka").owned, "bazooka carried into chapter 3")
+	check(p.holder.get_weapon("bazooka").owned, "bazooka carried into the hospital")
+	check_paths(level, {"shotgun": node_pos(level, "Pickups/WeaponShotgun1"), "generator": Vector3(17.5, 0, -28),
+		"fire door": Vector3(-23, 0, -16.5), "yard": Vector3(-31, 0, -17)})
+	await teleport(level, node_pos(level, "Pickups/WeaponShotgun1"))
+	check(p.holder.get_weapon("shotgun").owned and p.holder.current.id == "shotgun", "shotgun picked up and equipped")
+	var fire_door := level.get_node("Doors/FireDoor") as Door
+	fire_door.interact(p)
+	await frames(3)
+	check(not fire_door.is_open, "fire door stays shut without power")
+	var lamp := level.get_node("Lights/Ceiling3") as Light3D
+	check(lamp.light_energy == 0.0, "ceiling lights are dark")
+	await teleport(level, Vector3(17.3, 0, -28.2))
+	(level.get_node("Doors/GeneratorSwitch") as Door).interact(p)
+	await get_tree().create_timer(2.0).timeout
+	check(lamp.light_energy > 0.5, "power on: lights came back (%.2f)" % lamp.light_energy)
+	check(fire_door.is_open, "power on: fire door opened")
+	check((level.get_node("Story/WardHorde") as ZombieSpawner).active, "power on: the wards wake up")
+	check(level.hud.objective_label.text.contains("пожарному выходу"), "objective: " + level.hud.objective_label.text)
+	await kill_all(level)
+	await teleport(level, Vector3(-31, 0.1, -17))
+
+	# ---------------------------------------------------------------- chapter 4: subway
+	level = await wait_scene("Subway")
+	check(level != null and Game.current_level == 3, "chapter 4 (subway) loaded")
+	await start(level)
+	p = level.player
+	check(p.holder.get_weapon("shotgun").owned, "shotgun carried into the subway")
+	check_paths(level, {"blockage": Vector3(-7, 0, -86), "service corridor": Vector3(-13, 0, -96),
+		"after blockage": Vector3(-7, 0, -110), "dinamo": Vector3(0, 0, -150), "gate": Vector3(0, 0, -170)})
+	await teleport(level, Vector3(-7, 0.1, -83))
+	check(level.hud.objective_label.text == "Найди обход завала", "blockage: " + level.hud.objective_label.text)
+	(level.get_node("Doors/ServiceDoor") as Door).interact(p)
+	await frames(5)
+	check((level.get_node("Doors/ServiceDoor") as Door).is_open, "service door opened")
+	await teleport(level, Vector3(-7, 0.1, -108))
+	check((level.get_node("Story/Runners") as ZombieSpawner).active, "runners chase through the tunnel")
+	await kill_all(level)
+	await teleport(level, Vector3(0, 0.1, -142))
+	var gate_holdout := level.get_node("Story/Holdout") as Holdout
+	check(gate_holdout.running, "gate siege started")
+	await get_tree().create_timer(4.0).timeout
+	check(level.hud.timer_label.text.begins_with("Решётка откроется"), "timer: " + level.hud.timer_label.text)
+	gate_holdout.time_left = 0.05
+	await get_tree().create_timer(2.5).timeout
+	check((level.get_node("Doors/Gate") as Door).is_open, "gate opened")
+	await kill_all(level)
+	await teleport(level, Vector3(0, 0.1, -179))
+
+	# ---------------------------------------------------------------- chapter 5: stadium
+	level = await wait_scene("Stadium")
+	check(level != null and Game.current_level == 4, "chapter 5 (stadium) loaded")
+	await start(level)
+	p = level.player
+	check(p.holder.get_weapon("bazooka").owned and p.holder.get_weapon("shotgun").owned, "full arsenal carried into the stadium")
 	check_paths(level, {"helipad": Vector3(0, 0, 0), "north tunnel": Vector3(0, 0, -50),
 		"east tunnel": Vector3(50, 0, 0), "rocket crate": node_pos(level, "Pickups/AmmoRocket1")})
 	await teleport(level, Vector3(0, 0.1, 2))

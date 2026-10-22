@@ -20,6 +20,8 @@ const HIT_MASK := 1 | 4
 @export var magazine_size := 0
 @export var max_reserve := 0
 @export var reload_time := 1.5
+## Load one round per reload_time (pump shotgun) instead of a whole magazine.
+@export var reload_per_round := false
 @export var equip_time := 0.35
 ## Zombies within this radius hear the weapon being used.
 @export var noise_radius := 0.0
@@ -119,6 +121,13 @@ func start_reload() -> void:
 	reload_changed.emit(self, true)
 
 
+## Stops a round-by-round reload so the weapon can fire with what it has.
+func cancel_reload() -> void:
+	if is_reloading:
+		is_reloading = false
+		reload_changed.emit(self, false)
+
+
 ## Returns false when the reserve is already full.
 func add_ammo(amount: int) -> bool:
 	if not uses_ammo() or reserve >= max_reserve:
@@ -134,7 +143,9 @@ func make_noise() -> void:
 
 
 ## Casts a bullet/blade ray from the camera. Returns the end point.
-func fire_ray(direction: Vector3, damage: int, headshot_multiplier: float, max_range: float) -> Vector3:
+## [param falloff] (start, end) in metres scales damage down to a quarter between the two distances.
+func fire_ray(direction: Vector3, damage: int, headshot_multiplier: float, max_range: float,
+		falloff := Vector2.ZERO, impact := true) -> Vector3:
 	var from := camera.global_position
 	var query := PhysicsRayQueryParameters3D.create(from, from + direction * max_range, HIT_MASK)
 	var hit := get_world_3d().direct_space_state.intersect_ray(query)
@@ -145,10 +156,13 @@ func fire_ray(direction: Vector3, damage: int, headshot_multiplier: float, max_r
 	if collider is Zombie:
 		var zombie := collider as Zombie
 		var headshot := zombie.is_headshot(point)
-		var amount := roundi(damage * (headshot_multiplier if headshot else 1.0))
+		var scale := 1.0
+		if falloff.y > falloff.x:
+			scale = clampf(1.0 - (from.distance_to(point) - falloff.x) / (falloff.y - falloff.x) * 0.75, 0.25, 1.0)
+		var amount := roundi(damage * scale * (headshot_multiplier if headshot else 1.0))
 		var killed := zombie.take_damage(amount, direction, point)
 		enemy_hit.emit(killed, headshot)
-	else:
+	elif impact:
 		Effects.spawn(IMPACT_SCENE, self, point, hit.normal)
 	return point
 
@@ -168,6 +182,18 @@ func kick(back: float, up: float) -> void:
 
 
 func _finish_reload() -> void:
+	if reload_per_round:
+		ammo += 1
+		reserve -= 1
+		ammo_changed.emit(self)
+		if ammo < magazine_size and reserve > 0:
+			_reload_left = reload_time
+			if reload_sound != null:
+				reload_sound.play()
+			return
+		is_reloading = false
+		reload_changed.emit(self, false)
+		return
 	is_reloading = false
 	var taken := mini(magazine_size - ammo, reserve)
 	ammo += taken

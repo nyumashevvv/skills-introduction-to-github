@@ -95,4 +95,12 @@ for i in range(fade):
     k = i / fade
     amb[i] = amb[i] * k + amb[-fade + i] * (1 - k)
 save('ambience', amb[:-fade], 0.5)
+# shotgun (own seed so adding it does not change the sounds above)
+random.seed(23)
+blast = mix(lowpass(env_noise(0.6, 9), 0.3), scale(lowpass(env_noise(0.25, 25), 0.7), 0.6),
+            tone(lambda t: 90 * math.exp(-t * 8) + 35, 0.5, lambda t: math.exp(-t * 9)))
+save('shotgun', blast)
+rack = lambda f1, f2: mix(click(f1, 0.07, 45), delay(lowpass(env_noise(0.08, 30), 0.3), 0.02), delay(click(f2, 0.06, 55), 0.12))
+save('shotgun_pump', mix(rack(500, 900), delay(rack(700, 1200), 0.16)), 0.6)
+save('shell_insert', mix(click(1800, 0.04, 90), delay(click(600, 0.07, 50), 0.05)), 0.5)
 print('sounds ok')

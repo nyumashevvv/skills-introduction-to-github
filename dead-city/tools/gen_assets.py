@@ -22,6 +22,10 @@ def mats():
     material(T + 'metal_rust.tres', (0.5, 0.33, 0.22), metallic=0.3, roughness=0.8, texture='metal', uv_scale=0.4)
     material(T + 'grass.tres', (1, 1, 1), roughness=1.0, texture='grass', uv_scale=0.12)
     material(T + 'stands.tres', (0.45, 0.47, 0.52), roughness=0.9, texture='concrete', uv_scale=0.3)
+    material(T + 'hospital_wall.tres', (0.72, 0.8, 0.78), roughness=0.9, texture='concrete', uv_scale=0.4)
+    material(T + 'linoleum.tres', (0.55, 0.68, 0.62), roughness=0.4, texture='tile', uv_scale=0.35)
+    material(T + 'subway_tile.tres', (0.92, 0.88, 0.76), roughness=0.35, texture='tile', uv_scale=1.0)
+    material(T + 'rail.tres', (0.3, 0.27, 0.25), metallic=0.7, roughness=0.5, texture='metal', uv_scale=1.0)
     material(T + 'sandbag.tres', (0.62, 0.54, 0.4), roughness=1.0, texture='concrete', uv_scale=1.2)
     # plain
     for name, col in [('car_red', (0.45, 0.06, 0.05)), ('car_blue', (0.08, 0.15, 0.35)), ('car_white', (0.75, 0.75, 0.72)),
@@ -31,6 +35,10 @@ def mats():
     material(T + 'tire.tres', (0.03, 0.03, 0.03), roughness=0.9)
     material(T + 'chrome.tres', (0.7, 0.7, 0.72), metallic=0.6, roughness=0.25)
     material(T + 'dark.tres', (0.06, 0.06, 0.07), roughness=0.8)
+    material(T + 'lamp_off.tres', (0.5, 0.5, 0.48), roughness=0.4)
+    material(T + 'sheet.tres', (0.82, 0.85, 0.85), roughness=0.9)
+    material(T + 'train_red.tres', (0.42, 0.08, 0.06), metallic=0.4, roughness=0.45)
+    material(T + 'train_gray.tres', (0.45, 0.47, 0.5), metallic=0.5, roughness=0.4)
     material(T + 'lamp_glow.tres', (0, 0, 0), emission=(1.0, 0.78, 0.45), energy=6.0)
     material(T + 'headlight.tres', (0, 0, 0), emission=(1.0, 0.95, 0.8), energy=4.0)
     material(T + 'taillight.tres', (0.2, 0, 0), emission=(1.0, 0.05, 0.02), energy=3.0)
@@ -132,9 +140,23 @@ def weapons():
         s.node(name, 'AudioStreamPlayer', '.', stream=s.sound(snd), volume_db=vol, max_polyphony=3)
     s.save('scenes/weapons/pistol.tscn')
 
+    # Pump shotgun: 8 pellets, damage falls off with distance, loads shell by shell
+    s = Scene()
+    weapon_root(s, 'gun', dict(node_name='Shotgun', id=S('shotgun'), display_name=S('Дробовик'), slot=3,
+                ammo_type=S('shells'), magazine_size=6, max_reserve=48, reload_time=0.55, reload_per_round=True,
+                noise_radius=45.0, damage=16, headshot_multiplier=2.0, fire_rate=1.25, max_range=60.0,
+                base_spread_deg=1.0, move_spread_deg=1.5, heat_spread_deg=0.5, pellets=8, pellet_spread_deg=4.0,
+                falloff=V2(6, 22), pump_delay=0.3, recoil=0.05, kick_back=0.12, kick_up=0.12))
+    viewmodel(s, 'shotgun')
+    flash_node(s, 'Model', 0.32, 6.0)
+    for name, snd, vol in [('ShootSound', 'shotgun', -3.0), ('PumpSound', 'shotgun_pump', -5.0),
+                           ('ReloadSound', 'shell_insert', -5.0), ('EmptySound', 'empty', -4.0)]:
+        s.node(name, 'AudioStreamPlayer', '.', stream=s.sound(snd), volume_db=vol, max_polyphony=2)
+    s.save('scenes/weapons/shotgun.tscn')
+
     # Rifle
     s = Scene()
-    weapon_root(s, 'gun', dict(node_name='Rifle', id=S('rifle'), display_name=S('Автомат'), slot=3,
+    weapon_root(s, 'gun', dict(node_name='Rifle', id=S('rifle'), display_name=S('Автомат'), slot=4,
                 ammo_type=S('rifle'), magazine_size=30, max_reserve=210, reload_time=2.0, noise_radius=40.0,
                 automatic=True, damage=26, headshot_multiplier=2.5, fire_rate=10.0, base_spread_deg=0.35,
                 move_spread_deg=3.0, heat_spread_deg=1.6, recoil=0.009, kick_back=0.03, kick_up=0.03))
@@ -146,7 +168,7 @@ def weapons():
 
     # RPG-7 (slot "bazooka")
     s = Scene()
-    weapon_root(s, 'launcher', dict(node_name='Bazooka', id=S('bazooka'), display_name=S('РПГ-7'), slot=4,
+    weapon_root(s, 'launcher', dict(node_name='Bazooka', id=S('bazooka'), display_name=S('РПГ-7'), slot=5,
                 ammo_type=S('rocket'), magazine_size=1, max_reserve=8, reload_time=2.3, noise_radius=60.0,
                 equip_time=0.6, rocket_scene=s.ext_res('PackedScene', 'res://scenes/weapons/rocket.tscn')))
     viewmodel(s, 'rpg')
@@ -195,7 +217,7 @@ def player():
     s.node('ViewmodelLight', 'OmniLight3D', 'Head/Camera3D', position=V3(-0.1, 0.25, 0.1), light_color=C(0.85, 0.85, 1),
            light_energy=0.7, omni_range=2.0, light_cull_mask=2)
     s.node('WeaponHolder', 'Node3D', 'Head/Camera3D', script=s.ext_res('Script', 'res://scripts/player/weapon_holder.gd'))
-    for name in ('knife', 'pistol', 'rifle', 'bazooka'):
+    for name in ('knife', 'pistol', 'shotgun', 'rifle', 'bazooka'):
         s.node(name.capitalize(), None, 'Head/Camera3D/WeaponHolder',
                instance=s.ext_res('PackedScene', f'res://scenes/weapons/{name}.tscn'))
     s.node('SwitchSound', 'AudioStreamPlayer', 'Head/Camera3D/WeaponHolder', stream=s.sound('weapon_switch'), volume_db=-6.0)
@@ -279,6 +301,13 @@ def pickups():
     pickup('scenes/pickups/ammo_pistol.tscn', 'AmmoPistol',
            dict(kind=1, amount=24, ammo_type=S('pistol'), display_name=S('Патроны для пистолета')),
            lambda s, p: ammo_box(s, p, 0.26, 'brass'))
+    def shells(s, p):
+        ammo_box(s, p, 0.3, 'rocket_red')
+        for i in range(4):
+            s.cyl(f'Shell{i}', p, 0.018, 0.07, (-0.09 + i * 0.06, 0.17, 0), 'rocket_red')
+            s.cyl(f'Brass{i}', p, 0.019, 0.02, (-0.09 + i * 0.06, 0.135, 0), 'brass')
+    pickup('scenes/pickups/ammo_shells.tscn', 'AmmoShells',
+           dict(kind=1, amount=8, ammo_type=S('shells'), display_name=S('Патроны для дробовика')), shells, (1, 0.5, 0.4))
     pickup('scenes/pickups/ammo_rifle.tscn', 'AmmoRifle',
            dict(kind=1, amount=60, ammo_type=S('rifle'), display_name=S('Патроны для автомата')),
            lambda s, p: (ammo_box(s, p, 0.4, 'paint_yellow'),
@@ -296,6 +325,8 @@ def pickups():
             s.node('Model', None, p, instance=s.ext_res('PackedScene', f'res://models/weapons/{name}_world.glb'),
                    scale=V3(scale, scale, scale), rotation=V3(0, RX, 0))
         return build
+    pickup('scenes/pickups/weapon_shotgun.tscn', 'WeaponShotgun',
+           dict(kind=2, item_id=S('shotgun'), display_name=S('Дробовик')), weapon_visual('shotgun', 1.0))
     pickup('scenes/pickups/weapon_rifle.tscn', 'WeaponRifle',
            dict(kind=2, item_id=S('rifle'), display_name=S('Автомат')), weapon_visual('rifle', 1.0))
     pickup('scenes/pickups/weapon_bazooka.tscn', 'WeaponBazooka',
@@ -522,6 +553,19 @@ def prefabs():
     s.box('Screen', '.', (0.44, 0.28, 0.01), (0.3, 1.05, 0.17), 'glass')
     s.box('Papers', '.', (0.3, 0.02, 0.22), (-0.5, 0.82, 0.1), 'paint_white', rot=(0, 0.3, 0))
     s.save('scenes/world/desk.tscn')
+
+    s = Scene()
+    shape = s.sub_res('BoxShape3D', size=V3(1.0, 0.7, 2.1))
+    s.node('Bed', 'StaticBody3D')
+    s.node('CollisionShape3D', 'CollisionShape3D', '.', position=V3(0, 0.35, 0), shape=shape)
+    s.box('Frame', '.', (1.0, 0.12, 2.1), (0, 0.5, 0), 'metal')
+    s.box('Mattress', '.', (0.92, 0.14, 1.95), (0, 0.63, 0), 'sheet')
+    s.box('Pillow', '.', (0.6, 0.1, 0.35), (0, 0.75, 0.75), 'sheet')
+    s.box('Blood', '.', (0.5, 0.01, 0.6), (0.1, 0.705, -0.1), 'z_blood')
+    s.box('Head', '.', (1.0, 0.5, 0.06), (0, 0.8, 1.04), 'metal')
+    for i, (x, z) in enumerate([(-0.45, -1.0), (0.45, -1.0), (-0.45, 1.0), (0.45, 1.0)]):
+        s.box(f'Leg{i}', '.', (0.05, 0.45, 0.05), (x, 0.22, z), 'metal')
+    s.save('scenes/world/bed.tscn')
 
     s = Scene()
     shape = s.sub_res('BoxShape3D', size=V3(1.8, 2.0, 0.5))
