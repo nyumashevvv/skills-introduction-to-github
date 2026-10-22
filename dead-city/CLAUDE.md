@@ -18,11 +18,12 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
 - `Game` autoload (`scripts/autoload/game.gd`): chapter list, checkpoint (player state at chapter start),
   save file, kill counter, difficulty (`Game.tuning("health"|"speed"|"damage"|"ammo")`, applied in `Zombie._ready`,
   `Player.take_damage`, `Pickup`). `new_game(difficulty)` plays `intro_cutscene.tscn` first.
+  `Game.complete_level(state)` moves on; the last chapter leads to `ending.tscn`.
 - Menu and intro cutscene share `scenes/ui/backdrop_world.tscn` (street + basement set, camera marks `<Shot>A/B`);
   cutscene text lives in `tools/story_text.py`. Radio lines and the intro are voiced by `tools/gen_voice.py` (Piper,
   CC0 Russian voices) into `sounds/voice/<md5(text)[:12]>.ogg`; `Hud.voice_line(text)` finds them.
 - Knife: `Zombie.can_be_stealth_killed` (unaware or struck in the back) → `stealth_kill` (silent, no alert);
-  otherwise `melee_hit` (stagger + knock back). Bosses take `Boss.BACKSTAB_DAMAGE` instead. `Game.complete_level(state)` moves on; the last chapter leads to `ending.tscn`.
+  otherwise `melee_hit` (stagger + knock back). Bosses take `Boss.BACKSTAB_DAMAGE` instead.
 - `Level` (`scripts/story/level.gd`) is the root of every chapter: intro card, pause/death/completion,
   wires `Player` signals to `Hud`. Expected children: `Player`, `HUD`, `NavigationRegion3D` (baked at runtime
   from static colliders), plus `Decor`, `Lights`, `Doors`, `Zombies`, `Pickups`, `Story`.
