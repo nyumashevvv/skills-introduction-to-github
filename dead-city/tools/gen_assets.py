@@ -57,6 +57,10 @@ def mats():
     material(T + 'military.tres', (0.22, 0.26, 0.17), roughness=0.85)
     material(T + 'tent.tres', (0.3, 0.33, 0.22), roughness=1.0)
     material(T + 'fire_glow.tres', (0, 0, 0), emission=(1.0, 0.45, 0.1), energy=4.0)
+    for name, col in [('pink', (1.0, 0.15, 0.55)), ('cyan', (0.15, 0.85, 1.0)), ('green', (0.2, 1.0, 0.35)),
+                      ('red', (1.0, 0.08, 0.06)), ('blue', (0.25, 0.4, 1.0)), ('yellow', (1.0, 0.75, 0.15)),
+                      ('white', (0.9, 0.95, 1.0))]:
+        material(T + f'neon_{name}.tres', (0, 0, 0), emission=col, energy=7.0)
     material(T + 'door_glass_lit.tres', (0.1, 0.12, 0.14), roughness=0.1, emission=(0.8, 0.88, 0.95), energy=0.8)
     material(T + 'acid_glow.tres', (0, 0, 0), emission=(0.45, 1.0, 0.15), energy=3.0)
     # weapons & hands
@@ -259,7 +263,7 @@ def weapons():
 def player():
     s = Scene()
     shape = s.sub_res('CapsuleShape3D', radius=0.4, height=1.8)
-    s.node('Player', 'CharacterBody3D', groups=['player'], collision_layer=2, collision_mask=5,
+    s.node('Player', 'CharacterBody3D', groups=['player'], collision_layer=2, collision_mask=13,
            script=s.ext_res('Script', 'res://scripts/player/player.gd'))
     s.node('CollisionShape3D', 'CollisionShape3D', '.', position=V3(0, 0.9, 0), shape=shape)
     s.node('Head', 'Node3D', '.', position=V3(0, 1.6, 0))

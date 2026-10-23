@@ -19,6 +19,10 @@ extends Block
 ## StoryEvent fired when the door opens.
 @export var event: NodePath
 
+## Physics layer 4: once a door starts to open only the player bumps into it, so zombies standing behind it
+## are not shoved along by the panel and do not snag on it afterwards (the navmesh does not know about doors).
+const OPEN_LAYER := 8
+
 var is_open := false
 var _opener := Vector3.INF
 
@@ -55,6 +59,7 @@ func open() -> void:
 	if is_open:
 		return
 	is_open = true
+	collision_layer = OPEN_LAYER
 	$OpenSound.play()
 	var tween := create_tween()
 	if swing_degrees != 0.0:

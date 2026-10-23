@@ -148,6 +148,8 @@ func _run() -> void:
 			await snap("cutscene_%d" % i)
 	if "street" in sections:
 		await _street()
+	if "signs" in sections:
+		await _signs()
 	if "doors" in sections:
 		await _doors()
 	if "station" in sections:
@@ -425,3 +427,25 @@ func _subway() -> void:
 	player.flashlight.visible = false
 	await pose(player, Vector3(0, 0, -134), 0, 0)
 	await snap("14_subway_dinamo")
+
+
+## Building signs: neon over the chapter 1 shops, the pharmacy cross, the hospital's roof cross and the metro "М".
+func _signs() -> void:
+	var level := await load_level("res://scenes/levels/level_1_outskirts.tscn")
+	var player := await play(level)
+	freeze_zombies()
+	level.hud.gameplay.visible = false
+	player.holder.visible = false
+	await pose(player, Vector3(1.5, 0, 0), 8, 10)
+	await snap("signs_cafe")
+	await pose(player, Vector3(0, 0, -62), 0, 10)
+	await snap("signs_shops")
+	await pose(player, Vector3(0, 0, -100), 0, 12)
+	await snap("signs_police")
+	level = await load_level("res://scenes/levels/level_3_hospital.tscn")
+	player = await play(level)
+	freeze_zombies()
+	level.hud.gameplay.visible = false
+	player.holder.visible = false
+	await pose(player, Vector3(0, 0, 13), 0, 22)
+	await snap("signs_hospital")

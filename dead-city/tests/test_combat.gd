@@ -444,5 +444,13 @@ func test_movement_and_doors() -> void:
 	inside.alert(false)
 	await get_tree().create_timer(3.0).timeout
 	check(not shop.is_open and player.health == 100, "no damage through the shut shop door (%d)" % player.health)
+	# Opening the door swings it into the zombie behind it: it must not get stuck on the panel.
+	inside.global_position = Vector3(-10.3, 0, -80.6)
+	await frames(2)
+	shop.interact(player)
+	player.global_position = Vector3(-5.5, 0, -80)
+	inside.alert(false)
+	await get_tree().create_timer(4.0).timeout
+	check(inside.global_position.x > -8.0, "the zombie came out through the opened door (x %.1f)" % inside.global_position.x)
 	inside.queue_free()
 	await reset_player()

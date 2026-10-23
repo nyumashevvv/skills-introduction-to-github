@@ -70,7 +70,7 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
 - `Effects` static helpers: spawn one-shot effects, tracers, `apply_blast` for explosions.
 
 ## Physics layers
-1 world (also doors) · 2 player · 3 zombies · 5 pickups. Bullets use mask `1 | 4`; zombie sight `1 | 2`.
+1 world (also closed doors) · 2 player · 3 zombies · 4 open doors (player only) · 5 pickups. Bullets use mask `1 | 4`; zombie sight `1 | 2`.
 
 ## Generators and tests
 - `tools/gen_assets.py`, `tools/gen_props.py` (clutter props in `scenes/props/`; solid ones are StaticBody3D and
@@ -79,6 +79,8 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
 - Input map: `godot --headless --path . --script tools/setup_input.gd`.
 - `LevelBuilder.shell` hollows a building's ground floor (walls with door gaps, ceiling, solid storeys above);
   `fancy_door` / `dress_door` give doors the station-entrance look (frame, window, handles, lamp, sign).
+  `neon` (flat glowing sign with a tube frame and light), `blade` (vertical sign sticking out of a facade) and `cross`
+  mark what a building is; neon colours are the `neon_*` materials from `gen_assets.py`.
 - `tools/gen_levels.py`: chapter scenes are `Level` roots — keep `script` the first property of a node or Godot drops
   the script's exported values. After changing radio text, update `tools/voice_en.py` and rerun `tools/gen_voice.py`.
 - Tests (must pass before committing):
