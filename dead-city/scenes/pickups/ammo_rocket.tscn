@@ -51,6 +51,7 @@ shape = SubResource("SphereShape3D_1")
 
 [node name="Item" type="Node3D" parent="Visual"]
 position = Vector3(0.0, 0.5, 0.0)
+scale = Vector3(1.0, 1.0, 1.0)
 
 [node name="R0" type="Node3D" parent="Visual/Item"]
 position = Vector3(-0.08, 0.0, 0.1)
@@ -91,6 +92,16 @@ cast_shadow = 0
 mesh = SubResource("CylinderMesh_4")
 position = Vector3(0.0, 0.0, 0.2)
 rotation = Vector3(1.5708, 0.0, 0.0)
+
+[node name="Tag" type="Label3D" parent="Visual/Item"]
+position = Vector3(0.0, 0.2, 0.0)
+text = "РПГ-7"
+font_size = 26
+pixel_size = 0.0035
+billboard = 1
+modulate = Color(1.0, 0.6, 0.3, 1.0)
+outline_size = 10
+outline_modulate = Color(0.0, 0.0, 0.0, 0.8)
 
 [node name="Light" type="OmniLight3D" parent="."]
 position = Vector3(0.0, 0.8, 0.0)

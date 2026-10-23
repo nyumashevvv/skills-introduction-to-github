@@ -33,7 +33,8 @@ static func spawn_tracer(context: Node, from: Vector3, to: Vector3) -> void:
 
 ## Damages every zombie in [param radius] (falling off with distance) and,
 ## less, the player. Shakes the camera depending on distance.
-static func apply_blast(context: Node, at: Vector3, damage: int, radius: float, source: Weapon) -> void:
+## [param player_share]: the part of [param damage] the player takes at the centre of the blast.
+static func apply_blast(context: Node, at: Vector3, damage: int, radius: float, source: Weapon, player_share := 0.25) -> void:
 	var tree := context.get_tree()
 	for node in tree.get_nodes_in_group("zombies"):
 		var zombie := node as Zombie
@@ -56,7 +57,7 @@ static func apply_blast(context: Node, at: Vector3, damage: int, radius: float, 
 	if player != null:
 		var distance := (player.global_position + Vector3.UP).distance_to(at)
 		if distance < radius:
-			player.take_damage(roundi(damage * 0.25 * (1.0 - distance / radius)))
+			player.take_damage(roundi(damage * player_share * (1.0 - distance / radius)))
 		player.shake(clampf(1.0 - distance / (radius * 4.0), 0.0, 1.0) * 0.8)
 
 

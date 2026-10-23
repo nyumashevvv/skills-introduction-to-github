@@ -3,12 +3,19 @@
 [ext_resource type="PackedScene" path="res://models/vehicles/hatchback_sports.glb" id="1_hatchback_sports"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(1.5152, 1.316, 4.6147)
+size = Vector3(1.5152, 0.6843, 4.715)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(1.3176, 0.6317, 2.1067)
 
 [node name="HatchbackSports" type="StaticBody3D"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-position = Vector3(0.0, 0.658, 0.0)
+position = Vector3(0.0, 0.3422, 0.0)
 shape = SubResource("BoxShape3D_1")
+
+[node name="Cabin" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 1.0002, -0.1505)
+shape = SubResource("BoxShape3D_2")
 
 [node name="Model" parent="." instance=ExtResource("1_hatchback_sports")]

@@ -2256,9 +2256,9 @@ targets = Array[NodePath]([NodePath("../../Zombies/Warden")])
 
 [node name="WardenAppears" type="Node" parent="Story"]
 script = ExtResource("116_story_event")
-objective = "Убей Надзирателя"
+objective = "Убей Боболева"
 speaker = "Диспетчер"
-message = "Во дворе машина… и охранник со щитом! Щит держит пули — целься в голову, заходи сбоку или стреляй из РПГ."
+message = "Во дворе машина… и это Боболев со щитом! Щит держит пули — целься в голову, заходи сбоку или стреляй из РПГ."
 message_duration = 9.0
 
 [node name="WardenDead" type="Node" parent="Story"]

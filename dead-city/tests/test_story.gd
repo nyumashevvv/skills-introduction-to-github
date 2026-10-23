@@ -207,7 +207,7 @@ func _run() -> void:
 	check(shutter.is_open, "garage shutter raised")
 	await get_tree().create_timer(3.0).timeout
 	var warden := level.get_node("Zombies/Warden") as Boss
-	check(warden.state != Zombie.State.IDLE and level.hud.objective_label.text == "Убей Надзирателя",
+	check(warden.state != Zombie.State.IDLE and level.hud.objective_label.text == "Убей Боболева",
 		"the Warden comes for you: " + level.hud.objective_label.text)
 	await teleport(level, Vector3(30, 0.1, -48))
 	check(get_tree().current_scene == level, "no escape while the Warden lives")
@@ -305,10 +305,10 @@ func _run() -> void:
 	await frames(5)
 	var colossi := get_tree().get_nodes_in_group("bosses").filter(func(z: Zombie) -> bool: return z.name.begins_with("Colossus"))
 	check(colossi.size() == 1, "the Colossus arrives at the halfway mark")
-	check(level.hud.boss_box.visible and level.hud.boss_label.text == "Колосс", "boss bar: " + level.hud.boss_label.text)
+	check(level.hud.boss_box.visible and level.hud.boss_label.text == "Алёна", "boss bar: " + level.hud.boss_label.text)
 	holdout.time_left = 0.05
 	await frames(5)
-	check(holdout.running and not level.get_node("Helicopter").visible and level.hud.timer_label.text.begins_with("Убей Колосса"),
+	check(holdout.running and not level.get_node("Helicopter").visible and level.hud.timer_label.text.begins_with("Убей Алёну"),
 		"helicopter waits for the Colossus: " + level.hud.timer_label.text)
 	await kill_all(level, true)
 	await frames(5)
@@ -318,6 +318,20 @@ func _run() -> void:
 	await get_tree().create_timer(11.0).timeout
 	check(level.hud.objective_label.text == "Садись в вертолёт!", "objective: board the helicopter")
 	await teleport(level, Vector3(0, 0.1, 1))
+	var ending: Node = null
+	for i in 600:
+		await get_tree().process_frame
+		if get_tree().current_scene != null and get_tree().current_scene.name == "EndingCutscene":
+			ending = get_tree().current_scene
+			break
+	check(ending != null, "boarding plays the ending cutscene")
+	await get_tree().create_timer(3.0).timeout
+	check(ending != null and (ending.get_node("Voice") as AudioStreamPlayer).playing, "the ending is voiced")
+	check(ending != null and (ending.get_node("World/Heli") as Node3D).position.y > 0.5, "the helicopter lifts off")
+	var skip := InputEventKey.new()
+	skip.keycode = KEY_SPACE
+	skip.pressed = true
+	Input.parse_input_event(skip)
 	for i in 600:
 		await get_tree().process_frame
 		if get_tree().current_scene != null and get_tree().current_scene.name == "Ending":

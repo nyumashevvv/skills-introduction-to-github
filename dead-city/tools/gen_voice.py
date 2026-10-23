@@ -20,7 +20,7 @@ import wave
 from piper import PiperVoice, SynthesisConfig
 
 sys.path.insert(0, os.path.dirname(__file__))
-from story_text import CUTSCENE  # noqa: E402
+from story_text import CUTSCENE, ENDING  # noqa: E402
 from voice_en import EN  # noqa: E402
 
 OUT = 'sounds/voice'
@@ -57,7 +57,7 @@ def main():
     models = sys.argv[1] if len(sys.argv) > 1 else '.'
     os.makedirs(OUT, exist_ok=True)
     loaded = {}
-    lines = level_lines() + [(speaker, text) for _, speaker, text in CUTSCENE]
+    lines = level_lines() + [(speaker, text) for _, speaker, text in CUTSCENE + ENDING]
     missing = [text for _, text in lines if text not in EN]
     if missing:
         sys.exit('no English line in tools/voice_en.py for:\n' + '\n'.join(missing))

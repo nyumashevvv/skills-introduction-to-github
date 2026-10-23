@@ -3,12 +3,19 @@
 [ext_resource type="PackedScene" path="res://models/vehicles/taxi_burnt.glb" id="1_taxi_burnt"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(1.7489, 1.616, 4.4528)
+size = Vector3(1.7489, 0.8403, 4.5496)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(1.5208, 0.7757, 2.0328)
 
 [node name="TaxiBurnt" type="StaticBody3D"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-position = Vector3(0.0, 0.808, 0.0)
+position = Vector3(0.0, 0.4202, 0.0)
 shape = SubResource("BoxShape3D_1")
+
+[node name="Cabin" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 1.2282, -0.1452)
+shape = SubResource("BoxShape3D_2")
 
 [node name="Model" parent="." instance=ExtResource("1_taxi_burnt")]

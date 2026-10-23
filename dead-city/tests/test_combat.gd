@@ -203,6 +203,7 @@ func _run() -> void:
 
 	await test_new_arsenal()
 	await test_movement_and_doors()
+	await test_shot_over_car()
 	await test_bosses()
 
 	# Pickups and inventory.
@@ -238,7 +239,7 @@ func test_bosses() -> void:
 	rifle._handle_input(true, true)
 	await frames(2)
 	check(warden.health == warden.max_health - 2, "shield blocks a body shot (%d damage)" % (warden.max_health - warden.health))
-	check(level.hud.boss_box.visible and level.hud.boss_label.text == "Надзиратель", "shooting the Warden shows its health bar")
+	check(level.hud.boss_box.visible and level.hud.boss_label.text == "Боболев", "shooting the Warden shows its health bar")
 	check(level.is_music_playing() and level._music.stream == warden.music, "boss music starts")
 	var before := warden.health
 	await aim_at(warden.global_position + Vector3.UP * 2.1)
@@ -384,7 +385,8 @@ func test_new_arsenal() -> void:
 	bloater.alert(false)
 	await get_tree().create_timer(3.0).timeout
 	check(bloater.state == Zombie.State.DEAD and player.health < 100, "the bloater bursts in your face (health %d)" % player.health)
-	check(not is_instance_valid(bystander) or bystander.health < bystander.max_health, "the burst hurts other zombies too")
+	check(not is_instance_valid(bystander) or bystander.state == Zombie.State.DEAD, "the burst kills a walker next to it")
+	check(player.health >= 70, "but the player only takes a share of it (health %d)" % player.health)
 	# Spitter: acid from a distance, no boss bar.
 	await reset_player()
 	var spitter := dummy(SPITTER, Vector3(0, 0, -12), false) as Boss
@@ -454,3 +456,21 @@ func test_movement_and_doors() -> void:
 	check(inside.global_position.x > -8.0, "the zombie came out through the opened door (x %.1f)" % inside.global_position.x)
 	inside.queue_free()
 	await reset_player()
+
+
+## A shot over a car's bonnet hits the zombie standing behind it (the car is not one big box any more).
+func test_shot_over_car() -> void:
+	await reset_player()
+	var car := (load("res://scenes/world/vehicles/sedan.tscn") as PackedScene).instantiate() as Node3D
+	car.position = player.global_position + Vector3(0, 0, -6)
+	car.rotation.y = PI / 2
+	level.add_child(car)
+	var behind := dummy(WALKER, Vector3(1.6, 0, -7.6))
+	var pistol := await equip("pistol")
+	await aim_at(behind.global_position + Vector3.UP * 1.1)
+	pistol.ammo = pistol.magazine_size
+	pistol._handle_input(true, true)
+	await frames(3)
+	check(behind.health < 120, "a shot over the bonnet hits the zombie behind the car (health %d)" % behind.health)
+	behind.queue_free()
+	car.queue_free()

@@ -3,12 +3,19 @@
 [ext_resource type="PackedScene" path="res://models/vehicles/suv.glb" id="1_suv"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_1"]
-size = Vector3(1.7489, 1.556, 4.2164)
+size = Vector3(1.7489, 0.8091, 4.308)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_2"]
+size = Vector3(1.5208, 0.7469, 1.9249)
 
 [node name="Suv" type="StaticBody3D"]
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
-position = Vector3(0.0, 0.778, 0.0)
+position = Vector3(0.0, 0.4046, 0.0)
 shape = SubResource("BoxShape3D_1")
+
+[node name="Cabin" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 1.1826, -0.1375)
+shape = SubResource("BoxShape3D_2")
 
 [node name="Model" parent="." instance=ExtResource("1_suv")]

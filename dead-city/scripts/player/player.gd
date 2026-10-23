@@ -41,6 +41,8 @@ var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var _bob_time := 0.0
 var _shake := 0.0
 var _knockback := Vector3.ZERO
+## Visual recoil: the view jumps up on a shot and springs back (the aim keeps only part of it).
+var _punch := 0.0
 var _prompt := ""
 var stamina := 0.0
 var crouching := false
@@ -262,6 +264,8 @@ func _update_head_bob(delta: float, horizontal_speed: float) -> void:
 
 
 func _update_shake(delta: float) -> void:
+	_punch = lerpf(_punch, 0.0, clampf(delta * 9.0, 0.0, 1.0))
+	camera.rotation.x = _punch
 	_shake = move_toward(_shake, 0.0, delta * 1.5)
 	camera.h_offset = randf_range(-1.0, 1.0) * _shake * 0.08
 	camera.v_offset = randf_range(-1.0, 1.0) * _shake * 0.08
@@ -270,6 +274,10 @@ func _update_shake(delta: float) -> void:
 func _on_weapon_fired(recoil: float) -> void:
 	head.rotation.x = clampf(head.rotation.x + recoil, deg_to_rad(-89.0), deg_to_rad(89.0))
 	rotate_y(randf_range(-recoil, recoil) * 0.4)
+	# Heavy guns (revolver, shotgun, sniper) throw the view up and shake it.
+	if recoil >= 0.04:
+		_punch = minf(_punch + recoil * 2.2, 0.35)
+		shake(recoil * 3.0)
 
 
 func _die() -> void:

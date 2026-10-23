@@ -1,0 +1,1961 @@
+[gd_scene format=3]
+
+[ext_resource type="Material" path="res://materials/grass.tres" id="1_grass"]
+
+[ext_resource type="PackedScene" path="res://scenes/world/block.tscn" id="2_block"]
+
+[ext_resource type="Material" path="res://materials/concrete.tres" id="3_concrete"]
+
+[ext_resource type="Material" path="res://materials/stands.tres" id="4_stands"]
+
+[ext_resource type="Material" path="res://materials/dark.tres" id="5_dark"]
+
+[ext_resource type="Material" path="res://materials/neon_blue.tres" id="6_neon_blue"]
+
+[ext_resource type="PackedScene" path="res://scenes/world/floodlight_tower.tscn" id="7_floodlight_tower"]
+
+[ext_resource type="Material" path="res://materials/paint_white.tres" id="8_paint_white"]
+
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/ambulance.tscn" id="9_ambulance"]
+
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/police.tscn" id="10_police"]
+
+[ext_resource type="PackedScene" path="res://scenes/world/vehicles/sedan_burnt.tscn" id="11_sedan_burnt"]
+
+[ext_resource type="PackedScene" path="res://scenes/effects/fire.tscn" id="12_fire"]
+
+[ext_resource type="PackedScene" path="res://scenes/zombies/runner.tscn" id="13_runner"]
+
+[ext_resource type="PackedScene" path="res://scenes/zombies/walker.tscn" id="14_walker"]
+
+[ext_resource type="Material" path="res://materials/plaster_gray.tres" id="15_plaster_gray"]
+
+[ext_resource type="Material" path="res://materials/window_lit.tres" id="16_window_lit"]
+
+[ext_resource type="Material" path="res://materials/brick_dark.tres" id="17_brick_dark"]
+
+[ext_resource type="Material" path="res://materials/plaster.tres" id="18_plaster"]
+
+[ext_resource type="Script" path="res://scripts/ui/ending_heli.gd" id="19_ending_heli"]
+
+[ext_resource type="PackedScene" path="res://models/vehicles/helicopter.glb" id="20_helicopter"]
+
+[ext_resource type="AudioStream" path="res://sounds/helicopter.wav" id="21_helicopter"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
+sky_top_color = Color(0.01, 0.012, 0.03, 1.0)
+sky_horizon_color = Color(0.95, 0.5, 0.25, 1.0)
+ground_bottom_color = Color(0.01, 0.01, 0.01, 1.0)
+ground_horizon_color = Color(0.95, 0.5, 0.25, 1.0)
+sun_angle_max = 8.0
+sun_curve = 0.05
+
+[sub_resource type="Sky" id="Sky_2"]
+sky_material = SubResource("ProceduralSkyMaterial_1")
+
+[sub_resource type="Environment" id="Environment_3"]
+background_mode = 2
+sky = SubResource("Sky_2")
+ambient_light_source = 2
+ambient_light_color = Color(0.35, 0.3, 0.35, 1.0)
+ambient_light_energy = 1.0
+tonemap_mode = 3
+ssao_enabled = true
+glow_enabled = true
+glow_intensity = 1.0
+glow_bloom = 0.06
+fog_enabled = true
+fog_light_color = Color(0.05, 0.05, 0.08, 1.0)
+fog_density = 0.006
+fog_sky_affect = 0.6
+
+[sub_resource type="NavigationMesh" id="NavigationMesh_4"]
+geometry_parsed_geometry_type = 1
+geometry_collision_mask = 1
+agent_height = 2.0
+agent_radius = 0.5
+agent_max_climb = 0.25
+agent_max_slope = 40.0
+
+[sub_resource type="BoxMesh" id="BoxMesh_5"]
+size = Vector3(19.1, 6.45, 0.08)
+material = ExtResource("5_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_6"]
+size = Vector3(19.1, 0.05, 0.05)
+material = ExtResource("6_neon_blue")
+
+[sub_resource type="BoxMesh" id="BoxMesh_7"]
+size = Vector3(0.05, 6.45, 0.05)
+material = ExtResource("6_neon_blue")
+
+[sub_resource type="BoxMesh" id="BoxMesh_8"]
+size = Vector3(0.4, 0.02, 6.0)
+material = ExtResource("8_paint_white")
+
+[sub_resource type="BoxMesh" id="BoxMesh_9"]
+size = Vector3(8.0, 0.02, 0.4)
+material = ExtResource("8_paint_white")
+
+[sub_resource type="BoxMesh" id="BoxMesh_10"]
+size = Vector3(28.5314, 12.7413, 21.5268)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_11"]
+size = Vector3(25.1018, 21.0553, 17.6019)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_12"]
+size = Vector3(17.5713, 1.2, 17.7019)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_13"]
+size = Vector3(18.5552, 29.5741, 29.8498)
+material = ExtResource("17_brick_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_14"]
+size = Vector3(12.9887, 1.2, 29.9498)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_15"]
+size = Vector3(28.0676, 14.2243, 20.638)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_16"]
+size = Vector3(19.6473, 1.2, 20.738)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_17"]
+size = Vector3(16.2893, 36.9878, 20.1719)
+material = ExtResource("17_brick_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_18"]
+size = Vector3(26.87, 24.9125, 27.1884)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_19"]
+size = Vector3(18.809, 1.2, 27.2884)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_20"]
+size = Vector3(18.0327, 22.3017, 29.6124)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_21"]
+size = Vector3(12.6229, 1.2, 29.7124)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_22"]
+size = Vector3(21.7359, 37.8233, 22.9209)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_23"]
+size = Vector3(15.2151, 1.2, 23.0209)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_24"]
+size = Vector3(18.8562, 11.3458, 27.1685)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_25"]
+size = Vector3(16.1343, 36.0909, 18.4486)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_26"]
+size = Vector3(28.532, 11.004, 14.8288)
+material = ExtResource("17_brick_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_27"]
+size = Vector3(19.9724, 1.2, 14.9288)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_28"]
+size = Vector3(28.7234, 24.2562, 14.3905)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_29"]
+size = Vector3(20.1064, 1.2, 14.4905)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_30"]
+size = Vector3(15.3534, 24.3641, 25.6559)
+material = ExtResource("17_brick_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_31"]
+size = Vector3(26.7626, 19.5699, 18.5174)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_32"]
+size = Vector3(18.7338, 1.2, 18.6174)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_33"]
+size = Vector3(14.205, 19.6682, 24.6945)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_34"]
+size = Vector3(9.9435, 1.2, 24.7945)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_35"]
+size = Vector3(25.173, 17.4915, 25.3225)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_36"]
+size = Vector3(15.4535, 35.1394, 17.3592)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_37"]
+size = Vector3(10.8174, 1.2, 17.4592)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_38"]
+size = Vector3(28.2941, 23.126, 27.7396)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_39"]
+size = Vector3(15.0589, 30.9298, 15.9921)
+material = ExtResource("17_brick_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_40"]
+size = Vector3(10.5412, 1.2, 16.0921)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_41"]
+size = Vector3(19.0273, 32.6908, 28.986)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_42"]
+size = Vector3(13.3191, 1.2, 29.086)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_43"]
+size = Vector3(16.252, 12.5912, 16.9815)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_44"]
+size = Vector3(11.3764, 1.2, 17.0815)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_45"]
+size = Vector3(23.8448, 36.5069, 23.8293)
+material = ExtResource("17_brick_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_46"]
+size = Vector3(16.6914, 1.2, 23.9293)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_47"]
+size = Vector3(28.4193, 11.778, 26.126)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_48"]
+size = Vector3(19.8935, 1.2, 26.226)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_49"]
+size = Vector3(20.7644, 14.8202, 24.544)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_50"]
+size = Vector3(28.9756, 36.2125, 29.4791)
+material = ExtResource("17_brick_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_51"]
+size = Vector3(20.2829, 1.2, 29.5791)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_52"]
+size = Vector3(17.4987, 23.6215, 19.5988)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_53"]
+size = Vector3(28.398, 23.3431, 29.6576)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_54"]
+size = Vector3(19.3603, 17.1015, 26.7931)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_55"]
+size = Vector3(13.5522, 1.2, 26.8931)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_56"]
+size = Vector3(19.5427, 17.7748, 21.2818)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_57"]
+size = Vector3(13.6799, 1.2, 21.3818)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_58"]
+size = Vector3(23.0004, 28.1018, 17.2767)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_59"]
+size = Vector3(24.0216, 11.2897, 23.8775)
+material = ExtResource("17_brick_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_60"]
+size = Vector3(16.8152, 1.2, 23.9775)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_61"]
+size = Vector3(26.8296, 23.2796, 28.3881)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_62"]
+size = Vector3(17.8378, 24.7053, 14.1097)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_63"]
+size = Vector3(12.4865, 1.2, 14.2097)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_64"]
+size = Vector3(18.6235, 37.3483, 29.2042)
+material = ExtResource("17_brick_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_65"]
+size = Vector3(13.0365, 1.2, 29.3042)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_66"]
+size = Vector3(25.5834, 30.4936, 29.615)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_67"]
+size = Vector3(17.9084, 1.2, 29.715)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_68"]
+size = Vector3(21.1556, 22.9235, 17.7918)
+material = ExtResource("17_brick_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_69"]
+size = Vector3(23.657, 24.3745, 27.9282)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_70"]
+size = Vector3(16.5599, 1.2, 28.0282)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_71"]
+size = Vector3(19.9561, 26.3158, 16.0718)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_72"]
+size = Vector3(13.9693, 1.2, 16.1718)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_73"]
+size = Vector3(19.3074, 33.6306, 24.0356)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_74"]
+size = Vector3(13.5152, 1.2, 24.1356)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_75"]
+size = Vector3(21.4504, 13.0709, 28.1901)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_76"]
+size = Vector3(15.1746, 17.4358, 27.3684)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_77"]
+size = Vector3(26.0298, 10.0863, 14.5653)
+material = ExtResource("17_brick_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_78"]
+size = Vector3(18.2208, 1.2, 14.6653)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_79"]
+size = Vector3(14.7037, 13.449, 23.2042)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_80"]
+size = Vector3(21.8256, 32.6539, 29.1543)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_81"]
+size = Vector3(15.2779, 1.2, 29.2543)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_82"]
+size = Vector3(17.5506, 26.2248, 25.7158)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_83"]
+size = Vector3(12.2854, 1.2, 25.8158)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_84"]
+size = Vector3(29.2415, 12.6576, 26.6482)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_85"]
+size = Vector3(18.1539, 32.575, 18.371)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_86"]
+size = Vector3(28.779, 31.4751, 24.1499)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_87"]
+size = Vector3(20.1453, 1.2, 24.2499)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_88"]
+size = Vector3(18.7937, 22.2073, 15.6851)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_89"]
+size = Vector3(24.465, 31.3623, 22.8571)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_90"]
+size = Vector3(17.1255, 1.2, 22.9571)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_91"]
+size = Vector3(17.0583, 20.3599, 27.4448)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_92"]
+size = Vector3(22.983, 29.5949, 23.4276)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_93"]
+size = Vector3(28.5193, 15.3534, 24.4557)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_94"]
+size = Vector3(19.9635, 1.2, 24.5557)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_95"]
+size = Vector3(16.6917, 15.9746, 14.0561)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_96"]
+size = Vector3(23.9199, 12.4418, 22.0047)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_97"]
+size = Vector3(17.8069, 28.96, 29.2318)
+material = ExtResource("17_brick_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_98"]
+size = Vector3(12.4648, 1.2, 29.3318)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_99"]
+size = Vector3(17.8836, 19.4882, 29.1212)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_100"]
+size = Vector3(12.5185, 1.2, 29.2212)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_101"]
+size = Vector3(28.2884, 14.038, 14.9558)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_102"]
+size = Vector3(19.8019, 1.2, 15.0558)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_103"]
+size = Vector3(22.9546, 24.8161, 25.5869)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_104"]
+size = Vector3(16.0682, 1.2, 25.6869)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_105"]
+size = Vector3(15.3696, 31.0385, 18.7993)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_106"]
+size = Vector3(10.7587, 1.2, 18.8993)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_107"]
+size = Vector3(16.0927, 12.928, 29.2291)
+material = ExtResource("18_plaster")
+
+[sub_resource type="BoxMesh" id="BoxMesh_108"]
+size = Vector3(24.8013, 34.9433, 19.5202)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_109"]
+size = Vector3(25.3321, 17.4837, 14.3518)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_110"]
+size = Vector3(24.4723, 30.0375, 25.3549)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_111"]
+size = Vector3(17.1306, 1.2, 25.4549)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_112"]
+size = Vector3(29.1549, 32.1533, 24.0568)
+material = ExtResource("17_brick_dark")
+
+[sub_resource type="BoxMesh" id="BoxMesh_113"]
+size = Vector3(24.8177, 18.8685, 25.4563)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_114"]
+size = Vector3(17.3724, 1.2, 25.5563)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_115"]
+size = Vector3(20.5694, 12.9884, 26.7116)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_116"]
+size = Vector3(20.4465, 24.2419, 20.7584)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_117"]
+size = Vector3(14.3126, 1.2, 20.8584)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_118"]
+size = Vector3(17.7825, 37.4929, 25.2062)
+material = ExtResource("3_concrete")
+
+[sub_resource type="BoxMesh" id="BoxMesh_119"]
+size = Vector3(12.4477, 1.2, 25.3062)
+material = ExtResource("16_window_lit")
+
+[sub_resource type="BoxMesh" id="BoxMesh_120"]
+size = Vector3(24.8603, 24.4534, 22.7474)
+material = ExtResource("15_plaster_gray")
+
+[sub_resource type="BoxMesh" id="BoxMesh_121"]
+size = Vector3(17.4022, 1.2, 22.8474)
+material = ExtResource("16_window_lit")
+
+[node name="EndingWorld" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_3")
+
+[node name="Moon" type="DirectionalLight3D" parent="."]
+rotation = Vector3(-0.12, 0.25, 0.0)
+light_color = Color(1.0, 0.62, 0.35, 1.0)
+light_energy = 1.2
+shadow_enabled = true
+directional_shadow_max_distance = 200.0
+
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+navigation_mesh = SubResource("NavigationMesh_4")
+
+[node name="Decor" type="Node3D" parent="."]
+
+[node name="Lights" type="Node3D" parent="."]
+
+[node name="Doors" type="Node3D" parent="."]
+
+[node name="Zombies" type="Node3D" parent="."]
+
+[node name="Pickups" type="Node3D" parent="."]
+
+[node name="Story" type="Node3D" parent="."]
+
+[node name="Block1" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-28.0, -0.5, -47.1429)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block2" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-28.0, -0.5, -31.4286)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block3" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-28.0, -0.5, -15.7143)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block4" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-28.0, -0.5, 0.0)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block5" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-28.0, -0.5, 15.7143)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block6" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-28.0, -0.5, 31.4286)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block7" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-28.0, -0.5, 47.1429)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block8" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-14.0, -0.5, -47.1429)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block9" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-14.0, -0.5, -31.4286)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block10" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-14.0, -0.5, -15.7143)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block11" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-14.0, -0.5, 0.0)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block12" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-14.0, -0.5, 15.7143)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block13" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-14.0, -0.5, 31.4286)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block14" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-14.0, -0.5, 47.1429)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block15" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, -0.5, -47.1429)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block16" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, -0.5, -31.4286)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block17" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, -0.5, -15.7143)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block18" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, -0.5, 0.0)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block19" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, -0.5, 15.7143)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block20" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, -0.5, 31.4286)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block21" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, -0.5, 47.1429)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block22" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(14.0, -0.5, -47.1429)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block23" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(14.0, -0.5, -31.4286)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block24" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(14.0, -0.5, -15.7143)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block25" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(14.0, -0.5, 0.0)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block26" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(14.0, -0.5, 15.7143)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block27" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(14.0, -0.5, 31.4286)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block28" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(14.0, -0.5, 47.1429)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block29" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(28.0, -0.5, -47.1429)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block30" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(28.0, -0.5, -31.4286)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block31" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(28.0, -0.5, -15.7143)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block32" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(28.0, -0.5, 0.0)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block33" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(28.0, -0.5, 15.7143)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block34" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(28.0, -0.5, 31.4286)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block35" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(28.0, -0.5, 47.1429)
+size = Vector3(14.0, 1.0, 15.7143)
+material = ExtResource("1_grass")
+
+[node name="Block36" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-34.1667, -0.51, -53.375)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block37" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-34.1667, -0.51, -38.125)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block38" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-34.1667, -0.51, -22.875)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block39" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-34.1667, -0.51, -7.625)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block40" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-34.1667, -0.51, 7.625)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block41" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-34.1667, -0.51, 22.875)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block42" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-34.1667, -0.51, 38.125)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block43" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-34.1667, -0.51, 53.375)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block44" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-20.5, -0.51, -53.375)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block45" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-20.5, -0.51, -38.125)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block46" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-20.5, -0.51, -22.875)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block47" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-20.5, -0.51, -7.625)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block48" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-20.5, -0.51, 7.625)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block49" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-20.5, -0.51, 22.875)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block50" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-20.5, -0.51, 38.125)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block51" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-20.5, -0.51, 53.375)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block52" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-6.8333, -0.51, -53.375)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block53" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-6.8333, -0.51, -38.125)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block54" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-6.8333, -0.51, -22.875)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block55" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-6.8333, -0.51, -7.625)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block56" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-6.8333, -0.51, 7.625)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block57" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-6.8333, -0.51, 22.875)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block58" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-6.8333, -0.51, 38.125)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block59" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-6.8333, -0.51, 53.375)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block60" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(6.8333, -0.51, -53.375)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block61" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(6.8333, -0.51, -38.125)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block62" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(6.8333, -0.51, -22.875)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block63" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(6.8333, -0.51, -7.625)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block64" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(6.8333, -0.51, 7.625)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block65" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(6.8333, -0.51, 22.875)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block66" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(6.8333, -0.51, 38.125)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block67" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(6.8333, -0.51, 53.375)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block68" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(20.5, -0.51, -53.375)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block69" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(20.5, -0.51, -38.125)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block70" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(20.5, -0.51, -22.875)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block71" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(20.5, -0.51, -7.625)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block72" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(20.5, -0.51, 7.625)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block73" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(20.5, -0.51, 22.875)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block74" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(20.5, -0.51, 38.125)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block75" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(20.5, -0.51, 53.375)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block76" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(34.1667, -0.51, -53.375)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block77" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(34.1667, -0.51, -38.125)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block78" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(34.1667, -0.51, -22.875)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block79" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(34.1667, -0.51, -7.625)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block80" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(34.1667, -0.51, 7.625)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block81" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(34.1667, -0.51, 22.875)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block82" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(34.1667, -0.51, 38.125)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block83" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(34.1667, -0.51, 53.375)
+size = Vector3(13.6667, 1.0, 15.25)
+material = ExtResource("3_concrete")
+
+[node name="Block84" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-42.5, 0.6, 0.0)
+size = Vector3(3.0, 1.2, 122.0)
+material = ExtResource("4_stands")
+
+[node name="Block85" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(42.5, 0.6, 0.0)
+size = Vector3(3.0, 1.2, 122.0)
+material = ExtResource("4_stands")
+
+[node name="Block86" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, 0.6, -62.5)
+size = Vector3(106.0, 1.2, 3.0)
+material = ExtResource("4_stands")
+
+[node name="Block87" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, 0.6, 62.5)
+size = Vector3(106.0, 1.2, 3.0)
+material = ExtResource("4_stands")
+
+[node name="Block88" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-45.5, 1.2, 0.0)
+size = Vector3(3.0, 2.4, 122.0)
+material = ExtResource("4_stands")
+
+[node name="Block89" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(45.5, 1.2, 0.0)
+size = Vector3(3.0, 2.4, 122.0)
+material = ExtResource("4_stands")
+
+[node name="Block90" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, 1.2, -65.5)
+size = Vector3(106.0, 2.4, 3.0)
+material = ExtResource("4_stands")
+
+[node name="Block91" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, 1.2, 65.5)
+size = Vector3(106.0, 2.4, 3.0)
+material = ExtResource("4_stands")
+
+[node name="Block92" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-48.5, 1.8, 0.0)
+size = Vector3(3.0, 3.6, 122.0)
+material = ExtResource("4_stands")
+
+[node name="Block93" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(48.5, 1.8, 0.0)
+size = Vector3(3.0, 3.6, 122.0)
+material = ExtResource("4_stands")
+
+[node name="Block94" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, 1.8, -68.5)
+size = Vector3(106.0, 3.6, 3.0)
+material = ExtResource("4_stands")
+
+[node name="Block95" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, 1.8, 68.5)
+size = Vector3(106.0, 3.6, 3.0)
+material = ExtResource("4_stands")
+
+[node name="Block96" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-51.5, 2.4, 0.0)
+size = Vector3(3.0, 4.8, 122.0)
+material = ExtResource("4_stands")
+
+[node name="Block97" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(51.5, 2.4, 0.0)
+size = Vector3(3.0, 4.8, 122.0)
+material = ExtResource("4_stands")
+
+[node name="Block98" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, 2.4, -71.5)
+size = Vector3(106.0, 4.8, 3.0)
+material = ExtResource("4_stands")
+
+[node name="Block99" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, 2.4, 71.5)
+size = Vector3(106.0, 4.8, 3.0)
+material = ExtResource("4_stands")
+
+[node name="Block100" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, 4.0, -74.0)
+size = Vector3(106.0, 8.0, 1.0)
+material = ExtResource("3_concrete")
+
+[node name="Block101" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(0.0, 4.0, 74.0)
+size = Vector3(106.0, 8.0, 1.0)
+material = ExtResource("3_concrete")
+
+[node name="Block102" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(-53.0, 4.0, 0.0)
+size = Vector3(1.0, 8.0, 148.0)
+material = ExtResource("3_concrete")
+
+[node name="Block103" parent="NavigationRegion3D" instance=ExtResource("2_block")]
+position = Vector3(53.0, 4.0, 0.0)
+size = Vector3(1.0, 8.0, 148.0)
+material = ExtResource("3_concrete")
+
+[node name="D1" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_5")
+position = Vector3(0.0, 11.3, -73.62)
+cast_shadow = 0
+
+[node name="D2" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_6")
+position = Vector3(0.0, 8.075, -73.56)
+cast_shadow = 0
+
+[node name="D3" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_6")
+position = Vector3(0.0, 14.525, -73.56)
+cast_shadow = 0
+
+[node name="D4" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(-9.55, 11.3, -73.56)
+cast_shadow = 0
+
+[node name="D5" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_7")
+position = Vector3(9.55, 11.3, -73.56)
+cast_shadow = 0
+
+[node name="Neon1" type="Label3D" parent="Decor"]
+position = Vector3(0.0, 11.3, -73.54)
+rotation = Vector3(0.0, 0.0, 0.0)
+text = "ДИНАМО"
+font_size = 500
+pixel_size = 0.01
+modulate = Color(0.4, 0.64, 1.0, 1.0)
+outline_size = 10
+outline_modulate = Color(0.25, 0.4, 1.0, 0.5)
+
+[node name="FloodlightTower1" parent="Decor" instance=ExtResource("7_floodlight_tower")]
+position = Vector3(-38.0, 0.0, -58.0)
+rotation = Vector3(0.0, -2.5616, 0.0)
+
+[node name="FloodlightTower2" parent="Decor" instance=ExtResource("7_floodlight_tower")]
+position = Vector3(38.0, 0.0, -58.0)
+rotation = Vector3(0.0, 2.5616, 0.0)
+
+[node name="FloodlightTower3" parent="Decor" instance=ExtResource("7_floodlight_tower")]
+position = Vector3(-38.0, 0.0, 58.0)
+rotation = Vector3(0.0, -0.58, 0.0)
+
+[node name="FloodlightTower4" parent="Decor" instance=ExtResource("7_floodlight_tower")]
+position = Vector3(38.0, 0.0, 58.0)
+rotation = Vector3(0.0, 0.58, 0.0)
+
+[node name="D6" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(-4.0, 0.02, 0.0)
+
+[node name="D7" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_8")
+position = Vector3(4.0, 0.02, 0.0)
+
+[node name="D8" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_9")
+position = Vector3(0.0, 0.02, 0.0)
+
+[node name="Ambulance1" parent="NavigationRegion3D" instance=ExtResource("9_ambulance")]
+position = Vector3(-28.0, 0.0, 32.0)
+rotation = Vector3(0.0, 0.7, 0.0)
+
+[node name="Police1" parent="NavigationRegion3D" instance=ExtResource("10_police")]
+position = Vector3(29.0, 0.0, 34.0)
+rotation = Vector3(0.0, 0.7, 0.0)
+
+[node name="SedanBurnt1" parent="NavigationRegion3D" instance=ExtResource("11_sedan_burnt")]
+position = Vector3(20.0, 0.0, -30.0)
+rotation = Vector3(0.0, 0.7, 0.0)
+
+[node name="Fire1" parent="Decor" instance=ExtResource("12_fire")]
+position = Vector3(-24.0, 2.4, 20.0)
+
+[node name="Fire2" parent="Decor" instance=ExtResource("12_fire")]
+position = Vector3(26.0, 0.1, -34.0)
+
+[node name="Fire3" parent="Decor" instance=ExtResource("12_fire")]
+position = Vector3(20.0, 1.0, -30.0)
+
+[node name="Runner1" parent="Zombies" instance=ExtResource("13_runner")]
+position = Vector3(-5.4436, 0.0, 13.5302)
+rotation = Vector3(0.0, -2.7722, 0.0)
+
+[node name="Walker1" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(15.6276, 0.0, 3.1412)
+rotation = Vector3(0.0, 1.6643, 0.0)
+
+[node name="Walker2" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(2.6992, 0.0, 14.5368)
+rotation = Vector3(0.0, -1.8123, 0.0)
+
+[node name="Walker3" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(10.4173, 0.0, -12.8173)
+rotation = Vector3(0.0, -0.1091, 0.0)
+
+[node name="Walker4" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(3.4249, 0.0, -18.0082)
+rotation = Vector3(0.0, 2.9795, 0.0)
+
+[node name="Walker5" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(5.4488, 0.0, -4.027)
+rotation = Vector3(0.0, 1.9546, 0.0)
+
+[node name="Runner2" parent="Zombies" instance=ExtResource("13_runner")]
+position = Vector3(13.4027, 0.0, -7.0693)
+rotation = Vector3(0.0, 1.3524, 0.0)
+
+[node name="Walker6" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(5.5865, 0.0, 11.9117)
+rotation = Vector3(0.0, -1.3999, 0.0)
+
+[node name="Walker7" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(-4.4117, 0.0, 12.081)
+rotation = Vector3(0.0, 0.5446, 0.0)
+
+[node name="Walker8" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(-10.7579, 0.0, 4.8649)
+rotation = Vector3(0.0, -1.729, 0.0)
+
+[node name="Walker9" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(-8.6893, 0.0, -5.4198)
+rotation = Vector3(0.0, 0.854, 0.0)
+
+[node name="Walker10" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(2.0357, 0.0, -10.1333)
+rotation = Vector3(0.0, -0.9016, 0.0)
+
+[node name="Runner3" parent="Zombies" instance=ExtResource("13_runner")]
+position = Vector3(15.2576, 0.0, 15.2387)
+rotation = Vector3(0.0, 0.0199, 0.0)
+
+[node name="Walker11" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(-15.4375, 0.0, 11.6301)
+rotation = Vector3(0.0, 0.8791, 0.0)
+
+[node name="Walker12" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(19.8186, 0.0, 2.3328)
+rotation = Vector3(0.0, 1.0521, 0.0)
+
+[node name="Walker13" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(-8.3188, 0.0, 8.1722)
+rotation = Vector3(0.0, 2.4906, 0.0)
+
+[node name="Walker14" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(5.5795, 0.0, 11.459)
+rotation = Vector3(0.0, 0.9276, 0.0)
+
+[node name="Walker15" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(13.1667, 0.0, 2.2942)
+rotation = Vector3(0.0, -0.7829, 0.0)
+
+[node name="Runner4" parent="Zombies" instance=ExtResource("13_runner")]
+position = Vector3(-3.6057, 0.0, 5.5969)
+rotation = Vector3(0.0, -2.7846, 0.0)
+
+[node name="Walker16" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(-8.779, 0.0, 0.4665)
+rotation = Vector3(0.0, -0.0723, 0.0)
+
+[node name="Walker17" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(21.8265, 0.0, -1.0834)
+rotation = Vector3(0.0, -1.7959, 0.0)
+
+[node name="Walker18" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(8.7647, 0.0, -13.1416)
+rotation = Vector3(0.0, -2.1579, 0.0)
+
+[node name="Walker19" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(9.3008, 0.0, -15.0288)
+rotation = Vector3(0.0, 2.8665, 0.0)
+
+[node name="Walker20" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(21.4855, 0.0, 1.3508)
+rotation = Vector3(0.0, 2.3935, 0.0)
+
+[node name="Runner5" parent="Zombies" instance=ExtResource("13_runner")]
+position = Vector3(-11.744, 0.0, 17.7182)
+rotation = Vector3(0.0, -1.6764, 0.0)
+
+[node name="Walker21" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(-7.4861, 0.0, -2.1715)
+rotation = Vector3(0.0, -1.6771, 0.0)
+
+[node name="Walker22" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(14.6852, 0.0, -0.8171)
+rotation = Vector3(0.0, -0.4248, 0.0)
+
+[node name="Walker23" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(-9.3818, 0.0, -10.1046)
+rotation = Vector3(0.0, 0.8597, 0.0)
+
+[node name="Walker24" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(4.8127, 0.0, 16.7247)
+rotation = Vector3(0.0, -0.7752, 0.0)
+
+[node name="Walker25" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(-18.3318, 0.0, 13.8915)
+rotation = Vector3(0.0, 1.3202, 0.0)
+
+[node name="Runner6" parent="Zombies" instance=ExtResource("13_runner")]
+position = Vector3(-0.3965, 0.0, 9.6776)
+rotation = Vector3(0.0, -0.9541, 0.0)
+
+[node name="Walker26" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(3.7427, 0.0, -17.8097)
+rotation = Vector3(0.0, -1.4461, 0.0)
+
+[node name="Walker27" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(17.6344, 0.0, 0.0744)
+rotation = Vector3(0.0, 2.7346, 0.0)
+
+[node name="Walker28" parent="Zombies" instance=ExtResource("14_walker")]
+position = Vector3(4.4131, 0.0, -17.3171)
+rotation = Vector3(0.0, -2.1174, 0.0)
+
+[node name="D9" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_10")
+position = Vector3(-179.9754, 6.3706, 275.9255)
+
+[node name="D10" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_11")
+position = Vector3(-109.1059, 10.5277, 132.1817)
+
+[node name="D11" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_12")
+position = Vector3(-109.1059, 12.0, 132.1817)
+cast_shadow = 0
+
+[node name="D12" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_13")
+position = Vector3(-261.5498, 14.7871, -18.3976)
+
+[node name="D13" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_14")
+position = Vector3(-261.5498, 20.0, -18.3976)
+cast_shadow = 0
+
+[node name="Fire4" parent="Decor" instance=ExtResource("12_fire")]
+position = Vector3(-261.5498, 30.0741, -18.3976)
+
+[node name="D14" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_15")
+position = Vector3(158.0747, 7.1122, 92.784)
+
+[node name="D15" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_16")
+position = Vector3(158.0747, 4.0, 92.784)
+cast_shadow = 0
+
+[node name="D16" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_17")
+position = Vector3(268.8713, 18.4939, 69.8467)
+
+[node name="D17" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_18")
+position = Vector3(-168.3739, 12.4562, -28.8619)
+
+[node name="D18" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_19")
+position = Vector3(-168.3739, 20.0, -28.8619)
+cast_shadow = 0
+
+[node name="Fire5" parent="Decor" instance=ExtResource("12_fire")]
+position = Vector3(-168.3739, 25.4125, -28.8619)
+
+[node name="D19" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_20")
+position = Vector3(-117.9901, 11.1509, -147.6804)
+
+[node name="D20" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_21")
+position = Vector3(-117.9901, 4.0, -147.6804)
+cast_shadow = 0
+
+[node name="D21" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_21")
+position = Vector3(-117.9901, 12.0, -147.6804)
+cast_shadow = 0
+
+[node name="D22" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_22")
+position = Vector3(-272.5235, 18.9117, -65.2763)
+
+[node name="D23" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_23")
+position = Vector3(-272.5235, 28.0, -65.2763)
+cast_shadow = 0
+
+[node name="D24" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_24")
+position = Vector3(-120.3557, 5.6729, -112.5165)
+
+[node name="D25" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_25")
+position = Vector3(42.0092, 18.0455, 120.6716)
+
+[node name="D26" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_26")
+position = Vector3(-158.756, 5.502, 48.9869)
+
+[node name="D27" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_27")
+position = Vector3(-158.756, 4.0, 48.9869)
+cast_shadow = 0
+
+[node name="D28" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_28")
+position = Vector3(-231.9445, 12.1281, -42.7852)
+
+[node name="D29" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_29")
+position = Vector3(-231.9445, 4.0, -42.7852)
+cast_shadow = 0
+
+[node name="D30" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_29")
+position = Vector3(-231.9445, 12.0, -42.7852)
+cast_shadow = 0
+
+[node name="D31" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_29")
+position = Vector3(-231.9445, 20.0, -42.7852)
+cast_shadow = 0
+
+[node name="D32" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_30")
+position = Vector3(283.5058, 12.1821, -117.1662)
+
+[node name="D33" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_31")
+position = Vector3(240.9809, 9.7849, -149.2527)
+
+[node name="D34" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_32")
+position = Vector3(240.9809, 4.0, -149.2527)
+cast_shadow = 0
+
+[node name="D35" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_33")
+position = Vector3(-104.9424, 9.8341, 104.1953)
+
+[node name="D36" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_34")
+position = Vector3(-104.9424, 4.0, 104.1953)
+cast_shadow = 0
+
+[node name="D37" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_35")
+position = Vector3(184.553, 8.7457, 143.7826)
+
+[node name="D38" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_36")
+position = Vector3(104.9374, 17.5697, 123.952)
+
+[node name="D39" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_37")
+position = Vector3(104.9374, 4.0, 123.952)
+cast_shadow = 0
+
+[node name="D40" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_38")
+position = Vector3(142.0951, 11.563, 243.202)
+
+[node name="Fire6" parent="Decor" instance=ExtResource("12_fire")]
+position = Vector3(142.0951, 23.626, 243.202)
+
+[node name="D41" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_39")
+position = Vector3(88.5666, 15.4649, 62.3125)
+
+[node name="D42" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_40")
+position = Vector3(88.5666, 4.0, 62.3125)
+cast_shadow = 0
+
+[node name="D43" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_41")
+position = Vector3(63.0738, 16.3454, 82.8776)
+
+[node name="D44" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_42")
+position = Vector3(63.0738, 4.0, 82.8776)
+cast_shadow = 0
+
+[node name="D45" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_42")
+position = Vector3(63.0738, 12.0, 82.8776)
+cast_shadow = 0
+
+[node name="D46" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_42")
+position = Vector3(63.0738, 20.0, 82.8776)
+cast_shadow = 0
+
+[node name="D47" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_42")
+position = Vector3(63.0738, 28.0, 82.8776)
+cast_shadow = 0
+
+[node name="D48" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_43")
+position = Vector3(58.7756, 6.2956, 79.1893)
+
+[node name="D49" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_44")
+position = Vector3(58.7756, 4.0, 79.1893)
+cast_shadow = 0
+
+[node name="Fire7" parent="Decor" instance=ExtResource("12_fire")]
+position = Vector3(58.7756, 13.0912, 79.1893)
+
+[node name="D50" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_45")
+position = Vector3(290.6447, 18.2534, -23.9839)
+
+[node name="D51" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_46")
+position = Vector3(290.6447, 4.0, -23.9839)
+cast_shadow = 0
+
+[node name="D52" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_46")
+position = Vector3(290.6447, 12.0, -23.9839)
+cast_shadow = 0
+
+[node name="D53" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_46")
+position = Vector3(290.6447, 20.0, -23.9839)
+cast_shadow = 0
+
+[node name="D54" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_46")
+position = Vector3(290.6447, 28.0, -23.9839)
+cast_shadow = 0
+
+[node name="D55" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_47")
+position = Vector3(-206.3523, 5.889, -178.3006)
+
+[node name="D56" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_48")
+position = Vector3(-206.3523, 4.0, -178.3006)
+cast_shadow = 0
+
+[node name="D57" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_49")
+position = Vector3(-163.4841, 7.4101, 145.1684)
+
+[node name="D58" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_50")
+position = Vector3(123.0946, 18.1063, 12.3385)
+
+[node name="D59" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_51")
+position = Vector3(123.0946, 20.0, 12.3385)
+cast_shadow = 0
+
+[node name="D60" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_52")
+position = Vector3(145.4799, 11.8108, -57.3241)
+
+[node name="D61" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_53")
+position = Vector3(-199.6915, 11.6716, -3.0016)
+
+[node name="D62" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_54")
+position = Vector3(27.1557, 8.5507, -305.1543)
+
+[node name="D63" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_55")
+position = Vector3(27.1557, 4.0, -305.1543)
+cast_shadow = 0
+
+[node name="D64" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_56")
+position = Vector3(-319.8508, 8.8874, 25.596)
+
+[node name="D65" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_57")
+position = Vector3(-319.8508, 4.0, 25.596)
+cast_shadow = 0
+
+[node name="D66" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_58")
+position = Vector3(189.8496, 14.0509, -129.185)
+
+[node name="D67" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_59")
+position = Vector3(276.5887, 5.6449, 121.5879)
+
+[node name="D68" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_60")
+position = Vector3(276.5887, 4.0, 121.5879)
+cast_shadow = 0
+
+[node name="D69" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_61")
+position = Vector3(-114.8692, 11.6398, 207.1483)
+
+[node name="D70" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_62")
+position = Vector3(-194.6944, 12.3527, 34.7382)
+
+[node name="D71" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_63")
+position = Vector3(-194.6944, 12.0, 34.7382)
+cast_shadow = 0
+
+[node name="D72" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_63")
+position = Vector3(-194.6944, 20.0, 34.7382)
+cast_shadow = 0
+
+[node name="D73" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_64")
+position = Vector3(234.0371, 18.6742, -65.0182)
+
+[node name="D74" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_65")
+position = Vector3(234.0371, 12.0, -65.0182)
+cast_shadow = 0
+
+[node name="D75" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_65")
+position = Vector3(234.0371, 20.0, -65.0182)
+cast_shadow = 0
+
+[node name="D76" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_66")
+position = Vector3(-187.2165, 15.2468, 213.0263)
+
+[node name="D77" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_67")
+position = Vector3(-187.2165, 20.0, 213.0263)
+cast_shadow = 0
+
+[node name="D78" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_68")
+position = Vector3(306.9774, 11.4617, -55.5425)
+
+[node name="D79" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_69")
+position = Vector3(98.183, 12.1873, 68.8199)
+
+[node name="D80" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_70")
+position = Vector3(98.183, 4.0, 68.8199)
+cast_shadow = 0
+
+[node name="D81" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_71")
+position = Vector3(271.504, 13.1579, -150.1918)
+
+[node name="D82" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_72")
+position = Vector3(271.504, 12.0, -150.1918)
+cast_shadow = 0
+
+[node name="Fire8" parent="Decor" instance=ExtResource("12_fire")]
+position = Vector3(271.504, 26.8158, -150.1918)
+
+[node name="D83" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_73")
+position = Vector3(32.8275, 16.8153, 282.1103)
+
+[node name="D84" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_74")
+position = Vector3(32.8275, 20.0, 282.1103)
+cast_shadow = 0
+
+[node name="D85" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_74")
+position = Vector3(32.8275, 28.0, 282.1103)
+cast_shadow = 0
+
+[node name="D86" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_75")
+position = Vector3(98.8423, 6.5354, -120.1323)
+
+[node name="D87" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_76")
+position = Vector3(278.5288, 8.7179, 62.9345)
+
+[node name="D88" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_77")
+position = Vector3(310.7765, 5.0432, 55.0179)
+
+[node name="D89" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_78")
+position = Vector3(310.7765, 4.0, 55.0179)
+cast_shadow = 0
+
+[node name="D90" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_79")
+position = Vector3(225.1381, 6.7245, 196.9652)
+
+[node name="D91" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_80")
+position = Vector3(283.7362, 16.327, 15.6626)
+
+[node name="D92" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_81")
+position = Vector3(283.7362, 12.0, 15.6626)
+cast_shadow = 0
+
+[node name="D93" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_82")
+position = Vector3(-223.9731, 13.1124, -162.4727)
+
+[node name="D94" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_83")
+position = Vector3(-223.9731, 12.0, -162.4727)
+cast_shadow = 0
+
+[node name="D95" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_83")
+position = Vector3(-223.9731, 20.0, -162.4727)
+cast_shadow = 0
+
+[node name="Fire9" parent="Decor" instance=ExtResource("12_fire")]
+position = Vector3(-223.9731, 26.7248, -162.4727)
+
+[node name="D96" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_84")
+position = Vector3(244.5857, 6.3288, -91.9635)
+
+[node name="D97" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_85")
+position = Vector3(-113.8711, 16.2875, -98.8717)
+
+[node name="D98" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_86")
+position = Vector3(-13.2345, 15.7376, -182.051)
+
+[node name="D99" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_87")
+position = Vector3(-13.2345, 20.0, -182.051)
+cast_shadow = 0
+
+[node name="D100" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_88")
+position = Vector3(19.6733, 11.1036, 315.4834)
+
+[node name="D101" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_89")
+position = Vector3(-92.6499, 15.6811, -83.436)
+
+[node name="D102" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_90")
+position = Vector3(-92.6499, 12.0, -83.436)
+cast_shadow = 0
+
+[node name="D103" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_91")
+position = Vector3(136.9489, 10.18, 47.6233)
+
+[node name="D104" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_92")
+position = Vector3(-210.7316, 14.7975, -8.0498)
+
+[node name="D105" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_93")
+position = Vector3(105.464, 7.6767, -61.9502)
+
+[node name="D106" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_94")
+position = Vector3(105.464, 4.0, -61.9502)
+cast_shadow = 0
+
+[node name="D107" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_95")
+position = Vector3(-95.9934, 7.9873, -20.4921)
+
+[node name="D108" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_96")
+position = Vector3(-254.7375, 6.2209, 97.9359)
+
+[node name="D109" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_97")
+position = Vector3(121.7036, 14.48, 163.9315)
+
+[node name="D110" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_98")
+position = Vector3(121.7036, 12.0, 163.9315)
+cast_shadow = 0
+
+[node name="D111" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_98")
+position = Vector3(121.7036, 20.0, 163.9315)
+cast_shadow = 0
+
+[node name="D112" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_99")
+position = Vector3(-278.1936, 9.7441, -74.9999)
+
+[node name="D113" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_100")
+position = Vector3(-278.1936, 12.0, -74.9999)
+cast_shadow = 0
+
+[node name="D114" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_101")
+position = Vector3(44.0383, 7.019, 203.3787)
+
+[node name="D115" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_102")
+position = Vector3(44.0383, 4.0, 203.3787)
+cast_shadow = 0
+
+[node name="D116" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_103")
+position = Vector3(-245.0016, 12.408, -16.8825)
+
+[node name="D117" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_104")
+position = Vector3(-245.0016, 12.0, -16.8825)
+cast_shadow = 0
+
+[node name="D118" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_105")
+position = Vector3(-82.5745, 15.5192, 281.1003)
+
+[node name="D119" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_106")
+position = Vector3(-82.5745, 12.0, 281.1003)
+cast_shadow = 0
+
+[node name="D120" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_106")
+position = Vector3(-82.5745, 20.0, 281.1003)
+cast_shadow = 0
+
+[node name="D121" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_107")
+position = Vector3(170.7542, 6.464, 204.9642)
+
+[node name="Fire10" parent="Decor" instance=ExtResource("12_fire")]
+position = Vector3(170.7542, 13.428, 204.9642)
+
+[node name="D122" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_108")
+position = Vector3(90.6483, 17.4716, 119.1345)
+
+[node name="D123" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_109")
+position = Vector3(-260.2693, 8.7418, 114.8771)
+
+[node name="D124" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_110")
+position = Vector3(233.6024, 15.0187, 10.6655)
+
+[node name="D125" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_111")
+position = Vector3(233.6024, 4.0, 10.6655)
+cast_shadow = 0
+
+[node name="D126" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_111")
+position = Vector3(233.6024, 20.0, 10.6655)
+cast_shadow = 0
+
+[node name="D127" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_112")
+position = Vector3(-139.4032, 16.0766, 137.8021)
+
+[node name="Fire11" parent="Decor" instance=ExtResource("12_fire")]
+position = Vector3(-139.4032, 32.6533, 137.8021)
+
+[node name="D128" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_113")
+position = Vector3(-148.1653, 9.4343, 108.7181)
+
+[node name="D129" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_114")
+position = Vector3(-148.1653, 12.0, 108.7181)
+cast_shadow = 0
+
+[node name="D130" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_115")
+position = Vector3(-76.6283, 6.4942, 75.3926)
+
+[node name="D131" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_116")
+position = Vector3(-23.9568, 12.1209, 327.4505)
+
+[node name="D132" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_117")
+position = Vector3(-23.9568, 20.0, 327.4505)
+cast_shadow = 0
+
+[node name="D133" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_118")
+position = Vector3(-9.3987, 18.7465, -298.4436)
+
+[node name="D134" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_119")
+position = Vector3(-9.3987, 28.0, -298.4436)
+cast_shadow = 0
+
+[node name="D135" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_120")
+position = Vector3(87.1899, 12.2267, 134.7217)
+
+[node name="D136" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_121")
+position = Vector3(87.1899, 4.0, 134.7217)
+cast_shadow = 0
+
+[node name="D137" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_121")
+position = Vector3(87.1899, 12.0, 134.7217)
+cast_shadow = 0
+
+[node name="Heli" type="Node3D" parent="."]
+script = ExtResource("19_ending_heli")
+
+[node name="Model" parent="Heli" instance=ExtResource("20_helicopter")]
+
+[node name="Sound" type="AudioStreamPlayer3D" parent="Heli"]
+stream = ExtResource("21_helicopter")
+autoplay = true
+unit_size = 30.0
+max_distance = 400.0
+volume_db = 2.0
+
+[node name="Searchlight" type="SpotLight3D" parent="Heli"]
+position = Vector3(0.0, 0.6, -4.3)
+rotation = Vector3(-1.0, 0.0, 0.0)
+light_color = Color(1.0, 1.0, 0.9, 1.0)
+light_energy = 6.0
+spot_range = 60.0
+spot_angle = 22.0
+
+[node name="Cams" type="Node3D" parent="."]
+
+[node name="LiftoffA" type="Marker3D" parent="Cams"]
+position = Vector3(9.0, 1.4, 11.0)
+rotation = Vector3(0.0772, 0.6857, 0.0)
+
+[node name="LiftoffB" type="Marker3D" parent="Cams"]
+position = Vector3(7.0, 1.7, 8.5)
+rotation = Vector3(0.2059, 0.6889, 0.0)
+
+[node name="RiseA" type="Marker3D" parent="Heli"]
+position = Vector3(14.0, 7.0, 14.0)
+rotation = Vector3(-0.4677, 0.7854, 0.0)
+
+[node name="RiseB" type="Marker3D" parent="Heli"]
+position = Vector3(9.0, 13.0, 9.0)
+rotation = Vector3(-0.9806, 0.7854, 0.0)
+
+[node name="CityA" type="Marker3D" parent="Heli"]
+position = Vector3(-26.0, 10.0, 26.0)
+rotation = Vector3(-0.2379, -0.6823, 0.0)
+
+[node name="CityB" type="Marker3D" parent="Heli"]
+position = Vector3(-17.0, 6.0, 15.0)
+rotation = Vector3(-0.2068, -0.6365, 0.0)
+
+[node name="DawnA" type="Marker3D" parent="Heli"]
+position = Vector3(2.5, 3.5, 15.0)
+rotation = Vector3(-0.0443, 0.0555, 0.0)
+
+[node name="DawnB" type="Marker3D" parent="Heli"]
+position = Vector3(5.0, 9.0, 55.0)
+rotation = Vector3(-0.0694, 0.0435, 0.0)

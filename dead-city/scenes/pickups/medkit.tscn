@@ -44,6 +44,7 @@ shape = SubResource("SphereShape3D_1")
 
 [node name="Item" type="Node3D" parent="Visual"]
 position = Vector3(0.0, 0.5, 0.0)
+scale = Vector3(1.0, 1.0, 1.0)
 
 [node name="Case" type="MeshInstance3D" parent="Visual/Item"]
 mesh = SubResource("BoxMesh_2")

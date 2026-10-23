@@ -172,10 +172,112 @@ CHARACTERS = {
 
 
 
-def scary_face(objs, seed=0):
+
+def alena_face(shape, blob, strip, rnd, slot):
+    """Alyona: big blue eyes with lashes, thin auburn brows, pink lips and freckles; only the bruised lids and a trickle
+    of blood from the lip say she is one of them."""
+    sclera = slot(material("AlenaSclera", (0.85, 0.84, 0.8), roughness=0.4))
+    iris = slot(emissive("AlenaIris", (0.25, 0.55, 0.85), 0.6))
+    pupil = slot(material("AlenaPupil", (0.01, 0.01, 0.015), roughness=0.2))
+    lash = slot(material("AlenaLash", (0.03, 0.015, 0.01), roughness=0.9))
+    brow = slot(material("AlenaBrow", (0.35, 0.14, 0.05), roughness=0.9))
+    lid = slot(material("AlenaLid", (0.35, 0.2, 0.22), roughness=0.8))
+    lips = slot(material("AlenaLips", (0.78, 0.38, 0.42), roughness=0.35))
+    freckle = slot(material("AlenaFreckle", (0.55, 0.3, 0.18), roughness=0.9))
+    blood = slot(material("FaceBlood", (0.2, 0.0, 0.0), roughness=0.15))
+    for s in (-1, 1):
+        ex, ez = s * 0.235, 2.52
+        blob(ex, ez - 0.005, 0.125, 0.1, 0.003, lid, jag=0.05)                 # tired, bruised lids
+        blob(ex, ez, 0.095, 0.075, 0.006, sclera, n=16)
+        blob(ex - s * 0.008, ez - 0.004, 0.05, 0.052, 0.009, iris, n=14)
+        blob(ex - s * 0.008, ez - 0.004, 0.022, 0.024, 0.012, pupil, n=10)
+        blob(ex + s * 0.03, ez + 0.02, 0.012, 0.012, 0.014, sclera, n=6)       # catchlight
+        # upper lid line with lashes flicking outwards
+        shape([(ex - 0.1, ez + 0.06), (ex + 0.1, ez + 0.06), (ex + 0.1, ez + 0.085), (ex - 0.1, ez + 0.085)], 0.013, lash)
+        for i in range(3):
+            x = ex + s * (0.06 + i * 0.022)
+            shape([(x, ez + 0.07), (x + s * 0.02, ez + 0.07), (x + s * 0.045, ez + 0.12)], 0.013, lash)
+        # thin, softly arched brows
+        shape([(s * 0.1, 2.66), (s * 0.24, 2.7), (s * 0.37, 2.685), (s * 0.37, 2.665), (s * 0.24, 2.675), (s * 0.1, 2.64)],
+              0.006, brow)
+    for i in range(14):  # freckles over the nose and cheeks
+        x = rnd.uniform(-0.3, 0.3)
+        z = 2.42 - abs(x) * 0.25 + rnd.uniform(-0.04, 0.04)
+        blob(x, z, 0.009, 0.009, 0.005, freckle, n=6)
+    blob(0.0, 2.42, 0.03, 0.02, 0.004, lid, n=8)                                # the tip of the nose
+    # full pink lips, slightly parted
+    shape([(-0.11, 2.31), (-0.05, 2.335), (0.0, 2.325), (0.05, 2.335), (0.11, 2.31), (0.0, 2.3)], 0.006, lips)
+    shape([(-0.11, 2.305), (0.0, 2.298), (0.11, 2.305), (0.06, 2.265), (0.0, 2.258), (-0.06, 2.265)], 0.006, lips)
+    strip(0.085, 2.29, 2.21, 0.022, 0.008, blood)
+
+
+def bobolev_face(shape, blob, strip, rnd, slot):
+    """Bobolev: heavy dark brows over pale grey eyes, a straight nose, a closed half-smirk and stubble on the jaw."""
+    sclera = slot(material("BobSclera", (0.78, 0.76, 0.72), roughness=0.4))
+    iris = slot(emissive("BobIris", (0.55, 0.62, 0.68), 0.25))
+    pupil = slot(material("BobPupil", (0.01, 0.01, 0.012), roughness=0.2))
+    brow = slot(material("BobBrow", (0.05, 0.035, 0.025), roughness=0.9))
+    shade = slot(material("BobShade", (0.12, 0.09, 0.09), roughness=0.9))
+    stubble = slot(material("BobStubble", (0.16, 0.14, 0.12), roughness=1.0))
+    mouth = slot(material("BobMouth", (0.3, 0.12, 0.12), roughness=0.5))
+    blood = slot(material("FaceBlood", (0.2, 0.0, 0.0), roughness=0.15))
+    blob(0.0, 2.27, 0.33, 0.12, 0.003, stubble, jag=0.06, n=18)                 # stubbly jaw and chin
+    for s in (-1, 1):
+        ex, ez = s * 0.23, 2.52
+        blob(ex, ez - 0.01, 0.12, 0.085, 0.004, shade, jag=0.08)                 # deep-set eyes
+        blob(ex, ez, 0.085, 0.045, 0.007, sclera, n=14)
+        blob(ex - s * 0.01, ez - 0.006, 0.036, 0.036, 0.01, iris, n=12)
+        blob(ex - s * 0.01, ez - 0.006, 0.016, 0.016, 0.013, pupil, n=8)
+        # heavy upper lids: a calm, half-lidded look
+        shape([(ex - 0.095, ez + 0.012), (ex + 0.095, ez + 0.012), (ex + 0.1, ez + 0.06), (ex - 0.1, ez + 0.06)], 0.015, shade)
+        # thick straight brows, inner ends pulled down
+        shape([(s * 0.07, 2.6), (s * 0.38, 2.645), (s * 0.38, 2.705), (s * 0.08, 2.665)], 0.008, brow)
+    shape([(-0.025, 2.47), (0.025, 2.47), (0.035, 2.39), (-0.035, 2.39)], 0.004, shade)   # the line of the nose
+    # closed mouth, one corner up
+    shape([(-0.12, 2.31), (0.12, 2.335), (0.12, 2.317), (-0.12, 2.293)], 0.007, mouth)
+    strip(0.1, 2.3, 2.22, 0.018, 0.008, blood)                                   # blood from the corner of the mouth
+
+
+
+def drop_material(objs, name):
+    """Deletes every face of a material (e.g. hair hidden under a hat)."""
+    for o in objs:
+        if o.type != 'MESH' or name not in [m.name for m in o.data.materials]:
+            continue
+        index = [m.name for m in o.data.materials].index(name)
+        bm = bmesh.new()
+        bm.from_mesh(o.data)
+        bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.material_index == index], context='FACES')
+        bm.to_mesh(o.data)
+        bm.free()
+
+
+def fatten(objs, amount):
+    """Pads out the belly and the flanks: vertices weighted to the hips and the torso move away from the spine,
+    more to the front, so the outfit and the arms keep their place."""
+    mesh = next(o for o in objs if o.type == 'MESH' and o.vertex_groups.get("Torso") is not None)
+    groups = {mesh.vertex_groups[n].index for n in ("Abdomen", "Torso", "Hips") if mesh.vertex_groups.get(n)}
+    me = mesh.data
+    weights = [sum(g.weight for g in v.groups if g.group in groups) for v in me.vertices]
+    core = [v.co for v, w in zip(me.vertices, weights) if w > 0.6]
+    cy = sum(c.y for c in core) / len(core)
+    zs = [c.z for c in core]
+    z0, z1 = min(zs), max(zs)
+    for v, w in zip(me.vertices, weights):
+        if w <= 0.0:
+            continue
+        # strongest around the belly, fading towards the hips and the chest
+        t = (v.co.z - z0) / max(z1 - z0, 1e-6)
+        bulge = w * amount * math.sin(math.pi * min(max(t, 0.0), 1.0) * 0.9 + 0.15)
+        v.co.x *= 1.0 + bulge
+        v.co.y = cy + (v.co.y - cy) * (1.0 + bulge * (1.8 if v.co.y < cy else 0.6))
+
+
+def scary_face(objs, seed=0, style='dead'):
     """Replaces the cartoon eyes and brows with a dead face drawn onto the head: dark sunken sockets, milky eyes
     with glowing pinprick pupils, brows knitted into a scowl, a torn-open mouth with crooked teeth and blood running
-    from it. Every piece is projected onto the head surface and skinned to the Head bone (so a headshot takes it too)."""
+    from it. Every piece is projected onto the head surface and skinned to the Head bone (so a headshot takes it too).
+    style 'alena' / 'bobolev': the two easter-egg bosses get faces of their own (see alena_face, bobolev_face)."""
     rnd = random.Random(seed)
     mesh = next(o for o in objs if o.type == 'MESH' and o.vertex_groups.get("Head") is not None)
     arm = next(o for o in objs if o.type == 'ARMATURE')
@@ -242,31 +344,36 @@ def scary_face(objs, seed=0):
         shape([(x - w / 2, z0), (x + w / 2, z0), (x + w * 0.3 + wob, z1), (x - w * 0.3 + wob, z1)], lift, mat)
         blob(x + wob, z1, w * 0.45, w * 0.5, lift, mat, n=8)
 
-    look = rnd.uniform(-0.012, 0.012)
-    for s in (-1, 1):
-        ex, ez = s * 0.245, 2.53
-        blob(ex, ez - 0.01, 0.14, 0.125, 0.004, socket, jag=0.12)        # bruised, sunken socket
-        blob(ex, ez, 0.08, 0.06, 0.008, eye, jag=0.08, tilt=s * 0.25)     # milky, slit-like eye
-        blob(ex - s * 0.01 + look, ez + 0.004, 0.027, 0.03, 0.012, pupil, n=8)
-        # brows pulled down to the nose: a scowl
-        shape([(s * 0.09, 2.645), (s * 0.4, 2.76), (s * 0.41, 2.715), (s * 0.1, 2.6)], 0.006, brow)
-    # bloody tear under one eye
-    side = rnd.choice((-1, 1))
-    strip(side * 0.27, 2.43, 2.33, 0.03, 0.006, blood)
-    # a lopsided gaping mouth with broken teeth
-    mx, mz, tilt = rnd.uniform(-0.03, 0.03), 2.315, rnd.uniform(-0.12, 0.12)
-    blob(mx, mz, 0.21, 0.075, 0.005, mouth, jag=0.18, n=18, tilt=tilt)
-    for row, sign in ((7, 1), (6, -1)):
-        for i in range(row):
-            t = (i + 0.5) / row
-            x = mx + (t - 0.5) * 0.32
-            edge = mz + sign * 0.06 * math.sqrt(max(0.0, 1 - ((t - 0.5) * 1.9) ** 2)) + (x - mx) * math.tan(tilt)
-            if rnd.random() < 0.2:
-                continue  # a missing tooth
-            w, h = rnd.uniform(0.028, 0.04), rnd.uniform(0.03, 0.06)
-            shape([(x - w / 2, edge), (x + w / 2, edge), (x + rnd.uniform(-0.008, 0.008), edge - sign * h)], 0.009, teeth)
-    for x in (mx - 0.15, mx + rnd.uniform(-0.05, 0.05), mx + 0.13):
-        strip(x, mz - 0.03, mz - rnd.uniform(0.09, 0.15), rnd.uniform(0.025, 0.04), 0.007, blood)
+    if style == 'alena':
+        alena_face(shape, blob, strip, rnd, slot)
+    elif style == 'bobolev':
+        bobolev_face(shape, blob, strip, rnd, slot)
+    else:
+        look = rnd.uniform(-0.012, 0.012)
+        for s in (-1, 1):
+            ex, ez = s * 0.245, 2.53
+            blob(ex, ez - 0.01, 0.14, 0.125, 0.004, socket, jag=0.12)        # bruised, sunken socket
+            blob(ex, ez, 0.08, 0.06, 0.008, eye, jag=0.08, tilt=s * 0.25)     # milky, slit-like eye
+            blob(ex - s * 0.01 + look, ez + 0.004, 0.027, 0.03, 0.012, pupil, n=8)
+            # brows pulled down to the nose: a scowl
+            shape([(s * 0.09, 2.645), (s * 0.4, 2.76), (s * 0.41, 2.715), (s * 0.1, 2.6)], 0.006, brow)
+        # bloody tear under one eye
+        side = rnd.choice((-1, 1))
+        strip(side * 0.27, 2.43, 2.33, 0.03, 0.006, blood)
+        # a lopsided gaping mouth with broken teeth
+        mx, mz, tilt = rnd.uniform(-0.03, 0.03), 2.315, rnd.uniform(-0.12, 0.12)
+        blob(mx, mz, 0.21, 0.075, 0.005, mouth, jag=0.18, n=18, tilt=tilt)
+        for row, sign in ((7, 1), (6, -1)):
+            for i in range(row):
+                t = (i + 0.5) / row
+                x = mx + (t - 0.5) * 0.32
+                edge = mz + sign * 0.06 * math.sqrt(max(0.0, 1 - ((t - 0.5) * 1.9) ** 2)) + (x - mx) * math.tan(tilt)
+                if rnd.random() < 0.2:
+                    continue  # a missing tooth
+                w, h = rnd.uniform(0.028, 0.04), rnd.uniform(0.03, 0.06)
+                shape([(x - w / 2, edge), (x + w / 2, edge), (x + rnd.uniform(-0.008, 0.008), edge - sign * h)], 0.009, teeth)
+        for x in (mx - 0.15, mx + rnd.uniform(-0.05, 0.05), mx + 0.13):
+            strip(x, mz - 0.03, mz - rnd.uniform(0.09, 0.15), rnd.uniform(0.025, 0.04), 0.007, blood)
     bm.to_mesh(me)
     bm.free()
     arm.data.pose_position = old_pose
@@ -401,34 +508,65 @@ def props_lineman(arm):
     return [hammer, light]
 
 
-def props_colossus(arm):
-    bone = material("BoneSpike", (0.85, 0.8, 0.68), 0.0, 0.5)
-    spikes = []
-    for x, z, tilt in [(-0.35, 1.95, -0.5), (0.0, 2.05, 0.0), (0.35, 1.95, 0.5), (-0.2, 1.6, -0.3), (0.2, 1.6, 0.3)]:
-        spikes.append(prim('cone', (0.09 * M, 0.45 * M), Vector((x, 0.75, z)), bone, rot=(-math.pi / 2 - 0.4, tilt, 0)))
-    for sx in (-1, 1):
-        spikes.append(prim('cone', (0.08 * M, 0.35 * M), Vector((sx * 0.62, 0.1, 2.15)), bone, rot=(0, sx * 0.5, 0)))
-    return [attach(spikes, arm, "Torso", "Spikes")]
+def props_alena(arm):
+    """Long straight auburn hair down the back and over the shoulders, big chunky silver earrings."""
+    hair = material("AlenaHair", (0.42, 0.17, 0.06), roughness=0.6)
+    silver = material("AlenaSilver", (0.85, 0.86, 0.9), metallic=1.0, roughness=0.2)
+    parts = [prim('box', (0.9, 0.14, 1.35), Vector((0.0, 0.28, 2.2)), hair),          # down the back
+             prim('box', (1.02, 0.95, 0.22), Vector((0.0, -0.02, 2.93)), hair)]        # crown, parted hair
+    for s in (-1, 1):
+        parts.append(prim('box', (0.13, 0.3, 1.0), Vector((s * 0.5, 0.12, 2.25)), hair, rot=(0.0, s * 0.05, 0.0)))
+    hair_obj = attach(parts, arm, "Head", "LongHair")
+    rings = []
+    for s in (-1, 1):
+        bpy.ops.mesh.primitive_torus_add(major_radius=0.075, minor_radius=0.03, location=(s * 0.58, -0.1, 2.16),
+                                         rotation=(0.0, math.pi / 2, 0.0))
+        ring = bpy.context.object
+        ring.data.materials.append(silver)
+        rings.append(ring)
+    return [hair_obj, attach(rings, arm, "Head", "Earrings")]
+
+
+def props_bobolev(arm):
+    """A black knitted beanie, the white roll-neck of a turtleneck under his sweatshirt, plus the riot shield and baton."""
+    knit = material("Beanie", (0.03, 0.03, 0.035), roughness=0.95)
+    white = material("Turtleneck", (0.85, 0.85, 0.82), roughness=0.9)
+    beanie = [prim('box', (1.1, 1.1, 0.26), Vector((0.0, 0.0, 2.87)), knit),
+              prim('sphere', (0.66,), Vector((0.0, 0.04, 3.0)), knit)]
+    beanie[1].scale = (1.0, 1.0, 0.7)
+    bpy.context.view_layer.objects.active = beanie[1]
+    beanie[1].select_set(True)
+    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    collar = prim('cyl', (0.36, 0.2), Vector((0.0, 0.0, 2.1)), white)
+    return [attach(beanie, arm, "Head", "Beanie"), attach([collar], arm, "Neck", "Collar")] + props_warden(arm)
 
 
 BOSSES = {
     # out name: (source blend, material colour overrides, props)
     "boss_butcher": ("Chef_Male", {"Clothes": (0.62, 0.55, 0.5), "Shirt": (0.5, 0.2, 0.18)}, props_butcher),
-    "boss_warden": ("BlueSoldier_Male", {}, props_warden),
+    # Easter eggs: the Warden is Bobolev (a fat guy in a beanie), the giant of the last chapter is Alyona.
+    "boss_warden": ("Casual_Male", {"Shirt": (0.035, 0.035, 0.04), "Pants": (0.06, 0.06, 0.07), "Hair": (0.1, 0.07, 0.05)},
+                    props_bobolev, dict(face='bobolev', fat=1.6, bald=True)),
     "boss_patient": ("Goblin_Male", {"Pants": (0.55, 0.62, 0.66)}, props_patient),
     "boss_lineman": ("Worker_Male", {"Vest": (0.95, 0.4, 0.05)}, props_lineman),
-    "boss_colossus": ("Viking_Male", {"Main": (0.22, 0.16, 0.12), "Light": (0.35, 0.3, 0.25)}, props_colossus),
+    "boss_colossus": ("Casual_Female", {"Hair": (0.42, 0.17, 0.06), "Shirt": (0.33, 0.45, 0.6), "Pants": (0.12, 0.14, 0.2),
+                                        "Belt": (0.1, 0.08, 0.06)}, props_alena, dict(face='alena')),
 }
 
 
 def build_bosses(only=()):
-    for out_name, (src, colors, props) in BOSSES.items():
+    for out_name, (src, colors, props, *extra) in BOSSES.items():
         if only and out_name not in only:
             continue
+        opts = extra[0] if extra else {}
         reset()
         objs = append_objects(os.path.join(UACP, src + ".blend"), actions=True)
         fix_flat_materials(objs, colors)
-        scary_face(objs, seed=len(out_name) + 7)
+        scary_face(objs, seed=len(out_name) + 7, style=opts.get('face', 'dead'))
+        if opts.get('fat'):
+            fatten(objs, opts['fat'])
+        if opts.get('bald'):  # the beanie replaces the hair
+            drop_material(objs, "Hair")
         arm = next(o for o in objs if o.type == 'ARMATURE')
         arm.data.pose_position = 'REST'
         bpy.context.view_layer.update()
@@ -614,6 +752,173 @@ def kenney_model(kit, source, look, out_path):
     export_glb(out_path, objs + [root])
     lo, hi = bounds(world_verts(objs))
     return [round(hi.x - lo.x, 3), round(hi.z - lo.z, 3), round(hi.y - lo.y, 3)]
+
+
+
+def build_helicopter(out_path):
+    """The rescue helicopter (Mi-8-like): a lofted fuselage with a glazed nose, engines over the cabin, a tail boom with
+    a fin and stabilisers, fuel tanks, wheels, an open side door. The nose looks along +Y (-Z in Godot); the rotors are
+    separate objects named MainRotor / TailRotor with their pivots on the hubs so the game can spin them."""
+    reset()
+    olive = material("HeliOlive", (0.2, 0.24, 0.13), 0.2, 0.55)
+    belly = material("HeliBelly", (0.42, 0.5, 0.55), 0.2, 0.55)
+    glass = material("HeliGlass", (0.04, 0.07, 0.1), 0.4, 0.08)
+    dark = material("HeliDark", (0.03, 0.03, 0.035), 0.3, 0.6)
+    metal = material("HeliMetal", (0.3, 0.3, 0.32), 0.8, 0.35)
+    rubber = material("HeliTyre", (0.02, 0.02, 0.02), 0.0, 0.9)
+    star = material("HeliStar", (0.7, 0.05, 0.04), 0.1, 0.5)
+    parts = []
+
+    # fuselage: rounded cross-sections (y, width, height, centre z) lofted nose to tail
+    sections = [(4.75, 0.25, 0.3, 1.35), (4.45, 1.2, 1.25, 1.42), (3.9, 1.95, 1.95, 1.6), (3.1, 2.3, 2.4, 1.75),
+                (1.5, 2.4, 2.55, 1.8), (-0.8, 2.4, 2.55, 1.8), (-2.1, 2.2, 2.2, 1.95), (-2.9, 1.25, 1.3, 2.35),
+                (-3.4, 0.9, 0.9, 2.5), (-8.6, 0.42, 0.5, 2.75), (-9.1, 0.3, 0.42, 2.8)]
+    n = 16
+    bm = bmesh.new()
+    rings = []
+    for y, w, h, zc in sections:
+        ring = []
+        for i in range(n):
+            a = 2 * math.pi * i / n
+            c, s = math.cos(a), math.sin(a)
+            x = w / 2 * math.copysign(abs(c) ** 0.55, c)
+            z = zc + h / 2 * math.copysign(abs(s) ** 0.55, s)
+            ring.append(bm.verts.new((x, y, z)))
+        rings.append(ring)
+    for r0, r1 in zip(rings, rings[1:]):
+        for i in range(n):
+            j = (i + 1) % n
+            bm.faces.new((r0[i], r0[j], r1[j], r1[i]))
+    bm.faces.new(rings[0])
+    bm.faces.new(list(reversed(rings[-1])))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    me = bpy.data.meshes.new("Fuselage")
+    bm.to_mesh(me)
+    bm.free()
+    body = bpy.data.objects.new("Fuselage", me)
+    bpy.context.scene.collection.objects.link(body)
+    for m in (olive, belly, glass):
+        me.materials.append(m)
+    for f in me.polygons:
+        c = f.center
+        zc = 1.8 if c.y > -2.5 else 2.6
+        if c.y > 3.0 and c.z > 1.3:
+            f.material_index = 2          # glazed nose and cockpit
+        elif c.z < zc - 0.55:
+            f.material_index = 1          # pale belly
+    me.polygons.foreach_set("use_smooth", [True] * len(me.polygons))
+    parts.append(body)
+
+    def box(size, loc, mat, rot=(0, 0, 0), bevel=0.0):
+        bpy.ops.mesh.primitive_cube_add(size=1.0, location=loc, rotation=rot)
+        o = bpy.context.object
+        o.scale = size
+        bpy.ops.object.transform_apply(scale=True)
+        if bevel:
+            md = o.modifiers.new("Bevel", 'BEVEL')
+            md.width, md.segments = bevel, 2
+            bpy.ops.object.modifier_apply(modifier=md.name)
+        o.data.materials.append(mat)
+        parts.append(o)
+        return o
+
+    def cyl(radius, depth, loc, mat, rot=(0, 0, 0), verts=14):
+        bpy.ops.mesh.primitive_cylinder_add(vertices=verts, radius=radius, depth=depth, location=loc, rotation=rot)
+        o = bpy.context.object
+        o.data.materials.append(mat)
+        o.data.polygons.foreach_set("use_smooth", [True] * len(o.data.polygons))
+        parts.append(o)
+        return o
+
+    along_y = (math.pi / 2, 0, 0)
+    along_x = (0, math.pi / 2, 0)
+    # engines and gearbox over the cabin, exhausts to the sides
+    box((1.7, 3.6, 0.75), (0, 0.9, 3.35), olive, bevel=0.25)
+    box((1.1, 1.2, 0.5), (0, -0.4, 3.75), olive, bevel=0.15)
+    for sx in (-1, 1):
+        cyl(0.36, 0.9, (sx * 0.7, 2.8, 3.25), dark, rot=along_y)                      # intakes
+        cyl(0.24, 0.7, (sx * 0.95, -0.9, 3.2), metal, rot=(math.pi / 2, sx * 0.6, 0))  # exhausts
+    cyl(0.14, 0.55, (0, -0.4, 4.2), metal)                                          # rotor mast
+    # fuel tanks along the sides, windows, the open door on the right
+    for sx in (-1, 1):
+        cyl(0.42, 2.6, (sx * 1.38, 0.2, 0.95), olive, rot=along_y)
+        for i in range(5):
+            box((0.06, 0.45, 0.45), (sx * 1.19, 1.9 - i * 0.85, 2.35), glass, bevel=0.1)
+    box((0.08, 1.3, 1.7), (1.2, -1.3, 1.6), dark)                                  # the doorway, slid open
+    box((0.04, 1.35, 1.75), (1.23, -2.6, 1.65), olive)                               # the door panel, pushed back
+    box((0.04, 0.5, 0.5), (-1.21, -0.3, 1.5), star, rot=(0, 0, 0))                  # red marking
+    # landing gear: nose wheels and two main wheels on struts
+    for sx in (-0.28, 0.28):
+        cyl(0.28, 0.18, (sx, 3.6, 0.28), rubber, rot=along_x)
+    cyl(0.06, 0.8, (0, 3.6, 0.65), metal)
+    for sx in (-1, 1):
+        cyl(0.42, 0.3, (sx * 1.65, -0.9, 0.42), rubber, rot=along_x)
+        box((0.12, 0.12, 1.2), (sx * 1.35, -0.9, 0.85), metal, rot=(0, sx * 0.7, 0))
+    # tail: fin, stabilisers
+    bm = bmesh.new()
+    prof = [(-8.3, 2.7), (-9.3, 2.7), (-9.6, 4.6), (-9.1, 4.6)]
+    a = [bm.verts.new((0.09, y, z)) for y, z in prof]
+    b = [bm.verts.new((-0.09, y, z)) for y, z in prof]
+    bm.faces.new(a)
+    bm.faces.new(list(reversed(b)))
+    for i in range(4):
+        j = (i + 1) % 4
+        bm.faces.new((a[i], b[i], b[j], a[j]))
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    fm = bpy.data.meshes.new("Fin")
+    bm.to_mesh(fm)
+    bm.free()
+    fin = bpy.data.objects.new("Fin", fm)
+    bpy.context.scene.collection.objects.link(fin)
+    fm.materials.append(olive)
+    parts.append(fin)
+    box((2.2, 0.55, 0.06), (0, -7.4, 2.7), olive, bevel=0.02)
+    box((0.3, 0.3, 0.3), (0.0, -9.35, 4.4), dark)                                   # tail gearbox
+
+    # rotors (separate objects, origins on their hubs)
+    def rotor(name, hub, blades, radius, chord, axis):
+        objs = []
+        bpy.ops.mesh.primitive_cylinder_add(vertices=12, radius=0.28 if axis == 'Z' else 0.12, depth=0.25,
+                                            location=(0, 0, 0), rotation=(0, 0, 0) if axis == 'Z' else along_x)
+        objs.append(bpy.context.object)
+        objs[-1].data.materials.append(dark)
+        for i in range(blades):
+            a = 2 * math.pi * i / blades
+            if axis == 'Z':
+                loc = (math.cos(a) * radius / 2, math.sin(a) * radius / 2, 0.05 - 0.004 * radius)
+                rot = (0, 0.02, a)
+                size = (radius, chord, 0.05)
+            else:
+                loc = (0, math.cos(a) * radius / 2, math.sin(a) * radius / 2)
+                rot = (a, 0, 0)
+                size = (0.04, radius, chord)
+            bpy.ops.mesh.primitive_cube_add(size=1.0, location=loc, rotation=rot)
+            o = bpy.context.object
+            o.scale = size
+            bpy.ops.object.transform_apply(scale=True)
+            o.data.materials.append(dark)
+            objs.append(o)
+        bpy.ops.object.select_all(action='DESELECT')
+        for o in objs:
+            o.select_set(True)
+        bpy.context.view_layer.objects.active = objs[0]
+        bpy.ops.object.join()
+        r = bpy.context.object
+        r.name = name
+        r.location = hub
+        return r
+    main = rotor("MainRotor", (0, -0.4, 4.5), 5, 7.6, 0.42, 'Z')
+    tail = rotor("TailRotor", (-0.3, -9.3, 4.2), 3, 1.5, 0.22, 'X')
+
+    bpy.ops.object.select_all(action='DESELECT')
+    for o in parts:
+        o.select_set(True)
+    bpy.context.view_layer.objects.active = parts[0]
+    bpy.ops.object.join()
+    hull = bpy.context.object
+    hull.name = "Hull"
+    export_glb(out_path, [hull, main, tail])
+    return [hull, main, tail]
 
 
 def build_bus(out_path):
@@ -1193,15 +1498,15 @@ SNIPER_COLORS = {"LightWood": (0.32, 0.17, 0.07), "DarkWood": (0.2, 0.1, 0.04), 
 WEAPONS = {
     # source, length (m), grip point (bbox fractions: x, y from the rear, z from the bottom) and where it goes;
     # hands: (grip point as bbox fractions, finger direction, palm direction); material colour overrides
-    "pistol": dict(src="guns/FPS Pack/Blends/Pistol.blend", length=0.24, grip=(0.5, 0.17, 0.3), at=(0.09, 0.32, -0.17), yaw=6,
-                   right=((0.5, 0.17, 0.3), (0, 1, -0.25), (-1, 0, 0)),
-                   left=((0.0, 0.14, 0.15), (0.3, 0.8, -0.3), (1, 0.2, 0.3)), colors=PISTOL_COLORS),
+    "pistol": dict(src="guns/FPS Pack/Blends/Pistol.blend", length=0.24, grip=(0.5, 0.15, 0.55), at=(0.09, 0.32, -0.15), yaw=6,
+                   right=((0.5, 0.15, 0.55), (0, 1, -0.25), (-1, 0, 0)),
+                   left=((-1.4, 0.1, 0.05), (0.35, 0.75, 0.55), (0.9, 0.0, 0.45)), colors=PISTOL_COLORS, curl=58.0),
     "rifle": dict(src="model:ak", length=0.72, grip=(0.5, 0.33, 0.45), at=(0.165, 0.4, -0.265), yaw=8,
                   right=((0.5, 0.33, 0.45), (0, 1, -0.3), (-1, 0, 0)),
                   left=((0.5, 0.7, 0.66), (0.6, 0.8, 0), (0, 0, 1)), colors={}),
-    "revolver": dict(src="model:revolver", length=0.3, grip=(0.5, 0.12, 0.36), at=(0.1, 0.32, -0.17),
-                     yaw=6, right=((0.5, 0.12, 0.36), (0, 1, -0.25), (-1, 0, 0)),
-                     left=((0.0, 0.1, 0.2), (0.3, 0.8, -0.3), (1, 0.2, 0.3)), colors={}),
+    "revolver": dict(src="model:revolver", length=0.3, grip=(0.5, 0.12, 0.5), at=(0.1, 0.32, -0.15),
+                     yaw=6, right=((0.5, 0.12, 0.5), (0, 1, -0.25), (-1, 0, 0)),
+                     left=((-1.1, 0.07, 0.1), (0.35, 0.75, 0.55), (0.9, 0.0, 0.45)), colors={}, curl=58.0),
     "smg": dict(src="model:smg", length=0.6, grip=(0.5, 0.37, 0.55), at=(0.14, 0.38, -0.22), yaw=7,
                 right=((0.5, 0.37, 0.55), (0, 1, -0.3), (-1, 0, 0)),
                 left=((0.5, 0.68, 0.72), (0.6, 0.8, 0), (0, 0, 1)), colors={}),
@@ -1250,7 +1555,7 @@ def build_viewmodels(only=()):
 
         def hand(spec):
             return frac(spec[0]), turn @ Vector(spec[1]), turn @ Vector(spec[2])
-        arms = build_real_arms(hand(w["right"]), hand(w["left"]))
+        arms = build_real_arms(hand(w["right"]), hand(w["left"]), curl=w.get("curl", 75.0))
         m = add_muzzle(muzzle)
         rocket = next((o for o in objs if "Rocket" in o.name), None)
         if rocket is not None:
@@ -1389,6 +1694,10 @@ if "viewmodels" in PARTS:
     build_viewmodels()
 if "bosses" in PARTS:
     build_bosses()
+if "heli" in PARTS:
+    build_helicopter(os.path.join(PROJECT, "models", "vehicles", "helicopter.glb"))
+    render_lineup([os.path.join(PROJECT, "models", "vehicles", "helicopter.glb")], os.path.join(SRC, "previews", "helicopter.png"),
+                  spacing=7.0, cam=(14, -16, 7))
 if "kenney" in PARTS:
     build_kenney()
 KENNEY_ONLY = [p[7:] for p in PARTS if p.startswith("kenney:")]

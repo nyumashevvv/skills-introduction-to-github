@@ -1013,8 +1013,8 @@ def level_2():
     L.event('AlertPrisoners', delay=1.0, targets=[f'Zombies/Prisoner{i}' for i in range(1, 7)])
     L.spawner('LobbyHorde', [(-6, 0, -3), (6, 0, -3), (0, 0, -4)], ['walker', 'soldier', 'runner', 'walker'], 8, interval=1.2)
     L.event('ShutterOpened', targets=['Zombies/Warden'])
-    L.event('WardenAppears', speaker=D, duration=9, objective='Убей Надзирателя',
-            message='Во дворе машина… и охранник со щитом! Щит держит пули — целься в голову, заходи сбоку '
+    L.event('WardenAppears', speaker=D, duration=9, objective='Убей Боболева',
+            message='Во дворе машина… и это Боболев со щитом! Щит держит пули — целься в голову, заходи сбоку '
                     'или стреляй из РПГ.')
     L.event('WardenDead', speaker=D, objective='Садись в машину во дворе', message='Чисто! Машина ждёт — давай!',
             targets=['Story/ExitTrigger'])
@@ -1129,7 +1129,7 @@ def level_3():
     L.node('Holdout', 'Node', 'Story', script=L.ext_res('Script', 'res://scripts/story/holdout.gd'), duration=120.0,
            spawners=NPS(['../SpawnNorth', '../SpawnEast', '../SpawnWest', '../SpawnSouth']),
            boss_spawner=NP('../SpawnBoss'), boss_time=55.0, boss_event=NP('../BossWarning'),
-           boss_text=S('Убей Колосса! Вертолёт не сядет'), on_finished=NP('../HeliArrives'))
+           boss_text=S('Убей Алёну! Вертолёт не сядет'), on_finished=NP('../HeliArrives'))
     mix = ['walker', 'walker', 'soldier', 'runner', 'bloater', 'spitter']
     L.spawner('SpawnNorth', [(-2, 0, -66), (2, 0, -68)], mix, 0, interval=2.6, continuous=True, max_alive=6)
     L.spawner('SpawnEast', [(52, 0, -2), (50, 0, 2)], mix, 0, interval=3.2, continuous=True, max_alive=5)
@@ -1137,8 +1137,8 @@ def level_3():
     L.spawner('SpawnSouth', [(-2, 0, 63), (2, 0, 64)], mix, 0, interval=5.0, continuous=True, max_alive=3)
     L.spawner('SpawnBoss', [(0, 0, -67)], ['colossus'], 1, interval=0.1)
     L.event('BossWarning', speaker=D, duration=9,
-            message='С севера идёт что-то огромное… Это Колосс! Он швыряет обломки и бьёт о землю — '
-                    'прыгай, когда замахивается. Пока он жив, вертолёт не сядет!')
+            message='С севера идёт что-то огромное… Это Алёна! Она швыряет обломки и бьёт о землю — '
+                    'прыгай, когда замахивается. Пока она жива, вертолёт не сядет!')
     L.event('HeliArrives', speaker=P, duration=7, objective='Вертолёт садится — держись!',
             message='Захожу на посадку! Держись, я почти над тобой!', targets=['Helicopter', 'Story/HeliLanded'])
     L.event('HeliLanded', delay=9.5, speaker=P, objective='Садись в вертолёт!', message='Сел! Запрыгивай, живо!',
@@ -1556,6 +1556,69 @@ def backdrop_world():
 
 
 
+def ending_world():
+    """Set of the ending cutscene: the stadium at dawn with the dead crowding the pad, the city around it and the
+    helicopter (scripts/ui/ending_heli.gd) that carries the camera marks of the airborne shots."""
+    L = LevelBuilder('EndingWorld', {}, script=None)
+    env = night_env(L, fog=0.006, ambient=1.0, horizon=(0.95, 0.5, 0.25))
+    env['ambient_light_color'] = C(0.35, 0.3, 0.35)
+    L.setup(env, dict(rotation=V3(-0.12, 0.25, 0), light_color=C(1.0, 0.62, 0.35), light_energy=1.2, shadow_enabled=True,
+                      directional_shadow_max_distance=200.0))
+    # the stadium: field, track, stands, floodlights
+    L.floor('grass', -35, 35, 55, -55)
+    L.floor('concrete', -41, 41, 61, -61, top=-0.01)
+    for i in range(4):
+        h, d = 1.2 * (i + 1), 3.0
+        for sx in (-1, 1):
+            L.blk('stands', (d, h, 122), (sx * (41 + d / 2 + i * d), h / 2, 0))
+        for sz in (-1, 1):
+            L.blk('stands', (106, h, d), (0, h / 2, sz * (61 + d / 2 + i * d)))
+    L.wall_z(-74, -53, 53, 'concrete', h=8, t=1); L.wall_z(74, -53, 53, 'concrete', h=8, t=1)
+    L.wall_x(-53, -74, 74, 'concrete', h=8, t=1); L.wall_x(53, -74, 74, 'concrete', h=8, t=1)
+    L.neon('ДИНАМО', (0, 11.3, -73.6), '+z', 'blue', font=500, light=False)
+    for x, z in [(-38, -58), (38, -58), (-38, 58), (38, 58)]:
+        L.prop('res://scenes/world/floodlight_tower.tscn', (x, 0, z), math.atan2(x, z), parent='Decor')
+    for x in (-4, 4):  # the helipad
+        L.decor((0.4, 0.02, 6), (x, 0.02, 0), 'paint_white')
+    L.decor((8, 0.02, 0.4), (0, 0.02, 0), 'paint_white')
+    for kind, pos in [('ambulance', (-28, 0, 32)), ('police', (29, 0, 34)), ('sedan_burnt', (20, 0, -30))]:
+        L.prop(VEHICLE.format(kind), pos, 0.7)
+    for pos in [(-24, 2.4, 20), (26, 0.1, -34), (20, 1.0, -30)]:
+        L.fire(pos)
+    # the dead, crowding round the pad
+    for i in range(34):
+        a = L.rnd.uniform(0, math.tau)
+        r = L.rnd.uniform(5.5, 24)
+        L.zombie('runner' if i % 6 == 0 else 'walker', (math.cos(a) * r, 0, math.sin(a) * r))
+    # the city around: blocks with a few lit windows, some of them burning
+    for i in range(70):
+        a = L.rnd.uniform(0, math.tau)
+        r = L.rnd.uniform(95, 330)
+        x, z = math.cos(a) * r, math.sin(a) * r
+        w, d, h = L.rnd.uniform(14, 30), L.rnd.uniform(14, 30), L.rnd.uniform(10, 38)
+        L.decor((w, h, d), (x, h / 2, z), L.rnd.choice(['plaster_gray', 'brick_dark', 'concrete', 'plaster']))
+        for k in range(int(h // 8)):
+            if L.rnd.random() < 0.35:
+                L.decor((w * 0.7, 1.2, d + 0.1), (x, 4 + k * 8, z), 'window_lit', cast_shadow=0)
+        if L.rnd.random() < 0.15:
+            L.fire((x, h + 0.5, z))
+    # the helicopter and the camera marks that fly with it
+    L.node('Heli', 'Node3D', '.', script=L.ext_res('Script', 'res://scripts/ui/ending_heli.gd'))
+    L.node('Model', None, 'Heli', instance=L.ext_res('PackedScene', 'res://models/vehicles/helicopter.glb'))
+    L.node('Sound', 'AudioStreamPlayer3D', 'Heli', stream=L.sound('helicopter'), autoplay=True, unit_size=30.0,
+           max_distance=400.0, volume_db=2.0)
+    L.node('Searchlight', 'SpotLight3D', 'Heli', position=V3(0, 0.6, -4.3), rotation=V3(-1.0, 0, 0),
+           light_color=C(1, 1, 0.9), light_energy=6.0, spot_range=60.0, spot_angle=22.0)
+    L.node('Cams', 'Node3D', '.')
+    for name, frm, to in [('LiftoffA', (9, 1.4, 11), (0, 2.5, 0)), ('LiftoffB', (7, 1.7, 8.5), (0, 4, 0))]:
+        L.node(name, 'Marker3D', 'Cams', position=V3(*frm), rotation=look(frm, to))
+    for name, frm, to in [('RiseA', (14, 7, 14), (0, -3, 0)), ('RiseB', (9, 13, 9), (0, -6, 0)),
+                          ('CityA', (-26, 10, 26), (0, 0, -6)), ('CityB', (-17, 6, 15), (0, 0, -8)),
+                          ('DawnA', (2.5, 3.5, 15), (0, 1.5, -30)), ('DawnB', (5, 9, 55), (0, 1, -60))]:
+        L.node(name, 'Marker3D', 'Heli', position=V3(*frm), rotation=look(frm, to))
+    L.save('scenes/ui/ending_world.tscn')
+
+
 if __name__ == '__main__':
     level_1()
     level_2()
@@ -1563,4 +1626,5 @@ if __name__ == '__main__':
     level_subway()
     level_3()
     backdrop_world()
+    ending_world()
     print('levels ok')

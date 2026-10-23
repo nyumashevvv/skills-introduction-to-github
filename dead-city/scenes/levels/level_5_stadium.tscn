@@ -1519,7 +1519,7 @@ spawners = Array[NodePath]([NodePath("../SpawnNorth"), NodePath("../SpawnEast"),
 boss_spawner = NodePath("../SpawnBoss")
 boss_time = 55.0
 boss_event = NodePath("../BossWarning")
-boss_text = "Убей Колосса! Вертолёт не сядет"
+boss_text = "Убей Алёну! Вертолёт не сядет"
 on_finished = NodePath("../HeliArrives")
 
 [node name="SpawnNorth" type="Node3D" parent="Story"]
@@ -1591,7 +1591,7 @@ position = Vector3(0.0, 0.0, -67.0)
 [node name="BossWarning" type="Node" parent="Story"]
 script = ExtResource("56_story_event")
 speaker = "Диспетчер"
-message = "С севера идёт что-то огромное… Это Колосс! Он швыряет обломки и бьёт о землю — прыгай, когда замахивается. Пока он жив, вертолёт не сядет!"
+message = "С севера идёт что-то огромное… Это Алёна! Она швыряет обломки и бьёт о землю — прыгай, когда замахивается. Пока она жива, вертолёт не сядет!"
 message_duration = 9.0
 
 [node name="HeliArrives" type="Node" parent="Story"]

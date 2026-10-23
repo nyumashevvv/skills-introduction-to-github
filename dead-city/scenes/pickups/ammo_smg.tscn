@@ -2,26 +2,24 @@
 
 [ext_resource type="Script" path="res://scripts/pickups/pickup.gd" id="1_pickup"]
 
-[ext_resource type="Material" path="res://materials/ammo_green.tres" id="2_ammo_green"]
+[ext_resource type="Material" path="res://materials/gun_black.tres" id="2_gun_black"]
 
-[ext_resource type="Material" path="res://materials/dark.tres" id="3_dark"]
-
-[ext_resource type="Material" path="res://materials/paint_white.tres" id="4_paint_white"]
+[ext_resource type="Material" path="res://materials/brass.tres" id="3_brass"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_1"]
 radius = 0.8
 
 [sub_resource type="BoxMesh" id="BoxMesh_2"]
-size = Vector3(0.3, 0.2, 0.22)
-material = ExtResource("2_ammo_green")
+size = Vector3(0.025, 0.2, 0.03)
+material = ExtResource("2_gun_black")
 
-[sub_resource type="BoxMesh" id="BoxMesh_3"]
-size = Vector3(0.32, 0.04, 0.24)
-material = ExtResource("3_dark")
-
-[sub_resource type="BoxMesh" id="BoxMesh_4"]
-size = Vector3(0.18, 0.08, 0.005)
-material = ExtResource("4_paint_white")
+[sub_resource type="CylinderMesh" id="CylinderMesh_3"]
+top_radius = 0.005
+bottom_radius = 0.005
+height = 0.02
+radial_segments = 16
+rings = 1
+material = ExtResource("3_brass")
 
 [node name="AmmoSmg" type="Area3D"]
 collision_layer = 16
@@ -41,21 +39,50 @@ shape = SubResource("SphereShape3D_1")
 
 [node name="Item" type="Node3D" parent="Visual"]
 position = Vector3(0.0, 0.5, 0.0)
+scale = Vector3(1.8, 1.8, 1.8)
 
-[node name="Box" type="MeshInstance3D" parent="Visual/Item"]
+[node name="Mag0" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(-0.04, 0.0, 0.0)
+rotation = Vector3(0.0, 0.0, -0.15)
+
+[node name="Round0" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("CylinderMesh_3")
+position = Vector3(-0.055, 0.105, 0.0)
+rotation = Vector3(1.5708, 0.0, 0.0)
+
+[node name="Mag1" type="MeshInstance3D" parent="Visual/Item"]
 mesh = SubResource("BoxMesh_2")
 position = Vector3(0.0, 0.0, 0.0)
+rotation = Vector3(0.0, 0.0, 0.0)
 
-[node name="Lid" type="MeshInstance3D" parent="Visual/Item"]
-mesh = SubResource("BoxMesh_3")
-position = Vector3(0.0, 0.11, 0.0)
+[node name="Round1" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("CylinderMesh_3")
+position = Vector3(0.0, 0.105, 0.0)
+rotation = Vector3(1.5708, 0.0, 0.0)
 
-[node name="Label" type="MeshInstance3D" parent="Visual/Item"]
-mesh = SubResource("BoxMesh_4")
-position = Vector3(0.0, 0.0, -0.112)
+[node name="Mag2" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("BoxMesh_2")
+position = Vector3(0.04, 0.0, 0.0)
+rotation = Vector3(0.0, 0.0, 0.15)
+
+[node name="Round2" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("CylinderMesh_3")
+position = Vector3(0.055, 0.105, 0.0)
+rotation = Vector3(1.5708, 0.0, 0.0)
+
+[node name="Tag" type="Label3D" parent="Visual/Item"]
+position = Vector3(0.0, 0.2, 0.0)
+text = "ПП-9"
+font_size = 26
+pixel_size = 0.0035
+billboard = 1
+modulate = Color(0.4, 0.85, 1.0, 1.0)
+outline_size = 10
+outline_modulate = Color(0.0, 0.0, 0.0, 0.8)
 
 [node name="Light" type="OmniLight3D" parent="."]
 position = Vector3(0.0, 0.8, 0.0)
-light_color = Color(1.0, 0.9, 0.6, 1.0)
+light_color = Color(0.4, 0.85, 1.0, 1.0)
 light_energy = 0.8
 omni_range = 2.5

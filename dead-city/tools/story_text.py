@@ -1,4 +1,4 @@
-"""Text of the intro cutscene (shared by gen_assets.py, which builds the scene, and gen_voice.py, which voices it).
+"""Text of the intro and ending cutscenes (shared by gen_assets.py, which builds the scene, and gen_voice.py, which voices it).
 
 Each shot: the camera move (markers in scenes/ui/cutscene_world.tscn: <shot>A -> <shot>B), who speaks
 ('' = the hero's own voice, 'Новости' = a TV announcer, 'Диспетчер' = the radio) and what is said.
@@ -15,4 +15,12 @@ CUTSCENE = [
     ('Radio', 'Диспетчер', '…если кто-то слышит — эвакуация со стадиона «Динамо» на рассвете. '
                            'Повторяю: стадион, на рассвете.'),
     ('Door', '', 'Стадион на другом конце города. Но другого шанса не будет. Пора выходить.'),
+]
+
+# The ending (scenes/ui/ending_world.tscn): the helicopter lifts off the stadium and flies out over the city at dawn.
+ENDING = [
+    ('Liftoff', 'Пилот', 'Держись крепче! Взлетаем!'),
+    ('Rise', '', 'Стадион уходил вниз. Мёртвые тянули к нам руки, будто ещё могли достать.'),
+    ('City', 'Диспетчер', 'Борт-двенадцать, вижу вас. Коридор чистый, курс на базу. Добро пожаловать в живые.'),
+    ('Dawn', '', 'Девять дней я ждал рассвета. Город остался позади. Где-то там ещё есть люди — и теперь я снова один из них.'),
 ]

@@ -1,0 +1,108 @@
+[gd_scene format=3]
+
+[ext_resource type="FontFile" path="res://fonts/RussoOne-Regular.ttf" id="1_RussoOne-Regular"]
+
+[ext_resource type="Script" path="res://scripts/ui/cutscene.gd" id="2_cutscene"]
+
+[ext_resource type="PackedScene" path="res://scenes/ui/ending_world.tscn" id="3_ending_world"]
+
+[ext_resource type="AudioStream" path="res://sounds/radio.wav" id="4_radio"]
+
+[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="5_ambience"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1"]
+bg_color = Color(0.0, 0.0, 0.0, 0.55)
+content_margin_left = 18.0
+content_margin_right = 18.0
+content_margin_top = 10.0
+content_margin_bottom = 12.0
+
+[node name="EndingCutscene" type="Control"]
+script = ExtResource("2_cutscene")
+shots = PackedStringArray("Liftoff", "Rise", "City", "Dawn")
+speakers = PackedStringArray("Пилот", "", "Диспетчер", "")
+lines = PackedStringArray("Держись крепче! Взлетаем!", "Стадион уходил вниз. Мёртвые тянули к нам руки, будто ещё могли достать.", "Борт-двенадцать, вижу вас. Коридор чистый, курс на базу. Добро пожаловать в живые.", "Девять дней я ждал рассвета. Город остался позади. Где-то там ещё есть люди — и теперь я снова один из них.")
+finish_call = &"show_ending"
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="World" parent="." instance=ExtResource("3_ending_world")]
+
+[node name="Camera3D" type="Camera3D" parent="."]
+current = true
+fov = 55.0
+
+[node name="BarTop" type="ColorRect" parent="."]
+color = Color(0.0, 0.0, 0.0, 1.0)
+anchor_right = 1.0
+anchor_top = 0.0
+anchor_bottom = 0.11
+mouse_filter = 2
+
+[node name="BarBottom" type="ColorRect" parent="."]
+color = Color(0.0, 0.0, 0.0, 1.0)
+anchor_right = 1.0
+anchor_top = 0.89
+anchor_bottom = 1.0
+mouse_filter = 2
+
+[node name="Subtitle" type="PanelContainer" parent="."]
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -460.0
+offset_top = -190.0
+offset_right = 460.0
+offset_bottom = -110.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_1")
+
+[node name="Text" type="RichTextLabel" parent="Subtitle"]
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+mouse_filter = 2
+theme_override_font_sizes/normal_font_size = 23
+theme_override_font_sizes/italics_font_size = 23
+
+[node name="SkipHint" type="Label" parent="."]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -360.0
+offset_top = 22.0
+offset_right = -28.0
+offset_bottom = 48.0
+grow_horizontal = 0
+text = "Любая клавиша — пропустить"
+theme_override_font_sizes/font_size = 15
+theme_override_colors/font_color = Color(0.6, 0.58, 0.55, 1.0)
+horizontal_alignment = 2
+
+[node name="Fade" type="ColorRect" parent="."]
+color = Color(0.0, 0.0, 0.0, 1.0)
+mouse_filter = 2
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Voice" type="AudioStreamPlayer" parent="."]
+volume_db = 0.0
+
+[node name="RadioClick" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4_radio")
+volume_db = -8.0
+
+[node name="Ambience" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_ambience")
+autoplay = true
+volume_db = -8.0

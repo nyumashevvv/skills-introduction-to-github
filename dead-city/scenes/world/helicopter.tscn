@@ -2,145 +2,39 @@
 
 [ext_resource type="Script" path="res://scripts/world/helicopter.gd" id="1_helicopter"]
 
-[ext_resource type="Material" path="res://materials/military.tres" id="2_military"]
+[ext_resource type="PackedScene" path="res://models/vehicles/helicopter.glb" id="2_helicopter"]
 
-[ext_resource type="Material" path="res://materials/glass.tres" id="3_glass"]
+[ext_resource type="Script" path="res://scripts/world/flicker_light.gd" id="3_flicker_light"]
 
-[ext_resource type="Material" path="res://materials/dark.tres" id="4_dark"]
-
-[ext_resource type="Script" path="res://scripts/world/flicker_light.gd" id="5_flicker_light"]
-
-[ext_resource type="AudioStream" path="res://sounds/helicopter.wav" id="6_helicopter"]
-
-[sub_resource type="BoxMesh" id="BoxMesh_1"]
-size = Vector3(2.4, 2.2, 4.5)
-material = ExtResource("2_military")
-
-[sub_resource type="BoxMesh" id="BoxMesh_2"]
-size = Vector3(2.0, 1.4, 1.4)
-material = ExtResource("2_military")
-
-[sub_resource type="BoxMesh" id="BoxMesh_3"]
-size = Vector3(1.8, 1.0, 0.05)
-material = ExtResource("3_glass")
-
-[sub_resource type="BoxMesh" id="BoxMesh_4"]
-size = Vector3(0.6, 0.6, 6.0)
-material = ExtResource("2_military")
-
-[sub_resource type="BoxMesh" id="BoxMesh_5"]
-size = Vector3(0.15, 1.8, 1.0)
-material = ExtResource("2_military")
-
-[sub_resource type="BoxMesh" id="BoxMesh_6"]
-size = Vector3(0.12, 0.12, 4.5)
-material = ExtResource("4_dark")
-
-[sub_resource type="BoxMesh" id="BoxMesh_7"]
-size = Vector3(0.1, 0.5, 0.1)
-material = ExtResource("4_dark")
-
-[sub_resource type="BoxMesh" id="BoxMesh_8"]
-size = Vector3(0.05, 1.4, 1.6)
-material = ExtResource("4_dark")
-
-[sub_resource type="CylinderMesh" id="CylinderMesh_9"]
-top_radius = 0.25
-bottom_radius = 0.25
-height = 0.3
-radial_segments = 16
-rings = 1
-material = ExtResource("4_dark")
-
-[sub_resource type="BoxMesh" id="BoxMesh_10"]
-size = Vector3(12.0, 0.04, 0.4)
-material = ExtResource("4_dark")
-
-[sub_resource type="BoxMesh" id="BoxMesh_11"]
-size = Vector3(0.4, 0.04, 12.0)
-material = ExtResource("4_dark")
-
-[sub_resource type="BoxMesh" id="BoxMesh_12"]
-size = Vector3(0.04, 2.0, 0.2)
-material = ExtResource("4_dark")
-
-[sub_resource type="BoxMesh" id="BoxMesh_13"]
-size = Vector3(0.04, 0.2, 2.0)
-material = ExtResource("4_dark")
+[ext_resource type="AudioStream" path="res://sounds/helicopter.wav" id="4_helicopter"]
 
 [node name="Helicopter" type="Node3D"]
 script = ExtResource("1_helicopter")
 
-[node name="Cabin" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_1")
-position = Vector3(0.0, 1.6, 0.0)
+[node name="Model" parent="." instance=ExtResource("2_helicopter")]
 
-[node name="Nose" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_2")
-position = Vector3(0.0, 1.3, -2.8)
-rotation = Vector3(0.25, 0.0, 0.0)
+[node name="NumberL" type="Label3D" parent="."]
+position = Vector3(-1.235, 1.45, -1.7)
+rotation = Vector3(0.0, -1.5708, 0.0)
+text = "12"
+font_size = 150
+pixel_size = 0.006
+modulate = Color(0.85, 0.85, 0.78, 1.0)
+outline_size = 0
+shaded = true
 
-[node name="Glass" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_3")
-position = Vector3(0.0, 2.0, -3.35)
-rotation = Vector3(-0.5, 0.0, 0.0)
-
-[node name="Tail" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_4")
-position = Vector3(0.0, 2.3, 5.0)
-
-[node name="Fin" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_5")
-position = Vector3(0.0, 3.0, 7.8)
-
-[node name="SkidL" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_6")
-position = Vector3(-1.2, 0.06, 0.0)
-
-[node name="SkidR" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_6")
-position = Vector3(1.2, 0.06, 0.0)
-
-[node name="StrutL" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_7")
-position = Vector3(-1.15, 0.3, 0.0)
-
-[node name="StrutR" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_7")
-position = Vector3(1.15, 0.3, 0.0)
-
-[node name="Door" type="MeshInstance3D" parent="."]
-mesh = SubResource("BoxMesh_8")
-position = Vector3(1.21, 1.4, 0.3)
-
-[node name="MainRotor" type="Node3D" parent="."]
-position = Vector3(0.0, 2.95, 0.0)
-
-[node name="Hub" type="MeshInstance3D" parent="MainRotor"]
-mesh = SubResource("CylinderMesh_9")
-position = Vector3(0.0, 0.0, 0.0)
-
-[node name="Blade1" type="MeshInstance3D" parent="MainRotor"]
-mesh = SubResource("BoxMesh_10")
-position = Vector3(0.0, 0.15, 0.0)
-
-[node name="Blade2" type="MeshInstance3D" parent="MainRotor"]
-mesh = SubResource("BoxMesh_11")
-position = Vector3(0.0, 0.15, 0.0)
-
-[node name="TailRotor" type="Node3D" parent="."]
-position = Vector3(0.25, 3.2, 7.8)
-
-[node name="Blade1" type="MeshInstance3D" parent="TailRotor"]
-mesh = SubResource("BoxMesh_12")
-position = Vector3(0.0, 0.0, 0.0)
-
-[node name="Blade2" type="MeshInstance3D" parent="TailRotor"]
-mesh = SubResource("BoxMesh_13")
-position = Vector3(0.0, 0.0, 0.0)
+[node name="NumberR" type="Label3D" parent="."]
+position = Vector3(1.235, 1.45, -1.7)
+rotation = Vector3(0.0, 1.5708, 0.0)
+text = "12"
+font_size = 150
+pixel_size = 0.006
+modulate = Color(0.85, 0.85, 0.78, 1.0)
+outline_size = 0
+shaded = true
 
 [node name="Searchlight" type="SpotLight3D" parent="."]
-position = Vector3(0.0, 0.8, -3.0)
+position = Vector3(0.0, 0.6, -4.3)
 rotation = Vector3(-1.0, 0.0, 0.0)
 light_color = Color(1.0, 1.0, 0.9, 1.0)
 light_energy = 6.0
@@ -152,11 +46,11 @@ position = Vector3(0.0, 0.3, 0.0)
 light_color = Color(1.0, 0.1, 0.1, 1.0)
 light_energy = 2.0
 omni_range = 6.0
-script = ExtResource("5_flicker_light")
+script = ExtResource("3_flicker_light")
 flicker_chance = 0.4
 
 [node name="Sound" type="AudioStreamPlayer3D" parent="."]
-stream = ExtResource("6_helicopter")
+stream = ExtResource("4_helicopter")
 unit_size = 30.0
 max_distance = 200.0
 volume_db = 4.0

@@ -12,6 +12,7 @@ const MAIN_MENU := "res://scenes/ui/main_menu.tscn"
 const ENDING := "res://scenes/ui/ending.tscn"
 const SAVE_PATH := "user://progress.cfg"
 const CUTSCENE := "res://scenes/ui/intro_cutscene.tscn"
+const ENDING_CUTSCENE := "res://scenes/ui/ending_cutscene.tscn"
 
 enum Difficulty { EASY, NORMAL, HARD }
 const DIFFICULTY_NAMES: Array[String] = ["Лёгкая", "Нормальная", "Сложная"]
@@ -78,6 +79,11 @@ func start_first_chapter() -> void:
 	_change_to_level()
 
 
+## Called by the ending cutscene when it ends or is skipped.
+func show_ending() -> void:
+	_change_scene(ENDING)
+
+
 func continue_game() -> void:
 	var config := ConfigFile.new()
 	if config.load(SAVE_PATH) != OK:
@@ -96,7 +102,7 @@ func complete_level(player_state: Dictionary) -> void:
 	checkpoint = player_state
 	if current_level >= LEVELS.size():
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(SAVE_PATH))
-		_change_scene(ENDING)
+		_change_scene(ENDING_CUTSCENE)
 		return
 	_save()
 	_change_to_level()

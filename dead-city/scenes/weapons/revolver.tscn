@@ -36,9 +36,9 @@ fire_rate = 2.2
 base_spread_deg = 0.2
 move_spread_deg = 2.2
 heat_spread_deg = 1.5
-recoil = 0.045
-kick_back = 0.08
-kick_up = 0.22
+recoil = 0.07
+kick_back = 0.13
+kick_up = 0.4
 
 [node name="Model" parent="." instance=ExtResource("2_revolver_fp")]
 

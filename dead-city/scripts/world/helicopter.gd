@@ -6,8 +6,8 @@ extends Node3D
 
 var _landing := Vector3.ZERO
 
-@onready var main_rotor: Node3D = $MainRotor
-@onready var tail_rotor: Node3D = $TailRotor
+@onready var main_rotor: Node3D = $Model/MainRotor
+@onready var tail_rotor: Node3D = $Model/TailRotor
 @onready var sound: AudioStreamPlayer3D = $Sound
 
 

@@ -33,8 +33,8 @@ EN = {
     'Бери всё, что унесёшь.': "Take everything you can carry.",
     'Чёрт, это сигнализация! Замки камер открылись! Уходи через гараж — ворота в восточной стене!':
         "Damn, that's the alarm! The cell locks are open! Get out through the garage, the gate is in the east wall!",
-    'Во дворе машина… и охранник со щитом! Щит держит пули — целься в голову, заходи сбоку или стреляй из РПГ.':
-        "There's a car in the yard... and a guard with a riot shield! The shield stops bullets. Aim for the head, "
+    'Во дворе машина… и это Боболев со щитом! Щит держит пули — целься в голову, заходи сбоку или стреляй из РПГ.':
+        "There's a car in the yard... and that's Bobolev with a riot shield! The shield stops bullets. Aim for the head, "
         "flank him, or use the rocket launcher.",
     'Чисто! Машина ждёт — давай!': "Clear! The car is waiting. Go!",
     # chapter 3
@@ -69,10 +69,10 @@ EN = {
     'Борт-двенадцать на связи. Вижу площадку, но вокруг толпа — сесть не могу! Продержись две минуты, я сделаю круг.':
         "Twelve here. I see the pad, but there's a crowd all around it. I can't land! Hold out for two minutes, "
         "I'll circle around.",
-    'С севера идёт что-то огромное… Это Колосс! Он швыряет обломки и бьёт о землю — прыгай, когда замахивается. '
-    'Пока он жив, вертолёт не сядет!':
-        "Something huge is coming from the north... It's the Colossus! He throws debris and slams the ground. "
-        "Jump when he winds up. The helicopter can't land while he's alive!",
+    'С севера идёт что-то огромное… Это Алёна! Она швыряет обломки и бьёт о землю — прыгай, когда замахивается. '
+    'Пока она жива, вертолёт не сядет!':
+        "Something huge is coming from the north... It's Alyona! She throws debris and slams the ground. "
+        "Jump when she winds up. The helicopter can't land while she's alive!",
     'Захожу на посадку! Держись, я почти над тобой!': "Coming in to land! Hang on, I'm almost on top of you!",
     'Сел! Запрыгивай, живо!': "I'm down! Get in, now!",
     # intro cutscene
@@ -89,4 +89,13 @@ EN = {
         "Yesterday, the food ran out.",
     'Стадион на другом конце города. Но другого шанса не будет. Пора выходить.':
         "The stadium is on the other side of the city. But there won't be another chance. Time to go.",
+    # ending cutscene
+    'Держись крепче! Взлетаем!': "Hold on tight! We're lifting off!",
+    'Стадион уходил вниз. Мёртвые тянули к нам руки, будто ещё могли достать.':
+        "The stadium fell away below us. The dead reached up at us, as if they could still get us.",
+    'Борт-двенадцать, вижу вас. Коридор чистый, курс на базу. Добро пожаловать в живые.':
+        "Twelve, I have you on radar. The corridor is clear, head for the base. Welcome back to the living.",
+    'Девять дней я ждал рассвета. Город остался позади. Где-то там ещё есть люди — и теперь я снова один из них.':
+        "Nine days I waited for the dawn. The city is behind me now. There are still people out there, "
+        "and now I'm one of them again.",
 }

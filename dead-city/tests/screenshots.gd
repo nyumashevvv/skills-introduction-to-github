@@ -146,10 +146,17 @@ func _run() -> void:
 		for i in 9:
 			await get_tree().create_timer(5.5).timeout
 			await snap("cutscene_%d" % i)
+	if "ending" in sections:
+		get_tree().change_scene_to_file("res://scenes/ui/ending_cutscene.tscn")
+		for i in 7:
+			await get_tree().create_timer(5.0).timeout
+			await snap("ending_%d" % i)
 	if "street" in sections:
 		await _street()
 	if "signs" in sections:
 		await _signs()
+	if "ammo" in sections:
+		await _ammo()
 	if "doors" in sections:
 		await _doors()
 	if "station" in sections:
@@ -449,3 +456,20 @@ func _signs() -> void:
 	player.holder.visible = false
 	await pose(player, Vector3(0, 0, 13), 0, 22)
 	await snap("signs_hospital")
+
+
+## Every ammo pickup in a row, so their looks can be told apart.
+func _ammo() -> void:
+	var level := await load_level("res://scenes/levels/level_2_station.tscn")
+	var player := await play(level)
+	freeze_zombies()
+	level.hud.gameplay.visible = false
+	player.holder.visible = false
+	var kinds := ["pistol", "magnum", "shells", "smg", "rifle", "sniper", "rocket"]
+	for i in kinds.size():
+		var item := (load("res://scenes/pickups/ammo_%s.tscn" % kinds[i]) as PackedScene).instantiate() as Node3D
+		item.position = Vector3(-2.1 + i * 0.7, 0, -53.5)
+		item.set_script(null)
+		level.add_child(item)
+	await pose(player, Vector3(0, 0, -51.3), 0, -28)
+	await snap("ammo_row")

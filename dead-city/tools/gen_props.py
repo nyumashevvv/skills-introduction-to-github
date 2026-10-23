@@ -304,6 +304,9 @@ LOOSE = {'debris_door', 'debris_door_window', 'debris_bumper', 'debris_tire', 'd
          'computer_screen', 'computer_keyboard', 'laptop', 'microwave', 'coffee_machine', 'table_lamp', 'radio', 'books', 'rug',
          'rug_round', 'plant_small', 'toaster', 'bottle', 'shovel', 'pickaxe', 'axe', 'bucket', 'rock_flat', 'planks', 'bedroll',
          'bedroll_packed', 'campfire_pit', 'tv_old', 'speaker'}
+# Cars get two boxes (body up to the bonnet, cabin in the middle) instead of one bounding box, so shots over the
+# bonnet or the boot reach whoever stands next to the car instead of hitting empty air around the windscreen.
+CARS = ('sedan', 'suv', 'hatchback_sports', 'taxi', 'police')
 SIRENS = {'police': ((1, 0.1, 0.1), (0.2, 0.3, 1)), 'ambulance': ((1, 0.1, 0.1), (0.2, 0.3, 1)), 'firetruck': ((1, 0.15, 0.1), (1, 0.15, 0.1))}
 
 
@@ -319,8 +322,14 @@ def kenney():
             s.node(root, 'Node3D')
         else:
             s.node(root, 'StaticBody3D')
-            shape = s.sub_res('BoxShape3D', size=V3(w * 0.92, h, d * 0.92))
-            s.node('CollisionShape3D', 'CollisionShape3D', '.', position=V3(0, h / 2, 0), shape=shape)
+            if name.replace('_burnt', '') in CARS:
+                body = s.sub_res('BoxShape3D', size=V3(w * 0.92, h * 0.52, d * 0.94))
+                s.node('CollisionShape3D', 'CollisionShape3D', '.', position=V3(0, h * 0.26, 0), shape=body)
+                cabin = s.sub_res('BoxShape3D', size=V3(w * 0.8, h * 0.48, d * 0.42))
+                s.node('Cabin', 'CollisionShape3D', '.', position=V3(0, h * 0.76, -d * 0.03), shape=cabin)
+            else:
+                shape = s.sub_res('BoxShape3D', size=V3(w * 0.92, h, d * 0.92))
+                s.node('CollisionShape3D', 'CollisionShape3D', '.', position=V3(0, h / 2, 0), shape=shape)
         s.node('Model', None, '.', instance=glb)
         if name in SIRENS:
             for i, col in enumerate(SIRENS[name]):

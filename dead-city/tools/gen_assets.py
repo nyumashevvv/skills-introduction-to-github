@@ -73,6 +73,9 @@ def mats():
     material(T + 'glove.tres', (0.07, 0.07, 0.07), roughness=0.85)
     material(T + 'sleeve.tres', (0.16, 0.18, 0.12), roughness=0.95)
     material(T + 'brass.tres', (0.7, 0.5, 0.2), metallic=0.9, roughness=0.3)
+    material(T + 'copper.tres', (0.65, 0.3, 0.15), metallic=0.9, roughness=0.3)
+    material(T + 'gun_black.tres', (0.04, 0.04, 0.045), metallic=0.5, roughness=0.45)
+    material(T + 'cardboard.tres', (0.45, 0.33, 0.2), roughness=0.9)
     material(T + 'rocket_red.tres', (0.45, 0.08, 0.05), metallic=0.3, roughness=0.5)
     # zombies
     material(T + 'z_skin.tres', (0.42, 0.5, 0.4), roughness=0.75)
@@ -156,7 +159,7 @@ def weapons():
                 ammo_type=S('shells'), magazine_size=6, max_reserve=48, reload_time=0.55, reload_per_round=True,
                 noise_radius=45.0, damage=20, headshot_multiplier=2.0, fire_rate=1.25, max_range=60.0,
                 base_spread_deg=1.0, move_spread_deg=1.5, heat_spread_deg=0.5, pellets=8, pellet_spread_deg=4.0,
-                falloff=V2(6, 22), pump_delay=0.3, recoil=0.05, kick_back=0.12, kick_up=0.12))
+                falloff=V2(6, 22), pump_delay=0.3, recoil=0.075, kick_back=0.2, kick_up=0.28))
     viewmodel(s, 'shotgun')
     flash_node(s, 'Model', 0.32, 6.0)
     for name, snd, vol in [('ShootSound', 'shotgun', -3.0), ('PumpSound', 'shotgun_pump', -5.0),
@@ -198,7 +201,7 @@ def weapons():
     gun('revolver', 'Revolver', 'revolver', 'Револьвер', 3,
         dict(ammo_type=S('magnum'), magazine_size=6, max_reserve=36, reload_time=2.4, noise_radius=36.0, damage=80,
              headshot_multiplier=2.2, fire_rate=2.2, base_spread_deg=0.2, move_spread_deg=2.2, heat_spread_deg=1.5,
-             recoil=0.045, kick_back=0.08, kick_up=0.22), 'revolver', (0.16, 4.0),
+             recoil=0.07, kick_back=0.13, kick_up=0.4), 'revolver', (0.16, 4.0),
         [('ShootSound', 'revolver', -3.0), ('ReloadSound', 'reload_pistol', -4.0), ('EmptySound', 'empty', -4.0)])
     # Submachine gun: fast, light, inaccurate on the move
     gun('smg', 'Smg', 'smg', 'ПП-9', 5,
@@ -338,7 +341,7 @@ def zombies():
            ['soldier'], skin=[(0.45, 0.5, 0.42)])
     # Bloater: slow, bursts when shot dead or when it reaches you — hurts other zombies too
     zombie('scenes/zombies/bloater.tscn', 'Bloater',
-           dict(max_health=90, chase_speed=1.6, wander_speed=0.35, attack_range=2.0, sight_range=18.0, explode_damage=75,
+           dict(max_health=90, chase_speed=1.6, wander_speed=0.35, attack_range=2.0, sight_range=18.0, explode_damage=230,
                 explode_radius=4.5, voice_pitch=0.75, reach_arms=False),
            ['boss_patient'], radius=0.45, height=2.0, body_scale=0.66, skin=[(0.62, 0.66, 0.36)])
 
@@ -385,43 +388,44 @@ def track(name):
 
 
 def bosses():
+    # Stats were raised by half (health) and a quarter (damage) after playtesting: the fights were over too fast.
     # Chapter 1: a cook with a cleaver who charges across the street.
     boss('butcher', 'Butcher', 'Мясник', 'boss_butcher',
-         dict(music=track('boss_metal'), max_health=800, chase_speed=2.6, turn_speed=5.0, attack_damage=28, attack_range=2.1,
-              attack_windup=0.55, attack_recovery=0.7, knockback=5.0, charge_speed=12.0, charge_cooldown=6.0,
-              charge_damage=32, drops=scenes('pickups/medkit', 'pickups/ammo_rifle')),
+         dict(music=track('boss_metal'), max_health=1200, chase_speed=2.91, turn_speed=5.0, attack_damage=35, attack_range=2.1,
+              attack_windup=0.55, attack_recovery=0.7, knockback=5.0, charge_speed=12.0, charge_cooldown=4.8,
+              charge_damage=40, enrage_at=0.35, drops=scenes('pickups/medkit', 'pickups/ammo_rifle')),
          0.78, 0.5, 2.5, (0.5, 0.56, 0.45))
-    # Chapter 2: riot police; the shield stops bullets from the front, the head is open.
-    boss('warden', 'Warden', 'Надзиратель', 'boss_warden',
-         dict(music=track('boss_pursuit'), max_health=1500, chase_speed=2.4, turn_speed=3.2, attack_damage=30, attack_range=2.0,
+    # Chapter 2: Bobolev, a fat guy in a beanie with a riot shield; the shield stops bullets from the front, the head is open.
+    boss('warden', 'Warden', 'Боболев', 'boss_warden',
+         dict(music=track('boss_pursuit'), max_health=2250, chase_speed=2.69, turn_speed=3.2, attack_damage=38, attack_range=2.0,
               attack_windup=0.5, attack_recovery=0.6, knockback=8.0, front_armor=0.1, charge_speed=10.0,
-              charge_cooldown=8.0, charge_damage=26, drops=scenes('pickups/medkit', 'pickups/ammo_rocket')),
-         0.76, 0.5, 2.45, (0.45, 0.5, 0.48),
+              charge_cooldown=6.4, charge_damage=32, enrage_at=0.35, drops=scenes('pickups/medkit', 'pickups/ammo_rocket')),
+         0.76, 0.66, 2.45, (0.74, 0.68, 0.62),  # Bobolev is wide: a fatter collision capsule, paler skin
          extra=lambda s: s.node('ShieldSound', 'AudioStreamPlayer3D', '.', stream=s.sound('shield_hit'),
                                 position=V3(0, 1.2, 0), unit_size=5.0, max_polyphony=3))
     # Chapter 3: the first infected; spits acid and calls the patients.
     boss('patient_zero', 'PatientZero', 'Пациент Ноль', 'boss_patient',
-         dict(music=track('boss_pursuit'), max_health=1200, chase_speed=2.2, attack_damage=22, attack_range=1.8, attack_windup=0.45,
+         dict(music=track('boss_pursuit'), max_health=1800, chase_speed=2.46, attack_damage=28, attack_range=1.8, attack_windup=0.45,
               attack_animation=S('Punch'), projectile=scene('zombies/acid_spit'), projectile_count=3,
-              throw_cooldown=3.2, throw_distance=V2(4, 26), throw_animation=S('Shoot_OneHanded'),
-              minion=scene('zombies/walker'), summon_count=3, summon_cooldown=16.0, max_minions=5, voice_pitch=1.1,
-              drops=scenes('pickups/medkit', 'pickups/ammo_shells')),
+              throw_cooldown=2.56, throw_distance=V2(4, 26), throw_animation=S('Shoot_OneHanded'),
+              minion=scene('zombies/walker'), summon_count=3, summon_cooldown=12.8, max_minions=5, voice_pitch=1.1,
+              enrage_at=0.35, drops=scenes('pickups/medkit', 'pickups/ammo_shells')),
          0.72, 0.45, 2.3, (0.55, 0.62, 0.38))
     # Chapter 4: a track worker with a sledgehammer; slams the ground and calls runners from the tunnel.
     boss('lineman', 'Lineman', 'Обходчик', 'boss_lineman',
-         dict(music=track('boss_metal'), max_health=1600, chase_speed=2.5, turn_speed=4.0, attack_damage=34, attack_range=2.3,
-              attack_windup=0.6, attack_recovery=0.8, knockback=8.0, slam_radius=7.0, slam_damage=34,
-              slam_cooldown=6.5, minion=scene('zombies/runner'), summon_count=2, summon_cooldown=20.0,
-              max_minions=4, drops=scenes('pickups/medkit', 'pickups/ammo_shells', 'pickups/ammo_rifle')),
+         dict(music=track('boss_metal'), max_health=2400, chase_speed=2.8, turn_speed=4.0, attack_damage=42, attack_range=2.3,
+              attack_windup=0.6, attack_recovery=0.8, knockback=8.0, slam_radius=7.0, slam_damage=42,
+              slam_cooldown=5.2, minion=scene('zombies/runner'), summon_count=2, summon_cooldown=16.0,
+              max_minions=4, enrage_at=0.35, drops=scenes('pickups/medkit', 'pickups/ammo_shells', 'pickups/ammo_rifle')),
          0.8, 0.5, 2.6, (0.42, 0.47, 0.4))
-    # Chapter 5: a giant; throws rubble, slams, charges and goes berserk at half health.
-    boss('colossus', 'Colossus', 'Колосс', 'boss_colossus',
-         dict(music=track('boss_epic'), max_health=4000, chase_speed=2.3, turn_speed=2.8, attack_damage=40, attack_range=3.4,
+    # Chapter 5: Alyona, a giant girl; throws rubble, slams, charges and goes berserk at half health.
+    boss('colossus', 'Colossus', 'Алёна', 'boss_colossus',
+         dict(music=track('boss_epic'), max_health=6000, chase_speed=2.58, turn_speed=2.8, attack_damage=50, attack_range=3.4,
               attack_windup=0.8, attack_recovery=0.9, knockback=10.0, projectile=scene('zombies/debris'),
-              throw_cooldown=5.0, throw_distance=V2(8, 40), slam_radius=9.0, slam_damage=40, slam_cooldown=7.0,
-              charge_speed=11.0, charge_cooldown=9.0, charge_damage=40, charge_distance=V2(8, 26),
-              enrage_at=0.5, voice_pitch=0.6),
-         1.3, 0.9, 4.2, (0.4, 0.42, 0.44))
+              throw_cooldown=4.0, throw_distance=V2(8, 40), slam_radius=9.0, slam_damage=50, slam_cooldown=5.6,
+              charge_speed=11.0, charge_cooldown=7.2, charge_damage=50, charge_distance=V2(8, 26),
+              enrage_at=0.5, voice_pitch=0.85),
+         1.3, 0.9, 4.2, (0.82, 0.73, 0.67))
 
 
 def projectiles():
@@ -444,14 +448,57 @@ def projectiles():
 
 
 # ------------------------------------------------------------------ pickups
-def pickup(path, root_name, props, build, light=(1, 0.9, 0.6)):
+def cutscene(path, root, texts, world, finish_call, news):
+    """A voiced cutscene (scripts/ui/cutscene.gd) over a world scene with camera marks; texts from tools/story_text.py."""
+    s = Scene()
+    russo = s.ext_res('FontFile', RUSSO)
+    s.node(root, 'Control', script=s.ext_res('Script', 'res://scripts/ui/cutscene.gd'),
+           shots=PSA([c[0] for c in texts]), speakers=PSA([c[1] for c in texts]), lines=PSA([c[2] for c in texts]),
+           finish_call='&' + S(finish_call), **FULL)
+    s.node('World', None, '.', instance=s.ext_res('PackedScene', world))
+    s.node('Camera3D', 'Camera3D', '.', current=True, fov=55.0)
+    if news:  # the TV news overlay of the intro
+        s.node('News', 'Control', '.', mouse_filter=2, **FULL)
+        s.node('Background', 'ColorRect', 'News', color=C(0.02, 0.02, 0.03, 1), mouse_filter=2, **FULL)
+        s.node('Band', 'ColorRect', 'News', color=C(0.6, 0.05, 0.04, 1), anchors_preset=14, anchor_top=0.5, anchor_right=1.0,
+               anchor_bottom=0.5, offset_top=-70.0, offset_bottom=40.0, grow_horizontal=2, grow_vertical=2, mouse_filter=2)
+        label(s, 'Title', 'News', 'ЭКСТРЕННЫЙ ВЫПУСК', 64, None, 1, anchors_preset=14, anchor_top=0.5, anchor_right=1.0,
+              anchor_bottom=0.5, offset_top=-62.0, offset_bottom=30.0, grow_horizontal=2, grow_vertical=2,
+              **{'theme_override_fonts/font': russo})
+        label(s, 'Live', 'News', 'ГОРОДСКОЕ ВЕЩАНИЕ · ПРЯМОЙ ЭФИР', 22, C(0.95, 0.35, 0.25), 1, anchors_preset=14,
+              anchor_top=0.5, anchor_right=1.0, anchor_bottom=0.5, offset_top=52.0, offset_bottom=86.0, grow_horizontal=2,
+              grow_vertical=2)
+    for name, top, bottom in (('BarTop', 0.0, 0.11), ('BarBottom', 0.89, 1.0)):
+        s.node(name, 'ColorRect', '.', color=C(0, 0, 0, 1), anchor_right=1.0, anchor_top=top, anchor_bottom=bottom,
+               mouse_filter=2)
+    s.node('Subtitle', 'PanelContainer', '.', anchors_preset=7, anchor_left=0.5, anchor_top=1.0, anchor_right=0.5,
+           anchor_bottom=1.0, offset_left=-460.0, offset_top=-190.0, offset_right=460.0, offset_bottom=-110.0,
+           grow_horizontal=2, grow_vertical=0, mouse_filter=2,
+           **{'theme_override_styles/panel': s.sub_res('StyleBoxFlat', bg_color=C(0, 0, 0, 0.55), content_margin_left=18.0,
+                                                       content_margin_right=18.0, content_margin_top=10.0,
+                                                       content_margin_bottom=12.0)})
+    s.node('Text', 'RichTextLabel', 'Subtitle', bbcode_enabled=True, fit_content=True, scroll_active=False, mouse_filter=2,
+           **{'theme_override_font_sizes/normal_font_size': 23, 'theme_override_font_sizes/italics_font_size': 23})
+    label(s, 'SkipHint', '.', 'Любая клавиша — пропустить', 15, C(0.6, 0.58, 0.55), 2, anchors_preset=1,
+          anchor_left=1.0, anchor_right=1.0, offset_left=-360.0, offset_top=22.0, offset_right=-28.0, offset_bottom=48.0,
+          grow_horizontal=0)
+    s.node('Fade', 'ColorRect', '.', color=C(0, 0, 0, 1), mouse_filter=2, **FULL)
+    s.node('Voice', 'AudioStreamPlayer', '.', volume_db=0.0)
+    if news:
+        s.node('Static', 'AudioStreamPlayer', '.', stream=s.sound('tv_static'), volume_db=-16.0)
+    s.node('RadioClick', 'AudioStreamPlayer', '.', stream=s.sound('radio'), volume_db=-8.0)
+    s.node('Ambience', 'AudioStreamPlayer', '.', stream=s.sound('ambience'), autoplay=True, volume_db=-8.0)
+    s.save(path)
+
+
+def pickup(path, root_name, props, build, light=(1, 0.9, 0.6), item_scale=1.0):
     s = Scene()
     shape = s.sub_res('SphereShape3D', radius=0.8)
     s.node(root_name, 'Area3D', collision_layer=16, collision_mask=2, monitorable=False,
            script=s.ext_res('Script', 'res://scripts/pickups/pickup.gd'), **props)
     s.node('CollisionShape3D', 'CollisionShape3D', '.', position=V3(0, 0.5, 0), shape=shape)
     s.node('Visual', 'Node3D', '.')
-    s.node('Item', 'Node3D', 'Visual', position=V3(0, 0.5, 0))
+    s.node('Item', 'Node3D', 'Visual', position=V3(0, 0.5, 0), scale=V3(item_scale, item_scale, item_scale))
     build(s, 'Visual/Item')
     s.node('Light', 'OmniLight3D', '.', position=V3(0, 0.8, 0), light_color=C(*light), light_energy=0.8, omni_range=2.5)
     s.save(path)
@@ -465,29 +512,84 @@ def pickups():
         s.box('CrossV', p, (0.08, 0.24, 0.31), (0, 0, 0), 'medkit_red')
     pickup('scenes/pickups/medkit.tscn', 'Medkit', dict(kind=0, amount=40, display_name=S('Аптечка')), medkit, (1, 0.4, 0.4))
 
-    def ammo_box(s, p, w, color):
-        s.box('Box', p, (w, 0.2, 0.22), (0, 0, 0), 'ammo_green')
-        s.box('Lid', p, (w + 0.02, 0.04, 0.24), (0, 0.11, 0), 'dark')
-        s.box('Label', p, (w * 0.6, 0.08, 0.005), (0, 0, -0.112), color)
+    # Every kind of ammo looks like what it is (magazines, a speed loader, loose shells, long rifle rounds) and carries
+    # the name of its weapon over it, in the colour of its light.
+    def tag(s, p, text, color):
+        s.node('Tag', 'Label3D', p, position=V3(0, 0.2, 0), text=S(text), font_size=26, pixel_size=0.0035, billboard=1,
+               modulate=C(*color), outline_size=10, outline_modulate=C(0, 0, 0, 0.8))
+
+    def rounds(s, p, name, n, x0, dx, z, length, radius, case, tip, y=0.0):
+        """Cartridges standing upright: a case with a pointed bullet on top."""
+        for i in range(n):
+            x = x0 + i * dx
+            s.cyl(f'{name}Case{i}', p, radius, length * 0.7, (x, y + length * 0.35, z), case, segments=8)
+            s.cyl(f'{name}Tip{i}', p, radius * 0.25, length * 0.3, (x, y + length * 0.85, z), tip, top=radius * 0.25,
+                  segments=8, rot=None)
+
+    def ammo_pistol(s, p):
+        s.box('Carton', p, (0.18, 0.08, 0.12), (-0.05, -0.06, 0), 'cardboard')
+        for i, x in enumerate((0.09, 0.14)):  # two loaded pistol magazines
+            s.box(f'Mag{i}', p, (0.03, 0.13, 0.022), (x, 0.0, 0), 'gun_black', rot=(0, 0, -0.12))
+            s.cyl(f'MagRound{i}', p, 0.006, 0.02, (x - 0.008, 0.07, 0), 'brass', rot=(0, 0, RX))
+        rounds(s, p, 'Loose', 3, -0.11, 0.04, 0.0, 0.03, 0.0065, 'brass', 'copper', y=-0.02)
+        tag(s, p, 'ПИСТОЛЕТ', (1.0, 0.85, 0.4))
     pickup('scenes/pickups/ammo_pistol.tscn', 'AmmoPistol',
-           dict(kind=1, amount=30, ammo_type=S('pistol'), display_name=S('Патроны для пистолета')),
-           lambda s, p: ammo_box(s, p, 0.26, 'brass'))
+           dict(kind=1, amount=30, ammo_type=S('pistol'), display_name=S('Патроны для пистолета')), ammo_pistol, (1, 0.85, 0.4),
+           item_scale=1.8)
+
+    def ammo_magnum(s, p):
+        s.cyl('Loader', p, 0.05, 0.03, (0, -0.07, 0), 'gun_black', segments=12)  # a revolver speed loader
+        for i in range(6):
+            a = i * math.tau / 6
+            x, z = math.cos(a) * 0.028, math.sin(a) * 0.028
+            s.cyl(f'Case{i}', p, 0.009, 0.04, (x, -0.035, z), 'brass', segments=8)
+            s.cyl(f'Tip{i}', p, 0.003, 0.016, (x, -0.007, z), 'copper', top=0.003, segments=8)
+        s.box('Carton', p, (0.12, 0.06, 0.09), (0.12, -0.07, 0.02), 'cardboard', rot=(0, 0.4, 0))
+        tag(s, p, 'РЕВОЛЬВЕР', (1.0, 0.6, 0.25))
+
     def shells(s, p):
-        ammo_box(s, p, 0.3, 'rocket_red')
-        for i in range(4):
-            s.cyl(f'Shell{i}', p, 0.018, 0.07, (-0.09 + i * 0.06, 0.17, 0), 'rocket_red')
-            s.cyl(f'Brass{i}', p, 0.019, 0.02, (-0.09 + i * 0.06, 0.135, 0), 'brass')
+        for i in range(5):  # red shotgun shells lying side by side
+            z = -0.1 + i * 0.05
+            s.cyl(f'Shell{i}', p, 0.02, 0.07, (0.0, -0.05, z), 'rocket_red', rot=(0, 0, RX))
+            s.cyl(f'Brass{i}', p, 0.021, 0.022, (-0.045, -0.05, z), 'brass', rot=(0, 0, RX))
+        for i in range(3):
+            s.cyl(f'Up{i}', p, 0.02, 0.07, (0.1, -0.035 + 0, -0.05 + i * 0.05), 'rocket_red')
+            s.cyl(f'UpBrass{i}', p, 0.021, 0.022, (0.1, -0.07, -0.05 + i * 0.05), 'brass')
+        tag(s, p, 'ДРОБОВИК', (1.0, 0.35, 0.3))
     pickup('scenes/pickups/ammo_shells.tscn', 'AmmoShells',
-           dict(kind=1, amount=10, ammo_type=S('shells'), display_name=S('Патроны для дробовика')), shells, (1, 0.5, 0.4))
+           dict(kind=1, amount=10, ammo_type=S('shells'), display_name=S('Патроны для дробовика')), shells, (1, 0.4, 0.35),
+           item_scale=1.8)
+
+    def ammo_rifle(s, p):
+        for i, x in enumerate((-0.022, 0.022)):  # two curved AK magazines taped together
+            for j in range(4):
+                a = 0.12 + j * 0.13
+                s.box(f'Mag{i}_{j}', p, (0.035, 0.07, 0.06), (x, 0.05 - j * 0.062, math.sin(a) * 0.06 * j * 0.6),
+                      'bakelite', rot=(a, 0, 0))
+            s.cyl(f'Round{i}', p, 0.006, 0.03, (x, 0.09, 0), 'brass', rot=(RX, 0, 0))
+        s.box('Tape', p, (0.085, 0.03, 0.065), (0, -0.02, 0.02), 'dark')
+        tag(s, p, 'АВТОМАТ', (1.0, 0.55, 0.2))
     pickup('scenes/pickups/ammo_rifle.tscn', 'AmmoRifle',
-           dict(kind=1, amount=75, ammo_type=S('rifle'), display_name=S('Патроны для автомата')),
-           lambda s, p: (ammo_box(s, p, 0.4, 'paint_yellow'),
-                         s.box('Mag', p, (0.04, 0.16, 0.08), (0.12, 0.2, 0), 'bakelite', rot=(0, 0, 0.3))))
+           dict(kind=1, amount=75, ammo_type=S('rifle'), display_name=S('Патроны для автомата')), ammo_rifle, (1, 0.6, 0.3),
+           item_scale=1.6)
+
+    def ammo_smg(s, p):
+        for i, x in enumerate((-0.04, 0.0, 0.04)):  # three long straight SMG magazines
+            s.box(f'Mag{i}', p, (0.025, 0.2, 0.03), (x, 0.0, 0), 'gun_black', rot=(0, 0, (i - 1) * 0.15))
+            s.cyl(f'Round{i}', p, 0.005, 0.02, (x + (i - 1) * 0.015, 0.105, 0), 'brass', rot=(RX, 0, 0))
+        tag(s, p, 'ПП-9', (0.4, 0.85, 1.0))
+
+    def ammo_sniper(s, p):
+        s.box('Clip', p, (0.16, 0.012, 0.025), (0, -0.08, 0), 'gun_black')
+        rounds(s, p, 'Round', 5, -0.064, 0.032, 0.0, 0.11, 0.009, 'brass', 'copper', y=-0.075)
+        tag(s, p, 'СНАЙПЕРКА', (0.5, 1.0, 0.5))
+
     def rockets(s, p):
         for i, x in enumerate((-0.08, 0.08)):
             s.node(f'R{i}', 'Node3D', p, position=V3(x, 0, 0.1))
             rocket_parts(s, f'{p}/R{i}')
             s.cyl('Body', f'{p}/R{i}', 0.035, 0.3, (0, 0, 0.2), 'olive', rot=(RX, 0, 0))
+        tag(s, p, 'РПГ-7', (1.0, 0.6, 0.3))
     pickup('scenes/pickups/ammo_rocket.tscn', 'AmmoRocket',
            dict(kind=1, amount=2, ammo_type=S('rocket'), display_name=S('Ракеты')), rockets, (1, 0.6, 0.3))
 
@@ -502,11 +604,12 @@ def pickups():
                               ('grenade', 'Гранаты', 2.5)]:
         pickup(f'scenes/pickups/weapon_{wid}.tscn', 'Weapon' + wid.title(),
                dict(kind=2, item_id=S(wid), display_name=S(title)), weapon_visual(wid, scale))
-    for ammo_type, title, amount, color in [('magnum', 'Патроны для револьвера', 12, 'brass'), ('smg', 'Патроны для ПП', 64, 'paint_white'),
-                                            ('sniper', 'Патроны для снайперки', 10, 'rocket_red')]:
+    for ammo_type, title, amount, build, light in [
+            ('magnum', 'Патроны для револьвера', 12, ammo_magnum, (1, 0.6, 0.25)),
+            ('smg', 'Патроны для ПП', 64, ammo_smg, (0.4, 0.85, 1.0)),
+            ('sniper', 'Патроны для снайперки', 10, ammo_sniper, (0.5, 1.0, 0.5))]:
         pickup(f'scenes/pickups/ammo_{ammo_type}.tscn', 'Ammo' + ammo_type.title(),
-               dict(kind=1, amount=amount, ammo_type=S(ammo_type), display_name=S(title)),
-               lambda s, p, c=color: ammo_box(s, p, 0.3, c))
+               dict(kind=1, amount=amount, ammo_type=S(ammo_type), display_name=S(title)), build, light, item_scale=1.8)
     pickup('scenes/pickups/weapon_rifle.tscn', 'WeaponRifle',
            dict(kind=2, item_id=S('rifle'), display_name=S('Автомат')), weapon_visual('rifle', 1.0))
     pickup('scenes/pickups/weapon_bazooka.tscn', 'WeaponBazooka',
@@ -789,24 +892,13 @@ def prefabs():
 
     s = Scene()
     s.node('Helicopter', 'Node3D', script=s.ext_res('Script', 'res://scripts/world/helicopter.gd'))
-    s.box('Cabin', '.', (2.4, 2.2, 4.5), (0, 1.6, 0), 'military')
-    s.box('Nose', '.', (2.0, 1.4, 1.4), (0, 1.3, -2.8), 'military', rot=(0.25, 0, 0))
-    s.box('Glass', '.', (1.8, 1.0, 0.05), (0, 2.0, -3.35), 'glass', rot=(-0.5, 0, 0))
-    s.box('Tail', '.', (0.6, 0.6, 6.0), (0, 2.3, 5.0), 'military')
-    s.box('Fin', '.', (0.15, 1.8, 1.0), (0, 3.0, 7.8), 'military')
-    s.box('SkidL', '.', (0.12, 0.12, 4.5), (-1.2, 0.06, 0), 'dark')
-    s.box('SkidR', '.', (0.12, 0.12, 4.5), (1.2, 0.06, 0), 'dark')
-    s.box('StrutL', '.', (0.1, 0.5, 0.1), (-1.15, 0.3, 0), 'dark')
-    s.box('StrutR', '.', (0.1, 0.5, 0.1), (1.15, 0.3, 0), 'dark')
-    s.box('Door', '.', (0.05, 1.4, 1.6), (1.21, 1.4, 0.3), 'dark')
-    s.node('MainRotor', 'Node3D', '.', position=V3(0, 2.95, 0))
-    s.cyl('Hub', 'MainRotor', 0.25, 0.3, (0, 0, 0), 'dark')
-    s.box('Blade1', 'MainRotor', (12.0, 0.04, 0.4), (0, 0.15, 0), 'dark')
-    s.box('Blade2', 'MainRotor', (0.4, 0.04, 12.0), (0, 0.15, 0), 'dark')
-    s.node('TailRotor', 'Node3D', '.', position=V3(0.25, 3.2, 7.8))
-    s.box('Blade1', 'TailRotor', (0.04, 2.0, 0.2), (0, 0, 0), 'dark')
-    s.box('Blade2', 'TailRotor', (0.04, 0.2, 2.0), (0, 0, 0), 'dark')
-    s.node('Searchlight', 'SpotLight3D', '.', position=V3(0, 0.8, -3.0), rotation=V3(-1.0, 0, 0),
+    # Mi-8-like model from tools/blender/build_assets.py (part "heli"); its rotors spin in helicopter.gd.
+    s.node('Model', None, '.', instance=s.ext_res('PackedScene', 'res://models/vehicles/helicopter.glb'))
+    for side in (-1, 1):  # "Борт-двенадцать"
+        s.node(f'Number{"L" if side < 0 else "R"}', 'Label3D', '.', position=V3(side * 1.235, 1.45, -1.7),
+               rotation=V3(0, side * RX, 0), text=S('12'), font_size=150, pixel_size=0.006, modulate=C(0.85, 0.85, 0.78),
+               outline_size=0, shaded=True)
+    s.node('Searchlight', 'SpotLight3D', '.', position=V3(0, 0.6, -4.3), rotation=V3(-1.0, 0, 0),
            light_color=C(1, 1, 0.9), light_energy=6.0, spot_range=40.0, spot_angle=20.0)
     s.node('Beacon', 'OmniLight3D', '.', position=V3(0, 0.3, 0), light_color=C(1, 0.1, 0.1), light_energy=2.0,
            omni_range=6.0, script=s.ext_res('Script', 'res://scripts/world/flicker_light.gd'), flicker_chance=0.4)
@@ -1071,45 +1163,12 @@ def hud():
            volume_db=-40.0)
     s.save('scenes/ui/main_menu.tscn')
 
-    # Intro cutscene
-    from story_text import CUTSCENE
-    s = Scene()
-    russo = s.ext_res('FontFile', RUSSO)
-    s.node('IntroCutscene', 'Control', script=s.ext_res('Script', 'res://scripts/ui/cutscene.gd'),
-           shots=PSA([c[0] for c in CUTSCENE]), speakers=PSA([c[1] for c in CUTSCENE]), lines=PSA([c[2] for c in CUTSCENE]),
-           **FULL)
-    s.node('World', None, '.', instance=s.ext_res('PackedScene', 'res://scenes/ui/backdrop_world.tscn'))
-    s.node('Camera3D', 'Camera3D', '.', current=True, fov=55.0)
-    s.node('News', 'Control', '.', mouse_filter=2, **FULL)
-    s.node('Background', 'ColorRect', 'News', color=C(0.02, 0.02, 0.03, 1), mouse_filter=2, **FULL)
-    s.node('Band', 'ColorRect', 'News', color=C(0.6, 0.05, 0.04, 1), anchors_preset=14, anchor_top=0.5, anchor_right=1.0,
-           anchor_bottom=0.5, offset_top=-70.0, offset_bottom=40.0, grow_horizontal=2, grow_vertical=2, mouse_filter=2)
-    label(s, 'Title', 'News', 'ЭКСТРЕННЫЙ ВЫПУСК', 64, None, 1, anchors_preset=14, anchor_top=0.5, anchor_right=1.0,
-          anchor_bottom=0.5, offset_top=-62.0, offset_bottom=30.0, grow_horizontal=2, grow_vertical=2,
-          **{'theme_override_fonts/font': russo})
-    label(s, 'Live', 'News', 'ГОРОДСКОЕ ВЕЩАНИЕ · ПРЯМОЙ ЭФИР', 22, C(0.95, 0.35, 0.25), 1, anchors_preset=14,
-          anchor_top=0.5, anchor_right=1.0, anchor_bottom=0.5, offset_top=52.0, offset_bottom=86.0, grow_horizontal=2,
-          grow_vertical=2)
-    for name, top, bottom in (('BarTop', 0.0, 0.11), ('BarBottom', 0.89, 1.0)):
-        s.node(name, 'ColorRect', '.', color=C(0, 0, 0, 1), anchor_right=1.0, anchor_top=top, anchor_bottom=bottom,
-               mouse_filter=2)
-    s.node('Subtitle', 'PanelContainer', '.', anchors_preset=7, anchor_left=0.5, anchor_top=1.0, anchor_right=0.5,
-           anchor_bottom=1.0, offset_left=-460.0, offset_top=-190.0, offset_right=460.0, offset_bottom=-110.0,
-           grow_horizontal=2, grow_vertical=0, mouse_filter=2,
-           **{'theme_override_styles/panel': s.sub_res('StyleBoxFlat', bg_color=C(0, 0, 0, 0.55), content_margin_left=18.0,
-                                                       content_margin_right=18.0, content_margin_top=10.0,
-                                                       content_margin_bottom=12.0)})
-    s.node('Text', 'RichTextLabel', 'Subtitle', bbcode_enabled=True, fit_content=True, scroll_active=False, mouse_filter=2,
-           **{'theme_override_font_sizes/normal_font_size': 23, 'theme_override_font_sizes/italics_font_size': 23})
-    label(s, 'SkipHint', '.', 'Любая клавиша — пропустить', 15, C(0.6, 0.58, 0.55), 2, anchors_preset=1,
-          anchor_left=1.0, anchor_right=1.0, offset_left=-360.0, offset_top=22.0, offset_right=-28.0, offset_bottom=48.0,
-          grow_horizontal=0)
-    s.node('Fade', 'ColorRect', '.', color=C(0, 0, 0, 1), mouse_filter=2, **FULL)
-    s.node('Voice', 'AudioStreamPlayer', '.', volume_db=0.0)
-    s.node('Static', 'AudioStreamPlayer', '.', stream=s.sound('tv_static'), volume_db=-16.0)
-    s.node('RadioClick', 'AudioStreamPlayer', '.', stream=s.sound('radio'), volume_db=-8.0)
-    s.node('Ambience', 'AudioStreamPlayer', '.', stream=s.sound('ambience'), autoplay=True, volume_db=-8.0)
-    s.save('scenes/ui/intro_cutscene.tscn')
+    # Intro and ending cutscenes
+    from story_text import CUTSCENE, ENDING
+    cutscene('scenes/ui/intro_cutscene.tscn', 'IntroCutscene', CUTSCENE, 'res://scenes/ui/backdrop_world.tscn',
+             'start_first_chapter', news=True)
+    cutscene('scenes/ui/ending_cutscene.tscn', 'EndingCutscene', ENDING, 'res://scenes/ui/ending_world.tscn',
+             'show_ending', news=False)
 
     # Ending
     s = Scene()

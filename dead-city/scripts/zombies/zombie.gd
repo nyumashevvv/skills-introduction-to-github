@@ -71,8 +71,10 @@ static var _next_groan_time := 0.0
 ## Damage multiplier for bullets and blades that do not hit the head (a soldier's body armour).
 @export_range(0.0, 1.0) var body_armor := 1.0
 @export_group("Explode")
-## Bloaters burst when killed or when they reach the player; 0 = an ordinary zombie.
+## Bloaters burst when killed or when they reach the player; 0 = an ordinary zombie. The burst tears apart the
+## dead around it (full damage) but the player only takes [member explode_player_share] of it.
 @export var explode_damage := 0
+@export var explode_player_share := 0.09
 @export var explode_radius := 4.5
 @export var voice_pitch := 1.0
 
@@ -464,7 +466,8 @@ func _die(headshot: bool, silent := false) -> void:
 	groan_sound.stop()
 	if explode_damage > 0 and not silent:
 		Effects.spawn(BLOAT_SCENE, self, global_position + Vector3.UP)
-		Effects.apply_blast.call_deferred(self, global_position + Vector3.UP, explode_damage, explode_radius, null)
+		Effects.apply_blast.call_deferred(self, global_position + Vector3.UP, explode_damage, explode_radius, null,
+			explode_player_share)
 		model.visible = false
 	if not silent:
 		death_sound.stream = DEATHS.pick_random()

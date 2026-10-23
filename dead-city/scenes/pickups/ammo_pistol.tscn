@@ -2,26 +2,48 @@
 
 [ext_resource type="Script" path="res://scripts/pickups/pickup.gd" id="1_pickup"]
 
-[ext_resource type="Material" path="res://materials/ammo_green.tres" id="2_ammo_green"]
+[ext_resource type="Material" path="res://materials/cardboard.tres" id="2_cardboard"]
 
-[ext_resource type="Material" path="res://materials/dark.tres" id="3_dark"]
+[ext_resource type="Material" path="res://materials/gun_black.tres" id="3_gun_black"]
 
 [ext_resource type="Material" path="res://materials/brass.tres" id="4_brass"]
+
+[ext_resource type="Material" path="res://materials/copper.tres" id="5_copper"]
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_1"]
 radius = 0.8
 
 [sub_resource type="BoxMesh" id="BoxMesh_2"]
-size = Vector3(0.26, 0.2, 0.22)
-material = ExtResource("2_ammo_green")
+size = Vector3(0.18, 0.08, 0.12)
+material = ExtResource("2_cardboard")
 
 [sub_resource type="BoxMesh" id="BoxMesh_3"]
-size = Vector3(0.28, 0.04, 0.24)
-material = ExtResource("3_dark")
+size = Vector3(0.03, 0.13, 0.022)
+material = ExtResource("3_gun_black")
 
-[sub_resource type="BoxMesh" id="BoxMesh_4"]
-size = Vector3(0.156, 0.08, 0.005)
+[sub_resource type="CylinderMesh" id="CylinderMesh_4"]
+top_radius = 0.006
+bottom_radius = 0.006
+height = 0.02
+radial_segments = 16
+rings = 1
 material = ExtResource("4_brass")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_5"]
+top_radius = 0.0065
+bottom_radius = 0.0065
+height = 0.021
+radial_segments = 8
+rings = 1
+material = ExtResource("4_brass")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_6"]
+top_radius = 0.0016
+bottom_radius = 0.0016
+height = 0.009
+radial_segments = 8
+rings = 1
+material = ExtResource("5_copper")
 
 [node name="AmmoPistol" type="Area3D"]
 collision_layer = 16
@@ -41,21 +63,68 @@ shape = SubResource("SphereShape3D_1")
 
 [node name="Item" type="Node3D" parent="Visual"]
 position = Vector3(0.0, 0.5, 0.0)
+scale = Vector3(1.8, 1.8, 1.8)
 
-[node name="Box" type="MeshInstance3D" parent="Visual/Item"]
+[node name="Carton" type="MeshInstance3D" parent="Visual/Item"]
 mesh = SubResource("BoxMesh_2")
-position = Vector3(0.0, 0.0, 0.0)
+position = Vector3(-0.05, -0.06, 0.0)
 
-[node name="Lid" type="MeshInstance3D" parent="Visual/Item"]
+[node name="Mag0" type="MeshInstance3D" parent="Visual/Item"]
 mesh = SubResource("BoxMesh_3")
-position = Vector3(0.0, 0.11, 0.0)
+position = Vector3(0.09, 0.0, 0.0)
+rotation = Vector3(0.0, 0.0, -0.12)
 
-[node name="Label" type="MeshInstance3D" parent="Visual/Item"]
-mesh = SubResource("BoxMesh_4")
-position = Vector3(0.0, 0.0, -0.112)
+[node name="MagRound0" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("CylinderMesh_4")
+position = Vector3(0.082, 0.07, 0.0)
+rotation = Vector3(0.0, 0.0, 1.5708)
+
+[node name="Mag1" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("BoxMesh_3")
+position = Vector3(0.14, 0.0, 0.0)
+rotation = Vector3(0.0, 0.0, -0.12)
+
+[node name="MagRound1" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("CylinderMesh_4")
+position = Vector3(0.132, 0.07, 0.0)
+rotation = Vector3(0.0, 0.0, 1.5708)
+
+[node name="LooseCase0" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("CylinderMesh_5")
+position = Vector3(-0.11, -0.0095, 0.0)
+
+[node name="LooseTip0" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("CylinderMesh_6")
+position = Vector3(-0.11, 0.0055, 0.0)
+
+[node name="LooseCase1" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("CylinderMesh_5")
+position = Vector3(-0.07, -0.0095, 0.0)
+
+[node name="LooseTip1" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("CylinderMesh_6")
+position = Vector3(-0.07, 0.0055, 0.0)
+
+[node name="LooseCase2" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("CylinderMesh_5")
+position = Vector3(-0.03, -0.0095, 0.0)
+
+[node name="LooseTip2" type="MeshInstance3D" parent="Visual/Item"]
+mesh = SubResource("CylinderMesh_6")
+position = Vector3(-0.03, 0.0055, 0.0)
+
+[node name="Tag" type="Label3D" parent="Visual/Item"]
+position = Vector3(0.0, 0.2, 0.0)
+text = "ПИСТОЛЕТ"
+font_size = 26
+pixel_size = 0.0035
+billboard = 1
+modulate = Color(1.0, 0.85, 0.4, 1.0)
+outline_size = 10
+outline_modulate = Color(0.0, 0.0, 0.0, 0.8)
 
 [node name="Light" type="OmniLight3D" parent="."]
 position = Vector3(0.0, 0.8, 0.0)
-light_color = Color(1.0, 0.9, 0.6, 1.0)
+light_color = Color(1.0, 0.85, 0.4, 1.0)
 light_energy = 0.8
 omni_range = 2.5
