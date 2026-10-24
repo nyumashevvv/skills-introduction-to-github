@@ -157,6 +157,16 @@ func _run() -> void:
 		await _signs()
 	if "ammo" in sections:
 		await _ammo()
+	if "handguns" in sections:
+		var level := await load_level("res://scenes/levels/level_2_station.tscn")
+		var player := await play(level)
+		freeze_zombies()
+		level.hud.gameplay.visible = false
+		await pose(player, Vector3(0, 0, -51), 0, -6)
+		for id: String in ["pistol", "revolver"]:
+			await equip(player, id)
+			await get_tree().create_timer(1.0).timeout
+			await snap("hand_" + id)
 	if "doors" in sections:
 		await _doors()
 	if "station" in sections:
