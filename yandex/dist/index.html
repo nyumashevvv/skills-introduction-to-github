@@ -1888,6 +1888,8 @@ function cloudPack() {
   const get = k => { try { return localStorage.getItem(k); } catch (e) { return null; } };
   const d = { v: 1 };
   for (const k of CLOUD_KEYS.concat(['lv_ach', 'lv_secrets', 'lv_records'])) { const v = get(k); if (v) d[k] = v; }
+  // an erased slot is sent as an empty string so the cloud forgets it too
+  for (const k of CLOUD_KEYS) if (!d[k]) d[k] = '';
   return d;
 }
 function cloudSave(force) {
@@ -5027,6 +5029,7 @@ $('pList').addEventListener('click', e => {
   if (b.dataset.erase) {
     if (b.dataset.arm !== '1') { b.dataset.arm = '1'; b.textContent = 'Точно?'; return; }
     const n = +b.dataset.erase; try { localStorage.removeItem(slotKey(n)); } catch (e) {}
+    cloudSave(true);
     if (n === SLOT) { G = freshState(); resetWorld(); spawnEntities(); showTitle(); }
     renderPanel();
   }

@@ -70,3 +70,10 @@ Phone: D-pad — move, A — talk and attack (hold for a spin attack), B — run
 Miron and the journal (Map button) tell you where to find the next crystal. Enemies have weaknesses: the axe smashes stone, the spear pierces shells, the bow downs flyers.
 
 **Теги:** пиксельная графика, приключения, RPG, боссы, головоломки, исследование, питомцы, подземелье
+
+## Политика конфиденциальности
+
+Для Яндекс Игр — `docs/privacy-yandex.html` (реклама через SDK, облачные сохранения, язык, хранилище браузера, как удалить данные; RU + EN). Если включить GitHub Pages из папки `docs`, адрес будет таким:
+`https://nyumashevvv.github.io/skills-introduction-to-github/privacy-yandex.html` — его можно указать, если форма черновика попросит ссылку на политику. В самой игре ссылок на внешние сайты нет и быть не должно (правило 8.4.2).
+
+Политика для iPhone — `docs/privacy.html`, они ссылаются друг на друга.
