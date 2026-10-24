@@ -678,6 +678,8 @@ def level_1():
     L.floor('asphalt', -6, 6, Z0, Z1)
     L.floor('sidewalk', -9, -6, Z0, Z1)
     L.floor('sidewalk', 6, 9, Z0, Z1)
+    L.floor('sidewalk', -21, -9, -128, -131); L.floor('sidewalk', 9, 21, -128, -131)  # before the police station
+    L.wall_x(-21, -127.5, -131, 'brick'); L.wall_x(21, -127.5, -131, 'plaster')
     for z in range(10, -150, -6):  # lane markings
         L.decor((0.15, 0.01, 2.5), (0, 0.005, z), 'paint_white')
     # buildings (facades towards the road), alleys at z -66..-74 and (left) -100..-104. Some ground floors can be
@@ -865,6 +867,8 @@ def level_2():
     W, WI = 'wall_interior', 'plaster_gray'
     # floors & ceiling
     L.floor('tile', -14, 20, 1, -61)
+    L.floor('sidewalk', -6, 6, 4, 1)  # the porch outside the (locked) entrance, fenced off
+    L.blk('bars', (12, 1.2, 0.1), (0, 0.6, 4)); L.blk('bars', (0.1, 1.2, 3.8), (-6, 0.6, 2.1)); L.blk('bars', (0.1, 1.2, 3.8), (6, 0.6, 2.1))
     L.floor('concrete', 20, 34, -40, -56)  # back yard
     L.blk('concrete', (34.6, 0.4, 62), (3, 4.2, -30), name='Ceiling')
     # outer & room walls (height 4)
@@ -1182,7 +1186,7 @@ def level_mall():
         for x0, x1, z0, z1 in rects:
             L.floor(mat, x0, x1, z0, z1, top=y, thick=0.3, tile=8.0)
 
-    def ramp(x0, x1, z_low, y_low, z_high, y_high, mat='metal'):
+    def ramp(x0, x1, z_low, y_low, z_high, y_high, mat='metal', sides=(True, True)):
         """A walkable ramp (a stopped escalator, a stair flight) from (z_low, y_low) up to (z_high, y_high)."""
         dz, dy = z_high - z_low, y_high - y_low
         length = math.hypot(dz, dy)
@@ -1190,8 +1194,11 @@ def level_mall():
         rot = ang if dz < 0 else -ang
         L.blk(mat, (x1 - x0, 0.3, length), ((x0 + x1) / 2, (y_low + y_high) / 2 - 0.15 / math.cos(ang), (z_low + z_high) / 2),
               rot=(rot, 0, 0))
-        for x in (x0 - 0.1, x1 + 0.1):  # handrails
-            L.decor((0.12, 1.0, length), (x, (y_low + y_high) / 2 + 0.5, (z_low + z_high) / 2), 'dark', rot=(rot, 0, 0))
+        for x, side in zip((x0 - 0.06, x1 + 0.06), sides):  # solid glass sides with a rubber handrail on top
+            if not side:
+                continue
+            L.blk('glass', (0.1, 1.1, length), (x, (y_low + y_high) / 2 + 0.55, (z_low + z_high) / 2), rot=(rot, 0, 0))
+            L.decor((0.14, 0.08, length), (x, (y_low + y_high) / 2 + 1.12, (z_low + z_high) / 2), 'dark', rot=(rot, 0, 0))
 
     def railing(x0, x1, z0, z1, y):
         """A glass balustrade along an atrium edge (solid, so nobody walks off the gallery)."""
@@ -1214,7 +1221,15 @@ def level_mall():
         L.prop(VEHICLE.format(scene), pos, rot)
     L.prop(VEHICLE.format('bus'), (-30, 0, 30), 1.57); L.prop(VEHICLE.format('bus'), (30, 0, 30.5), 1.5)
     L.wall_z(32.5, -45, 45, 'concrete', h=3, t=1)
-    L.wall_x(-45.5, 32, 0, 'concrete', h=3, t=1); L.wall_x(45.5, 32, 0, 'concrete', h=3, t=1)
+    # alleys round the sides and the back of the mall: walled in, and cut off from the car park by fences
+    L.floor('asphalt', -45, -30.4, 0, -104); L.floor('asphalt', 30.4, 45, 0, -104); L.floor('asphalt', -30.4, 30.4, -100.4, -104)
+    L.wall_x(-45.5, 32, -104.5, 'concrete', h=4, t=1); L.wall_x(45.5, 32, -104.5, 'concrete', h=4, t=1)
+    L.wall_z(-104.5, -45.5, -41.2, 'concrete', h=4, t=1); L.wall_z(-104.5, -36.8, 45.5, 'concrete', h=4, t=1)
+    for x0, x1 in ((-45, -30.4), (30.4, 45)):
+        L.blk('bars', (x1 - x0, 3.0, 0.12), ((x0 + x1) / 2, 1.5, -0.3))
+        L.decor((x1 - x0, 0.1, 0.15), ((x0 + x1) / 2, 3.0, -0.3), 'metal_rust', cast_shadow=0)
+    for pos in [(38, 0, -20), (38, 0, -60), (-43, 0, -20)]:
+        L.prop('res://scenes/world/dumpster.tscn', pos, math.pi / 2)
     L.fire((2.5, 1.0, 26)); L.fire((-30, 2.6, 30))
     for x in (-20, 0, 20):
         L.prop('res://scenes/world/street_lamp_flicker.tscn' if x == 0 else 'res://scenes/world/street_lamp.tscn',
@@ -1232,7 +1247,8 @@ def level_mall():
     for z in range(-20, -84, 8):
         L.decor((20, 0.25, 0.25), (0, 14.85, z), 'metal', cast_shadow=0)
     L.wall_z(-100.2, -30.4, 30.4, 'brick_dark', h=16.2, t=0.4)
-    L.wall_x(-30.2, 0, -100, 'brick_dark', h=16.2, t=0.4); L.wall_x(30.2, 0, -100, 'brick_dark', h=16.2, t=0.4)
+    L.wall_x(-30.2, 0, -100, 'brick_dark', h=15.0, t=0.4); L.wall_x(30.2, 0, -100, 'brick_dark', h=16.2, t=0.4)
+    L.wall_x(-30.2, 0, -66, 'brick_dark', h=1.2, t=0.4, y0=15.0); L.wall_x(-30.2, -70, -100, 'brick_dark', h=1.2, t=0.4, y0=15.0)
     L.wall_z(0.2, -30.4, -4, 'plaster_gray', h=16.2, t=0.4); L.wall_z(0.2, 4, 30.4, 'plaster_gray', h=16.2, t=0.4)
     L.blk('plaster_gray', (8, 11.2, 0.4), (0, 4 + 5.6, 0.2))                      # over the entrance
     for x in (-3.0, 3.0):                                                          # smashed sliding doors
@@ -1252,7 +1268,17 @@ def level_mall():
     ramp(7, 9, -50, F[1], -60, F[2])
     slab([(6.5, 10, -60, -64)], F[2])
     L.door('EscalatorShutter', (2.4, 3.0, 0.12), (8, F[1] + 1.5, -50.3), 'bars', player_can_open=False,
-           locked_message='Решётка опущена — нет питания', open_offset=V3(0, 2.9, 0), open_time=2.0)
+           locked_message='Нет питания — запусти генератор (1-й этаж, восточное крыло)', open_offset=V3(0, 2.9, 0),
+           open_time=2.0)
+    L.node('NoPower', 'Label3D', 'Doors/EscalatorShutter', position=V3(0, 0.6, 0.1), text=S('НЕТ ПИТАНИЯ\nГЕНЕРАТОР: 1 ЭТАЖ, ВОСТОК'),
+           font_size=36, pixel_size=0.006, modulate=C(1, 0.35, 0.25), outline_size=8)
+    # balustrades round the escalator landings (open only towards the gallery and the escalator itself)
+    railing(-6.5, -6.5, -36, -40, F[1]); railing(-10, -6.5, -40, -40, F[1])
+    railing(-10, -9.1, -36, -36, F[1]); railing(-6.9, -6.5, -36, -36, F[1])
+    railing(6.5, 6.5, -46, -50, F[1]); railing(6.5, 10, -46, -46, F[1])
+    railing(6.5, 6.9, -50, -50, F[1]); railing(9.1, 10, -50, -50, F[1])
+    railing(6.5, 6.5, -60, -64, F[2]); railing(6.5, 10, -64, -64, F[2])
+    railing(6.5, 6.9, -60, -60, F[2]); railing(9.1, 10, -60, -60, F[2])
     # balustrades round the atrium, open where the escalator landings join the galleries
     for y in F[1:]:
         railing(-10, 10, -15, -15, y); railing(-10, 10, -85, -85, y)
@@ -1273,7 +1299,8 @@ def level_mall():
         for zz in ((z0 + zc + 1.5) / 2, (zc - 1.5 + z1) / 2):                     # display windows
             L.decor((0.05, 2.2, abs(zc - z0) - 3.5), (x - side * 0.17, y + 1.5, zz),
                     'window_lit' if L.rnd.random() < 0.35 else 'window_dark', cast_shadow=0)
-        name_ = f'ShopLight{len(shop_lights) + 1}'                                # a lamp inside, on with the power
+        L.omni((24 * side, y + 3.0, zc), (1, 0.8, 0.55), 0.55, 9)                  # a dim lamp left on inside
+        name_ = f'ShopLight{len(shop_lights) + 1}'                                # the main lamp, on with the power
         L.ceiling_lamp(24 * side, zc, y=y + 4.6, energy=1.6, rng=10.0, name=name_, power=True)
         shop_lights.append('Lights/' + name_)
         L.neon(name, (x - side * 0.16, y + 3.9, zc), '+x' if side < 0 else '-x', color, font=55, light=False)
@@ -1290,86 +1317,150 @@ def level_mall():
             for z in range(int(z0), int(z1), -3):
                 L.prop('res://scenes/world/shelf.tscn', (x, y, z), math.pi / 2)
 
+    E, Wf, N_, S_ = -math.pi / 2, math.pi / 2, math.pi, 0.0   # headings: facing -x (east wall), +x (west wall), -z, +z
+
+    def along_wall(kind, side, z0, z1, y, step, x=29.5):
+        """A row of wall units (shelves, TV walls...) against a shop's back wall, facing into the shop."""
+        z = z0 - step / 2
+        while z > z1 + step / 2 - 0.01:
+            c(kind, (x * side, y, z), Wf if side < 0 else E)
+            z -= step
+
     # ground floor, west: supermarket (two units), clothes, pharmacy
     front(F[0], -1, -2, -42, 'СУПЕРМАРКЕТ', 'green')
-    shelves(-27, -21, -6, -38, F[0], 3)
-    for z in (-8, -14, -20):
-        c('kitchen_bar', (-19.6, 0, z), math.pi / 2); c('box_closed', (-19.6, 0.88, z - 0.3))
-    for z in range(-5, -40, -2):
-        c('fridge', (-29.3, 0, z), math.pi / 2)
+    along_wall('drinks_shelf', -1, -2.5, -41.5, 0, 2.1)
+    for z in (-17, -23, -29, -35):                                     # aisles of back-to-back shelves
+        for x in (-26.5, -24.4, -22.3):
+            c('grocery_shelf', (x, 0, z), S_); c('grocery_shelf', (x, 0, z - 0.6), N_)
+    for z in (-5, -9, -13):
+        c('checkout', (-23.5, 0, z), S_)
+    for pos in [(-20.5, 0, -6.5), (-20.8, 0, -11), (-21, 0, -24), (-25, 0, -26.5), (-27.5, 0, -38), (-19.8, 0, -36)]:
+        c('shopping_cart', pos)
     front(F[0], -1, -42, -62, 'ОДЕЖДА', 'pink')
-    for i in range(10):
-        x, z = L.rnd.uniform(-28, -21), L.rnd.uniform(-44, -60)
-        L.blk('plastic_white', (0.3, 1.2, 0.3), (x, 0.9, z), cyl=True)            # mannequins
-        L.decor((0.32, 0.32, 0.32), (x, 1.68, z), 'plastic_white')
-    for i in range(4):
-        c('coat_rack', (L.rnd.uniform(-28, -21), 0, L.rnd.uniform(-44, -60)))
+    for x in (-26.5, -23):
+        for z in (-46, -50.5, -55, -59.5):
+            c('clothes_rack', (x, 0, z), S_)
+    for z in (-44.5, -47.5, -56.5, -59.5):
+        c('mannequin_dressed' if L.rnd.random() < 0.7 else 'mannequin', (-19.8, 0, z), Wf)
+    c('mannequin', (-29, 0, -52), Wf); c('mannequin_dressed', (-29, 0, -54), Wf)
     front(F[0], -1, -62, -82, 'АПТЕКА', 'green')
-    shelves(-28, -24, -64, -80, F[0], 2)
-    for z in (-66, -72, -78):
-        c('pills', (-21, 0, z)); c('syringes_floor', (-22, 0, z - 2))
-    # ground floor, east: electronics, coffee shop, toys, switch room
+    along_wall('grocery_shelf', -1, -62.5, -81.5, 0, 2.1)
+    for z in (-68, -74):
+        c('grocery_shelf', (-24.5, 0, z), S_); c('grocery_shelf', (-24.5, 0, z - 0.6), N_)
+    c('checkout', (-20.8, 0, -78), Wf)
+    for z in (-66, -71, -77):
+        c('pills', (-22, 0, z)); c('syringes_floor', (-23, 0, z - 1.5))
+    # ground floor, east: electronics, coffee shop, toys, the generator room
     front(F[0], 1, -2, -22, 'ЭЛЕКТРОНИКА', 'blue')
-    for z in (-6, -11, -16):
-        L.prop('res://scenes/world/desk.tscn', (24, 0, z), 0.0)
-        c('tv_old', (24, 0.8, z)); c('computer_screen', (22.5, 0.8, z))
-    c('speaker', (28.5, 0, -4)); c('speaker', (28.5, 0, -20))
+    along_wall('tv_wall', 1, -2.5, -21.5, 0, 2.5)
+    for z in (-7, -12, -17):
+        L.prop('res://scenes/world/desk.tscn', (23.5, 0, z), 0.0)
+        c('laptop', (23.0, 0.8, z)); c('computer_screen', (24.2, 0.8, z))
+    c('speaker', (20, 0, -3.5)); c('speaker', (20, 0, -20.5)); c('checkout', (21, 0, -12), E)
     front(F[0], 1, -22, -42, 'КОФЕЙНЯ', 'yellow')
-    for tx, tz in [(22, -27), (26, -31), (22, -36), (27, -38)]:
-        c('table_round', (tx, 0, tz)); c('chair_cushion', (tx + 0.9, 0, tz)); c('chair_fallen', (tx - 0.9, 0, tz + 0.5))
-    for z in (-24.5, -25.4, -26.3):
-        c('kitchen_bar', (29.2, 0, z), -math.pi / 2)
-    c('coffee_machine', (29.2, 0.95, -25.4), -math.pi / 2)
+    c('food_stall_b', (28.9, 0, -32), E)
+    for tx, tz in [(21.5, -25.5), (25, -25.5), (21.5, -38.5), (25, -38.5), (23.5, -32)]:
+        c('table_round', (tx, 0, tz)); c('chair_cushion', (tx + 0.9, 0, tz), E); c('chair_cushion', (tx - 0.9, 0, tz), Wf)
+    c('chair_fallen', (22, 0, -29)); c('mug', (21.5, 0.77, -25.3)); c('mug', (25, 0.77, -38.3))
     front(F[0], 1, -42, -62, 'ИГРУШКИ', 'cyan')
-    for _ in range(12):
-        c(L.rnd.choice(['box_pile', 'cardboard_box', 'box_open', 'rug_round', 'plant_small']),
-          (L.rnd.uniform(20, 29), 0, L.rnd.uniform(-44, -60)))
-    front(F[0], 1, -62, -82, 'ЩИТОВАЯ', 'red')
-    L.blk('metal', (0.8, 2.4, 6.0), (29.4, 1.2, -72), name='Switchboard')
-    for z in (-70, -74):
-        L.decor((0.05, 0.4, 0.3), (28.98, 1.6, z), 'taillight', cast_shadow=0)
-    L.door('PowerSwitch', (0.15, 0.6, 0.4), (28.9, 1.3, -72), 'siren_red', event='PowerOn',
-           prompt='Включить рубильник', open_offset=V3(0, -0.1, 0), open_time=0.3)
-    c('toolbox', (26, 0, -66)); c('car_battery', (27, 0, -78)); c('jerrycan', (28.5, 0, -64))
+    along_wall('plush_shelf', 1, -42.5, -61.5, 0, 2.0)
+    for z in (-48, -54):
+        c('plush_shelf', (23.5, 0, z), S_); c('plush_shelf', (23.5, 0, z - 0.55), N_)
+    for _ in range(6):
+        c(L.rnd.choice(['box_pile', 'box_open', 'rug_round']), (L.rnd.uniform(20, 22), 0, L.rnd.uniform(-44, -60)))
+    front(F[0], 1, -62, -82, 'ГЕНЕРАТОРНАЯ', 'red')
+    L.blk('metal', (2.4, 2.0, 4.6), (28.0, 1.0, -72), name='Generator')            # the diesel generator
+    L.blk('dark', (2.0, 0.5, 4.0), (28.0, 2.25, -72))
+    for z in (-70.4, -71.2, -72.0, -72.8, -73.6):
+        L.decor((2.45, 0.12, 0.08), (28.0, 1.9, z), 'metal_rust', cast_shadow=0)    # cooling fins
+    L.blk('dark', (0.3, 1.2, 0.8), (26.65, 1.1, -72), name='GeneratorPanel')
+    L.door('PowerSwitch', (0.12, 0.45, 0.45), (26.45, 1.3, -72), 'siren_red', event='PowerOn',
+           prompt='Запустить генератор', open_offset=V3(0, -0.1, 0), open_time=0.3)
+    L.omni((25.5, 2.6, -72), (1, 0.1, 0.05), 1.2, 6, flicker=True)
+    L.blk('metal', (0.3, 0.3, 6), (29.6, 3.5, -72))                                # exhaust pipe
+    c('toolbox', (25, 0, -66)); c('car_battery', (26, 0, -78)); c('jerrycan', (29, 0, -64)); c('jerrycan', (29, 0, -64.6))
+    c('barrel_open', (29, 0, -80)); c('fire_extinguisher', (19.5, 0, -64))
+    for z in (-20, -40):                                                           # signs to the generator
+        L.neon('ГЕНЕРАТОРНАЯ >>>', (10.2, 3.9, z), '-x', 'red', font=40, light=False)
+    L.neon('ГЕНЕРАТОРНАЯ: ВОСТОЧНОЕ КРЫЛО >>>', (14, 3.9, -2.4), '+z', 'red', font=36, light=False)
     # first floor: sport, books, shoes, watches (west); security, optics, flowers, souvenirs (east); food court (north)
     front(F[1], -1, -2, -22, 'СПОРТ', 'cyan')
-    c('weapon_rack', (-29.2, F[1], -8), math.pi / 2); c('weapon_rack', (-29.2, F[1], -14), math.pi / 2)
-    for z in (-6, -12, -18):
-        c('crate_large', (-24, F[1], z))
+    c('weapon_rack', (-29.2, F[1], -6), Wf); c('weapon_rack', (-29.2, F[1], -10), Wf)
+    along_wall('shoe_wall', -1, -12, -21.5, F[1], 2.1)
+    for z in (-6, -10, -15):
+        c('mannequin_dressed', (-22.5, F[1], z), Wf); c('crate_large', (-25, F[1], z - 1))
     front(F[1], -1, -22, -42, 'КНИГИ', 'yellow')
-    for z in range(-25, -41, -3):
-        c('bookcase_wide', (-29.3, F[1], z), math.pi / 2); c('books_floor', (-23, F[1], z))
+    for z in range(-24, -41, -2):
+        c('bookcase_wide', (-29.3, F[1], z), Wf)
+    for z in (-28, -34):
+        c('bookcase_wide', (-24, F[1], z), S_); c('bookcase_wide', (-24, F[1], z - 0.6), N_)
+    c('books_floor', (-21, F[1], -30)); c('books_floor', (-22, F[1], -38)); c('checkout', (-20.8, F[1], -25), Wf)
     front(F[1], -1, -42, -62, 'ОБУВЬ', 'pink')
+    along_wall('shoe_wall', -1, -42.5, -61.5, F[1], 2.1)
+    for z in (-47, -52, -57):
+        c('bench', (-24, F[1], z), S_); c('shoe_wall', (-26.5, F[1], z), S_)
     front(F[1], -1, -62, -82, 'ЧАСЫ', 'white')
-    for z in (-46, -52, -58, -66, -72, -78):
-        c(L.rnd.choice(['box_pile', 'side_table', 'lounge_chair', 'cardboard_box']), (-24, F[1], z))
+    for z in (-66, -71, -76):
+        c('checkout', (-24, F[1], z), S_)
+    c('mannequin_dressed', (-28.8, F[1], -64), Wf); c('mannequin_dressed', (-28.8, F[1], -80), Wf)
     front(F[1], 1, -2, -22, 'ОХРАНА', 'blue')
-    L.prop('res://scenes/world/lockers.tscn', (29.5, F[1], -6), -math.pi / 2)
-    L.prop('res://scenes/world/desk.tscn', (24, F[1], -14), 0.0)
-    c('computer_screen', (24, F[1] + 0.8, -14)); c('office_chair_fallen', (24, F[1], -12))
+    L.prop('res://scenes/world/lockers.tscn', (29.5, F[1], -5), -math.pi / 2)
+    L.prop('res://scenes/world/lockers.tscn', (29.5, F[1], -7), -math.pi / 2)
+    c('tv_wall', (29.5, F[1], -14), E)
+    L.prop('res://scenes/world/desk.tscn', (26, F[1], -14), -math.pi / 2)
+    c('office_chair_fallen', (24.5, F[1], -13)); c('weapon_rack', (29.2, F[1], -19), E)
     front(F[1], 1, -22, -42, 'ОПТИКА', 'cyan')
+    along_wall('grocery_shelf', 1, -22.5, -41.5, F[1], 2.1)
+    for z in (-27, -33, -38):
+        c('checkout', (23.5, F[1], z), S_)
+    c('mannequin', (20, F[1], -24), E)
     front(F[1], 1, -42, -62, 'ЦВЕТЫ', 'green')
-    for _ in range(10):
+    for z in (-45, -49, -53, -57):
+        c('flower_stand', (28.8, F[1], z), E)
+    for z in (-47, -53):
+        c('flower_stand', (23.5, F[1], z), S_)
+    for _ in range(8):
         c(L.rnd.choice(['plant_tall', 'potted_plant', 'potted_plant_dead', 'vase', 'vase_broken']),
-          (L.rnd.uniform(20, 29), F[1], L.rnd.uniform(-44, -60)))
+          (L.rnd.uniform(20, 26), F[1], L.rnd.uniform(-43, -61)))
     front(F[1], 1, -62, -82, 'СУВЕНИРЫ', 'yellow')
-    for z in (-26, -34, -66, -76):
-        c(L.rnd.choice(['side_table', 'box_pile', 'cardboard_box']), (24, F[1], z))
-    for tx in (-7, -2, 3, 8):                                                      # food court
+    along_wall('plush_shelf', 1, -62.5, -71.5, F[1], 2.0)
+    along_wall('grocery_shelf', 1, -72, -81.5, F[1], 2.1)
+    c('checkout', (21.5, F[1], -76), E); c('box_pile', (24, F[1], -66))
+    for i, x in enumerate((-25, -18, 18, 25)):                                     # food court
+        c('food_stall' if i % 2 else 'food_stall_b', (x, F[1], -98.9), S_)
+    for tx in (-7, -2, 3, 8):
         for tz in (-89, -95):
-            c('table_round', (tx, F[1], tz)); c('chair_cushion', (tx + 1, F[1], tz)); c('chair_fallen', (tx - 1, F[1], tz))
-    for x in (-24, -20, 20, 24):
-        c('kitchen_bar', (x, F[1], -99.3)); c('kitchen_bar', (x + 0.9, F[1], -99.3))
+            c('table_round', (tx, F[1], tz)); c('chair_cushion', (tx + 1, F[1], tz), E); c('chair_cushion', (tx - 1, F[1], tz), Wf)
+    for tx, tz in [(-22, -91), (22, -91), (-26, -92), (26, -92)]:
+        c('table_round', (tx, F[1], tz)); c('chair_fallen', (tx + 1, F[1], tz))
     L.neon('ФУД-КОРТ', (0, F[1] + 3.9, -99.75), '+z', 'yellow', font=90)
     # second floor: arcade, photo, tattoo, kids' room / pizza, bowling, tea, cosmetics; the cinema in the north
     for side, names in ((-1, ['ИГРОВЫЕ АВТОМАТЫ', 'ФОТО', 'ТАТУ', 'ДЕТСКАЯ']), (1, ['ПИЦЦА', 'БОУЛИНГ', 'ЧАЙ', 'КОСМЕТИКА'])):
         for i, z0 in enumerate((-2, -22, -42, -62)):
             front(F[2], side, z0, z0 - 20, names[i], ['pink', 'cyan', 'yellow', 'green'][i])
-    for z in range(-5, -20, -3):
-        c('vending_machine', (-29.2, F[2], z), math.pi / 2)
+    for i, z in enumerate(range(-4, -21, -2)):                                     # arcade
+        c('arcade_cabinet' if i % 2 else 'arcade_cabinet_b', (-29.4, F[2], z), Wf)
+    for z in (-6, -10, -14, -18):
+        c('arcade_cabinet_b', (-24.5, F[2], z), Wf); c('arcade_cabinet', (-25.4, F[2], z), E)
+    along_wall('tv_wall', -1, -22.5, -31, F[2], 2.5)                              # photo
+    c('checkout', (-24, F[2], -36), S_); c('mannequin', (-21, F[2], -26), Wf)
+    c('checkout', (-26, F[2], -48), S_); c('lounge_chair', (-26, F[2], -52)); c('lounge_chair', (-23, F[2], -56))  # tattoo
+    along_wall('plush_shelf', -1, -62.5, -81.5, F[2], 2.0)                         # kids' room
     for _ in range(8):
-        c(L.rnd.choice(['rug_round', 'box_open', 'chair_fallen', 'trash_bags']), (L.rnd.uniform(-28, -20), F[2], L.rnd.uniform(-64, -80)))
-        c(L.rnd.choice(['table_round', 'chair_fallen', 'box_pile', 'trash_can']), (L.rnd.uniform(20, 28), F[2], L.rnd.uniform(-4, -20)))
+        c(L.rnd.choice(['rug_round', 'box_open', 'chair_fallen', 'plant_small']), (L.rnd.uniform(-27, -20), F[2], L.rnd.uniform(-64, -80)))
+    c('food_stall', (28.9, F[2], -12), E)                                          # pizza
+    for tx, tz in [(22, -5), (22, -18), (25, -7), (25, -17)]:
+        c('table_round', (tx, F[2], tz)); c('chair_cushion', (tx + 0.9, F[2], tz), E)
+    for i in range(3):                                                             # bowling lanes and pins
+        z = -27 - i * 4.5
+        L.decor((9, 0.05, 1.6), (24.5, F[2] + 0.03, z), 'wood', cast_shadow=0)
+        for j, (dx, dz) in enumerate([(0, 0), (0.3, -0.2), (0.3, 0.2), (0.6, -0.4), (0.6, 0), (0.6, 0.4)]):
+            L.decor((0.1, 0.38, 0.1), (28.4 + dx, F[2] + 0.22, z + dz), 'plastic_white', cast_shadow=0)
+    c('table_round', (21, F[2], -50)); c('table_round', (24, F[2], -56)); c('chair_cushion', (22, F[2], -50))  # tea
+    along_wall('grocery_shelf', 1, -62.5, -81.5, F[2], 2.1)                        # cosmetics
+    c('mannequin_dressed', (21, F[2], -66), E); c('mannequin_dressed', (21, F[2], -78), E); c('checkout', (24, F[2], -72), S_)
+    for x in (-14, 14):                                                            # the cinema lobby
+        c('popcorn_machine', (x, F[2], -86.6), S_)
     # the cinema hall: screen, rows of seats
     L.wall_z(-88, -20, -2.2, W, h=H, y0=F[2]); L.wall_z(-88, 2.2, 20, W, h=H, y0=F[2])
     L.blk(W, (4.4, H - 3.2, 0.3), (0, F[2] + 3.2 + (H - 3.2) / 2, -88))
@@ -1388,20 +1479,35 @@ def level_mall():
     L.dress_door((24, F[2], -97.5), 'z', '-x', sign='ВЫХОД НА КРЫШУ', width=2.4)
     L.door('RoofDoor', (0.2, 3.0, 2.4), (24, F[2] + 1.5, -97.5), 'door_steel', player_can_open=False,
            locked_message='Заперто изнутри', swing_degrees=100.0, open_time=1.0)
-    ramp(25, 29, -98.5, F[2], -87.2, 15.0, 'concrete')
+    ramp(24.5, 29.5, -98.5, F[2], -87.2, 15.0, 'concrete', sides=(False, True))   # open on the door side
 
     # --- the roof: car park, parapet, the ramp down to the hospital street
-    L.wall_z(0.2, -30.4, 30.4, 'concrete', h=1.2, t=0.4, y0=15.0); L.wall_z(-100.2, -30.4, 30.4, 'concrete', h=1.2, t=0.4, y0=15.0)
-    L.wall_x(-30.2, 0, -100, 'concrete', h=1.2, t=0.4, y0=15.0); L.wall_x(30.2, 0, -100, 'concrete', h=1.2, t=0.4, y0=15.0)
+    # (the outer walls rise 1.2 m above the roof: they are the parapet; the west one has the exit gap at z -66..-70)
     railing(-10, 10, -15, -15, 15.0); railing(-10, 10, -85, -85, 15.0)
     railing(-10, -10, -15, -85, 15.0); railing(10, 10, -15, -85, 15.0)
     for scene, pos, rot in [('sedan', (-22, 15, -30), 1.57), ('van', (-22, 15, -50), 1.6), ('suv', (21, 15, -40), -1.5),
-                            ('hatchback_sports_burnt', (-21, 15, -70), 1.4), ('taxi', (20, 15, -20), -1.6)]:
+                            ('hatchback_sports_burnt', (-21, 15, -88), 1.4), ('taxi', (20, 15, -20), -1.6)]:
         L.prop(VEHICLE.format(scene), pos, rot)
-    L.fire((-21, 16.0, -70))
-    L.decor((6, 0.05, 4), (-24, 15.03, -6), 'paint_yellow', cast_shadow=0)
-    L.neon('ВЫЕЗД', (-24, 18.2, -3.2), '+z', 'green', font=90)
-    L.blk('concrete', (0.4, 3.2, 0.4), (-27, 16.6, -3.5)); L.blk('concrete', (0.4, 3.2, 0.4), (-21, 16.6, -3.5))
+    L.fire((-21, 16.0, -88))
+    # the exit: a gap in the west parapet, a bridge and a ramp down into the west alley, then the gate to the hospital
+    L.floor('concrete', -41, -30.0, -66, -70, top=15.0, thick=0.3)
+    L.wall_z(-65.8, -41.2, -30.4, 'concrete', h=1.2, t=0.4, y0=15.0)
+    L.wall_x(-41.2, -65.6, -70.2, 'concrete', h=1.2, t=0.4, y0=15.0)
+    L.wall_z(-70.2, -36.8, -30.4, 'concrete', h=1.2, t=0.4, y0=15.0)
+    ramp(-41, -37, -100, F[0], -70, 15.0, 'concrete')
+    for z in (-75, -82, -89, -95):                                                 # pillars under the ramp
+        L.decor((0.6, 15 * (z + 100) / 30.0, 0.6), (-39, 15 * (z + 100) / 60.0, z), 'concrete')
+    for x in (-36, -24):
+        L.decor((0.12, 0.05, 4), (x, 15.03, -68), 'paint_yellow', cast_shadow=0)
+    L.decor((5.6, 0.25, 0.25), (-30.2, 18.6, -68), 'dark', cast_shadow=0)
+    L.neon('ВЫЕЗД', (-30.0, 17.9, -68), '+x', 'green', font=90)
+    L.neon('К БОЛЬНИЦЕ', (-39, 3.0, -104.0), '+z', 'green', font=70)
+    L.floor('asphalt', -41.2, -36.8, -104, -112)                                   # the lane beyond the gate
+    L.wall_x(-41.6, -104.5, -112.5, 'concrete', h=4, t=0.8); L.wall_x(-36.4, -104.5, -112.5, 'concrete', h=4, t=0.8)
+    L.wall_z(-112.4, -41.6, -36.4, 'concrete', h=4, t=0.8)
+    L.decor((0.3, 4, 0.3), (-41.2, 2, -104.5), 'metal_rust'); L.decor((0.3, 4, 0.3), (-36.8, 2, -104.5), 'metal_rust')
+    for y, z in [(13, -74), (8, -84), (4, -94), (3.5, -106)]:                       # lamps along the exit ramp
+        L.omni((-39, y + 2.5, z), (1, 0.8, 0.5), 1.4, 11)
     for x, z in [(-20, -10), (20, -10), (-20, -90), (20, -70), (-20, -50), (20, -40)]:   # lamp posts
         L.prop('res://scenes/world/street_lamp.tscn', (x + (1.2 if x < 0 else -1.2), 15, z), math.pi / 2 if x < 0 else -math.pi / 2)
         L.omni((x, 19, z), (1, 0.85, 0.6), 3.5, 22)
@@ -1410,6 +1516,11 @@ def level_mall():
     for x, y, z in [(-14, 3.6, -30), (14, 3.6, -60), (0, 3.6, -8), (-14, 8.6, -60), (14, 8.6, -30), (0, 8.6, -92),
                     (-14, 13.6, -20), (14, 13.6, -80), (27, 13.6, -92), (26, 3.6, -72)]:
         L.omni((x, y, z), (1, 0.15, 0.1), 0.9, 8, flicker=True)
+    for y in F:                                                                    # dim night lighting, always on
+        for x, z in [(sx, sz) for sx in (-14, 14) for sz in (-12, -36, -60, -84)]:
+            L.omni((x, y + 3.8, z), (1, 0.82, 0.6), 0.5, 11)
+    for z in (-24, -50, -76):
+        L.omni((0, 4.5, z), (0.85, 0.85, 1.0), 0.8, 14)
     power = []
     for y in F:
         for x, z in [(sx, sz) for sx in (-14, 14) for sz in range(-6, -96, -10)] + [(0, -8), (0, -92)]:
@@ -1422,11 +1533,14 @@ def level_mall():
         L.ceiling_lamp(0, z, y=8.3, energy=6.0, rng=22.0, name=name, power=True)
         power.append('Lights/' + name)
     # the atrium floor: fountain, benches, plants, the information desk
-    L.blk('concrete', (6, 0.6, 6), (0, 0.3, -50), cyl=True)
-    L.decor((5.4, 0.05, 5.4), (0, 0.62, -50), 'water_blue', cyl=True)
-    for z in (-30, -44, -56, -70):
-        for x in (-5, 5):
+    c('fountain', (0, 0, -50), 0.0)
+    L.omni((0, 2.0, -50), (0.4, 0.7, 1.0), 2.0, 10)
+    for z in (-30, -38, -62, -70):
+        for x in (-5.5, 5.5):
             c('bench', (x, 0, z), math.pi / 2); c('plant_tall', (x, 0, z - 3))
+    for a in range(8):                                                             # benches round the fountain
+        ang = a * math.tau / 8 + 0.4
+        c('potted_plant', (math.cos(ang) * 5.3, 0, -50 + math.sin(ang) * 5.3))
     L.blk('wood', (4, 1.1, 1.2), (0, 0.55, -20), name='InfoDesk')
     L.neon('ИНФОРМАЦИЯ', (0, 2.4, -19.3), '+z', 'blue', font=40, light=False)
     L.scatter(['trash_bags', 'newspaper', 'papers', 'suitcase', 'backpack', 'trash_can', 'box_open'], -9, 9, -17, -83, 22)
@@ -1464,9 +1578,9 @@ def level_mall():
             message='Машина встала? Через улицу не пройти — там баррикада. Иди через «Галактику»: с крыши парковки '
                     'пандус спускается прямо к больнице.')
     L.trigger('EntranceTrigger', (0, 1.5, -3), (8, 3, 3), 'Inside')
-    L.event('Inside', speaker=D, duration=9, objective='Найди щитовую и включи питание',
-            message='Темно… эскалаторы стоят, решётка на третий этаж опущена. Щитовая на первом этаже, в восточном '
-                    'крыле, за игрушками. Включи рубильник.')
+    L.event('Inside', speaker=D, duration=9, objective='Запусти генератор: 1-й этаж, восточное крыло, в конце',
+            message='Темно… эскалаторы стоят, решётка на третий этаж без питания. Генераторная на первом этаже, '
+                    'в восточном крыле, в самом конце, за игрушками. Запусти генератор.')
     L.event('PowerOn', speaker=D, duration=9, objective='Поднимись на третий этаж к кинотеатру',
             message='Есть свет! Решётка у эскалатора на третий этаж поднята. Кинотеатр наверху — оттуда лестница '
                     'на крышу. И… на фуд-корте кто-то зашевелился.',
@@ -1481,11 +1595,11 @@ def level_mall():
     L.event('GoshaDead', speaker=D, duration=7, objective='Поднимись на крышу-парковку',
             message='Готов! Дверь на крышу — справа от кинозала. Поднимайся!', targets=['Doors/RoofDoor'])
     L.trigger('RoofTrigger', (26, 16.5, -80), (8, 3, 8), 'OnRoof')
-    L.event('OnRoof', speaker=D, duration=7, objective='Спустись по пандусу к больнице',
-            message='Ты на крыше. Выезд в южном углу — пандус ведёт прямо к больнице. Беги!',
+    L.event('OnRoof', speaker=D, duration=8, objective='Спустись по пандусу к больнице',
+            message='Ты на крыше. Выезд у западного края: пандус спускается в переулок, там ворота к больнице. Беги!',
             targets=['Story/RoofHorde', 'Story/ExitTrigger'])
     L.spawner('RoofHorde', [(-25, 15, -95), (25, 15, -60), (-5, 15, -95)], ['runner', 'runner', 'walker'], 6, interval=1.5)
-    L.trigger('ExitTrigger', (-24, 16.5, -5), (6, 3, 4), 'Exit', enabled=False)
+    L.trigger('ExitTrigger', (-39, 1.5, -103), (5, 3, 3), 'Exit', enabled=False)
     L.event('Exit', complete=True)
 
     L.finish((0, 0, 22))

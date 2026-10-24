@@ -46,7 +46,7 @@ func check_paths(level: Level, targets: Dictionary) -> void:
 		var target: Vector3 = targets[label]
 		var path := NavigationServer3D.map_get_path(map, from, target, true)
 		var end: Vector3 = path[path.size() - 1] if path.size() > 0 else from
-		var ok := Vector2(end.x - target.x, end.z - target.z).length() < 1.5
+		var ok := Vector2(end.x - target.x, end.z - target.z).length() < 1.5 and absf(end.y - target.y) < 1.5
 		check(ok, "%s: reachable %s (path ends %s)" % [level.name, label, end])
 
 
@@ -222,15 +222,15 @@ func _run() -> void:
 	await start(level)
 	p = level.player
 	check(p.holder.get_weapon("bazooka").owned, "bazooka carried into the mall")
-	check_paths(level, {"switch room": Vector3(28, 0, -72), "escalator up": Vector3(-8, 5, -38),
+	check_paths(level, {"generator": Vector3(25.8, 0, -72), "escalator up": Vector3(-8, 5, -38),
 		"third floor": Vector3(8, 10, -62), "cinema": Vector3(0, 10, -92), "roof stairs": Vector3(25, 10, -97.5),
-		"roof": Vector3(26, 15, -80), "exit ramp": Vector3(-24, 15, -5)})
+		"roof": Vector3(26, 15, -80), "roof exit": Vector3(-35, 15, -68), "exit gate": Vector3(-39, 0, -103)})
 	await teleport(level, Vector3(0, 0.1, -3))
-	check(level.hud.objective_label.text.contains("щитовую"), "inside the mall: " + level.hud.objective_label.text)
+	check(level.hud.objective_label.text.contains("генератор"), "inside the mall: " + level.hud.objective_label.text)
 	var mall_shutter := level.get_node("Doors/EscalatorShutter") as Door
 	check(not mall_shutter.is_open and (level.get_node("Lights/MallLight1") as Light3D).light_energy == 0.0,
 		"no power: the shutter is down, the lights are off")
-	await teleport(level, Vector3(28.2, 0.1, -72))
+	await teleport(level, Vector3(25.8, 0.1, -72))
 	(level.get_node("Doors/PowerSwitch") as Door).interact(p)
 	await get_tree().create_timer(2.5).timeout
 	check(mall_shutter.is_open and (level.get_node("Lights/MallLight1") as Light3D).light_energy > 0.5,
@@ -251,7 +251,8 @@ func _run() -> void:
 	await teleport(level, Vector3(26, 15.1, -80))
 	check(level.hud.objective_label.text.contains("пандусу"), "on the roof: " + level.hud.objective_label.text)
 	await kill_all(level)
-	await teleport(level, Vector3(-24, 15.1, -5))
+	await teleport(level, Vector3(-39, 0.1, -98))
+	await teleport(level, Vector3(-39, 0.1, -103))
 
 	# ---------------------------------------------------------------- chapter 4: hospital
 	level = await wait_scene("Hospital")

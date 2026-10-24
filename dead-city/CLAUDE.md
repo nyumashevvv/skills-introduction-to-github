@@ -92,6 +92,10 @@ Linear zombie shooter in six chapters (outskirts, station, mall, hospital, subwa
 - The mall (`level_mall`, `level_3_mall.tscn`) is multi-storey: floors at y 0/5/10, roof 15; `slab` cuts floors into 8 m
   tiles (fewer lights per mesh), `ramp` makes walkable escalators/stairs, `railing` closes the atrium edges, `front`
   builds a shop front (door, windows, neon name, a power lamp inside). `limits/opengl/max_lights_per_object` is 32.
+  Power comes from the generator room (ground floor, east wing, `Doors/PowerSwitch` → `PowerOn`), which lights the
+  `power_light`s and raises the shutter to the third floor. Shop furniture and the atrium fountain are Blender models
+  (part `mall` in `build_assets.py`: carts, mannequins, racks, shelves, arcade cabinets, food stalls…). The roof exit is a
+  bridge over the west alley and a ramp down to the gate (`ExitTrigger`); the alleys round the building are walled in.
 - `tools/gen_levels.py`: chapter scenes are `Level` roots — keep `script` the first property of a node or Godot drops
   the script's exported values. After changing radio text, update `tools/voice_en.py` and rerun `tools/gen_voice.py`.
 - Tests (must pass before committing):
@@ -99,3 +103,4 @@ Linear zombie shooter in six chapters (outskirts, station, mall, hospital, subwa
       godot --headless --path . --import
       godot --headless --path . res://tests/test_story.tscn
       godot --headless --path . res://tests/test_combat.tscn
+      godot --headless --path . res://tests/test_holes.tscn   # no spot to fall out of any map

@@ -42,10 +42,10 @@ EN = {
     'прямо к больнице.':
         "The car's dead? You can't get down the street, there's a barricade. Go through the Galaktika mall. "
         "From the roof car park, a ramp goes straight down to the hospital.",
-    'Темно… эскалаторы стоят, решётка на третий этаж опущена. Щитовая на первом этаже, в восточном крыле, за игрушками. '
-    'Включи рубильник.':
-        "It's dark... the escalators are dead, and the shutter to the third floor is down. The switch room is on the "
-        "ground floor, east wing, behind the toy store. Throw the switch.",
+    'Темно… эскалаторы стоят, решётка на третий этаж без питания. Генераторная на первом этаже, в восточном крыле, '
+    'в самом конце, за игрушками. Запусти генератор.':
+        "It's dark... the escalators are dead, and the shutter to the third floor has no power. The generator room is "
+        "on the ground floor, east wing, at the very end, past the toy store. Start the generator.",
     'Есть свет! Решётка у эскалатора на третий этаж поднята. Кинотеатр наверху — оттуда лестница на крышу. '
     'И… на фуд-корте кто-то зашевелился.':
         "Lights are on! The shutter to the third floor is up. The cinema is at the top, the stairs to the roof are "
@@ -55,8 +55,9 @@ EN = {
         "Someone's in the hall... is that a mascot? Gosha the Bunny, from the kids' room. Whatever is inside that "
         "costume, it's not an entertainer anymore. He leaps at you. Dodge to the side!",
     'Готов! Дверь на крышу — справа от кинозала. Поднимайся!': "Got him! The roof door is to the right of the cinema. Go up!",
-    'Ты на крыше. Выезд в южном углу — пандус ведёт прямо к больнице. Беги!':
-        "You're on the roof. The exit is in the south corner, the ramp goes straight to the hospital. Run!",
+    'Ты на крыше. Выезд у западного края: пандус спускается в переулок, там ворота к больнице. Беги!':
+        "You're on the roof. The exit is on the west side: the ramp goes down into the alley, and the gate there "
+        "leads to the hospital. Run!",
     # chapter 4 (hospital)
     'Больница? Плохо, но другого пути нет. Пожарный выход в западном крыле на электрозамке — сначала запусти генератор, '
     'он в техническом крыле, на востоке.':

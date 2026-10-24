@@ -123,8 +123,10 @@ func _run() -> void:
 	if "enemies" in sections:
 		var level := await load_level("res://scenes/levels/level_3_hospital.tscn")
 		var player := await play(level)
+		await pose(player, Vector3(-3, 0, -40), 15, -12)
+		await snap("mall_3_fountain_dark")
 		level.get_node("Story/PowerOn").call("fire")
-		await get_tree().create_timer(1.5).timeout
+		await get_tree().create_timer(3.0).timeout
 		for z in get_tree().get_nodes_in_group("zombies"):
 			z.queue_free()
 		for spawner: String in ["Story/WardHorde", "Story/LobbyHorde"]:
@@ -163,20 +165,25 @@ func _run() -> void:
 		freeze_zombies()
 		level.hud.gameplay.visible = false
 		player.holder.visible = false
-		await pose(player, Vector3(0, 0, 24), 0, 12)
-		await snap("mall_1_facade")
+		await pose(player, Vector3(0, 0, -16), 0, -4)
+		await snap("mall_1_atrium_dark")
+		await pose(player, Vector3(21, 0, -69), -110, -8)
+		await snap("mall_2_generator")
+		await pose(player, Vector3(-3, 0, -40), 15, -12)
+		await snap("mall_3_fountain_dark")
 		level.get_node("Story/PowerOn").call("fire")
-		await get_tree().create_timer(1.0).timeout
-		await pose(player, Vector3(-3, 0, -10), 10, 14)
-		await snap("mall_2_atrium")
-		await pose(player, Vector3(-14, 5, -12), 0, -4)
-		await snap("mall_3_gallery")
-		await pose(player, Vector3(19.5, 0, -12), -90, -6)
-		await snap("mall_4_electronics")
-		await pose(player, Vector3(0, 10, -87.5), 0, -6)
-		await snap("mall_5_cinema")
-		await pose(player, Vector3(20, 15, -90), 135, -5)
-		await snap("mall_6_roof")
+		await get_tree().create_timer(3.0).timeout
+		await pose(player, Vector3(-3, 0, -40), 15, -12)
+		await snap("mall_3_fountain")
+		for shot: Array in [["supermarket", Vector3(-19, 0, -16), 90], ["clothes", Vector3(-19, 0, -52), 90],
+				["electronics", Vector3(19, 0, -12), -90], ["toys", Vector3(19, 0, -52), -90], ["food_court", Vector3(0, 5, -86), 0],
+				["arcade", Vector3(-19, 10, -12), 90], ["flowers", Vector3(19, 5, -52), -90], ["escalator", Vector3(12, 5, -44), 70]]:
+			await pose(player, shot[1], shot[2], -10)
+			await snap("mall_shop_" + shot[0])
+		await pose(player, Vector3(-28, 15, -68), 90, -12)
+		await snap("mall_4_roof_exit")
+		await pose(player, Vector3(-39, 0, -101), 180, 8)
+		await snap("mall_5_ramp")
 	if "handguns" in sections:
 		var level := await load_level("res://scenes/levels/level_2_station.tscn")
 		var player := await play(level)

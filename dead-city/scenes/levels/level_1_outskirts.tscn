@@ -8,17 +8,17 @@
 
 [ext_resource type="Material" path="res://materials/sidewalk.tres" id="4_sidewalk"]
 
-[ext_resource type="Material" path="res://materials/paint_white.tres" id="5_paint_white"]
+[ext_resource type="Material" path="res://materials/brick.tres" id="5_brick"]
 
-[ext_resource type="Material" path="res://materials/brick.tres" id="6_brick"]
+[ext_resource type="Material" path="res://materials/plaster.tres" id="6_plaster"]
 
-[ext_resource type="Material" path="res://materials/window_dark.tres" id="7_window_dark"]
+[ext_resource type="Material" path="res://materials/paint_white.tres" id="7_paint_white"]
 
-[ext_resource type="Material" path="res://materials/window_lit.tres" id="8_window_lit"]
+[ext_resource type="Material" path="res://materials/window_dark.tres" id="8_window_dark"]
 
-[ext_resource type="Material" path="res://materials/tile.tres" id="9_tile"]
+[ext_resource type="Material" path="res://materials/window_lit.tres" id="9_window_lit"]
 
-[ext_resource type="Material" path="res://materials/plaster.tres" id="10_plaster"]
+[ext_resource type="Material" path="res://materials/tile.tres" id="10_tile"]
 
 [ext_resource type="Material" path="res://materials/brick_dark.tres" id="11_brick_dark"]
 
@@ -295,19 +295,19 @@ agent_max_slope = 40.0
 
 [sub_resource type="BoxMesh" id="BoxMesh_5"]
 size = Vector3(0.15, 0.01, 2.5)
-material = ExtResource("5_paint_white")
+material = ExtResource("7_paint_white")
 
 [sub_resource type="BoxMesh" id="BoxMesh_6"]
 size = Vector3(0.06, 1.5, 1.1)
-material = ExtResource("7_window_dark")
+material = ExtResource("8_window_dark")
 
 [sub_resource type="BoxMesh" id="BoxMesh_7"]
 size = Vector3(0.06, 1.5, 1.1)
-material = ExtResource("8_window_lit")
+material = ExtResource("9_window_lit")
 
 [sub_resource type="BoxMesh" id="BoxMesh_8"]
 size = Vector3(0.06, 2.0, 2.6)
-material = ExtResource("8_window_lit")
+material = ExtResource("9_window_lit")
 
 [sub_resource type="BoxMesh" id="BoxMesh_9"]
 size = Vector3(0.08, 1.825, 3.724)
@@ -753,6 +753,26 @@ position = Vector3(7.5, -0.5, 6.4545)
 size = Vector3(3.0, 1.0, 15.0909)
 material = ExtResource("4_sidewalk")
 
+[node name="Block34" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+position = Vector3(-15.0, -0.5, -129.5)
+size = Vector3(12.0, 1.0, 3.0)
+material = ExtResource("4_sidewalk")
+
+[node name="Block35" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+position = Vector3(15.0, -0.5, -129.5)
+size = Vector3(12.0, 1.0, 3.0)
+material = ExtResource("4_sidewalk")
+
+[node name="Block36" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+position = Vector3(-21.0, 2.0, -129.25)
+size = Vector3(0.3, 4.0, 3.5)
+material = ExtResource("5_brick")
+
+[node name="Block37" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+position = Vector3(21.0, 2.0, -129.25)
+size = Vector3(0.3, 4.0, 3.5)
+material = ExtResource("6_plaster")
+
 [node name="D1" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_5")
 position = Vector3(0.0, 0.005, 10.0)
@@ -861,10 +881,10 @@ position = Vector3(0.0, 0.005, -140.0)
 mesh = SubResource("BoxMesh_5")
 position = Vector3(0.0, 0.005, -146.0)
 
-[node name="Block34" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block38" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-15.0, 5.0, 2.0)
 size = Vector3(12.0, 10.0, 24.0)
-material = ExtResource("6_brick")
+material = ExtResource("5_brick")
 
 [node name="D28" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_6")
@@ -926,45 +946,45 @@ mesh = SubResource("BoxMesh_6")
 position = Vector3(-8.97, 5.6, 10.75)
 cast_shadow = 0
 
-[node name="Block35" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block39" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-15.0, -0.09, -18.0)
 size = Vector3(12.0, 0.2, 16.0)
-material = ExtResource("9_tile")
-
-[node name="Block36" parent="NavigationRegion3D" instance=ExtResource("3_block")]
-position = Vector3(-15.0, 9.0, -18.0)
-size = Vector3(12.0, 10.0, 16.0)
-material = ExtResource("10_plaster")
-
-[node name="Block37" parent="NavigationRegion3D" instance=ExtResource("3_block")]
-position = Vector3(-21.0, 2.0, -18.0)
-size = Vector3(0.3, 4.0, 16.0)
-material = ExtResource("10_plaster")
-
-[node name="Block38" parent="NavigationRegion3D" instance=ExtResource("3_block")]
-position = Vector3(-9.0, 2.0, -22.45)
-size = Vector3(0.3, 4.0, 7.1)
-material = ExtResource("10_plaster")
-
-[node name="Block39" parent="NavigationRegion3D" instance=ExtResource("3_block")]
-position = Vector3(-9.0, 3.5, -18.0)
-size = Vector3(0.3, 1.0, 1.8)
-material = ExtResource("10_plaster")
+material = ExtResource("10_tile")
 
 [node name="Block40" parent="NavigationRegion3D" instance=ExtResource("3_block")]
-position = Vector3(-9.0, 2.0, -13.55)
-size = Vector3(0.3, 4.0, 7.1)
-material = ExtResource("10_plaster")
+position = Vector3(-15.0, 9.0, -18.0)
+size = Vector3(12.0, 10.0, 16.0)
+material = ExtResource("6_plaster")
 
 [node name="Block41" parent="NavigationRegion3D" instance=ExtResource("3_block")]
-position = Vector3(-15.0, 2.0, -10.0)
-size = Vector3(12.0, 4.0, 0.3)
-material = ExtResource("10_plaster")
+position = Vector3(-21.0, 2.0, -18.0)
+size = Vector3(0.3, 4.0, 16.0)
+material = ExtResource("6_plaster")
 
 [node name="Block42" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+position = Vector3(-9.0, 2.0, -22.45)
+size = Vector3(0.3, 4.0, 7.1)
+material = ExtResource("6_plaster")
+
+[node name="Block43" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+position = Vector3(-9.0, 3.5, -18.0)
+size = Vector3(0.3, 1.0, 1.8)
+material = ExtResource("6_plaster")
+
+[node name="Block44" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+position = Vector3(-9.0, 2.0, -13.55)
+size = Vector3(0.3, 4.0, 7.1)
+material = ExtResource("6_plaster")
+
+[node name="Block45" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+position = Vector3(-15.0, 2.0, -10.0)
+size = Vector3(12.0, 4.0, 0.3)
+material = ExtResource("6_plaster")
+
+[node name="Block46" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-15.0, 2.0, -26.0)
 size = Vector3(12.0, 4.0, 0.3)
-material = ExtResource("10_plaster")
+material = ExtResource("6_plaster")
 
 [node name="D40" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_8")
@@ -1016,10 +1036,10 @@ mesh = SubResource("BoxMesh_6")
 position = Vector3(-8.97, 8.8, -12.75)
 cast_shadow = 0
 
-[node name="Block43" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block47" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-15.0, 7.0, -33.0)
 size = Vector3(12.0, 14.0, 14.0)
-material = ExtResource("10_plaster")
+material = ExtResource("6_plaster")
 
 [node name="D50" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_6")
@@ -1066,7 +1086,7 @@ mesh = SubResource("BoxMesh_7")
 position = Vector3(-8.97, 8.8, -29.5)
 cast_shadow = 0
 
-[node name="Block44" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block48" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-15.0, 4.5, -53.0)
 size = Vector3(12.0, 9.0, 26.0)
 material = ExtResource("11_brick_dark")
@@ -1141,57 +1161,57 @@ mesh = SubResource("BoxMesh_6")
 position = Vector3(-8.97, 5.6, -42.5)
 cast_shadow = 0
 
-[node name="Block45" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block49" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-15.0, -0.09, -93.5)
 size = Vector3(12.0, 0.2, 13.0)
-material = ExtResource("9_tile")
+material = ExtResource("10_tile")
 
-[node name="Block46" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block50" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-15.0, -0.09, -80.5)
 size = Vector3(12.0, 0.2, 13.0)
-material = ExtResource("9_tile")
+material = ExtResource("10_tile")
 
-[node name="Block47" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block51" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-15.0, 8.0, -87.0)
 size = Vector3(12.0, 8.0, 26.0)
 material = ExtResource("12_plaster_gray")
 
-[node name="Block48" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block52" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-21.0, 2.0, -97.9)
 size = Vector3(0.3, 4.0, 4.2)
 material = ExtResource("12_plaster_gray")
 
-[node name="Block49" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block53" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-21.0, 3.5, -95.0)
 size = Vector3(0.3, 1.0, 1.6)
 material = ExtResource("12_plaster_gray")
 
-[node name="Block50" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block54" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-21.0, 2.0, -84.1)
 size = Vector3(0.3, 4.0, 20.2)
 material = ExtResource("12_plaster_gray")
 
-[node name="Block51" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block55" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-9.0, 2.0, -90.45)
 size = Vector3(0.3, 4.0, 19.1)
 material = ExtResource("12_plaster_gray")
 
-[node name="Block52" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block56" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-9.0, 3.5, -80.0)
 size = Vector3(0.3, 1.0, 1.8)
 material = ExtResource("12_plaster_gray")
 
-[node name="Block53" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block57" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-9.0, 2.0, -76.55)
 size = Vector3(0.3, 4.0, 5.1)
 material = ExtResource("12_plaster_gray")
 
-[node name="Block54" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block58" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-15.0, 2.0, -74.0)
 size = Vector3(12.0, 4.0, 0.3)
 material = ExtResource("12_plaster_gray")
 
-[node name="Block55" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block59" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-15.0, 2.0, -100.0)
 size = Vector3(12.0, 4.0, 0.3)
 material = ExtResource("12_plaster_gray")
@@ -1276,10 +1296,10 @@ mesh = SubResource("BoxMesh_6")
 position = Vector3(-8.97, 8.8, -76.5)
 cast_shadow = 0
 
-[node name="Block56" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block60" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-15.0, 5.0, -116.0)
 size = Vector3(12.0, 10.0, 24.0)
-material = ExtResource("6_brick")
+material = ExtResource("5_brick")
 
 [node name="D89" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_6")
@@ -1341,12 +1361,12 @@ mesh = SubResource("BoxMesh_7")
 position = Vector3(-8.97, 5.6, -107.25)
 cast_shadow = 0
 
-[node name="Block57" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block61" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-15.0, -0.5, -70.0)
 size = Vector3(12.0, 1.0, 8.0)
 material = ExtResource("2_asphalt")
 
-[node name="Block58" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block62" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(15.0, 6.0, -2.0)
 size = Vector3(12.0, 12.0, 32.0)
 material = ExtResource("12_plaster_gray")
@@ -1471,10 +1491,10 @@ mesh = SubResource("BoxMesh_6")
 position = Vector3(8.97, 8.8, 10.25)
 cast_shadow = 0
 
-[node name="Block59" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block63" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(15.0, 4.5, -31.0)
 size = Vector3(12.0, 9.0, 26.0)
-material = ExtResource("6_brick")
+material = ExtResource("5_brick")
 
 [node name="D125" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_7")
@@ -1546,10 +1566,10 @@ mesh = SubResource("BoxMesh_6")
 position = Vector3(8.97, 5.6, -20.5)
 cast_shadow = 0
 
-[node name="Block60" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block64" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(15.0, 6.5, -55.0)
 size = Vector3(12.0, 13.0, 22.0)
-material = ExtResource("10_plaster")
+material = ExtResource("6_plaster")
 
 [node name="D139" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_6")
@@ -1641,42 +1661,42 @@ mesh = SubResource("BoxMesh_6")
 position = Vector3(8.97, 8.8, -46.25)
 cast_shadow = 0
 
-[node name="Block61" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block65" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(15.0, -0.09, -82.0)
 size = Vector3(12.0, 0.2, 16.0)
 material = ExtResource("13_linoleum")
 
-[node name="Block62" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block66" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(15.0, 7.0, -82.0)
 size = Vector3(12.0, 6.0, 16.0)
 material = ExtResource("11_brick_dark")
 
-[node name="Block63" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block67" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(9.0, 2.0, -86.45)
 size = Vector3(0.3, 4.0, 7.1)
 material = ExtResource("11_brick_dark")
 
-[node name="Block64" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block68" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(9.0, 3.5, -82.0)
 size = Vector3(0.3, 1.0, 1.8)
 material = ExtResource("11_brick_dark")
 
-[node name="Block65" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block69" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(9.0, 2.0, -77.55)
 size = Vector3(0.3, 4.0, 7.1)
 material = ExtResource("11_brick_dark")
 
-[node name="Block66" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block70" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(21.0, 2.0, -82.0)
 size = Vector3(0.3, 4.0, 16.0)
 material = ExtResource("11_brick_dark")
 
-[node name="Block67" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block71" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(15.0, 2.0, -74.0)
 size = Vector3(12.0, 4.0, 0.3)
 material = ExtResource("11_brick_dark")
 
-[node name="Block68" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block72" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(15.0, 2.0, -90.0)
 size = Vector3(12.0, 4.0, 0.3)
 material = ExtResource("11_brick_dark")
@@ -1711,7 +1731,7 @@ mesh = SubResource("BoxMesh_6")
 position = Vector3(8.97, 5.6, -76.75)
 cast_shadow = 0
 
-[node name="Block69" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block73" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(15.0, 5.0, -97.0)
 size = Vector3(12.0, 10.0, 14.0)
 material = ExtResource("11_brick_dark")
@@ -1746,10 +1766,10 @@ mesh = SubResource("BoxMesh_7")
 position = Vector3(8.97, 5.6, -93.5)
 cast_shadow = 0
 
-[node name="Block70" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block74" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(15.0, 5.5, -116.0)
 size = Vector3(12.0, 11.0, 24.0)
-material = ExtResource("10_plaster")
+material = ExtResource("6_plaster")
 
 [node name="D169" type="MeshInstance3D" parent="Decor"]
 mesh = SubResource("BoxMesh_6")
@@ -1811,12 +1831,12 @@ mesh = SubResource("BoxMesh_6")
 position = Vector3(8.97, 5.6, -107.25)
 cast_shadow = 0
 
-[node name="Block71" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block75" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(15.0, -0.5, -70.0)
 size = Vector3(12.0, 1.0, 8.0)
 material = ExtResource("2_asphalt")
 
-[node name="Block72" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block76" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(21.5, 4.0, -70.0)
 size = Vector3(1.0, 8.0, 8.0)
 material = ExtResource("11_brick_dark")
@@ -2357,37 +2377,37 @@ light_energy = 1.6
 omni_range = 8.0
 script = ExtResource("16_flicker_light")
 
-[node name="Block73" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block77" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-27.25, -0.5, -97.6667)
 size = Vector3(12.5, 1.0, 12.6667)
 material = ExtResource("2_asphalt")
 
-[node name="Block74" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block78" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-27.25, -0.5, -85.0)
 size = Vector3(12.5, 1.0, 12.6667)
 material = ExtResource("2_asphalt")
 
-[node name="Block75" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block79" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-27.25, -0.5, -72.3333)
 size = Vector3(12.5, 1.0, 12.6667)
 material = ExtResource("2_asphalt")
 
-[node name="Block76" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block80" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-15.0, -0.5, -102.0)
 size = Vector3(12.0, 1.0, 4.0)
 material = ExtResource("2_asphalt")
 
-[node name="Block77" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block81" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-33.8, 3.5, -85.0)
 size = Vector3(0.6, 7.0, 38.8)
 material = ExtResource("11_brick_dark")
 
-[node name="Block78" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block82" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-27.4, 3.5, -65.6)
 size = Vector3(12.8, 7.0, 0.6)
 material = ExtResource("11_brick_dark")
 
-[node name="Block79" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block83" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-27.4, 3.5, -104.4)
 size = Vector3(12.8, 7.0, 0.6)
 material = ExtResource("11_brick_dark")
@@ -3074,12 +3094,12 @@ pixel_size = 0.008
 modulate = Color(0.4, 1.0, 0.55, 1.0)
 outline_size = 8
 
-[node name="Block80" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block84" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(16.0, 2.0, -79.8)
 size = Vector3(0.2, 4.0, 11.6)
 material = ExtResource("67_hospital_wall")
 
-[node name="Block81" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block85" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(16.0, 2.0, -88.6)
 size = Vector3(0.2, 4.0, 2.8)
 material = ExtResource("67_hospital_wall")
@@ -3203,7 +3223,7 @@ rotation = Vector3(0.0, 2.2925, 0.0)
 position = Vector3(18.5, 0.0, -85.5)
 rotation = Vector3(0.0, -0.7128, 0.0)
 
-[node name="Block82" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block86" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(0.0, 1.5, 14.5)
 size = Vector3(18.0, 3.0, 1.0)
 material = ExtResource("77_concrete")
@@ -3344,22 +3364,22 @@ position = Vector3(-4.2, 1.0, -78.0)
 position = Vector3(0.0, 0.0, -88.0)
 rotation = Vector3(0.0, 1.4, 0.0)
 
-[node name="Block83" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block87" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-7.3, 1.1, -88.2)
 size = Vector3(3.6, 2.2, 1.0)
 material = ExtResource("93_sandbag")
 
-[node name="Block84" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block88" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-7.3, 2.5, -88.2)
 size = Vector3(3.6, 0.6, 1.2)
 material = ExtResource("77_concrete")
 
-[node name="Block85" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block89" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(7.3, 1.1, -88.2)
 size = Vector3(3.6, 2.2, 1.0)
 material = ExtResource("93_sandbag")
 
-[node name="Block86" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block90" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(7.3, 2.5, -88.2)
 size = Vector3(3.6, 0.6, 1.2)
 material = ExtResource("77_concrete")
@@ -3367,37 +3387,37 @@ material = ExtResource("77_concrete")
 [node name="Fire4" parent="Decor" instance=ExtResource("24_fire")]
 position = Vector3(1.5, 3.2, -88.0)
 
-[node name="Block87" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block91" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(7.5, 0.45, -39.0)
 size = Vector3(3.0, 0.9, 0.6)
 material = ExtResource("77_concrete")
 rotation = Vector3(0.0, 0.2, 0.0)
 
-[node name="Block88" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block92" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-5.0, 0.45, -116.0)
 size = Vector3(2.2, 0.9, 0.6)
 material = ExtResource("77_concrete")
 rotation = Vector3(0.0, -0.2123, 0.0)
 
-[node name="Block89" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block93" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(-2.5, 0.45, -116.0)
 size = Vector3(2.2, 0.9, 0.6)
 material = ExtResource("77_concrete")
 rotation = Vector3(0.0, 0.2679, 0.0)
 
-[node name="Block90" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block94" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(2.5, 0.45, -116.0)
 size = Vector3(2.2, 0.9, 0.6)
 material = ExtResource("77_concrete")
 rotation = Vector3(0.0, 0.209, 0.0)
 
-[node name="Block91" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block95" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(5.0, 0.45, -116.0)
 size = Vector3(2.2, 0.9, 0.6)
 material = ExtResource("77_concrete")
 rotation = Vector3(0.0, 0.0783, 0.0)
 
-[node name="Block92" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+[node name="Block96" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(0.0, 5.0, -141.0)
 size = Vector3(42.0, 10.0, 22.0)
 material = ExtResource("12_plaster_gray")

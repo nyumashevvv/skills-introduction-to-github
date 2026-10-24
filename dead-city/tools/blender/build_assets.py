@@ -949,6 +949,302 @@ def build_helicopter(out_path):
     return [hull, main, tail]
 
 
+
+# ---------------------------------------------------------------- mall furniture
+# Shop fittings for the "Galaktika" mall, modelled from primitives (base on z = 0, centred, the front looks along -Y,
+# i.e. +Z in Godot). Exported to models/props/<name>.glb; their sizes go into kenney_sizes.json, so tools/gen_props.py
+# makes scenes with collision boxes for them like for the Kenney props.
+class Kit:
+    def __init__(self, seed=0):
+        self.parts = []
+        self.rnd = random.Random(seed)
+
+    def box(self, size, loc, mat, rot=(0, 0, 0), bevel=0.0):
+        bpy.ops.mesh.primitive_cube_add(size=1.0, location=loc, rotation=rot)
+        o = bpy.context.object
+        o.scale = size
+        bpy.ops.object.transform_apply(scale=True)
+        if bevel:
+            md = o.modifiers.new("Bevel", 'BEVEL')
+            md.width, md.segments = bevel, 2
+            bpy.ops.object.modifier_apply(modifier=md.name)
+        o.data.materials.append(mat)
+        self.parts.append(o)
+        return o
+
+    def cyl(self, r, depth, loc, mat, rot=(0, 0, 0), verts=12, r2=None):
+        if r2 is None:
+            bpy.ops.mesh.primitive_cylinder_add(vertices=verts, radius=r, depth=depth, location=loc, rotation=rot)
+        else:
+            bpy.ops.mesh.primitive_cone_add(vertices=verts, radius1=r, radius2=r2, depth=depth, location=loc, rotation=rot)
+        o = bpy.context.object
+        o.data.materials.append(mat)
+        o.data.polygons.foreach_set("use_smooth", [True] * len(o.data.polygons))
+        self.parts.append(o)
+        return o
+
+    def ball(self, r, loc, mat, scale=(1, 1, 1)):
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=12, ring_count=8, radius=r, location=loc)
+        o = bpy.context.object
+        o.scale = scale
+        bpy.ops.object.transform_apply(scale=True)
+        o.data.materials.append(mat)
+        o.data.polygons.foreach_set("use_smooth", [True] * len(o.data.polygons))
+        self.parts.append(o)
+        return o
+
+    def colour(self, palette):
+        c = self.rnd.choice(palette)
+        return material(f"Mall_{c[0]:.2f}_{c[1]:.2f}_{c[2]:.2f}", c, roughness=0.6)
+
+    def export(self, name):
+        bpy.ops.object.select_all(action='DESELECT')
+        for o in self.parts:
+            o.select_set(True)
+        bpy.context.view_layer.objects.active = self.parts[0]
+        bpy.ops.object.join()
+        o = bpy.context.object
+        o.name = name
+        lo, hi = bounds(world_verts([o]))
+        export_glb(os.path.join(PROJECT, "models", "props", name + ".glb"), [o])
+        return [round(hi.x - lo.x, 3), round(hi.z - lo.z, 3), round(hi.y - lo.y, 3)]
+
+
+BRIGHT = [(0.8, 0.1, 0.08), (0.95, 0.6, 0.1), (0.95, 0.85, 0.2), (0.15, 0.55, 0.2), (0.1, 0.35, 0.8), (0.55, 0.15, 0.6),
+          (0.9, 0.9, 0.85), (0.9, 0.4, 0.55), (0.1, 0.6, 0.65), (0.3, 0.2, 0.12)]
+CLOTH = [(0.12, 0.15, 0.3), (0.6, 0.08, 0.1), (0.85, 0.85, 0.82), (0.2, 0.2, 0.22), (0.35, 0.45, 0.6), (0.55, 0.45, 0.3),
+         (0.15, 0.35, 0.2), (0.85, 0.55, 0.6)]
+
+
+def mall_materials():
+    """Fresh materials for each model (reset() clears the old ones)."""
+    from types import SimpleNamespace
+    chrome = material("MallChrome", (0.75, 0.76, 0.78), metallic=0.9, roughness=0.25)
+    steel = material("MallSteel", (0.35, 0.36, 0.38), metallic=0.7, roughness=0.4)
+    dark = material("MallDark", (0.05, 0.05, 0.055), roughness=0.6)
+    white = material("MallWhite", (0.88, 0.88, 0.86), roughness=0.25)
+    wood = material("MallWood", (0.45, 0.3, 0.17), roughness=0.6)
+    red = material("MallRed", (0.7, 0.06, 0.05), roughness=0.5)
+    glass = material("MallGlass", (0.6, 0.7, 0.75), metallic=0.1, roughness=0.05)
+    glass.blend_method = 'BLEND'
+    glass.node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value = 0.3
+    water = emissive("MallWater", (0.25, 0.55, 0.85), 0.6)
+    water.blend_method = 'BLEND'
+    water.node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value = 0.65
+    stone = material("MallStone", (0.62, 0.6, 0.56), roughness=0.7)
+    return SimpleNamespace(chrome=chrome, steel=steel, dark=dark, white=white, wood=wood, red=red, glass=glass, water=water,
+                           stone=stone)
+
+
+def build_mall_props():
+    sizes = {}
+
+    def screen(c):
+        return emissive(f"MallScreen_{c[0]:.1f}_{c[1]:.1f}_{c[2]:.1f}", c, 2.0)
+
+    # shopping cart
+    reset(); m = mall_materials(); k = Kit(1)
+    for x in (-0.24, 0.24):
+        for y in (-0.38, 0.38):
+            k.cyl(0.05, 0.04, (x, y, 0.06), m.dark, rot=(0, math.pi / 2, 0))
+            k.cyl(0.012, 0.32, (x, y, 0.26), m.chrome)
+    k.box((0.52, 0.86, 0.02), (0, 0, 0.42), m.chrome)
+    for x in (-0.26, 0.26):                                            # side walls of wire
+        for z in (0.5, 0.62, 0.74, 0.86):
+            k.box((0.012, 0.86, 0.012), (x, 0, z), m.chrome)
+        for y in [i * 0.12 - 0.42 for i in range(8)]:
+            k.box((0.012, 0.012, 0.46), (x, y, 0.65), m.chrome)
+    for y in (-0.43, 0.43):
+        for z in (0.5, 0.62, 0.74, 0.86):
+            k.box((0.52, 0.012, 0.012), (0, y, z), m.chrome)
+        for x in [i * 0.1 - 0.25 for i in range(6)]:
+            k.box((0.012, 0.012, 0.46), (x, y, 0.65), m.chrome)
+    k.cyl(0.02, 0.56, (0, 0.5, 0.95), m.red, rot=(0, math.pi / 2, 0))
+    for x in (-0.25, 0.25):
+        k.box((0.015, 0.1, 0.1), (x, 0.47, 0.92), m.chrome)
+    sizes["shopping_cart"] = k.export("shopping_cart")
+
+    # mannequins: a bare m.white one and a dressed one
+    for name, dressed in (("mannequin", False), ("mannequin_dressed", True)):
+        reset(); m = mall_materials(); k = Kit(2 if dressed else 3)
+        k.cyl(0.2, 0.03, (0, 0, 0.015), m.steel); k.cyl(0.015, 0.75, (0, 0, 0.4), m.chrome)
+        k.ball(0.17, (0, 0, 1.05), m.white, (1.0, 0.75, 0.75))           # hips
+        k.ball(0.2, (0, 0, 1.35), m.white, (1.0, 0.65, 1.3))             # torso
+        k.cyl(0.045, 0.12, (0, 0, 1.66), m.white)
+        k.ball(0.11, (0, 0, 1.8), m.white, (0.85, 0.95, 1.15))           # faceless head
+        for s in (-1, 1):
+            k.cyl(0.045, 0.62, (s * 0.25, 0, 1.3), m.white, rot=(0, s * 0.12, 0))
+            k.cyl(0.06, 0.8, (s * 0.09, 0, 0.55), m.white)
+        if dressed:
+            shirt, trousers = k.colour(CLOTH), k.colour(CLOTH)
+            k.ball(0.215, (0, 0, 1.36), shirt, (1.05, 0.7, 1.25))
+            for s in (-1, 1):
+                k.cyl(0.055, 0.3, (s * 0.24, 0, 1.45), shirt, rot=(0, s * 0.12, 0))
+                k.cyl(0.07, 0.75, (s * 0.09, 0, 0.6), trousers)
+            k.ball(0.18, (0, 0, 1.06), trousers, (1.05, 0.8, 0.75))
+        sizes[name] = k.export(name)
+
+    # clothes rack with shirts on hangers
+    reset(); m = mall_materials(); k = Kit(4)
+    for x in (-0.75, 0.75):
+        k.box((0.04, 0.5, 0.03), (x, 0, 0.015), m.chrome); k.cyl(0.015, 1.5, (x, 0, 0.77), m.chrome)
+    k.cyl(0.015, 1.55, (0, 0, 1.52), m.chrome, rot=(0, math.pi / 2, 0))
+    for i in range(9):
+        x = -0.64 + i * 0.16
+        c = k.colour(CLOTH)
+        k.box((0.05, 0.44, 0.62), (x, 0, 1.17), c, bevel=0.01)
+        k.box((0.04, 0.5, 0.18), (x, 0, 1.4), c)                          # shoulders and sleeves
+        k.box((0.01, 0.3, 0.02), (x, 0, 1.49), m.dark)                      # hanger
+    sizes["clothes_rack"] = k.export("clothes_rack")
+
+    # checkout counter with a conveyor, a register and a card terminal
+    reset(); m = mall_materials(); k = Kit(5)
+    k.box((2.2, 0.8, 0.86), (0, 0, 0.43), material("MallCounter", (0.25, 0.27, 0.3), roughness=0.5), bevel=0.02)
+    k.box((1.5, 0.5, 0.03), (-0.3, 0, 0.875), m.dark)
+    for x in (-1.0, 0.4):
+        k.cyl(0.03, 0.5, (x, 0, 0.875), m.steel, rot=(math.pi / 2, 0, 0))
+    k.box((0.4, 0.4, 0.2), (0.85, 0.1, 0.96), m.dark, bevel=0.02)
+    k.box((0.32, 0.03, 0.22), (0.85, -0.08, 1.2), screen((0.3, 0.8, 0.5)), rot=(0.3, 0, 0))
+    k.box((0.08, 0.14, 0.03), (0.6, -0.25, 0.9), m.dark)
+    k.box((0.04, 0.04, 0.35), (1.08, 0.36, 1.03), m.steel); k.box((0.25, 0.04, 0.18), (1.08, 0.36, 1.3), m.red)  # lane number
+    sizes["checkout"] = k.export("checkout")
+
+    # supermarket shelves: dry goods and drinks
+    for name, drinks, seed in (("grocery_shelf", False, 6), ("drinks_shelf", True, 7)):
+        reset(); m = mall_materials(); k = Kit(seed)
+        k.box((2.0, 0.05, 1.9), (0, 0.25, 0.95), m.steel)
+        for x in (-0.98, 0.98):
+            k.box((0.04, 0.55, 1.9), (x, 0, 0.95), m.steel)
+        for z in (0.1, 0.55, 1.0, 1.45, 1.88):
+            k.box((1.96, 0.52, 0.03), (0, 0, z), m.steel)
+        for z in (0.12, 0.57, 1.02, 1.47):
+            x = -0.9
+            while x < 0.85:
+                if drinks:
+                    r, h = k.rnd.uniform(0.035, 0.05), k.rnd.uniform(0.22, 0.32)
+                    k.cyl(r, h, (x + r, k.rnd.uniform(-0.12, 0.05), z + h / 2), k.colour(BRIGHT), verts=8)
+                    k.cyl(r * 0.4, 0.05, (x + r, 0, z + h + 0.02), m.white, verts=6)
+                    x += r * 2 + 0.02
+                else:
+                    w, h = k.rnd.uniform(0.1, 0.22), k.rnd.uniform(0.15, 0.36)
+                    if k.rnd.random() < 0.12:
+                        x += w  # a gap where someone grabbed the last pack
+                        continue
+                    k.box((w, 0.3, h), (x + w / 2, k.rnd.uniform(-0.1, 0.05), z + h / 2), k.colour(BRIGHT))
+                    x += w + 0.02
+        sizes[name] = k.export(name)
+
+    # arcade cabinet
+    for name, seed in (("arcade_cabinet", 8), ("arcade_cabinet_b", 9)):
+        reset(); m = mall_materials(); k = Kit(seed)
+        art = k.colour([(0.8, 0.1, 0.5), (0.1, 0.4, 0.9), (0.95, 0.6, 0.05), (0.1, 0.7, 0.3)])
+        k.box((0.7, 0.75, 1.75), (0, 0.05, 0.875), m.dark, bevel=0.02)
+        for x in (-0.355, 0.355):
+            k.box((0.02, 0.7, 1.6), (x, 0.05, 0.9), art)
+        k.box((0.6, 0.05, 0.45), (0, -0.25, 1.3), screen(k.rnd.choice([(0.3, 0.9, 1.0), (1.0, 0.4, 0.8), (0.4, 1.0, 0.4)])),
+              rot=(-0.25, 0, 0))
+        k.box((0.68, 0.35, 0.1), (0, -0.42, 0.95), m.dark, rot=(0.25, 0, 0))
+        k.cyl(0.015, 0.1, (-0.15, -0.45, 1.04), m.chrome); k.ball(0.035, (-0.15, -0.45, 1.1), m.red)
+        for i in range(4):
+            k.cyl(0.025, 0.02, (0.02 + i * 0.07, -0.44, 1.02), k.colour(BRIGHT), rot=(0.25, 0, 0))
+        k.box((0.7, 0.2, 0.22), (0, -0.05, 1.86), screen((1.0, 0.75, 0.2)))
+        sizes[name] = k.export(name)
+
+    # shoe wall, TV wall, plush toys
+    reset(); m = mall_materials(); k = Kit(10)
+    k.box((2.0, 0.05, 2.0), (0, 0.18, 1.0), m.wood)
+    for z in (0.3, 0.7, 1.1, 1.5, 1.9):
+        k.box((2.0, 0.36, 0.03), (0, 0, z), m.wood)
+        for i in range(6):
+            c = k.colour(BRIGHT)
+            for d in (-0.06, 0.06):
+                k.box((0.11, 0.26, 0.09), (-0.8 + i * 0.32 + d, -0.02, z + 0.06), c, bevel=0.02)
+    sizes["shoe_wall"] = k.export("shoe_wall")
+    reset(); m = mall_materials(); k = Kit(11)
+    k.box((2.4, 0.45, 0.6), (0, 0, 0.3), m.dark, bevel=0.02)
+    k.box((2.4, 0.05, 1.4), (0, 0.2, 1.3), m.dark)
+    for i, (x, z, w, h) in enumerate([(-0.75, 0.95, 0.8, 0.5), (0.0, 0.95, 0.6, 0.4), (0.75, 0.95, 0.8, 0.5),
+                                     (-0.6, 1.6, 1.0, 0.6), (0.6, 1.6, 1.0, 0.6)]):
+        k.box((w + 0.04, 0.06, h + 0.04), (x, 0.12, z), m.dark)
+        k.box((w, 0.02, h), (x, 0.085, z), screen(k.rnd.choice([(0.3, 0.6, 1.0), (1.0, 0.5, 0.2), (0.4, 1.0, 0.6), (0.9, 0.9, 1.0)])))
+    sizes["tv_wall"] = k.export("tv_wall")
+    reset(); m = mall_materials(); k = Kit(12)
+    k.box((1.8, 0.05, 1.8), (0, 0.22, 0.9), m.wood)
+    for z in (0.05, 0.6, 1.15, 1.7):
+        k.box((1.8, 0.45, 0.04), (0, 0, z), m.wood)
+    for z in (0.07, 0.62, 1.17):
+        for i in range(5):
+            x = -0.7 + i * 0.35
+            c = k.colour(BRIGHT[:9])
+            k.ball(0.11, (x, 0, z + 0.11), c); k.ball(0.08, (x, -0.02, z + 0.29), c)
+            for s in (-1, 1):
+                k.ball(0.03, (x + s * 0.06, -0.02, z + 0.37), c)
+            k.ball(0.012, (x - 0.03, -0.095, z + 0.3), m.dark); k.ball(0.012, (x + 0.03, -0.095, z + 0.3), m.dark)
+    sizes["plush_shelf"] = k.export("plush_shelf")
+
+    # flower stand, popcorn machine, food-court stall
+    reset(); m = mall_materials(); k = Kit(13)
+    for i, z in enumerate((0.0, 0.35, 0.7)):
+        k.box((1.4, 0.7 - i * 0.18, 0.05), (0, 0.1 * i, z + 0.3), m.wood)
+        for j in range(4):
+            x = -0.5 + j * 0.33
+            k.cyl(0.11, 0.25, (x, 0.1 * i, z + 0.45), m.steel)
+            fl = k.colour([(0.9, 0.1, 0.2), (0.95, 0.85, 0.2), (0.9, 0.5, 0.7), (0.95, 0.95, 0.95), (0.6, 0.2, 0.7)])
+            for f in range(5):
+                a = f * 1.26
+                k.cyl(0.006, 0.35, (x + math.cos(a) * 0.05, 0.1 * i + math.sin(a) * 0.05, z + 0.65),
+                      material("Stem", (0.15, 0.4, 0.12)), verts=4)
+                k.ball(0.045, (x + math.cos(a) * 0.06, 0.1 * i + math.sin(a) * 0.06, z + 0.84), fl)
+    for x in (-0.68, 0.68):
+        k.box((0.04, 0.7, 1.05), (x, 0.1, 0.52), m.wood)
+    sizes["flower_stand"] = k.export("flower_stand")
+    reset(); m = mall_materials(); k = Kit(14)
+    k.box((0.7, 0.55, 0.8), (0, 0, 0.4), m.red, bevel=0.02)
+    for x in (-0.3, 0.3):
+        k.cyl(0.06, 0.04, (x, -0.25, 0.06), m.dark, rot=(0, math.pi / 2, 0))
+    k.box((0.6, 0.5, 0.6), (0, 0, 1.12), m.glass)
+    pop = material("Popcorn", (0.98, 0.9, 0.6), roughness=0.9)
+    for i in range(40):
+        k.ball(0.035, (k.rnd.uniform(-0.26, 0.26), k.rnd.uniform(-0.2, 0.2), 0.85 + k.rnd.uniform(0, 0.18)), pop)
+    for x in (-0.3, 0.3):
+        for y in (-0.25, 0.25):
+            k.box((0.03, 0.03, 0.62), (x, y, 1.12), m.red)
+    k.cyl(0.42, 0.22, (0, 0, 1.53), m.red, verts=4, r2=0.05, rot=(0, 0, math.pi / 4))
+    k.box((0.62, 0.02, 0.12), (0, -0.28, 0.7), material("MallYellow", (0.95, 0.8, 0.1)))
+    sizes["popcorn_machine"] = k.export("popcorn_machine")
+    for name, seed, tint in (("food_stall", 15, (0.85, 0.3, 0.1)), ("food_stall_b", 16, (0.15, 0.5, 0.25))):
+        reset(); m = mall_materials(); k = Kit(seed)
+        paint = material(f"Stall_{seed}", tint, roughness=0.5)
+        k.box((3.0, 0.8, 1.0), (0, -0.2, 0.5), paint, bevel=0.03)
+        k.box((3.1, 0.9, 0.05), (0, -0.2, 1.02), m.steel)
+        k.box((3.0, 0.1, 2.4), (0, 0.55, 1.2), m.dark)
+        k.box((2.6, 0.04, 0.8), (0, 0.48, 1.85), screen((1.0, 0.9, 0.7)))      # lit menu board
+        k.box((3.2, 1.2, 0.08), (0, 0.0, 2.6), paint, rot=(0.25, 0, 0))          # canopy
+        k.box((0.4, 0.35, 0.25), (1.0, -0.2, 1.17), m.dark)
+        k.box((0.6, 0.4, 0.5), (-0.9, 0.25, 1.3), m.steel)                          # fryer / oven
+        sizes[name] = k.export(name)
+
+    # the fountain: a wide basin, a column with two bowls and m.water falling in curtains
+    reset(); m = mall_materials(); k = Kit(17)
+    k.cyl(3.6, 0.6, (0, 0, 0.3), m.stone, verts=32)
+    k.cyl(3.75, 0.12, (0, 0, 0.66), m.stone, verts=32)
+    k.cyl(3.35, 0.05, (0, 0, 0.5), m.water, verts=32)
+    k.cyl(0.55, 1.7, (0, 0, 1.25), m.stone, verts=16)
+    k.cyl(0.5, 0.35, (0, 0, 2.1), m.stone, verts=24, r2=1.5)
+    k.cyl(1.4, 0.04, (0, 0, 2.26), m.water, verts=24)
+    k.cyl(1.5, 1.7, (0, 0, 1.4), m.water, verts=24, r2=1.45)                    # the curtain from the lower bowl
+    k.cyl(0.22, 0.9, (0, 0, 2.7), m.stone, verts=12)
+    k.cyl(0.2, 0.25, (0, 0, 3.15), m.stone, verts=16, r2=0.65)
+    k.cyl(0.6, 0.03, (0, 0, 3.27), m.water, verts=16)
+    k.cyl(0.65, 0.9, (0, 0, 2.82), m.water, verts=16, r2=0.62)                  # the curtain from the top bowl
+    k.cyl(0.08, 0.6, (0, 0, 3.55), m.water, verts=8, r2=0.02)                   # the jet
+    for i in range(8):                                                         # lamps in the basin rim
+        a = i * math.tau / 8
+        k.box((0.2, 0.2, 0.08), (math.cos(a) * 3.0, math.sin(a) * 3.0, 0.55), emissive("FountainLamp", (0.7, 0.85, 1.0), 3.0))
+    sizes["fountain"] = k.export("fountain")
+    return sizes
+
+
 def build_bus(out_path):
     """A city bus modelled from scratch: rounded body, window band with pillars, doors, Kenney truck wheels."""
     reset()
@@ -1723,6 +2019,12 @@ if "viewmodels" in PARTS:
     build_viewmodels()
 if "bosses" in PARTS:
     build_bosses()
+if "mall" in PARTS:
+    import json
+    sizes_path = os.path.join(PROJECT, "models", "kenney_sizes.json")
+    sizes = json.load(open(sizes_path))
+    sizes.update(build_mall_props())
+    json.dump(sizes, open(sizes_path, "w"), indent=1, sort_keys=True)
 if "heli" in PARTS:
     build_helicopter(os.path.join(PROJECT, "models", "vehicles", "helicopter.glb"))
     render_lineup([os.path.join(PROJECT, "models", "vehicles", "helicopter.glb")], os.path.join(SRC, "previews", "helicopter.png"),
