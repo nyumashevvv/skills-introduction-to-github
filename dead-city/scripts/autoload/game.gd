@@ -4,6 +4,7 @@ extends Node
 const LEVELS: Array[String] = [
 	"res://scenes/levels/level_1_outskirts.tscn",
 	"res://scenes/levels/level_2_station.tscn",
+	"res://scenes/levels/level_3_mall.tscn",
 	"res://scenes/levels/level_3_hospital.tscn",
 	"res://scenes/levels/level_4_subway.tscn",
 	"res://scenes/levels/level_5_stadium.tscn",

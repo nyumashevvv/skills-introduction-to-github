@@ -1,5 +1,5 @@
 extends Node
-## Plays through all five chapters by teleporting the player and checks every story beat.
+## Plays through all six chapters by teleporting the player and checks every story beat.
 ##   godot --headless --path . res://tests/test_story.tscn
 
 var failures := 0
@@ -216,9 +216,46 @@ func _run() -> void:
 	await teleport(level, Vector3(26, 0.1, -48))
 	await teleport(level, Vector3(30, 0.1, -48))
 
-	# ---------------------------------------------------------------- chapter 3: hospital
+	# ---------------------------------------------------------------- chapter 3: the mall
+	level = await wait_scene("Mall")
+	check(level != null and Game.current_level == 2, "chapter 3 (mall) loaded")
+	await start(level)
+	p = level.player
+	check(p.holder.get_weapon("bazooka").owned, "bazooka carried into the mall")
+	check_paths(level, {"switch room": Vector3(28, 0, -72), "escalator up": Vector3(-8, 5, -38),
+		"third floor": Vector3(8, 10, -62), "cinema": Vector3(0, 10, -92), "roof stairs": Vector3(25, 10, -97.5),
+		"roof": Vector3(26, 15, -80), "exit ramp": Vector3(-24, 15, -5)})
+	await teleport(level, Vector3(0, 0.1, -3))
+	check(level.hud.objective_label.text.contains("щитовую"), "inside the mall: " + level.hud.objective_label.text)
+	var mall_shutter := level.get_node("Doors/EscalatorShutter") as Door
+	check(not mall_shutter.is_open and (level.get_node("Lights/MallLight1") as Light3D).light_energy == 0.0,
+		"no power: the shutter is down, the lights are off")
+	await teleport(level, Vector3(28.2, 0.1, -72))
+	(level.get_node("Doors/PowerSwitch") as Door).interact(p)
+	await get_tree().create_timer(2.5).timeout
+	check(mall_shutter.is_open and (level.get_node("Lights/MallLight1") as Light3D).light_energy > 0.5,
+		"power on: shutter up, lights on")
+	check((level.get_node("Story/FoodCourtHorde") as ZombieSpawner).active, "power on: the food court wakes up")
+	check(level.hud.objective_label.text.contains("кинотеатру"), "objective: " + level.hud.objective_label.text)
+	await kill_all(level)
+	var roof_door := level.get_node("Doors/RoofDoor") as Door
+	await teleport(level, Vector3(0, 10.1, -89.5))
+	var gosha := level.get_node("Zombies/Gosha") as Boss
+	check(gosha.state != Zombie.State.IDLE and level.hud.objective_label.text == "Убей Зайца Гошу",
+		"Gosha the bunny in the cinema: " + level.hud.objective_label.text)
+	check(level.hud.boss_label.text == "Заяц Гоша" or not level.hud.boss_box.visible, "boss bar: " + level.hud.boss_label.text)
+	check(not roof_door.is_open, "the roof door stays shut while Gosha lives")
+	await kill_all(level, true)
+	await frames(5)
+	check(roof_door.is_open and level.hud.objective_label.text.contains("крышу"), "Gosha dead -> " + level.hud.objective_label.text)
+	await teleport(level, Vector3(26, 15.1, -80))
+	check(level.hud.objective_label.text.contains("пандусу"), "on the roof: " + level.hud.objective_label.text)
+	await kill_all(level)
+	await teleport(level, Vector3(-24, 15.1, -5))
+
+	# ---------------------------------------------------------------- chapter 4: hospital
 	level = await wait_scene("Hospital")
-	check(level != null and Game.current_level == 2, "chapter 3 (hospital) loaded")
+	check(level != null and Game.current_level == 3, "chapter 4 (hospital) loaded")
 	await start(level)
 	p = level.player
 	check(p.holder.get_weapon("bazooka").owned, "bazooka carried into the hospital")
@@ -251,9 +288,9 @@ func _run() -> void:
 	await teleport(level, Vector3(-30, 0.1, -17))
 	await teleport(level, Vector3(-34.5, 0.1, -17))
 
-	# ---------------------------------------------------------------- chapter 4: subway
+	# ---------------------------------------------------------------- chapter 5: subway
 	level = await wait_scene("Subway")
-	check(level != null and Game.current_level == 3, "chapter 4 (subway) loaded")
+	check(level != null and Game.current_level == 4, "chapter 5 (subway) loaded")
 	await start(level)
 	p = level.player
 	check(p.holder.get_weapon("shotgun").owned, "shotgun carried into the subway")
@@ -286,9 +323,9 @@ func _run() -> void:
 	await kill_all(level, true)
 	await teleport(level, Vector3(0, 0.1, -179))
 
-	# ---------------------------------------------------------------- chapter 5: stadium
+	# ---------------------------------------------------------------- chapter 6: stadium
 	level = await wait_scene("Stadium")
-	check(level != null and Game.current_level == 4, "chapter 5 (stadium) loaded")
+	check(level != null and Game.current_level == 5, "chapter 6 (stadium) loaded")
 	await start(level)
 	p = level.player
 	check(p.holder.get_weapon("bazooka").owned and p.holder.get_weapon("shotgun").owned, "full arsenal carried into the stadium")

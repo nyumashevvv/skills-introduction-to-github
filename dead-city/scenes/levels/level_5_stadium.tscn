@@ -211,7 +211,7 @@ size = Vector3(8.0, 3.0, 8.0)
 
 [node name="Stadium" type="Node3D"]
 script = ExtResource("1_level")
-chapter_number = 5
+chapter_number = 6
 chapter_title = "Стадион"
 intro_text = "Лестница метро выводит прямо к южным воротам стадиона.\nНад трибунами горят прожекторы. Где-то там, в темноте, гудит вертолёт."
 start_objective = "Доберись до вертолётной площадки в центре поля"

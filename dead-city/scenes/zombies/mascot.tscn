@@ -1,0 +1,105 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/zombies/boss.gd" id="1_boss"]
+
+[ext_resource type="AudioStream" path="res://music/boss_metal.ogg" id="2_boss_metal"]
+
+[ext_resource type="PackedScene" path="res://scenes/zombies/runner.tscn" id="3_runner"]
+
+[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="4_medkit"]
+
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_shells.tscn" id="5_ammo_shells"]
+
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rifle.tscn" id="6_ammo_rifle"]
+
+[ext_resource type="PackedScene" path="res://models/characters/boss_mascot.glb" id="7_boss_mascot"]
+
+[ext_resource type="AudioStream" path="res://sounds/zombie/groan1.ogg" id="8_groan1"]
+
+[ext_resource type="AudioStream" path="res://sounds/zombie/attack1.ogg" id="9_attack1"]
+
+[ext_resource type="AudioStream" path="res://sounds/zombie/death1.ogg" id="10_death1"]
+
+[ext_resource type="AudioStream" path="res://sounds/zombie/roar1.ogg" id="11_roar1"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_1"]
+radius = 0.55
+height = 2.6
+
+[node name="Mascot" type="CharacterBody3D" groups=["zombies"]]
+collision_layer = 4
+collision_mask = 7
+script = ExtResource("1_boss")
+boss_name = "Заяц Гоша"
+wander_speed = 0.4
+stagger_resistance = 0.97
+sight_range = 30.0
+reach_arms = false
+wakes_from_noise = false
+attack_animation = "SwordSlash"
+voice_pitch = 1.25
+music = ExtResource("2_boss_metal")
+max_health = 2000
+chase_speed = 2.9
+turn_speed = 4.5
+attack_damage = 30
+attack_range = 2.1
+attack_windup = 0.5
+attack_recovery = 0.6
+knockback = 7.0
+charge_speed = 13.0
+charge_cooldown = 5.5
+charge_damage = 30
+slam_radius = 6.0
+slam_damage = 28
+slam_cooldown = 7.0
+minion = ExtResource("3_runner")
+summon_count = 2
+summon_cooldown = 18.0
+max_minions = 4
+enrage_at = 0.35
+drops = Array[PackedScene]([ExtResource("4_medkit"), ExtResource("5_ammo_shells"), ExtResource("6_ammo_rifle")])
+bodies = Array[PackedScene]([ExtResource("7_boss_mascot")])
+body_scale = 0.8
+skin_colors = Array[Color]([Color(0.92, 0.86, 0.88, 1.0)])
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 1.3, 0.0)
+shape = SubResource("CapsuleShape3D_1")
+
+[node name="Model" type="Node3D" parent="."]
+rotation = Vector3(0.0, 3.1416, 0.0)
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+path_desired_distance = 0.8
+target_desired_distance = 0.8
+height = 2.6
+radius = 0.55
+
+[node name="GroanSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("8_groan1")
+position = Vector3(0.0, 2.2069, 0.0)
+volume_db = -8.0
+unit_size = 3.0
+max_distance = 30.0
+
+[node name="AttackSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("9_attack1")
+position = Vector3(0.0, 2.2069, 0.0)
+volume_db = -3.0
+unit_size = 3.0
+max_distance = 30.0
+
+[node name="DeathSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("10_death1")
+position = Vector3(0.0, 2.2069, 0.0)
+volume_db = -4.0
+unit_size = 3.0
+max_distance = 30.0
+
+[node name="RoarSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("11_roar1")
+position = Vector3(0.0, 2.08, 0.0)
+volume_db = 2.0
+unit_size = 8.0
+max_distance = 60.0

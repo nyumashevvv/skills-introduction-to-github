@@ -157,6 +157,26 @@ func _run() -> void:
 		await _signs()
 	if "ammo" in sections:
 		await _ammo()
+	if "mall" in sections:
+		var level := await load_level("res://scenes/levels/level_3_mall.tscn")
+		var player := await play(level)
+		freeze_zombies()
+		level.hud.gameplay.visible = false
+		player.holder.visible = false
+		await pose(player, Vector3(0, 0, 24), 0, 12)
+		await snap("mall_1_facade")
+		level.get_node("Story/PowerOn").call("fire")
+		await get_tree().create_timer(1.0).timeout
+		await pose(player, Vector3(-3, 0, -10), 10, 14)
+		await snap("mall_2_atrium")
+		await pose(player, Vector3(-14, 5, -12), 0, -4)
+		await snap("mall_3_gallery")
+		await pose(player, Vector3(19.5, 0, -12), -90, -6)
+		await snap("mall_4_electronics")
+		await pose(player, Vector3(0, 10, -87.5), 0, -6)
+		await snap("mall_5_cinema")
+		await pose(player, Vector3(20, 15, -90), 135, -5)
+		await snap("mall_6_roof")
 	if "handguns" in sections:
 		var level := await load_level("res://scenes/levels/level_2_station.tscn")
 		var player := await play(level)

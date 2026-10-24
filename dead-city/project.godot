@@ -170,3 +170,4 @@ crouch={
 [rendering]
 
 anti_aliasing/quality/msaa_3d=2
+limits/opengl/max_lights_per_object=32

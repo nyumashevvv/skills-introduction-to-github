@@ -37,7 +37,27 @@ EN = {
         "There's a car in the yard... and that's Bobolev with a riot shield! The shield stops bullets. Aim for the head, "
         "flank him, or use the rocket launcher.",
     'Чисто! Машина ждёт — давай!': "Clear! The car is waiting. Go!",
-    # chapter 3
+    # chapter 3 (mall)
+    'Машина встала? Через улицу не пройти — там баррикада. Иди через «Галактику»: с крыши парковки пандус спускается '
+    'прямо к больнице.':
+        "The car's dead? You can't get down the street, there's a barricade. Go through the Galaktika mall. "
+        "From the roof car park, a ramp goes straight down to the hospital.",
+    'Темно… эскалаторы стоят, решётка на третий этаж опущена. Щитовая на первом этаже, в восточном крыле, за игрушками. '
+    'Включи рубильник.':
+        "It's dark... the escalators are dead, and the shutter to the third floor is down. The switch room is on the "
+        "ground floor, east wing, behind the toy store. Throw the switch.",
+    'Есть свет! Решётка у эскалатора на третий этаж поднята. Кинотеатр наверху — оттуда лестница на крышу. '
+    'И… на фуд-корте кто-то зашевелился.':
+        "Lights are on! The shutter to the third floor is up. The cinema is at the top, the stairs to the roof are "
+        "there. And... something is moving in the food court.",
+    'В зале кто-то есть… Это ростовая кукла? Заяц Гоша из детской комнаты. Внутри костюма давно не аниматор. '
+    'Он прыгает с разбега — уходи в сторону!':
+        "Someone's in the hall... is that a mascot? Gosha the Bunny, from the kids' room. Whatever is inside that "
+        "costume, it's not an entertainer anymore. He leaps at you. Dodge to the side!",
+    'Готов! Дверь на крышу — справа от кинозала. Поднимайся!': "Got him! The roof door is to the right of the cinema. Go up!",
+    'Ты на крыше. Выезд в южном углу — пандус ведёт прямо к больнице. Беги!':
+        "You're on the roof. The exit is in the south corner, the ramp goes straight to the hospital. Run!",
+    # chapter 4 (hospital)
     'Больница? Плохо, но другого пути нет. Пожарный выход в западном крыле на электрозамке — сначала запусти генератор, '
     'он в техническом крыле, на востоке.':
         "The hospital? Not good, but there's no other way. The fire exit in the west wing has an electric lock. "
@@ -51,7 +71,7 @@ EN = {
         "In the yard... is that thing glowing? That's patient zero. This all started with him. Stay out of his spit, "
         "and don't let him call the others!",
     'Он мёртв. Вход в метро в углу двора — иди!': "He's dead. The metro entrance is in the corner of the yard. Go!",
-    # chapter 4
+    # chapter 5 (subway)
     'Ты в метро? До «Динамо» два перегона. Иди по левому пути — правый тоннель завалило.':
         "You're in the metro? Two stops to Dynamo. Take the left track. The right tunnel has caved in.",
     'Впереди сошедший вагон, тоннель перекрыт. Ищи служебную дверь — они есть через каждые сто метров.':
@@ -63,7 +83,7 @@ EN = {
         "Something heavy is coming down the side passage... a track worker with a sledgehammer! When he slams the "
         "ground, jump. The shockwave runs along the floor.",
     'Есть! Решётка поднята — наверх, стадион прямо над тобой!': "Got it! The gate is up. Go up, the stadium is right above you!",
-    # chapter 5
+    # chapter 6 (stadium)
     'Ты на стадионе? Вертолёт на подходе. Площадка в центре поля — жди там.':
         "You're at the stadium? The helicopter is on its way. The landing pad is in the middle of the field. Wait there.",
     'Борт-двенадцать на связи. Вижу площадку, но вокруг толпа — сесть не могу! Продержись две минуты, я сделаю круг.':

@@ -1,6 +1,6 @@
 # Dead City — Godot 4.7 story FPS
 
-Linear zombie shooter in five chapters (outskirts, station, hospital, subway, stadium). GDScript only, Forward+ renderer. UI and story text are Russian.
+Linear zombie shooter in six chapters (outskirts, station, mall, hospital, subway, stadium). GDScript only, Forward+ renderer. UI and story text are Russian.
 
 ## Conventions
 - Static typing everywhere, tabs for indentation; match the comment density of existing scripts.
@@ -58,8 +58,8 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
   Quaternius rig: Idle/Walk/Run/Punch/RecieveHit/Death) and tints its "Skin" material. `ZombiePose`
   (SkeletonModifier3D) layers arms-forward reaching and headshot head removal over the animation.
   Headshot = hit above the Neck bone. Groans are rate-limited globally (`GROAN_GAP`).
-- `Boss` (`scripts/zombies/boss.gd`, extends `Zombie`; scenes butcher / warden / patient_zero / lineman /
-  colossus): HUD health bar, abilities switched on by exports (charge, `BossProjectile` throw, ground slam,
+- `Boss` (`scripts/zombies/boss.gd`, extends `Zombie`; scenes butcher / warden / mascot (Заяц Гоша, the mall) /
+  patient_zero / lineman / colossus): HUD health bar, abilities switched on by exports (charge, `BossProjectile` throw, ground slam,
   summon, `front_armor` shield, enrage) run in `State.SPECIAL` via the `_try_special` / `_process_special` /
   `_damage_scale` hooks in `Zombie`. Bosses ignore noise (`wakes_from_noise = false`). Placed bosses fire
   `alert_event` / `death_event`; spawned ones (subway, stadium) are tracked by `Holdout.boss_spawner`, which
@@ -89,6 +89,9 @@ Linear zombie shooter in five chapters (outskirts, station, hospital, subway, st
   `fancy_door` / `dress_door` give doors the station-entrance look (frame, window, handles, lamp, sign).
   `neon` (flat glowing sign with a tube frame and light), `blade` (vertical sign sticking out of a facade) and `cross`
   mark what a building is; neon colours are the `neon_*` materials from `gen_assets.py`.
+- The mall (`level_mall`, `level_3_mall.tscn`) is multi-storey: floors at y 0/5/10, roof 15; `slab` cuts floors into 8 m
+  tiles (fewer lights per mesh), `ramp` makes walkable escalators/stairs, `railing` closes the atrium edges, `front`
+  builds a shop front (door, windows, neon name, a power lamp inside). `limits/opengl/max_lights_per_object` is 32.
 - `tools/gen_levels.py`: chapter scenes are `Level` roots — keep `script` the first property of a node or Godot drops
   the script's exported values. After changing radio text, update `tools/voice_en.py` and rerun `tools/gen_voice.py`.
 - Tests (must pass before committing):

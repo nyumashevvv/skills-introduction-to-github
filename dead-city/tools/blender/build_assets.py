@@ -541,6 +541,32 @@ def props_bobolev(arm):
     return [attach(beanie, arm, "Head", "Beanie"), attach([collar], arm, "Neck", "Collar")] + props_warden(arm)
 
 
+def props_mascot(arm):
+    """Gosha, the mall's bunny mascot: long ears (pink inside), a fluffy tail, a red bow tie and buck teeth."""
+    fur = material("MascotFur", (0.92, 0.62, 0.72), roughness=0.95)
+    inner = material("MascotEarInner", (0.98, 0.85, 0.88), roughness=0.9)
+    white = material("MascotWhite", (0.95, 0.94, 0.9), roughness=0.9)
+    red = material("MascotBow", (0.7, 0.05, 0.06), roughness=0.6)
+    head = []
+    for s in (-1, 1):
+        ear = prim('sphere', (0.5,), Vector((s * 0.3, 0.05, 3.55)), fur, rot=(0.0, s * 0.25, 0.0))
+        ear.scale = (0.32, 0.18, 1.0)
+        inside = prim('sphere', (0.42,), Vector((s * 0.3, -0.04, 3.55)), inner, rot=(0.0, s * 0.25, 0.0))
+        inside.scale = (0.22, 0.1, 0.9)
+        head += [ear, inside]
+    for s in (-1, 1):  # buck teeth under the nose
+        head.append(prim('box', (0.1, 0.04, 0.16), Vector((s * 0.055, -0.505, 2.2)), white))
+    for o in head:
+        bpy.context.view_layer.objects.active = o
+        bpy.ops.object.select_all(action='DESELECT')
+        o.select_set(True)
+        bpy.ops.object.transform_apply(location=False, rotation=False, scale=True)
+    tail = prim('sphere', (0.32,), Vector((0.0, 0.42, 1.3)), white)
+    bow = [prim('box', (0.22, 0.08, 0.16), Vector((s * 0.13, -0.42, 2.02)), red, rot=(0.0, s * 0.3, 0.0)) for s in (-1, 1)]
+    bow.append(prim('box', (0.08, 0.1, 0.1), Vector((0.0, -0.44, 2.02)), red))
+    return [attach(head, arm, "Head", "Ears"), attach([tail], arm, "Hips", "Tail"), attach(bow, arm, "Neck", "BowTie")]
+
+
 BOSSES = {
     # out name: (source blend, material colour overrides, props)
     "boss_butcher": ("Chef_Male", {"Clothes": (0.62, 0.55, 0.5), "Shirt": (0.5, 0.2, 0.18)}, props_butcher),
@@ -549,6 +575,8 @@ BOSSES = {
                     props_bobolev, dict(face='bobolev', fat=1.6, bald=True)),
     "boss_patient": ("Goblin_Male", {"Pants": (0.55, 0.62, 0.66)}, props_patient),
     "boss_lineman": ("Worker_Male", {"Vest": (0.95, 0.4, 0.05)}, props_lineman),
+    "boss_mascot": ("Casual_Male", {"Shirt": (0.92, 0.62, 0.72), "Pants": (0.92, 0.62, 0.72), "Hair": (0.95, 0.9, 0.9),
+                                     "Belt": (0.95, 0.94, 0.9)}, props_mascot, dict(fat=0.6)),
     "boss_colossus": ("Casual_Female", {"Hair": (0.42, 0.17, 0.06), "Shirt": (0.33, 0.45, 0.6), "Pants": (0.12, 0.14, 0.2),
                                         "Belt": (0.1, 0.08, 0.06)}, props_alena, dict(face='alena')),
 }

@@ -403,7 +403,15 @@ def bosses():
          0.76, 0.66, 2.45, (0.74, 0.68, 0.62),  # Bobolev is wide: a fatter collision capsule, paler skin
          extra=lambda s: s.node('ShieldSound', 'AudioStreamPlayer3D', '.', stream=s.sound('shield_hit'),
                                 position=V3(0, 1.2, 0), unit_size=5.0, max_polyphony=3))
-    # Chapter 3: the first infected; spits acid and calls the patients.
+    # Chapter 3: Gosha, the bunny mascot of the "Galaktika" mall; hops at you, stomps and calls the shoppers.
+    boss('mascot', 'Mascot', 'Заяц Гоша', 'boss_mascot',
+         dict(music=track('boss_metal'), max_health=2000, chase_speed=2.9, turn_speed=4.5, attack_damage=30, attack_range=2.1,
+              attack_windup=0.5, attack_recovery=0.6, knockback=7.0, charge_speed=13.0, charge_cooldown=5.5,
+              charge_damage=30, slam_radius=6.0, slam_damage=28, slam_cooldown=7.0, minion=scene('zombies/runner'),
+              summon_count=2, summon_cooldown=18.0, max_minions=4, enrage_at=0.35, voice_pitch=1.25,
+              drops=scenes('pickups/medkit', 'pickups/ammo_shells', 'pickups/ammo_rifle')),
+         0.8, 0.55, 2.6, (0.92, 0.86, 0.88))
+    # Chapter 4: the first infected; spits acid and calls the patients.
     boss('patient_zero', 'PatientZero', 'Пациент Ноль', 'boss_patient',
          dict(music=track('boss_pursuit'), max_health=1800, chase_speed=2.46, attack_damage=28, attack_range=1.8, attack_windup=0.45,
               attack_animation=S('Punch'), projectile=scene('zombies/acid_spit'), projectile_count=3,
