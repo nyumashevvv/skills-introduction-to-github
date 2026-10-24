@@ -342,8 +342,23 @@ def kenney():
 
 
 
+def signs():
+    """Scenes for the Blender signs in models/signs: the model plus sign_bulbs.gd, which runs its bulbs."""
+    os.makedirs('scenes/world/signs', exist_ok=True)
+    for f in sorted(os.listdir('models/signs')):
+        if not f.endswith('.glb'):
+            continue
+        name = f[:-4]
+        s = Scene()
+        glb = s.ext_res('PackedScene', f'res://models/signs/{name}.glb')
+        s.node(''.join(p.title() for p in name.split('_')), 'Node3D', script=s.ext_res('Script', 'res://scripts/world/sign_bulbs.gd'))
+        s.node('Model', None, '.', instance=glb)
+        s.save(f'scenes/world/signs/{name}.tscn')
+
+
 if __name__ == '__main__':
     mats()
     build()
     kenney()
+    signs()
     print('props ok')

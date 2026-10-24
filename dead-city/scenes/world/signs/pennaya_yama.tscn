@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/signs/pennaya_yama.glb" id="1_pennaya_yama"]
+
+[ext_resource type="Script" path="res://scripts/world/sign_bulbs.gd" id="2_sign_bulbs"]
+
+[node name="PennayaYama" type="Node3D"]
+script = ExtResource("2_sign_bulbs")
+
+[node name="Model" parent="." instance=ExtResource("1_pennaya_yama")]

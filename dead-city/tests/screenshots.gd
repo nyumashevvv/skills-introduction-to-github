@@ -473,7 +473,7 @@ func _subway() -> void:
 	await snap("14_subway_dinamo")
 
 
-## Building signs: neon over the chapter 1 shops, the pharmacy cross, the hospital's roof cross and the metro "М".
+## Building signs (Blender models from models/signs): the chapter 1 street, the hospital, the metro, the mall, the stadium.
 func _signs() -> void:
 	var level := await load_level("res://scenes/levels/level_1_outskirts.tscn")
 	var player := await play(level)
@@ -486,6 +486,11 @@ func _signs() -> void:
 	await snap("signs_shops")
 	await pose(player, Vector3(0, 0, -100), 0, 12)
 	await snap("signs_police")
+	for shot: Array in [["cafe_close", Vector3(-2, 0, -15), 70, 14], ["dvoechka", Vector3(-1, 0, -84), 70, 14],
+			["pharmacy", Vector3(2, 0, -80), -70, 12], ["bar", Vector3(-2, 0, -108), 70, 12],
+			["lombard", Vector3(2, 0, -52), -75, 8], ["hotel", Vector3(0, 0, 4), -40, 22]]:
+		await pose(player, shot[1], shot[2], shot[3])
+		await snap("signs_" + shot[0])
 	level = await load_level("res://scenes/levels/level_3_hospital.tscn")
 	player = await play(level)
 	freeze_zombies()
@@ -493,6 +498,30 @@ func _signs() -> void:
 	player.holder.visible = false
 	await pose(player, Vector3(0, 0, 13), 0, 22)
 	await snap("signs_hospital")
+	await pose(player, Vector3(-28, 0, -19), 80, 12)
+	await snap("signs_metro")
+	level = await load_level("res://scenes/levels/level_3_mall.tscn")
+	player = await play(level)
+	freeze_zombies()
+	level.hud.gameplay.visible = false
+	player.holder.visible = false
+	await pose(player, Vector3(0, 0, 22), 0, 14)
+	await snap("signs_mall_facade")
+	level.get_node("Story/PowerOn").call("fire")
+	await get_tree().create_timer(3.0).timeout
+	for shot: Array in [["mall_west", Vector3(-12, 0, -30), 120, 8], ["mall_east", Vector3(12, 0, -30), -120, 8],
+			["mall_f2", Vector3(-12, 5, -50), 60, 8], ["mall_f3", Vector3(12, 10, -40), -60, 8],
+			["mall_cinema", Vector3(-3, 10, -86.4), -15, 32], ["mall_food", Vector3(0, 5, -90), 0, 8],
+			["mall_arrow", Vector3(2, 0, -26), -60, 4], ["mall_exit", Vector3(-20, 15, -70), 90, 6]]:
+		await pose(player, shot[1], shot[2], shot[3])
+		await snap("signs_" + shot[0])
+	level = await load_level("res://scenes/levels/level_5_stadium.tscn")
+	player = await play(level)
+	freeze_zombies()
+	level.hud.gameplay.visible = false
+	player.holder.visible = false
+	await pose(player, Vector3(0, 0, -30), 0, 14)
+	await snap("signs_dinamo")
 
 
 ## Every ammo pickup in a row, so their looks can be told apart.

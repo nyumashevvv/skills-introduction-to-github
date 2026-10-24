@@ -87,11 +87,14 @@ Linear zombie shooter in six chapters (outskirts, station, mall, hospital, subwa
 - Input map: `godot --headless --path . --script tools/setup_input.gd`.
 - `LevelBuilder.shell` hollows a building's ground floor (walls with door gaps, ceiling, solid storeys above);
   `fancy_door` / `dress_door` give doors the station-entrance look (frame, window, handles, lamp, sign).
-  `neon` (flat glowing sign with a tube frame and light), `blade` (vertical sign sticking out of a facade) and `cross`
-  mark what a building is; neon colours are the `neon_*` materials from `gen_assets.py`.
+  Signs are Blender models (part `signs` in `build_assets.py`: `SignKit` draws 3D letters in the project fonts, light
+  boxes, parody logos and two sets of bulbs `BulbsA` / `BulbsB` into `models/signs/`; `gen_props.signs()` wraps them in
+  `scenes/world/signs/` with `sign_bulbs.gd`, which lights the sets in turn). `LevelBuilder.sign` hangs one on a wall
+  (optionally with its light), `blade_sign` sticks a double-sided one out of a facade. Shop names are parodies
+  ("Двоечка", "Ы.Видео", "Мозгоед"…); the mall maps shop → sign in `SHOP_SIGNS`.
 - The mall (`level_mall`, `level_3_mall.tscn`) is multi-storey: floors at y 0/5/10, roof 15; `slab` cuts floors into 8 m
   tiles (fewer lights per mesh), `ramp` makes walkable escalators/stairs, `railing` closes the atrium edges, `front`
-  builds a shop front (door, windows, neon name, a power lamp inside). `limits/opengl/max_lights_per_object` is 32.
+  builds a shop front (door, windows, the shop's sign, a power lamp inside). `limits/opengl/max_lights_per_object` is 32.
   Power comes from the generator room (ground floor, east wing, `Doors/PowerSwitch` → `PowerOn`), which lights the
   `power_light`s and raises the shutter to the third floor. Shop furniture and the atrium fountain are Blender models
   (part `mall` in `build_assets.py`: carts, mannequins, racks, shelves, arcade cabinets, food stalls…). The roof exit is a

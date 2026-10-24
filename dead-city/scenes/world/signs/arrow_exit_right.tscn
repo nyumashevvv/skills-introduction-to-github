@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/signs/arrow_exit_right.glb" id="1_arrow_exit_right"]
+
+[ext_resource type="Script" path="res://scripts/world/sign_bulbs.gd" id="2_sign_bulbs"]
+
+[node name="ArrowExitRight" type="Node3D"]
+script = ExtResource("2_sign_bulbs")
+
+[node name="Model" parent="." instance=ExtResource("1_arrow_exit_right")]

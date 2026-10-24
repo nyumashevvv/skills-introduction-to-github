@@ -16,6 +16,13 @@ NAV = 'NavigationRegion3D'
 PROP = 'res://scenes/props/{}.tscn'
 VEHICLE = 'res://scenes/world/vehicles/{}.tscn'
 FACING = {'+x': -math.pi / 2, '-x': math.pi / 2, '+z': math.pi, '-z': 0.0}
+# the mall's shops and the Blender sign each one gets (models/signs, built by build_assets.py part "signs")
+SHOP_SIGNS = {'СУПЕРМАРКЕТ': 'tupik', 'ОДЕЖДА': 'gloria_trups', 'АПТЕКА': 'apteka_412', 'ЭЛЕКТРОНИКА': 'y_video',
+              'КОФЕЙНЯ': 'stary_baks', 'ИГРУШКИ': 'detsky_mor', 'ГЕНЕРАТОРНАЯ': 'generator', 'СПОРТ': 'sportmanster',
+              'КНИГИ': 'mozgoed', 'ОБУВЬ': 'karies', 'ЧАСЫ': 'posledny_chas', 'ОХРАНА': 'chop', 'ОПТИКА': 'glaz_almaz',
+              'ЦВЕТЫ': 'venochek', 'СУВЕНИРЫ': 'privet_iz_ada', 'ИГРОВЫЕ АВТОМАТЫ': 'game_over', 'ФОТО': 'foto_pamyatnik',
+              'ТАТУ': 'tatu', 'ДЕТСКАЯ': 'zaykina_polyana', 'ПИЦЦА': 'dohlo_pizza', 'БОУЛИНГ': 'strike', 'ЧАЙ': 'chaihona',
+              'КОСМЕТИКА': 'gniloe_yabloko'}
 
 
 def is_solid(kind):
@@ -154,52 +161,25 @@ class LevelBuilder(Scene):
 
     NEON = {'pink': (1.0, 0.15, 0.55), 'cyan': (0.15, 0.85, 1.0), 'green': (0.2, 1.0, 0.35), 'red': (1.0, 0.08, 0.06),
             'blue': (0.25, 0.4, 1.0), 'yellow': (1.0, 0.75, 0.15), 'white': (0.9, 0.95, 1.0)}
-    FACE_ROT = {'+z': 0.0, '-z': math.pi, '+x': math.pi / 2, '-x': -math.pi / 2}
 
-    def neon(self, text, pos, face, color, font=110, frame=True, flicker=False, light=True, pixel=0.01):
-        """A glowing neon sign on a facade: bright letters over a dark board, a neon tube frame and a coloured light
-        spilling onto the street. face: the way the sign looks ('+x', '-x', '+z', '-z')."""
-        x, y, z = pos
-        c = self.NEON[color]
-        n = {'+z': (0, 0, 1), '-z': (0, 0, -1), '+x': (1, 0, 0), '-x': (-1, 0, 0)}[face]
-        lines = text.split('\n')
-        w = max(len(t) for t in lines) * font * pixel * 0.62 + 0.5
-        h = font * pixel * (1.25 + 1.42 * (len(lines) - 1)) + 0.2
-        along = (lambda a, b, d: (a, b, d)) if face[1] == 'z' else (lambda a, b, d: (d, b, a))
-        self.decor(along(w, h, 0.08), (x - n[0] * 0.02, y, z - n[2] * 0.02), 'dark', cast_shadow=0)
-        if frame:
-            for dy in (-h / 2, h / 2):
-                self.decor(along(w, 0.05, 0.05), (x + n[0] * 0.04, y + dy, z + n[2] * 0.04), f'neon_{color}', cast_shadow=0)
-            for s_ in (-1, 1):
-                o = along(s_ * w / 2, 0, 0)
-                self.decor(along(0.05, h, 0.05), (x + o[0] + n[0] * 0.04, y, z + o[2] + n[2] * 0.04), f'neon_{color}',
-                           cast_shadow=0)
-        self.node(self.uid('Neon'), 'Label3D', 'Decor', position=V3(x + n[0] * 0.06, y, z + n[2] * 0.06),
-                  rotation=V3(0, self.FACE_ROT[face], 0), text=S(text), font_size=font, pixel_size=pixel,
-                  modulate=C(*(min(1.0, k * 1.6) for k in c)), outline_size=10, outline_modulate=C(*c, 0.5))
-        if light:
-            self.omni((x + n[0] * 1.5, y, z + n[2] * 1.5), c, 1.6, 8.0, flicker=flicker)
+    SIGN = 'res://scenes/world/signs/{}.tscn'
 
-    def blade(self, text, wall_x, out, y, z, color, font=80, flicker=False):
-        """A vertical sign hanging out of a facade at wall_x (out: +1 / -1, the way the facade faces), letters stacked
-        top to bottom and facing up the street (+z), so it reads from far away."""
-        w = font * 0.01 * 0.62 + 0.5
-        h = font * 0.01 * (1.25 + 1.42 * (len(text) - 1)) + 0.2
-        cx = wall_x + out * (w / 2 + 0.3)
-        self.neon('\n'.join(text), (cx, y, z), '+z', color, font=font, flicker=flicker)
-        for dy in (-h / 2 + 0.2, h / 2 - 0.2):  # brackets into the wall
-            self.decor((w + 0.3, 0.07, 0.07), (wall_x + out * (w + 0.3) / 2, y + dy, z), 'dark')
+    def sign(self, name, pos, face, color=None, energy=1.6, rng=8.0, flicker=False):
+        """A Blender sign from models/signs (3D letters, logo, running bulbs) with its back at pos, looking along
+        `face`; `color` adds the light it throws on the street."""
+        self.prop(self.SIGN.format(name), pos, FACING[face] or 0.0001, parent='Decor')
+        if color:
+            n = {'+z': (0, 0, 1), '-z': (0, 0, -1), '+x': (1, 0, 0), '-x': (-1, 0, 0)}[face]
+            c = self.NEON.get(color, color) if isinstance(color, str) else color
+            self.omni((pos[0] + n[0] * 1.5, pos[1], pos[2] + n[2] * 1.5), c, energy, rng, flicker=flicker)
 
-    def cross(self, pos, face, mat, size=2.0, depth=0.25):
-        """A glowing cross (hospital, pharmacy) facing `face`; for a sign that sticks out of a wall use depth along it."""
-        x, y, z = pos
-        t = size * 0.32
-        if face[1] == 'z':
-            self.decor((size, t, depth), (x, y, z), mat, cast_shadow=0)
-            self.decor((t, size, depth), (x, y, z), mat, cast_shadow=0)
-        else:
-            self.decor((depth, t, size), (x, y, z), mat, cast_shadow=0)
-            self.decor((depth, size, t), (x, y, z), mat, cast_shadow=0)
+    def blade_sign(self, name, wall_x, out, y, z, reach, color=None):
+        """A double-sided Blender sign hanging out of a wall at wall_x (out: +1 / -1, the way the facade faces); `reach`
+        is how far its centre stands from the wall. Its brackets are built into the model."""
+        self.sign(name, (wall_x + out * reach, y, z), '+z' if out > 0 else '-z')
+        if color:
+            c = self.NEON.get(color, color) if isinstance(color, str) else color
+            self.omni((wall_x + out * reach, y, z), c, 1.2, 7.0)
 
     def clutter(self, kind, pos, rot_y=None):
         """A prop from scenes/props at (x, y, z); random heading unless given."""
@@ -336,7 +316,7 @@ def street_1_backyard(L):
     L.pickup('medkit', (-21.8, 0, -86))
 
     # cafe (x -21..-9, z -10..-26)
-    L.fancy_door('CafeDoor', (-9, 0, -18), 'z', '+x', sign='КАФЕ «ВСТРЕЧА»', sign_color=(1, 0.75, 0.45))
+    L.fancy_door('CafeDoor', (-9, 0, -18), 'z', '+x')
     for i, z in enumerate((-11.0, -11.95, -12.9, -13.85)):
         c(['fridge', 'kitchen_cabinet', 'kitchen_sink', 'kitchen_stove'][i], (-20.4, 0, z), -H)
     c('coffee_machine', (-20.4, 0.95, -11.95), -H)
@@ -356,7 +336,7 @@ def street_1_backyard(L):
     L.zombie('walker', (-14.5, 0, -16.5)); L.zombie('walker', (-18.5, 0, -23.5))
 
     # grocery shop (x -21..-9, z -74..-100): front door on the street, back door into the yard
-    L.fancy_door('ShopDoor', (-9, 0, -80), 'z', '+x', sign='ПРОДУКТЫ', sign_color=(0.5, 0.9, 1.0))
+    L.fancy_door('ShopDoor', (-9, 0, -80), 'z', '+x')
     L.fancy_door('ShopBackDoor', (-21, 0, -95), 'z', '-x', glass=False, sign='ВХОД ДЛЯ ПЕРСОНАЛА', sign_color=(0.9, 0.9, 0.85))
     for x in (-18.0, -14.6):
         for i in range(10):
@@ -378,7 +358,7 @@ def street_1_backyard(L):
         L.zombie(kind, pos)
 
     # pharmacy (x 9..21, z -74..-90); the back office behind a partition hides the revolver
-    L.fancy_door('PharmacyDoor', (9, 0, -82), 'z', '-x', sign='АПТЕКА', sign_color=(0.4, 1.0, 0.55))
+    L.fancy_door('PharmacyDoor', (9, 0, -82), 'z', '-x')
     L.wall_x(16, -74, -85.6, 'hospital_wall', h=4.0, t=0.2); L.wall_x(16, -87.2, -90, 'hospital_wall', h=4.0, t=0.2)
     for x in (10.6, 12.0, 13.4, 14.8):
         L.prop('res://scenes/world/shelf.tscn', (x, 0, -74.5), 0.0)
@@ -715,21 +695,20 @@ def level_1():
         if side > 0:
             L.wall_x(21.5 * side, -66, -74, 'brick_dark', h=8, t=1.0)
     # what each building is, from far down the street: neon over the shops, a pharmacy cross, a bar, a hotel
-    L.neon('КАФЕ', (-8.85, 5.4, -18), '+x', 'pink', font=130, flicker=True)
-    L.blade('КАФЕ', -8.85, 1, 6.0, -12.0, 'pink', font=80)
-    L.neon('ОТКРЫТО', (-8.85, 3.3, -12.5), '+x', 'cyan', font=50, light=False)
-    L.neon('ПРОДУКТЫ', (-8.85, 5.2, -87), '+x', 'cyan', font=120)
-    L.blade('ПРОДУКТЫ', -8.85, 1, 7.4, -76.0, 'cyan', font=60)
-    L.neon('24 ЧАСА', (-8.85, 3.3, -94), '+x', 'yellow', font=60, light=False)
-    L.neon('АПТЕКА', (8.85, 5.2, -84.5), '-x', 'green', font=110)
-    L.decor((1.2, 0.08, 0.08), (8.25, 4.6, -78.6), 'dark')               # bracket holding the cross out of the wall
-    L.cross((7.7, 4.6, -78.6), '+z', 'neon_green', size=1.3, depth=0.2)
-    L.omni((7.4, 4.6, -78.6), (0.2, 1.0, 0.35), 1.6, 8.0)
-    L.neon('БАР', (-8.85, 4.2, -112), '+x', 'red', font=120, flicker=True)
-    L.blade('БАР', -8.85, 1, 5.0, -106.0, 'red', font=80, flicker=True)
-    L.blade('АПТЕКА', 8.85, -1, 7.0, -76.0, 'green', font=60)
-    L.neon('ГОСТИНИЦА', (8.85, 8.6, -4), '-x', 'white', font=100)
-    L.neon('ЛОМБАРД', (8.85, 3.4, -55), '-x', 'yellow', font=70, flicker=True)
+    # (Blender models from models/signs, parodies of the chains everybody knows)
+    L.sign('kofe_haos', (-8.97, 5.4, -18), '+x', 'pink', flicker=True)
+    L.blade_sign('blade_cafe', -9.0, 1, 6.0, -12.0, 1.1, 'pink')
+    L.sign('open_sign', (-8.97, 3.3, -12.5), '+x')
+    L.sign('dvoechka', (-8.97, 5.2, -87), '+x', 'red')
+    L.blade_sign('blade_dvoechka', -9.0, 1, 7.4, -76.0, 1.15, 'red')
+    L.sign('arrow_entrance_left', (-8.97, 3.3, -91.5), '+x')
+    L.sign('apteka_412', (8.97, 5.2, -84.5), '-x', 'green')
+    L.blade_sign('pharmacy_cross', 9.0, -1, 4.6, -78.6, 1.55, 'green')
+    L.sign('pennaya_yama', (-8.97, 4.2, -112), '+x', (1.0, 0.55, 0.1), flicker=True)
+    L.blade_sign('blade_bar', -9.0, 1, 5.0, -106.0, 1.15, (1.0, 0.55, 0.1))
+    L.sign('hotel', (8.97, 8.6, -4), '-x', 'cyan')
+    L.sign('lombard', (8.97, 3.4, -55), '-x', (1.0, 0.7, 0.2), flicker=True)
+    L.blade_sign('pawn_balls', 9.0, -1, 4.3, -51.5, 0.85)
     street_1_backyard(L)
     # start: dead end behind the player
     L.wall_z(Z0 + 0.5, -9, 9, 'concrete', h=3, t=1.0)
@@ -770,14 +749,9 @@ def level_1():
     L.node('EntranceSign', 'Label3D', 'Decor', position=V3(0, 3.75, -129.7), text=S('ВХОД'), font_size=90,
            pixel_size=0.01, modulate=C(0.45, 1.0, 0.55), outline_size=0)
     L.decor((42.2, 0.6, 0.4), (0, 9.7, -129.9), 'police_blue')
-    L.node('Sign', 'Label3D', 'Decor', position=V3(0, 6.5, -129.8), text=S('ПОЛИЦИЯ'), font_size=200,
-           pixel_size=0.01, modulate=C(0.45, 0.65, 1.0), outline_size=0)
+    L.sign('police', (0, 6.5, -129.95), '+z')
     L.omni((0, 6, -128), (0.4, 0.6, 1.0), 2.0, 10, flicker=True)
     L.omni((0, 2.9, -128.2), (1, 0.9, 0.7), 3.0, 9)
-    for dy in (-1.4, 1.4):  # blue neon tube around ПОЛИЦИЯ
-        L.decor((10.4, 0.06, 0.06), (0, 6.5 + dy, -129.7), 'neon_blue', cast_shadow=0)
-    for x in (-5.2, 5.2):
-        L.decor((0.06, 2.86, 0.06), (x, 6.5, -129.7), 'neon_blue', cast_shadow=0)
     for x, mat, col in ((-1.2, 'siren_red', (1, 0.1, 0.1)), (1.2, 'siren_blue', (0.2, 0.3, 1))):  # beacons on the roof edge
         L.decor((1.6, 0.4, 0.5), (x, 10.2, -130.4), mat, cast_shadow=0)
         L.omni((x, 10.8, -129.0), col, 2.5, 12, flicker=True)
@@ -1074,7 +1048,7 @@ def level_3():
         L.omni((sign * 47, 3.5, 0) if horizontal else (0, 3.5, sign * 66), (1, 0.6, 0.4), 1.5, 10, flicker=True)
     # outer wall behind the stands
     L.wall_z(-74, -53, 53, 'concrete', h=8, t=1); L.wall_z(74, -53, 53, 'concrete', h=8, t=1)
-    L.neon('ДИНАМО', (0, 11.3, -73.6), '+z', 'blue', font=500, light=False)  # letters standing on the north wall
+    L.sign('dinamo', (0, 10.8, -74.0), '+z')                                      # letters standing on the north wall
     L.omni((0, 11.3, -68), (0.25, 0.4, 1.0), 4.0, 22)
     L.wall_x(-53.5, -74, 74, 'concrete', h=8, t=1); L.wall_x(53.5, -74, 74, 'concrete', h=8, t=1)
 
@@ -1255,8 +1229,7 @@ def level_mall():
         L.decor((1.2, 2.6, 0.05), (x, 1.3, 0.45), 'glass', cast_shadow=0)
     for x0 in (-28, -18, 8, 18):                                                   # shop windows on the facade
         L.decor((9, 2.8, 0.05), (x0 + 5, 1.8, 0.44), 'window_lit' if x0 in (-18, 8) else 'window_dark', cast_shadow=0)
-    L.neon('ГАЛАКТИКА', (0, 11.5, 0.45), '+z', 'pink', font=220, flicker=True)
-    L.neon('ТОРГОВЫЙ ЦЕНТР', (0, 8.6, 0.45), '+z', 'cyan', font=80, light=False)
+    L.sign('galaktika', (0, 10.6, 0.62), '+z', 'pink', energy=2.5, rng=14.0, flicker=True)
     for y in F[1:]:                                                                # storey bands on the facade
         L.decor((60.8, 0.4, 0.2), (0, y, 0.5), 'dark', cast_shadow=0)
     L.omni((0, 3.5, 2.5), (1, 0.85, 0.6), 1.5, 9)
@@ -1303,7 +1276,7 @@ def level_mall():
         name_ = f'ShopLight{len(shop_lights) + 1}'                                # the main lamp, on with the power
         L.ceiling_lamp(24 * side, zc, y=y + 4.6, energy=1.6, rng=10.0, name=name_, power=True)
         shop_lights.append('Lights/' + name_)
-        L.neon(name, (x - side * 0.16, y + 3.9, zc), '+x' if side < 0 else '-x', color, font=55, light=False)
+        L.sign(SHOP_SIGNS[name], (x - side * 0.17, y + 3.9, zc), '+x' if side < 0 else '-x')
     for y in F:
         for side in (-1, 1):
             for z in (-2, -22, -42, -62, -82):
@@ -1381,8 +1354,8 @@ def level_mall():
     c('toolbox', (25, 0, -66)); c('car_battery', (26, 0, -78)); c('jerrycan', (29, 0, -64)); c('jerrycan', (29, 0, -64.6))
     c('barrel_open', (29, 0, -80)); c('fire_extinguisher', (19.5, 0, -64))
     for z in (-20, -40):                                                           # signs to the generator
-        L.neon('ГЕНЕРАТОРНАЯ >>>', (10.2, 3.9, z), '-x', 'red', font=40, light=False)
-    L.neon('ГЕНЕРАТОРНАЯ: ВОСТОЧНОЕ КРЫЛО >>>', (14, 3.9, -2.4), '+z', 'red', font=36, light=False)
+        L.sign('arrow_generator_left', (10.25, 3.9, z), '-x')
+    L.sign('arrow_generator_right', (14, 3.9, -2.4), '+z')
     # first floor: sport, books, shoes, watches (west); security, optics, flowers, souvenirs (east); food court (north)
     front(F[1], -1, -2, -22, 'СПОРТ', 'cyan')
     c('weapon_rack', (-29.2, F[1], -6), Wf); c('weapon_rack', (-29.2, F[1], -10), Wf)
@@ -1433,7 +1406,7 @@ def level_mall():
             c('table_round', (tx, F[1], tz)); c('chair_cushion', (tx + 1, F[1], tz), E); c('chair_cushion', (tx - 1, F[1], tz), Wf)
     for tx, tz in [(-22, -91), (22, -91), (-26, -92), (26, -92)]:
         c('table_round', (tx, F[1], tz)); c('chair_fallen', (tx + 1, F[1], tz))
-    L.neon('ФУД-КОРТ', (0, F[1] + 3.9, -99.75), '+z', 'yellow', font=90)
+    L.sign('food_court', (0, F[1] + 3.9, -99.98), '+z', 'yellow')
     # second floor: arcade, photo, tattoo, kids' room / pizza, bowling, tea, cosmetics; the cinema in the north
     for side, names in ((-1, ['ИГРОВЫЕ АВТОМАТЫ', 'ФОТО', 'ТАТУ', 'ДЕТСКАЯ']), (1, ['ПИЦЦА', 'БОУЛИНГ', 'ЧАЙ', 'КОСМЕТИКА'])):
         for i, z0 in enumerate((-2, -22, -42, -62)):
@@ -1465,7 +1438,7 @@ def level_mall():
     L.wall_z(-88, -20, -2.2, W, h=H, y0=F[2]); L.wall_z(-88, 2.2, 20, W, h=H, y0=F[2])
     L.blk(W, (4.4, H - 3.2, 0.3), (0, F[2] + 3.2 + (H - 3.2) / 2, -88))
     L.wall_x(-20, -88, -100, W, h=H, y0=F[2]); L.wall_x(20, -88, -100, W, h=H, y0=F[2])
-    L.neon('КИНО', (0, F[2] + 3.9, -87.8), '+z', 'red', font=110, flicker=True)
+    L.sign('cinema', (0, F[2] + 3.85, -87.83), '+z', 'red', flicker=True)
     L.decor((34, 3.6, 0.1), (0, F[2] + 2.6, -99.75), 'screen_glow', cast_shadow=0)
     L.omni((0, F[2] + 2.5, -97), (0.8, 0.85, 1.0), 1.4, 16)
     for z in (-91.5, -94):
@@ -1500,8 +1473,8 @@ def level_mall():
     for x in (-36, -24):
         L.decor((0.12, 0.05, 4), (x, 15.03, -68), 'paint_yellow', cast_shadow=0)
     L.decor((5.6, 0.25, 0.25), (-30.2, 18.6, -68), 'dark', cast_shadow=0)
-    L.neon('ВЫЕЗД', (-30.0, 17.9, -68), '+x', 'green', font=90)
-    L.neon('К БОЛЬНИЦЕ', (-39, 3.0, -104.0), '+z', 'green', font=70)
+    L.sign('arrow_exit_right', (-30.0, 17.9, -68), '+x', 'green')
+    L.sign('to_hospital', (-39, 3.0, -104.0), '+z', 'green')
     L.floor('asphalt', -41.2, -36.8, -104, -112)                                   # the lane beyond the gate
     L.wall_x(-41.6, -104.5, -112.5, 'concrete', h=4, t=0.8); L.wall_x(-36.4, -104.5, -112.5, 'concrete', h=4, t=0.8)
     L.wall_z(-112.4, -41.6, -36.4, 'concrete', h=4, t=0.8)
@@ -1542,7 +1515,7 @@ def level_mall():
         ang = a * math.tau / 8 + 0.4
         c('potted_plant', (math.cos(ang) * 5.3, 0, -50 + math.sin(ang) * 5.3))
     L.blk('wood', (4, 1.1, 1.2), (0, 0.55, -20), name='InfoDesk')
-    L.neon('ИНФОРМАЦИЯ', (0, 2.4, -19.3), '+z', 'blue', font=40, light=False)
+    L.sign('info', (0, 2.4, -19.3), '+z')
     L.scatter(['trash_bags', 'newspaper', 'papers', 'suitcase', 'backpack', 'trash_can', 'box_open'], -9, 9, -17, -83, 22)
     L.scatter(['papers', 'trash_bags', 'chair_fallen', 'newspaper'], -17, -11, -1, -99, 10, y=F[1])
     L.scatter(['papers', 'trash_bags', 'chair_fallen', 'newspaper'], 11, 17, -1, -99, 10, y=F[1])
@@ -1649,8 +1622,8 @@ def level_hospital():
             if row == 0 and abs(x) < 6:
                 continue
             L.decor((1.3, 1.5, 0.06), (x, y, 0.19), 'window_lit' if L.rnd.random() < 0.25 else 'window_dark', cast_shadow=0)
-    L.neon('БОЛЬНИЦА', (0, 6.0, 0.15), '+z', 'white', font=130)
-    L.cross((0, 15.2, -1.5), '+z', 'neon_red', size=3.6, depth=0.35)
+    L.sign('hospital', (0, 6.0, 0.15), '+z', 'white')
+    L.sign('roof_cross', (0, 15.2, -1.7), '+z')
     L.decor((0.5, 1.6, 0.5), (0, 13.2, -1.5), 'dark')
     L.omni((0, 15.2, 1.0), (1.0, 0.1, 0.08), 3.0, 18)
     L.decor((0.06, 0.6, 2.6), (-23.8, 3.4, -16.5), 'siren_red', cast_shadow=0)  # EXIT sign
@@ -1658,11 +1631,9 @@ def level_hospital():
            text=S('ВЫХОД'), font_size=64, pixel_size=0.006, modulate=C(0.4, 1.0, 0.5))
     # metro entrance in the yard's west wall
     L.decor((0.1, 2.6, 2.6), (-35.95, 1.3, -17), 'dark')
-    L.node('MetroSign', 'Label3D', 'Decor', position=V3(-35.85, 3.2, -17), rotation=V3(0, math.pi / 2, 0),
-           text=S('М  МЕТРО'), font_size=80, pixel_size=0.008, modulate=C(1.0, 0.25, 0.2))
+    L.sign('metro', (-35.97, 4.3, -17), '+x', 'red')
     L.omni((-34.5, 3.0, -17), (1, 0.5, 0.4), 1.2, 6)
-    L.decor((0.2, 0.9, 0.2), (-36.2, 3.95, -17), 'dark')
-    L.neon('М', (-36.0, 5.0, -17), '+x', 'red', font=180)
+    L.sign('metro_pylon', (-34.6, 0, -21.5), '+x')
     L.dress_door((-24, 0, -16.5), 'z', '+x', width=2.0)
     L.door('FireDoor', (0.3, 3.0, 2.0), (-24, 1.5, -16.5), 'door_steel', player_can_open=False,
            locked_message='Электрозамок — нет питания', swing_degrees=100.0, open_time=1.0)
@@ -2025,7 +1996,7 @@ def ending_world():
             L.blk('stands', (106, h, d), (0, h / 2, sz * (61 + d / 2 + i * d)))
     L.wall_z(-74, -53, 53, 'concrete', h=8, t=1); L.wall_z(74, -53, 53, 'concrete', h=8, t=1)
     L.wall_x(-53, -74, 74, 'concrete', h=8, t=1); L.wall_x(53, -74, 74, 'concrete', h=8, t=1)
-    L.neon('ДИНАМО', (0, 11.3, -73.6), '+z', 'blue', font=500, light=False)
+    L.sign('dinamo', (0, 10.8, -74.0), '+z')
     for x, z in [(-38, -58), (38, -58), (-38, 58), (38, 58)]:
         L.prop('res://scenes/world/floodlight_tower.tscn', (x, 0, z), math.atan2(x, z), parent='Decor')
     for x in (-4, 4):  # the helipad

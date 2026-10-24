@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/signs/kofe_haos.glb" id="1_kofe_haos"]
+
+[ext_resource type="Script" path="res://scripts/world/sign_bulbs.gd" id="2_sign_bulbs"]
+
+[node name="KofeHaos" type="Node3D"]
+script = ExtResource("2_sign_bulbs")
+
+[node name="Model" parent="." instance=ExtResource("1_kofe_haos")]

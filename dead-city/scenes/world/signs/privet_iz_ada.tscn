@@ -1,0 +1,10 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/signs/privet_iz_ada.glb" id="1_privet_iz_ada"]
+
+[ext_resource type="Script" path="res://scripts/world/sign_bulbs.gd" id="2_sign_bulbs"]
+
+[node name="PrivetIzAda" type="Node3D"]
+script = ExtResource("2_sign_bulbs")
+
+[node name="Model" parent="." instance=ExtResource("1_privet_iz_ada")]

@@ -1987,6 +1987,611 @@ def export_world_model(objs, root, path):
     root.matrix_world = saved
 
 
+# ---------------------------------------------------------------- signs
+# Shop and street signs (part "signs"): 3D channel letters, light boxes, marquee bulbs and parody logos. Each one is
+# drawn in a flat "sign plane" (u to the viewer's right, v up, d towards the viewer, the back at d = 0, the centre at
+# u = v = 0) and exported to models/signs/<name>.glb as three meshes: Sign, plus BulbsA / BulbsB, which
+# scripts/world/sign_bulbs.gd lights in turn (a chasing marquee). The front looks along Blender +Y (Godot -Z), like
+# the wall props placed with FACING in gen_levels.py.
+
+GLOW = dict(pink=(1.0, 0.2, 0.6), cyan=(0.2, 0.9, 1.0), yellow=(1.0, 0.82, 0.2), green=(0.25, 1.0, 0.35),
+            red=(1.0, 0.12, 0.08), blue=(0.2, 0.45, 1.0), white=(1.0, 0.96, 0.88), orange=(1.0, 0.45, 0.08),
+            gold=(1.0, 0.68, 0.18), purple=(0.7, 0.25, 1.0), lime=(0.6, 1.0, 0.15), amber=(1.0, 0.55, 0.1))
+
+
+class SignKit(Kit):
+    def __init__(self):
+        super().__init__(0)
+        self.bulbs = ([], [])
+        self.flip = False
+        self.fonts = {k: bpy.data.fonts.load(os.path.join(PROJECT, 'fonts', f))
+                      for k, f in (('russo', 'RussoOne-Regular.ttf'), ('oswald', 'Oswald.ttf'))}
+        self.dark = material('SignDark', (0.035, 0.035, 0.04), 0.3, 0.5)
+        self.metal = material('SignMetal', (0.5, 0.51, 0.53), 0.85, 0.3)
+        self.socket = material('SignSocket', (0.1, 0.09, 0.08), 0.6, 0.4)
+        self.bulb_mat = emissive('SignBulb', (1.0, 0.78, 0.42), 9.0)
+
+    # -- colours
+    def glow(self, c, s=4.0):
+        rgb = GLOW[c] if isinstance(c, str) else c
+        return emissive(f'Glow_{rgb[0]:.2f}_{rgb[1]:.2f}_{rgb[2]:.2f}_{s:.1f}', rgb, s)
+
+    def paint(self, c, metallic=0.4):
+        rgb = GLOW[c] if isinstance(c, str) else c
+        return material(f'Paint_{rgb[0]:.2f}_{rgb[1]:.2f}_{rgb[2]:.2f}', tuple(k * 0.45 for k in rgb), metallic, 0.4)
+
+    # -- geometry in the sign plane
+    def P(self, u, v, d):
+        if self.flip:  # the back face of a double-sided (blade) sign
+            u, d = -u, -d
+        return (-u, d, v)
+
+    def sbox(self, w, h, depth, u, v, d, mat, bevel=0.0, roll=0.0):
+        """A box w wide and h high whose back sits at d (it sticks out `depth` towards the viewer)."""
+        return self.box((w, depth, h), self.P(u, v, d + depth / 2), mat, rot=(0, -roll if not self.flip else roll, 0),
+                        bevel=bevel)
+
+    def disc(self, r, depth, u, v, d, mat, verts=32):
+        return self.cyl(r, depth, self.P(u, v, d + depth / 2), mat, rot=(math.pi / 2, 0, 0), verts=verts)
+
+    def sball(self, r, u, v, d, mat, su=1.0, sv=1.0, sd=1.0):
+        return self.ball(r, self.P(u, v, d), mat, scale=(su, sd, sv))
+
+    def ring(self, r, t, u, v, d, mat, tilt=0.0):
+        bpy.ops.mesh.primitive_torus_add(major_radius=r, minor_radius=t, major_segments=40, minor_segments=8,
+                                         location=self.P(u, v, d), rotation=(math.pi / 2 + tilt, 0, 0))
+        o = bpy.context.object
+        o.data.materials.append(mat)
+        self.parts.append(o)
+        return o
+
+    def prism(self, pts, depth, u, v, d, mat, scale=1.0, roll=0.0):
+        """A flat 2D outline (points in the sign plane, around (u, v)) pushed out `depth` towards the viewer."""
+        cr, sr = math.cos(roll), math.sin(roll)
+        pts = [((x * cr - y * sr) * scale, (x * sr + y * cr) * scale) for x, y in pts]
+        n = len(pts)
+        verts = [self.P(u + x, v + y, d + dd) for dd in (0.0, depth) for x, y in pts]
+        faces = [list(range(n - 1, -1, -1)), list(range(n, 2 * n))] + \
+                [[i, (i + 1) % n, n + (i + 1) % n, n + i] for i in range(n)]
+        me = bpy.data.meshes.new('Prism')
+        me.from_pydata(verts, [], faces)
+        bm = bmesh.new()
+        bm.from_mesh(me)
+        bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+        bm.to_mesh(me)
+        bm.free()
+        me.materials.append(mat)
+        o = bpy.data.objects.new('Prism', me)
+        bpy.context.collection.objects.link(o)
+        self.parts.append(o)
+        return o
+
+    def text(self, s, h, u, v, d, face, side=None, depth=0.1, font='russo', max_w=None, spacing=1.0, roll=0.0):
+        """Extruded letters h high (the whole block) centred on (u, v); `face` on the front, `side` round the edges.
+        Returns the width they took."""
+        cu = bpy.data.curves.new('Text', 'FONT')
+        cu.body = s
+        cu.font = self.fonts[font]
+        cu.align_x, cu.align_y = 'CENTER', 'CENTER'
+        cu.extrude = depth / 2
+        cu.space_character = spacing
+        cu.space_line = 0.85
+        o = bpy.data.objects.new('Text', cu)
+        bpy.context.collection.objects.link(o)
+        bpy.ops.object.select_all(action='DESELECT')
+        o.select_set(True)
+        bpy.context.view_layer.objects.active = o
+        bpy.ops.object.convert(target='MESH')
+        o = bpy.context.view_layer.objects.active
+        me = o.data
+        xs = [p.co.x for p in me.vertices]
+        ys = [p.co.y for p in me.vertices]
+        cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+        k = h / (max(ys) - min(ys))
+        if max_w and (max(xs) - min(xs)) * k > max_w:
+            k = max_w / (max(xs) - min(xs))
+        cr, sr = math.cos(roll), math.sin(roll)
+        for p in me.vertices:
+            x, y = (p.co.x - cx) * k, (p.co.y - cy) * k
+            p.co = self.P(u + x * cr - y * sr, v + x * sr + y * cr, d + p.co.z + depth / 2)
+        me.update()
+        me.materials.append(face)
+        me.materials.append(side or self.dark)
+        for f in me.polygons:
+            f.material_index = 0 if abs(f.normal.y) > 0.7 else 1
+        self.parts.append(o)
+        return (max(xs) - min(xs)) * k
+
+    # -- bulbs
+    def bulb(self, u, v, d, phase=None, r=0.05):
+        if phase is None:
+            phase = (len(self.bulbs[0]) + len(self.bulbs[1])) % 2
+        self.disc(r * 0.9, 0.04, u, v, d, self.socket, verts=8)
+        bpy.ops.mesh.primitive_uv_sphere_add(segments=8, ring_count=6, radius=r, location=self.P(u, v, d + 0.04 + r * 0.6))
+        o = bpy.context.object
+        o.data.materials.append(self.bulb_mat)
+        self.bulbs[phase].append(o)
+
+    def bulb_frame(self, w, h, u, v, d, step=0.28, r=0.05):
+        nu, nv = max(2, round(w / step)), max(1, round(h / step))
+        pts = [(-w / 2 + w * i / nu, -h / 2) for i in range(nu)] + [(w / 2, -h / 2 + h * i / nv) for i in range(nv)] + \
+              [(w / 2 - w * i / nu, h / 2) for i in range(nu)] + [(-w / 2, h / 2 - h * i / nv) for i in range(nv)]
+        for i, (a, b) in enumerate(pts):
+            self.bulb(u + a, v + b, d, i % 2, r)
+
+    def bulb_line(self, u0, v0, u1, v1, d, step=0.28, r=0.05, phase=None):
+        n = max(1, round(math.hypot(u1 - u0, v1 - v0) / step))
+        for i in range(n + 1):
+            self.bulb(u0 + (u1 - u0) * i / n, v0 + (v1 - v0) * i / n, d, i % 2 if phase is None else phase, r)
+
+    def bulb_arrow(self, u, v, d, length, height, direction=1, chevrons=4, r=0.055):
+        """Chevrons of bulbs pointing along `direction` (+1: to the viewer's right), lit in turn so they run."""
+        gap = length / chevrons
+        for c in range(chevrons):
+            tip = u + direction * (-length / 2 + gap * (c + 0.8))
+            for j in range(-2, 3):
+                self.bulb(tip - direction * abs(j) * height * 0.22, v + j * height / 4, d, c % 2, r)
+
+    # -- boards
+    def board(self, w, h, mat=None, depth=0.14, edge=None, d=0.0):
+        self.sbox(w, h, depth, 0, 0, d, mat or self.dark, bevel=0.02)
+        if edge is not None:
+            t = 0.06
+            for vv in (-h / 2, h / 2):
+                self.sbox(w + t, t, depth + 0.04, 0, vv, d, edge)
+            for uu in (-w / 2, w / 2):
+                self.sbox(t, h + t, depth + 0.04, uu, 0, d, edge)
+        return d + depth
+
+    def export(self, name):
+        objs = []
+        for gname, items in (('Sign', self.parts), ('BulbsA', self.bulbs[0]), ('BulbsB', self.bulbs[1])):
+            if not items:
+                continue
+            bpy.ops.object.select_all(action='DESELECT')
+            for o in items:
+                o.select_set(True)
+            bpy.context.view_layer.objects.active = items[0]
+            bpy.ops.object.join()
+            o = bpy.context.view_layer.objects.active
+            o.name = gname
+            objs.append(o)
+        export_glb(os.path.join(PROJECT, 'models', 'signs', name + '.glb'), objs)
+
+
+# ---- logos: each drawn round (u, v), about s high, with its back at d
+def star_pts(r=1.0, inner=0.45, n=5):
+    return [((r if i % 2 == 0 else r * inner) * math.sin(i * math.pi / n), (r if i % 2 == 0 else r * inner) * math.cos(i * math.pi / n))
+            for i in range(2 * n)]
+
+
+def ellipse_pts(a, b, n=24, a0=0.0, a1=2 * math.pi):
+    return [(a * math.cos(a0 + (a1 - a0) * i / n), b * math.sin(a0 + (a1 - a0) * i / n)) for i in range(n)]
+
+
+CROSS = [(-0.17, 0.5), (0.17, 0.5), (0.17, 0.17), (0.5, 0.17), (0.5, -0.17), (0.17, -0.17), (0.17, -0.5), (-0.17, -0.5),
+         (-0.17, -0.17), (-0.5, -0.17), (-0.5, 0.17), (-0.17, 0.17)]
+HEART = [(0.5 * math.sin(t) ** 3, 0.4 * math.cos(t) - 0.16 * math.cos(2 * t) - 0.06 * math.cos(3 * t) - 0.03 * math.cos(4 * t))
+         for t in [i * 2 * math.pi / 32 for i in range(32)]]
+SHIELD = [(-0.42, 0.5), (0.42, 0.5), (0.42, 0.05), (0.3, -0.25), (0.0, -0.5), (-0.3, -0.25), (-0.42, 0.05)]
+BOLT = [(0.1, 0.5), (-0.3, -0.05), (-0.02, -0.05), (-0.12, -0.5), (0.32, 0.08), (0.04, 0.08), (0.22, 0.5)]
+TOOTH = [(-0.4, 0.3), (-0.3, 0.48), (-0.1, 0.42), (0.0, 0.36), (0.1, 0.42), (0.3, 0.48), (0.4, 0.3), (0.36, 0.0),
+         (0.26, -0.45), (0.14, -0.48), (0.06, -0.1), (-0.06, -0.1), (-0.14, -0.48), (-0.26, -0.45), (-0.36, 0.0)]
+LEAF = [(0.0, -0.5), (0.25, -0.3), (0.32, 0.0), (0.2, 0.3), (0.0, 0.5), (-0.2, 0.3), (-0.32, 0.0), (-0.25, -0.3)]
+ARROW = [(-0.5, 0.12), (0.15, 0.12), (0.15, 0.3), (0.5, 0.0), (0.15, -0.3), (0.15, -0.12), (-0.5, -0.12)]
+DIAMOND = [(0, 0.5), (0.5, 0), (0, -0.5), (-0.5, 0)]
+
+
+def logo(k, kind, u, v, d, s):
+    g, p = k.glow, k.paint
+    if kind == 'leaf2':      # Двоечка: a red 2 on a leaf in a green ring
+        k.disc(s * 0.5, 0.06, u, v, d, g('green', 2.5))
+        k.disc(s * 0.43, 0.08, u, v, d, g('white', 1.5))
+        k.prism(LEAF, 0.05, u - s * 0.12, v, d + 0.08, g('lime', 2.5), scale=s * 0.8, roll=-0.5)
+        k.text('2', s * 0.7, u + s * 0.05, v, d + 0.1, g('red', 4.0), p('red'), depth=0.08)
+    elif kind == 'deadend':  # Тупик: the blue "dead end" road sign
+        k.sbox(s, s, 0.06, u, v, d, g('blue', 1.6), bevel=0.03)
+        k.sbox(s * 0.16, s * 0.6, 0.04, u, v - s * 0.12, d + 0.06, g('white', 3.0))
+        k.sbox(s * 0.6, s * 0.16, 0.04, u, v + s * 0.22, d + 0.06, g('red', 4.0))
+    elif kind == 'cup':      # a coffee cup with steam
+        k.cyl(s * 0.28, s * 0.42, k.P(u, v - s * 0.08, d + s * 0.3), g('white', 2.0), r2=s * 0.22, verts=20)
+        k.ring(s * 0.1, s * 0.03, u + s * 0.3, v - s * 0.06, d + s * 0.3, g('white', 2.0))
+        k.cyl(s * 0.4, 0.03, k.P(u, v - s * 0.3, d + s * 0.3), k.metal, verts=20)  # the saucer
+        for i, du in enumerate((-0.1, 0.0, 0.1)):
+            k.prism(ellipse_pts(0.04, 0.16, 10), 0.03, u + du * s, v + s * 0.32, d + s * 0.3, g('white', 1.2), scale=s,
+                    roll=0.3 * (i - 1))
+    elif kind == 'mug':      # a frothy beer mug
+        k.cyl(s * 0.25, s * 0.6, k.P(u, v - s * 0.08, d + s * 0.28), g('amber', 3.0), verts=16)
+        k.ring(s * 0.14, s * 0.04, u + s * 0.3, v - s * 0.08, d + s * 0.28, k.glow('amber', 2.0))
+        for du, dv in ((-0.14, 0.24), (0.0, 0.3), (0.14, 0.24), (0.07, 0.36), (-0.08, 0.34)):
+            k.sball(s * 0.12, u + du * s, v + dv * s, d + s * 0.28, g('white', 2.5))
+    elif kind == 'cross':
+        k.prism(CROSS, 0.14, u, v, d, g('green', 4.0), scale=s)
+    elif kind == 'redcross':
+        k.prism(CROSS, 0.2, u, v, d, g('red', 4.0), scale=s)
+    elif kind == 'star':
+        k.prism(star_pts(0.5), 0.08, u, v, d, g('gold', 4.0), scale=s)
+    elif kind == 'tooth':
+        k.prism(TOOTH, 0.12, u, v, d, g('gold', 3.5), scale=s)
+    elif kind == 'shield':
+        k.prism(SHIELD, 0.08, u, v, d, g('blue', 2.0), scale=s)
+        k.prism([(x * 0.9, y * 0.9) for x, y in SHIELD], 0.1, u, v, d, k.glow('gold', 1.0), scale=s * 0.85)
+        k.prism(star_pts(0.5), 0.06, u, v + s * 0.05, d + 0.1, g('gold', 4.0), scale=s * 0.5)
+    elif kind == 'planet':
+        k.sball(s * 0.32, u, v, d + s * 0.35, g('purple', 2.5))
+        k.ring(s * 0.5, s * 0.035, u, v, d + s * 0.35, g('cyan', 4.0), tilt=1.1)
+    elif kind == 'yvideo':   # Ы.Видео: a red square with a white Ы
+        k.sbox(s, s, 0.08, u, v, d, g('red', 3.0), bevel=0.03)
+        k.text('Ы', s * 0.62, u, v, d + 0.08, g('white', 3.0), depth=0.05)
+    elif kind == 'buck':     # Старый Бакс: a green roundel with a dollar
+        k.disc(s * 0.5, 0.06, u, v, d, g('green', 2.0))
+        k.ring(s * 0.42, s * 0.03, u, v, d + 0.08, g('white', 3.0))
+        k.text('$', s * 0.55, u, v, d + 0.06, g('white', 3.5), depth=0.05)
+    elif kind == 'balloons':
+        for du, dv, c in ((-0.2, 0.12, 'red'), (0.0, 0.22, 'yellow'), (0.2, 0.1, 'blue')):
+            k.sball(s * 0.16, u + du * s, v + dv * s, d + s * 0.2, g(c, 3.0), sv=1.25)
+            k.sbox(0.012, s * 0.42, 0.012, u + du * s * 0.5, v - s * 0.2, d + s * 0.2, k.metal, roll=du * 1.2)
+    elif kind == 'heart':
+        k.prism(HEART, 0.1, u, v, d, g('red', 4.0), scale=s)
+        k.sbox(s * 1.1, s * 0.05, 0.04, u, v, d + 0.12, k.metal, roll=-0.4)
+    elif kind == 'clock':
+        k.disc(s * 0.45, 0.06, u, v, d, g('white', 2.0))
+        k.ring(s * 0.45, s * 0.04, u, v, d + 0.04, k.metal)
+        k.sbox(s * 0.04, s * 0.32, 0.03, u + s * 0.06, v + s * 0.12, d + 0.07, k.dark, roll=-0.4)
+        k.sbox(s * 0.05, s * 0.24, 0.03, u - s * 0.09, v + s * 0.04, d + 0.07, k.dark, roll=1.2)
+        k.sbox(s * 0.015, s * 0.38, 0.02, u, v - s * 0.1, d + 0.1, g('red', 4.0), roll=0.3)
+    elif kind == 'eye':
+        k.sball(s * 0.5, u, v, d + 0.05, g('white', 2.0), sv=0.55, sd=0.25)
+        k.disc(s * 0.2, 0.05, u, v, d + 0.12, g('cyan', 3.0))
+        k.disc(s * 0.09, 0.06, u, v, d + 0.14, k.dark)
+    elif kind == 'book':
+        for side in (-1, 1):
+            k.sbox(s * 0.42, s * 0.6, 0.05, u + side * s * 0.21, v, d + 0.04, g('white', 2.0), roll=side * -0.12)
+        k.prism(ellipse_pts(0.14, 0.12, 12, 0, math.pi), 0.08, u + s * 0.3, v + s * 0.3, d + 0.03, k.dark, scale=s)
+    elif kind == 'ball':
+        k.sball(s * 0.45, u, v, d + s * 0.3, g('white', 2.0))
+        for a in range(5):
+            k.disc(s * 0.1, 0.03, u + math.cos(a * 1.257) * s * 0.26, v + math.sin(a * 1.257) * s * 0.26, d + s * 0.68,
+                   k.dark, verts=5)
+    elif kind == 'wreath':
+        k.ring(s * 0.36, s * 0.1, u, v, d + 0.08, g('green', 1.5))
+        for a in range(8):
+            k.sball(s * 0.07, u + math.cos(a * 0.785) * s * 0.36, v + math.sin(a * 0.785) * s * 0.36, d + 0.18, g('red', 3.5))
+        k.sbox(s * 0.12, s * 0.5, 0.03, u - s * 0.12, v - s * 0.45, d + 0.1, k.dark, roll=0.25)
+        k.sbox(s * 0.12, s * 0.5, 0.03, u + s * 0.12, v - s * 0.45, d + 0.1, k.dark, roll=-0.25)
+    elif kind == 'horns':
+        for side in (-1, 1):
+            o = k.cyl(s * 0.13, s * 0.55, k.P(u + side * s * 0.2, v, d + 0.15), g('red', 3.5), r2=0.0, verts=12)
+            o.rotation_euler = (0, side * 0.45 * (1 if not k.flip else -1), 0)
+    elif kind == 'joystick':
+        k.sbox(s * 0.7, s * 0.25, s * 0.35, u, v - s * 0.3, d, k.dark, bevel=0.02)
+        k.cyl(s * 0.04, s * 0.45, k.P(u, v, d + s * 0.18), k.metal)
+        k.sball(s * 0.14, u, v + s * 0.25, d + s * 0.18, g('red', 4.0))
+        for du, c in ((0.2, 'yellow'), (-0.2, 'cyan')):
+            k.disc(s * 0.06, 0.04, u + du * s, v - s * 0.3, d + s * 0.35, g(c, 4.0))
+    elif kind == 'camera':
+        k.sbox(s * 0.8, s * 0.5, 0.2, u, v - s * 0.05, d, k.dark, bevel=0.03)
+        k.disc(s * 0.18, 0.12, u, v - s * 0.05, d + 0.2, k.metal)
+        k.disc(s * 0.12, 0.14, u, v - s * 0.05, d + 0.2, g('cyan', 2.0))
+        k.sbox(s * 0.2, s * 0.1, 0.06, u + s * 0.25, v + s * 0.25, d + 0.1, g('white', 6.0))
+    elif kind == 'bunny':
+        k.sball(s * 0.25, u, v - s * 0.15, d + 0.15, g('white', 2.0))
+        for side in (-1, 1):
+            k.sball(s * 0.08, u + side * s * 0.12, v + s * 0.25, d + 0.12, g('pink', 3.0), sv=3.0)
+        for side in (-1, 1):
+            k.disc(s * 0.04, 0.03, u + side * s * 0.08, v - s * 0.12, d + 0.38, k.dark)
+    elif kind == 'pizza':
+        k.prism([(-0.45, 0.35), (0.45, 0.35), (0.0, -0.5)], 0.08, u, v, d, g('yellow', 3.0), scale=s)
+        k.sbox(s * 0.95, s * 0.12, 0.1, u, v + s * 0.38, d, g('amber', 2.5), bevel=0.02)
+        for du, dv in ((-0.15, 0.15), (0.15, 0.18), (0.0, -0.12)):
+            k.disc(s * 0.08, 0.03, u + du * s, v + dv * s, d + 0.08, g('red', 3.0))
+    elif kind == 'pin':
+        k.sball(s * 0.12, u, v + s * 0.3, d + 0.15, g('white', 2.5))
+        k.sball(s * 0.2, u, v - s * 0.18, d + 0.15, g('white', 2.5), sv=1.4)
+        k.cyl(s * 0.08, s * 0.25, k.P(u, v + s * 0.1, d + 0.15), g('white', 2.5))
+        k.cyl(s * 0.09, s * 0.05, k.P(u, v + s * 0.1, d + 0.15), g('red', 4.0))
+    elif kind == 'teapot':
+        k.sball(s * 0.3, u, v - s * 0.08, d + 0.2, g('cyan', 2.5), sv=0.8)
+        o = k.cyl(s * 0.07, s * 0.35, k.P(u - s * 0.36, v - s * 0.0, d + 0.2), g('cyan', 2.5), r2=s * 0.03)
+        o.rotation_euler = (0, -0.9 if not k.flip else 0.9, 0)
+        k.ring(s * 0.12, s * 0.03, u + s * 0.32, v - s * 0.05, d + 0.2, g('cyan', 2.0))
+        k.sball(s * 0.08, u, v + s * 0.26, d + 0.2, g('white', 3.0))
+    elif kind == 'apple':
+        k.sball(s * 0.36, u, v - s * 0.06, d + 0.2, g((0.55, 0.65, 0.12), 2.5), sv=0.9)
+        k.prism(LEAF, 0.03, u + s * 0.12, v + s * 0.36, d + 0.2, g('green', 3.0), scale=s * 0.35, roll=-0.8)
+        k.cyl(s * 0.045, s * 0.3, k.P(u - s * 0.24, v + s * 0.05, d + s * 0.45), g('pink', 3.0)).rotation_euler = (0.5, 0, 0)
+    elif kind == 'forkknife':
+        k.sbox(s * 0.07, s * 0.95, 0.04, u - s * 0.12, v, d, k.metal, roll=0.35)
+        k.sbox(s * 0.11, s * 0.95, 0.04, u + s * 0.12, v, d, k.metal, roll=-0.35)
+    elif kind == 'reel':
+        k.disc(s * 0.48, 0.06, u, v, d, k.metal)
+        k.disc(s * 0.1, 0.08, u, v, d, k.dark)
+        for a in range(5):
+            k.disc(s * 0.11, 0.08, u + math.cos(a * 1.257 + 0.3) * s * 0.27, v + math.sin(a * 1.257 + 0.3) * s * 0.27, d,
+                   k.dark)
+    elif kind == 'bolt':
+        k.sbox(s * 0.9, s * 0.9, 0.04, u, v, d, k.dark, bevel=0.02)
+        k.prism(BOLT, 0.1, u, v, d + 0.04, g('yellow', 5.0), scale=s * 0.85)
+    elif kind == 'info':
+        k.disc(s * 0.5, 0.06, u, v, d, g('blue', 2.5))
+        k.text('i', s * 0.65, u, v, d + 0.06, g('white', 3.5), depth=0.05)
+    elif kind == 'sneaker':
+        k.prism([(-0.5, -0.2), (0.5, -0.2), (0.5, -0.05), (0.2, 0.05), (0.0, 0.3), (-0.4, 0.3), (-0.5, 0.0)], 0.12, u, v, d,
+                g('white', 2.0), scale=s)
+        k.sbox(s * 1.0, s * 0.08, 0.14, u, v - s * 0.2, d, g('red', 3.5))
+    elif kind == 'diamond_d':  # Динамо: a blue rhombus with a white Д
+        k.prism(DIAMOND, 0.12, u, v, d, g('blue', 2.5), scale=s)
+        k.text('Д', s * 0.42, u, v, d + 0.12, g('white', 4.0), depth=0.06)
+
+
+def shop(k, title, sub, col, kind, style='channel', w=5.6, h=1.15, title_col=None):
+    """The common mall/street sign: a board with the logo on the left and the name (and a small line) on the right."""
+    g = k.glow
+    if style == 'lightbox':
+        front = k.board(w, h, g(col, 1.4), edge=k.metal)
+        face, side = k.paint((0.05, 0.05, 0.05)), k.metal
+    elif style == 'white':
+        front = k.board(w, h, g('white', 1.2), edge=k.paint(col))
+        face, side = g(title_col or col, 1.2), k.paint(title_col or col)
+    else:
+        front = k.board(w, h, k.dark, edge=k.paint(col) if style == 'marquee' else None)
+        face, side = g(title_col or col, 4.5), k.paint(title_col or col)
+    if style == 'marquee':
+        k.bulb_frame(w - 0.12, h - 0.12, 0, 0, front)
+    s = h * (0.78 if style != 'marquee' else 0.66)
+    lu = -w / 2 + s * 0.6 + 0.12
+    logo(k, kind, lu, 0, front, s)
+    left = lu + s * 0.6
+    cu, cw = (left + w / 2) / 2, w / 2 - left - 0.22
+    if sub:
+        k.text(title, h * 0.42, cu, h * 0.12, front, face, side, depth=0.1, max_w=cw)
+        k.text(sub, h * 0.17, cu, -h * 0.3, front, g('white', 2.5) if style in ('channel', 'marquee') else face, depth=0.04,
+               font='oswald', max_w=cw)
+    else:
+        k.text(title, h * 0.5, cu, 0, front, face, side, depth=0.1, max_w=cw)
+
+
+def arrow_sign(k, text, col, direction, w=4.2, h=0.8):
+    """A dark board with a word and a run of bulb chevrons pointing the way."""
+    front = k.board(w, h, k.dark, edge=k.paint(col))
+    tw = w * 0.55
+    tu = -direction * (w / 2 - tw / 2 - 0.15)
+    k.text(text, h * 0.42, tu, 0, front, k.glow(col, 4.5), k.paint(col), max_w=tw)
+    k.bulb_arrow(direction * (w / 2 - (w - tw) / 2), 0, front, w - tw - 0.4, h * 0.7, direction, chevrons=3)
+
+
+SHOPS = {   # name: (title, small line, colour, logo, style)
+    'dvoechka': ('ДВОЕЧКА', 'у нас всё на двойку', 'red', 'leaf2', 'white'),
+    'tupik': ('ТУПИК', 'супермаркет', 'blue', 'deadend', 'channel'),
+    'gloria_trups': ('ГЛОРИЯ ТРУПС', 'одежда', 'pink', 'heart', 'channel'),
+    'apteka_412': ('АПТЕКА 41,2°', 'от всего, кроме укусов', 'green', 'cross', 'channel'),
+    'y_video': ('Ы.ВИДЕО', 'электроника', 'red', 'yvideo', 'white'),
+    'stary_baks': ('СТАРЫЙ БАКС', 'кофейня', 'green', 'buck', 'channel'),
+    'detsky_mor': ('ДЕТСКИЙ МОР', 'игрушки', 'yellow', 'balloons', 'marquee'),
+    'generator': ('ГЕНЕРАТОРНАЯ', 'не влезай — убьёт', 'yellow', 'bolt', 'lightbox'),
+    'sportmanster': ('СПОРТМАНСТЕР', 'спорт', 'cyan', 'ball', 'channel'),
+    'mozgoed': ('МОЗГОЕД', 'книги', 'orange', 'book', 'channel'),
+    'karies': ('КАРИЕС', 'обувь', 'pink', 'sneaker', 'channel'),
+    'posledny_chas': ('ПОСЛЕДНИЙ ЧАС', 'часы', 'white', 'clock', 'channel'),
+    'chop': ('ЧОП «БДИТЕЛЬНЫЙ СОН»', 'охрана', 'blue', 'shield', 'lightbox'),
+    'glaz_almaz': ('ГЛАЗ-АЛМАЗ', 'оптика', 'cyan', 'eye', 'channel'),
+    'venochek': ('ВЕНОЧЕК', 'цветы на любой случай', 'green', 'wreath', 'channel'),
+    'privet_iz_ada': ('ПРИВЕТ ИЗ АДА', 'сувениры', 'red', 'horns', 'marquee'),
+    'game_over': ('ГЕЙМ ОВЕР', 'игровые автоматы', 'purple', 'joystick', 'marquee'),
+    'foto_pamyatnik': ('ФОТО НА ПАМЯТНИК', 'и на паспорт', 'cyan', 'camera', 'channel'),
+    'tatu': ('ТАТУ «НАВСЕГДА»', 'тату-салон', 'red', 'heart', 'channel'),
+    'zaykina_polyana': ('ЗАЙКИНА ПОЛЯНА', 'детская комната', 'pink', 'bunny', 'marquee'),
+    'dohlo_pizza': ('ДОХЛО ПИЦЦА', 'пицца', 'orange', 'pizza', 'channel'),
+    'strike': ('МЁРТВЫЙ СТРАЙК', 'боулинг', 'purple', 'pin', 'marquee'),
+    'chaihona': ('ЧАЙХОНА №0', 'чай', 'cyan', 'teapot', 'channel'),
+    'gniloe_yabloko': ('ГНИЛОЕ ЯБЛОКО', 'косметика', 'lime', 'apple', 'channel'),
+    'kofe_haos': ('КОФЕ ХАОС', 'кофе с собой', 'pink', 'cup', 'channel'),
+    'pennaya_yama': ('ПЕННАЯ ЯМА', 'бар', 'amber', 'mug', 'marquee'),
+    'lombard': ('ЛОМБАРД «ЗОЛОТОЙ ЗУБ»', 'скупка золота', 'gold', 'tooth', 'channel'),
+}
+SHOP_SIZE = {'dvoechka': (6.4, 1.7), 'kofe_haos': (4.6, 1.6), 'apteka_412': (5.0, 1.5), 'pennaya_yama': (4.4, 1.6),
+             'lombard': (4.4, 1.1)}
+
+
+def build_signs():
+    def make(name, fn):
+        reset()
+        k = SignKit()
+        fn(k)
+        k.export(name)
+
+    for name, (title, sub, col, kind, style) in SHOPS.items():
+        w, h = SHOP_SIZE.get(name, (5.6, 1.15))
+        make(name, lambda k: shop(k, title, sub, col, kind, style, w, h))
+
+    def blade(k, draw, w, h, col):
+        """A double-sided sign hanging out of a wall: its inner edge at u = -w/2."""
+        k.sbox(w, h, 0.18, 0, 0, -0.09, k.dark, bevel=0.03)
+        for flip in (False, True):
+            k.flip = flip
+            draw(k, 0.09)
+        k.flip = False
+        for vv in (h / 2 - 0.15, -h / 2 + 0.15):  # brackets into the wall
+            k.sbox(0.5, 0.06, 0.06, -w / 2 - 0.25, vv, -0.03, k.metal)
+
+    def blade_text(word, col, logo_kind=None):
+        def draw(k, d):
+            k.bulb_frame(0.86, 2.9, 0, 0, d, step=0.3, r=0.045)
+            k.text('\n'.join(word), 2.2 if not logo_kind else 1.5, 0, -0.3 if logo_kind else 0, d, k.glow(col, 4.5),
+                   k.paint(col), depth=0.06, max_w=0.6)
+            if logo_kind:
+                logo(k, logo_kind, 0, 1.05, d, 0.6)
+        return draw
+
+    make('blade_cafe', lambda k: blade(k, lambda k, d: (k.bulb_frame(1.0, 3.0, 0, 0, d, r=0.045), logo(k, 'cup', 0, 0.75, d, 0.9),
+                                                         k.text('К\nО\nФ\nЕ', 1.5, 0, -0.55, d, k.glow('pink', 4.5),
+                                                                k.paint('pink'), depth=0.06, max_w=0.5)), 1.15, 3.2, 'pink'))
+    make('blade_dvoechka', lambda k: blade(k, lambda k, d: (logo(k, 'leaf2', 0, 1.0, d, 1.0),
+                                                             k.text('24\nЧАСА', 0.9, 0, -0.55, d, k.glow('red', 4.0),
+                                                                    k.paint('red'), depth=0.06, max_w=0.9),
+                                                             k.bulb_frame(1.1, 3.0, 0, 0, d, r=0.045)), 1.25, 3.2, 'red'))
+    make('blade_bar', lambda k: blade(k, lambda k, d: (logo(k, 'mug', 0, 0.6, d, 1.0),
+                                                        k.text('БАР', 0.45, 0, -0.65, d, k.glow('amber', 4.5), k.paint('amber'),
+                                                               depth=0.06, max_w=0.9),
+                                                        k.bulb_frame(1.1, 2.4, 0, 0, d, r=0.045)), 1.25, 2.6, 'amber'))
+
+    def pharmacy_cross(k):
+        """A cross sticking out of the wall, lit on both faces, with running bulbs round its edge."""
+        k.prism(CROSS, 0.2, 0, 0, -0.1, k.glow('green', 4.0), scale=1.4)
+        for flip in (False, True):
+            k.flip = flip
+            pts = [(x * 1.4, y * 1.4) for x, y in CROSS]
+            for i in range(len(pts)):
+                (a, b), (c, e) = pts[i], pts[(i + 1) % len(pts)]
+                k.bulb_line(a, b, c, e, 0.1, step=0.16, r=0.035)
+        k.flip = False
+        k.sbox(0.9, 0.08, 0.08, -1.1, 0, -0.04, k.metal)
+    make('pharmacy_cross', pharmacy_cross)
+
+    def pawn_balls(k):
+        """The pawnbroker's three gold balls hanging from a bracket."""
+        k.sbox(1.6, 0.08, 0.08, 0, 0.6, -0.04, k.metal)
+        for du, dv in ((-0.25, 0.0), (0.25, 0.0), (0.0, -0.45)):
+            k.sbox(0.02, 0.6 + dv, 0.02, du * 2, 0.3 + dv / 2, -0.01, k.metal)
+            k.sball(0.22, du * 2, dv - 0.05, 0, k.glow('gold', 3.0))
+    make('pawn_balls', pawn_balls)
+
+    def hotel(k):
+        """Hotel "Вечный сон": letters on a frame, three stars, the last one hanging by a corner."""
+        front = k.board(6.6, 1.9, k.dark, edge=k.paint('white'), depth=0.1)
+        k.text('ОТЕЛЬ', 0.35, 0, 0.62, front, k.glow('white', 3.0), depth=0.05, font='oswald')
+        k.text('«ВЕЧНЫЙ СОН»', 0.62, 0, 0.0, front, k.glow('cyan', 4.5), k.paint('cyan'), max_w=6.0)
+        for i, (du, roll, dv) in enumerate(((-0.7, 0, -0.62), (0.0, 0, -0.62), (0.8, 2.6, -0.95))):
+            logo(k, 'star', du, dv, front, 0.42) if i < 2 else \
+                k.prism(star_pts(0.5), 0.08, du, dv, front, k.glow('gold', 1.2), scale=0.42, roll=roll)
+        k.bulb_line(-3.1, -0.85, 3.1, -0.85, front, step=0.3)
+    make('hotel', hotel)
+
+    def police(k):
+        """The station's light box: white letters on blue, a shield, and red / blue lamps that flash in turn."""
+        front = k.board(11.0, 2.4, k.glow('blue', 1.0), edge=k.metal, depth=0.2)
+        logo(k, 'shield', -4.4, 0, front, 1.8)
+        k.text('ПОЛИЦИЯ', 1.3, 0.9, 0.0, front, k.glow('white', 3.5), k.metal, max_w=8.0)
+        for i, u in enumerate((-5.0, -3.0, -1.0, 1.0, 3.0, 5.0)):
+            for vv in (1.32, -1.32):
+                k.disc(0.07, 0.05, u, vv, front, k.socket, verts=8)
+                bpy.ops.mesh.primitive_uv_sphere_add(segments=10, ring_count=6, radius=0.16, location=k.P(u, vv, front + 0.08))
+                o = bpy.context.object
+                o.scale = (1.4, 0.6, 0.6)
+                o.data.materials.append(k.glow('red' if i % 2 == 0 else 'blue', 8.0))
+                k.bulbs[i % 2].append(o)
+    make('police', police)
+
+    def galaktika(k):
+        """The mall's facade: GALAKTIKA in big pink letters, a ringed planet and a border of running bulbs."""
+        front = k.board(19.0, 3.4, k.dark, edge=k.paint('pink'), depth=0.2)
+        logo(k, 'planet', -7.8, 0.1, front, 2.8)
+        k.text('ГАЛАКТИКА', 2.0, 1.4, 0.45, front, k.glow('pink', 5.0), k.paint('pink'), depth=0.25, max_w=14.0)
+        k.text('ТОРГОВЫЙ ЦЕНТР', 0.6, 1.4, -1.05, front, k.glow('cyan', 4.0), depth=0.08, font='oswald', max_w=10.0)
+        k.bulb_frame(18.7, 3.1, 0, 0, front, step=0.35, r=0.07)
+    make('galaktika', galaktika)
+
+    def cinema(k):
+        """Cinema "Синема Морг": a white marquee box with film reels and bulbs."""
+        front = k.board(9.0, 1.6, k.glow('white', 1.6), edge=k.paint('red'), depth=0.25)
+        for u in (-3.9, 3.9):
+            logo(k, 'reel', u, 0, front, 1.3)
+        k.text('СИНЕМА МОРГ', 0.75, 0, 0.15, front, k.glow('red', 3.0), k.paint('red'), max_w=6.0)
+        k.text('сегодня: «НОЧЬ ЖИВЫХ МЕРТВЕЦОВ»', 0.24, 0, -0.5, front, k.paint((0.1, 0.1, 0.1)), depth=0.03,
+               font='oswald', max_w=6.0)
+        k.bulb_frame(8.8, 1.4, 0, 0, front + 0.02, step=0.25)
+    make('cinema', cinema)
+
+    def food_court(k):
+        front = k.board(7.0, 1.3, k.dark, edge=k.paint('yellow'))
+        logo(k, 'forkknife', -2.9, 0, front, 1.0)
+        logo(k, 'forkknife', 2.9, 0, front, 1.0)
+        k.text('ВКУСНО — И КРАНТЫ', 0.5, 0, 0.15, front, k.glow('yellow', 4.5), k.paint('yellow'), max_w=4.8)
+        k.text('фуд-корт', 0.25, 0, -0.38, front, k.glow('white', 2.5), depth=0.04, font='oswald')
+        k.bulb_frame(6.85, 1.15, 0, 0, front)
+    make('food_court', food_court)
+
+    make('info', lambda k: (k.board(2.2, 0.8, k.dark, edge=k.paint('blue'), depth=0.08), logo(k, 'info', -0.7, 0, 0.08, 0.6),
+                            k.text('ИНФО', 0.34, 0.3, 0, 0.08, k.glow('blue', 4.0), k.paint('blue'), max_w=1.2)))
+
+    make('arrow_generator_left', lambda k: arrow_sign(k, 'ГЕНЕРАТОРНАЯ', 'red', -1))
+    make('arrow_generator_right', lambda k: arrow_sign(k, 'ГЕНЕРАТОРНАЯ', 'red', 1))
+    make('arrow_entrance_left', lambda k: arrow_sign(k, 'ВХОД', 'yellow', -1, w=3.4, h=0.8))
+    make('arrow_exit_right', lambda k: arrow_sign(k, 'ВЫЕЗД', 'green', 1, w=4.0, h=1.0))
+    make('arrow_exit_left', lambda k: arrow_sign(k, 'ВЫЕЗД', 'green', -1, w=4.0, h=1.0))
+
+    def to_hospital(k):
+        front = k.board(4.6, 1.1, k.dark, edge=k.paint('green'))
+        logo(k, 'redcross', -1.8, 0, front, 0.7)
+        k.text('К БОЛЬНИЦЕ', 0.42, 0.2, 0.18, front, k.glow('green', 4.5), k.paint('green'), max_w=3.0)
+        k.bulb_arrow(0.2, -0.3, front, 3.0, 0.3, 1, chevrons=5, r=0.04)
+    make('to_hospital', to_hospital)
+
+    def hospital(k):
+        front = k.board(9.6, 2.0, k.glow('white', 1.5), edge=k.metal, depth=0.2)
+        logo(k, 'redcross', -3.9, 0, front, 1.5)
+        k.text('ГОРОДСКАЯ БОЛЬНИЦА №13', 0.42, 1.0, 0.45, front, k.paint((0.05, 0.05, 0.05)), k.metal, depth=0.06,
+               font='oswald', max_w=7.0)
+        k.text('ПРИЁМНЫЙ ПОКОЙ', 0.8, 1.0, -0.3, front, k.glow('red', 2.5), k.paint('red'), max_w=7.0)
+    make('hospital', hospital)
+
+    def roof_cross(k):
+        k.prism(CROSS, 0.4, 0, 0, 0, k.glow('red', 4.0), scale=3.6)
+        pts = [(x * 3.6, y * 3.6) for x, y in CROSS]
+        for i in range(len(pts)):
+            (a, b), (c, e) = pts[i], pts[(i + 1) % len(pts)]
+            k.bulb_line(a, b, c, e, 0.4, step=0.3, r=0.07)
+    make('roof_cross', roof_cross)
+
+    def metro(k):
+        """The metro's red М over a white roundel, with МЕТРО under it."""
+        k.disc(1.0, 0.12, 0, 0.35, 0, k.glow('white', 1.6))
+        k.ring(1.0, 0.06, 0, 0.35, 0.12, k.metal)
+        k.text('М', 1.25, 0, 0.35, 0.12, k.glow('red', 5.0), k.paint('red'), depth=0.2)
+        k.sbox(2.2, 0.55, 0.1, 0, -1.0, 0, k.dark, bevel=0.02)
+        k.text('МЕТРО', 0.38, 0, -1.0, 0.1, k.glow('white', 3.5), depth=0.05)
+    make('metro', metro)
+
+    def metro_pylon(k):
+        """A street pylon: a pole with a lit cube on top, a red М on every side."""
+        k.cyl(0.1, 4.0, (0, 0, 2.0), k.metal)
+        k.box((1.2, 1.2, 1.2), (0, 0, 4.6), k.glow('white', 1.8), bevel=0.04)
+        for a in range(4):
+            rot = a * math.pi / 2
+            ca, sa = math.cos(rot), math.sin(rot)
+            cu = bpy.data.curves.new('M', 'FONT')
+            cu.body, cu.font, cu.align_x, cu.align_y, cu.extrude = 'М', k.fonts['russo'], 'CENTER', 'CENTER', 0.04
+            o = bpy.data.objects.new('M', cu)
+            bpy.context.collection.objects.link(o)
+            o.scale = (1.0, 1.0, 1.0)
+            o.rotation_euler = (math.pi / 2, 0, rot + math.pi)
+            o.location = (sa * 0.62, -ca * 0.62, 4.55)
+            bpy.ops.object.select_all(action='DESELECT')
+            o.select_set(True)
+            bpy.context.view_layer.objects.active = o
+            bpy.ops.object.convert(target='MESH')
+            bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+            o.data.materials.append(k.glow('red', 5.0))
+            k.parts.append(o)
+    make('metro_pylon', metro_pylon)
+
+    def dinamo(k):
+        """Stadium letters on a steel truss: a blue rhombus with Д and ДИНАМО, bulbs along the bottom."""
+        k.sbox(20.0, 0.3, 0.3, 0, -2.6, 0, k.metal)
+        for u in range(-9, 10, 3):
+            k.sbox(0.15, 5.0, 0.15, u, -0.2, 0.0, k.metal)
+        logo(k, 'diamond_d', -7.6, 0, 0.3, 4.4)
+        k.text('ДИНАМО', 3.8, 2.0, 0.2, 0.3, k.glow('blue', 5.0), k.paint('white', 0.2), depth=0.4, max_w=14.5)
+        k.bulb_line(-9.6, -2.35, 9.6, -2.35, 0.3, step=0.4, r=0.1)
+    make('dinamo', dinamo)
+
+    def open_sign(k):
+        front = k.board(1.9, 0.7, k.dark, edge=k.paint('cyan'), depth=0.08)
+        k.text('ОТКРЫТО', 0.32, 0, 0, front, k.glow('cyan', 4.5), k.paint('cyan'), depth=0.05, font='oswald', max_w=1.5)
+        k.bulb_frame(1.8, 0.6, 0, 0, front, step=0.2, r=0.03)
+    make('open_sign', open_sign)
+
+
 # ---------------------------------------------------------------- previews
 def render_first_person(glb, out_png):
     reset()
@@ -2025,6 +2630,8 @@ if "mall" in PARTS:
     sizes = json.load(open(sizes_path))
     sizes.update(build_mall_props())
     json.dump(sizes, open(sizes_path, "w"), indent=1, sort_keys=True)
+if "signs" in PARTS:
+    build_signs()
 if "heli" in PARTS:
     build_helicopter(os.path.join(PROJECT, "models", "vehicles", "helicopter.glb"))
     render_lineup([os.path.join(PROJECT, "models", "vehicles", "helicopter.glb")], os.path.join(SRC, "previews", "helicopter.png"),
