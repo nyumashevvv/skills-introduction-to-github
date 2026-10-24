@@ -1500,13 +1500,13 @@ WEAPONS = {
     # hands: (grip point as bbox fractions, finger direction, palm direction); material colour overrides
     "pistol": dict(src="guns/FPS Pack/Blends/Pistol.blend", length=0.24, grip=(0.5, 0.15, 0.4), at=(0.1, 0.4, -0.17), yaw=6,
                    right=((0.5, 0.15, 0.4), (0, 1, -0.25), (-1, 0, 0)),
-                   left=((0.5, 0.14, -0.14), (0.25, 0.9, 0.35), (0, 0, 1)), colors=PISTOL_COLORS, curl=62.0),
+                   left=((-0.55, 0.2, 0.3), (0.25, 0.75, -0.6), (1, -0.1, 0.2)), colors=PISTOL_COLORS, curl=62.0, left_curl=35.0),
     "rifle": dict(src="model:ak", length=0.72, grip=(0.5, 0.33, 0.45), at=(0.165, 0.4, -0.265), yaw=8,
                   right=((0.5, 0.33, 0.45), (0, 1, -0.3), (-1, 0, 0)),
                   left=((0.5, 0.7, 0.66), (0.6, 0.8, 0), (0, 0, 1)), colors={}),
     "revolver": dict(src="model:revolver", length=0.3, grip=(0.5, 0.12, 0.4), at=(0.1, 0.4, -0.17),
                      yaw=6, right=((0.5, 0.12, 0.4), (0, 1, -0.25), (-1, 0, 0)),
-                     left=((0.5, 0.1, -0.14), (0.25, 0.9, 0.35), (0, 0, 1)), colors={}, curl=62.0),
+                     left=((-0.6, 0.16, 0.3), (0.25, 0.75, -0.6), (1, -0.1, 0.2)), colors={}, curl=62.0, left_curl=35.0),
     "smg": dict(src="model:smg", length=0.6, grip=(0.5, 0.37, 0.55), at=(0.14, 0.38, -0.22), yaw=7,
                 right=((0.5, 0.37, 0.55), (0, 1, -0.3), (-1, 0, 0)),
                 left=((0.5, 0.68, 0.72), (0.6, 0.8, 0), (0, 0, 1)), colors={}),
@@ -1555,7 +1555,8 @@ def build_viewmodels(only=()):
 
         def hand(spec):
             return frac(spec[0]), turn @ Vector(spec[1]), turn @ Vector(spec[2])
-        arms = build_real_arms(hand(w["right"]), hand(w["left"]), curl=w.get("curl", 75.0))
+        arms = build_real_arms(hand(w["right"]), hand(w["left"]), curl=w.get("curl", 75.0),
+                               left_curl=w.get("left_curl", 60.0))
         m = add_muzzle(muzzle)
         rocket = next((o for o in objs if "Rocket" in o.name), None)
         if rocket is not None:
