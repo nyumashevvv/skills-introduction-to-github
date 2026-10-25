@@ -1557,14 +1557,36 @@ def level_mall():
     L.omni((-20, 4.2, -92), (0.6, 0.8, 1.0), 2.0, 9)
     for x in (-4, -2.8):
         c('atm', (x, 0, -99.4), S_)
-    for x in (4, 5.2, 6.4):
+    for x in (-7.5, -6.3):
         c('vending_machine', (x, 0, -99.4), S_)
-    c('photo_booth', (-11, 0, -99.2), S_); c('kiosk', (16, 0, -91), 0.0)
-    for x in (-8, 10):
-        c('mall_bench', (x, 0, -95), S_); c('planter', (x + 3, 0, -95))
-    c('armchair', (24, 0, -98.8), S_); c('armchair', (26, 0, -98.8), S_); c('stroller', (2, 0, -93), 0.4)
-    for x in (-12, 0, 12, 24):
+    c('photo_booth', (-11, 0, -99.2), S_); c('mall_bench', (-6, 0, -94), S_); c('planter', (-3, 0, -94))
+    c('stroller', (-1, 0, -91), 0.4)
+    for x in (-12, -2):
         L.omni((x, 3.8, -93), (1, 0.85, 0.6), 0.7, 11)
+    # the casino "Последняя ставка" (east of the promo zone): slots, roulette, blackjack, the cash desk.
+    # Slots, roulette tables and the cash desk are playable (scripts/casino): chips are won and spent on prizes.
+    CX0, CZ0 = 2.0, -85.2
+    L.wall_z(CZ0, CX0, 9.0, W, h=H); L.wall_z(CZ0, 13.0, 30.0, W, h=H)          # the front, the entrance at x 9..13
+    L.wall_x(CX0, CZ0, -100, W, h=H)
+    L.sign('casino', (11.0, 3.9, CZ0 + 0.17), '+z', (1.0, 0.25, 0.2), energy=2.0, rng=10.0)
+    L.decor((28 - 0.4, 0.02, 15.5 - 0.4), ((CX0 + 30) / 2, 0.02, (CZ0 - 100) / 2), 'fabric_red', cast_shadow=0)  # carpet
+    for i, x in enumerate((19.6, 20.6, 21.6, 22.6, 23.6, 24.6, 25.6, 26.6, 27.6, 28.6)):   # slots along the back wall
+        c('slot_machine' if i % 2 else 'slot_machine_b', (x, 0, -99.5), S_); c('casino_stool', (x, 0, -98.3))
+    for i, z in enumerate((-86.6, -87.6, -88.6, -89.6)):                         # and along the east wall
+        c('slot_machine_b' if i % 2 else 'slot_machine', (29.5, 0, z), E); c('casino_stool', (28.3, 0, z))
+    for i, x in enumerate((19.6, 20.6, 21.6, 22.6, 23.6)):                         # an island of slots back to back
+        c('slot_machine', (x, 0, -92.3), N_); c('slot_machine_b', (x, 0, -92.9), S_)
+    for z in (-89.5, -96.0):
+        c('roulette_table', (9.5, 0, z), S_)
+        for dx in (-0.9, 0.0, 0.9):
+            c('casino_stool', (9.5 + dx - 0.3, 0, z + 1.05))
+    c('blackjack_table', (15.0, 0, -89.0), S_); c('blackjack_table', (15.0, 0, -96.5), S_)
+    c('cashier_desk', (2.65, 0, -93.0), Wf)
+    c('planter', (3.0, 0, -86.3)); c('planter', (17.0, 0, -86.3)); c('sofa', (5.5, 0, -99.4), S_)
+    for x, z in ((6, -88), (6, -97), (16, -93), (24, -88), (24, -96)):            # chandeliers: warm, a little red
+        L.omni((x, 3.9, z), (1.0, 0.7, 0.45), 1.1, 9)
+    L.omni((11, 3.6, -92), (1.0, 0.2, 0.25), 0.9, 12, flicker=True)
+    L.zombie('walker', (21.5, 0, -95.5))                                         # still pulling the lever
     # the atrium floor: fountain, benches, plants, the information desk
     c('fountain', (0, 0, -50), 0.0)
     L.omni((0, 2.0, -50), (0.4, 0.7, 1.0), 2.0, 10)

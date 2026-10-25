@@ -2419,6 +2419,121 @@ def build_mall_furniture():
     return sizes
 
 
+def build_casino():
+    """The mall's casino: slot machines, roulette and blackjack tables, the cash desk, chip stacks. Fronts face -Y."""
+    sizes = {}
+
+    def new(seed):
+        reset()
+        return mall_materials(), Kit(seed)
+
+    def words(k, text, size, loc, mat, depth=0.02):
+        """Flat letters facing -Y (the model's front), centred on loc."""
+        cu = bpy.data.curves.new("Words", 'FONT')
+        cu.body, cu.align_x, cu.align_y, cu.extrude, cu.size = text, 'CENTER', 'CENTER', depth, size
+        cu.font = bpy.data.fonts.load(os.path.join(PROJECT, 'fonts', 'RussoOne-Regular.ttf'))
+        o = bpy.data.objects.new("Words", cu)
+        bpy.context.collection.objects.link(o)
+        o.rotation_euler = (math.pi / 2, 0, 0)
+        o.location = loc
+        bpy.ops.object.select_all(action='DESELECT')
+        o.select_set(True)
+        bpy.context.view_layer.objects.active = o
+        bpy.ops.object.convert(target='MESH')
+        bpy.ops.object.transform_apply(location=False, rotation=True, scale=True)
+        o.data.materials.append(mat)
+        k.parts.append(o)
+
+    felt = lambda: material("Felt", (0.04, 0.32, 0.15), roughness=0.95)
+    gold = lambda: material("CasinoGold", (0.95, 0.7, 0.25), metallic=1.0, roughness=0.3)
+
+    # slot machine: a cabinet with three lit reels, a lever and a glowing topper
+    for name, seed, tint in (("slot_machine", 70, (0.6, 0.05, 0.1)), ("slot_machine_b", 71, (0.1, 0.15, 0.55))):
+        m, k = new(seed)
+        body = material(f"Slot_{seed}", tint, metallic=0.5, roughness=0.35)
+        k.box((0.72, 0.6, 1.05), (0, 0, 0.525), body, bevel=0.03)
+        k.box((0.72, 0.5, 0.65), (0, 0.05, 1.37), body, bevel=0.03)
+        k.box((0.6, 0.04, 0.3), (0, -0.21, 1.3), glow_mat := emissive("Reels", (1.0, 0.97, 0.9), 2.0))
+        for i, x in enumerate((-0.19, 0, 0.19)):
+            words(k, "7", 0.2, (x, -0.235, 1.3), emissive("SevenRed", (1, 0.1, 0.05), 3.0))
+            k.box((0.015, 0.03, 0.3), (x + 0.095, -0.225, 1.3), m.dark)
+        k.box((0.6, 0.03, 0.22), (0, -0.21, 1.58), emissive(f"SlotScreen_{seed}", (0.3, 0.6, 1.0) if seed == 70 else (1, 0.4, 0.8), 2.5))
+        k.box((0.65, 0.35, 0.06), (0, -0.4, 1.06), m.dark)                       # the button deck
+        for i, c in enumerate(((1, 0.2, 0.1), (1, 0.8, 0.1), (0.2, 1, 0.3))):
+            k.cyl(0.035, 0.03, (-0.2 + i * 0.2, -0.45, 1.1), emissive(f"SlotBtn{i}", c, 3.0), verts=10)
+        k.cyl(0.4, 0.12, (0, 0.05, 1.75), body, rot=(math.pi / 2, 0, 0), verts=20)  # rounded top
+        k.box((0.74, 0.08, 0.25), (0, -0.2, 1.82), emissive(f"Topper_{seed}", (1, 0.75, 0.2), 3.0))
+        words(k, "777", 0.16, (0, -0.25, 1.82), emissive("TopperText", (0.8, 0.05, 0.05), 1.0))
+        k.cyl(0.02, 0.45, (0.42, 0.0, 1.25), m.chrome, verts=8)                     # the lever
+        k.ball(0.05, (0.42, 0.0, 1.5), emissive("LeverKnob", (1, 0.1, 0.1), 1.5))
+        k.box((0.3, 0.08, 0.1), (0, -0.31, 0.75), m.chrome)                         # the tray
+        sizes[name] = k.export(name)
+
+    # stool for the slots
+    m, k = new(72)
+    k.cyl(0.2, 0.08, (0, 0, 0.72), material("StoolRed", (0.6, 0.05, 0.08), roughness=0.4), verts=18)
+    k.cyl(0.03, 0.7, (0, 0, 0.36), m.chrome, verts=8)
+    k.cyl(0.22, 0.03, (0, 0, 0.015), m.chrome, verts=16)
+    sizes["casino_stool"] = k.export("casino_stool")
+
+    # roulette table: felt with the betting grid, the wheel bowl at one end
+    m, k = new(73)
+    k.box((2.6, 1.3, 0.8), (0, 0, 0.4), m.wood, bevel=0.04)
+    k.box((2.5, 1.2, 0.03), (0, 0, 0.815), felt())
+    rail = material("Rail", (0.3, 0.12, 0.05), roughness=0.4)
+    for s in (-1, 1):
+        k.box((2.6, 0.08, 0.08), (0, s * 0.62, 0.85), rail)
+        k.box((0.08, 1.3, 0.08), (s * 1.27, 0, 0.85), rail)
+    for col in range(12):                                                        # the numbers in three rows
+        for row in range(3):
+            n = col * 3 + 3 - row
+            red = n in (1, 3, 5, 7, 9, 12, 14, 16, 18, 19, 21, 23, 25, 27, 30, 32, 34, 36)
+            k.box((0.1, 0.18, 0.005), (-0.55 + col * 0.12, -0.25 + row * 0.2, 0.832),
+                  material("CellRed" if red else "CellBlack", (0.6, 0.05, 0.05) if red else (0.05, 0.05, 0.05)))
+    k.box((0.1, 0.58, 0.005), (-0.67, -0.05, 0.832), material("CellGreen", (0.05, 0.45, 0.18)))
+    k.cyl(0.42, 0.12, (1.0 - 0.05, 0, 0.88), m.wood, verts=32)                  # the wheel
+    k.cyl(0.36, 0.06, (0.95, 0, 0.92), m.dark, verts=32)
+    for i in range(37):
+        a = i * math.tau / 37
+        c = (0.05, 0.45, 0.18) if i == 0 else ((0.65, 0.05, 0.05) if i % 2 else (0.05, 0.05, 0.05))
+        k.box((0.05, 0.04, 0.02), (0.95 + math.cos(a) * 0.3, math.sin(a) * 0.3, 0.955), material(f"Pocket{i % 2}_{i == 0}", c),
+              rot=(0, 0, a))
+    k.cyl(0.12, 0.06, (0.95, 0, 0.98), gold(), verts=16)
+    k.cyl(0.02, 0.12, (0.95, 0, 1.05), gold(), verts=8)
+    for i in range(6):                                                           # chips on the felt
+        k.cyl(0.03, 0.01 * (i % 3 + 1) * 3, (-0.3 + i * 0.12, 0.05 * (i % 2), 0.835 + 0.015 * (i % 3 + 1)),
+              material(f"Chip{i % 3}", ((0.8, 0.1, 0.1), (0.1, 0.3, 0.8), (0.9, 0.9, 0.85))[i % 3]), verts=12)
+    sizes["roulette_table"] = k.export("roulette_table")
+
+    # blackjack table: a half-moon of felt with seats' marks and cards
+    m, k = new(74)
+    k.cyl(1.1, 0.8, (0, 0.2, 0.4), m.wood, verts=40)
+    k.cyl(1.0, 0.03, (0, 0.2, 0.815), felt(), verts=40)
+    k.box((2.4, 1.0, 0.9), (0, 1.0, 0.45), m.dark)                                # the dealer's side cuts the circle
+    for i in range(5):
+        a = math.pi * (0.2 + 0.15 * i)
+        k.box((0.08, 0.12, 0.004), (math.cos(a) * 0.6, 0.2 - math.sin(a) * 0.6, 0.832), m.white, rot=(0, 0, a))
+        k.box((0.08, 0.12, 0.004), (math.cos(a) * 0.6 + 0.04, 0.2 - math.sin(a) * 0.6 + 0.02, 0.836), m.white, rot=(0, 0, a + 0.2))
+    for i in range(4):
+        k.cyl(0.03, 0.06 + 0.02 * i, (-0.3 + i * 0.2, 0.35, 0.85 + 0.01 * i), material(f"Chip{i % 3}", ((0.8, 0.1, 0.1), (0.1, 0.3, 0.8), (0.9, 0.9, 0.85))[i % 3]), verts=12)
+    sizes["blackjack_table"] = k.export("blackjack_table")
+
+    # the cash desk: a counter behind a grille with a lit sign
+    m, k = new(75)
+    k.box((2.6, 0.8, 1.1), (0, 0, 0.55), m.wood, bevel=0.03)
+    k.box((2.7, 0.9, 0.05), (0, 0, 1.12), gold())
+    for x in [i * 0.2 - 1.2 for i in range(13)]:
+        k.box((0.02, 0.02, 1.0), (x, 0.3, 1.65), gold())
+    k.box((2.6, 0.04, 0.02), (0, 0.3, 2.15), gold())
+    k.box((2.6, 0.5, 0.3), (0, 0.3, 2.35), m.dark)
+    k.box((2.4, 0.03, 0.22), (0, 0.04, 2.35), emissive("CashSign", (1, 0.75, 0.25), 3.0))
+    words(k, "КАССА", 0.2, (0, 0.02, 2.35), emissive("CashText", (0.4, 0.05, 0.02), 1.0))
+    for i in range(5):
+        k.cyl(0.035, 0.08 + 0.03 * i, (-0.6 + i * 0.3, 0.1, 1.2 + 0.015 * i), material(f"Chip{i % 3}", ((0.8, 0.1, 0.1), (0.1, 0.3, 0.8), (0.9, 0.9, 0.85))[i % 3]), verts=12)
+    sizes["cashier_desk"] = k.export("cashier_desk")
+    return sizes
+
+
 # ---------------------------------------------------------------- signs
 # Shop and street signs (part "signs"): 3D channel letters, light boxes, marquee bulbs and parody logos. Each one is
 # drawn in a flat "sign plane" (u to the viewer's right, v up, d towards the viewer, the back at d = 0, the centre at
@@ -3017,6 +3132,19 @@ def build_signs():
         k.bulb_line(-9.6, -2.35, 9.6, -2.35, 0.3, step=0.4, r=0.1)
     make('dinamo', dinamo)
 
+    def casino(k):
+        """Casino "Последняя ставка": red board, gold letters, a playing-card logo and a double row of running bulbs."""
+        front = k.board(9.0, 2.0, k.glow((0.35, 0.02, 0.04), 1.2), edge=k.paint('gold', 0.9), depth=0.2)
+        for i, (u, roll) in enumerate(((-3.7, 0.25), (-3.2, -0.2))):
+            k.sbox(0.8, 1.15, 0.04, u, 0.0, front + i * 0.04, k.glow('white', 2.0), roll=roll)
+        k.text('A', 0.5, -3.2, 0.12, front + 0.08, k.glow('red', 4.0), depth=0.03)
+        k.prism(HEART, 0.04, -3.2, -0.25, front + 0.08, k.glow('red', 4.0), scale=0.35)
+        k.text('КАЗИНО', 0.95, 0.8, 0.35, front, k.glow('gold', 5.0), k.paint('gold', 0.9), depth=0.15, max_w=6.0)
+        k.text('«ПОСЛЕДНЯЯ СТАВКА»', 0.42, 0.8, -0.55, front, k.glow('white', 3.5), depth=0.05, font='oswald', max_w=6.0)
+        k.bulb_frame(8.8, 1.8, 0, 0, front, step=0.25)
+        k.bulb_frame(8.4, 1.4, 0, 0, front, step=0.3, r=0.04)
+    make('casino', casino)
+
     def open_sign(k):
         front = k.board(1.9, 0.7, k.dark, edge=k.paint('cyan'), depth=0.08)
         k.text('ОТКРЫТО', 0.32, 0, 0, front, k.glow('cyan', 4.5), k.paint('cyan'), depth=0.05, font='oswald', max_w=1.5)
@@ -3062,6 +3190,7 @@ if "mall" in PARTS:
     sizes = json.load(open(sizes_path))
     sizes.update(build_mall_props())
     sizes.update(build_mall_furniture())
+    sizes.update(build_casino())
     json.dump(sizes, open(sizes_path, "w"), indent=1, sort_keys=True)
 if "signs" in PARTS:
     build_signs()

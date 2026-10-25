@@ -155,6 +155,55 @@ func _run() -> void:
 			await snap("ending_%d" % i)
 	if "street" in sections:
 		await _street()
+	if "casino" in sections:  # the casino hall and its three screens
+		var level := await load_level("res://scenes/levels/level_3_mall.tscn")
+		var player := await play(level)
+		freeze_zombies()
+		level.hud.gameplay.visible = false
+		player.holder.visible = false
+		level.get_node("Story/PowerOn").call("fire")
+		await get_tree().create_timer(3.0).timeout
+		await pose(player, Vector3(11, 0, -78), 0, 4)
+		await snap("casino_entrance")
+		await pose(player, Vector3(7, 0, -86.5), -125, -12)
+		await snap("casino_hall")
+		await pose(player, Vector3(16, 0, -93), -100, -6)
+		await snap("casino_slots")
+		Game.chips = 250
+		var machines := level.find_children("*", "CasinoMachine", true, false)
+		for m: Node in machines:
+			if (m as CasinoMachine).kind == CasinoMachine.Kind.SLOTS:
+				m.call("interact", player)
+				break
+		await get_tree().create_timer(0.3).timeout
+		var panel := level.hud.get_child(level.hud.get_child_count() - 1)
+		panel.call("spin")
+		await get_tree().create_timer(0.6).timeout
+		await snap("casino_slots_spinning")
+		await get_tree().create_timer(2.0).timeout
+		await snap("casino_slots_result")
+		panel.queue_free()
+		await get_tree().create_timer(0.3).timeout
+		for m: Node in machines:
+			if (m as CasinoMachine).kind == CasinoMachine.Kind.ROULETTE:
+				m.call("interact", player)
+				break
+		await get_tree().create_timer(0.3).timeout
+		panel = level.hud.get_child(level.hud.get_child_count() - 1)
+		for key: String in ["red", "n17", "n17", "d3"]:
+			panel.call("place_bet", key)
+		panel.call("spin")
+		await get_tree().create_timer(2.0).timeout
+		await snap("casino_roulette_spinning")
+		await get_tree().create_timer(3.0).timeout
+		await snap("casino_roulette_result")
+		panel.queue_free()
+		await get_tree().create_timer(0.3).timeout
+		for m: Node in machines:
+			if (m as CasinoMachine).kind == CasinoMachine.Kind.CASHIER:
+				m.call("interact", player)
+		await get_tree().create_timer(0.3).timeout
+		await snap("casino_cashier")
 	if "mall_tour" in sections:  # every shop with the power on
 		var level := await load_level("res://scenes/levels/level_3_mall.tscn")
 		var player := await play(level)

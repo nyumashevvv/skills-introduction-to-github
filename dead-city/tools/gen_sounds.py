@@ -122,3 +122,19 @@ _ = (mix(env_noise(1.2, 5, 0.5), scale(env_noise(0.08, 60, 0.9), 0.9),
                    scale(tone(lambda t: 70 * math.exp(-t * 4) + 30, 1.0, lambda t: math.exp(-t * 5)), 1.0)))
 save('throw', bandpass([noise() * math.sin(math.pi * min(1, i / n(0.25))) for i in range(n(0.25))], 700, 1.0), 0.5)
 print('sounds ok')
+
+# casino (the mall): reels, wins, the roulette ball, chips
+random.seed(67)
+save('casino_tick', click(1800, 0.03, 140), 0.35)
+save('casino_reel_stop', mix(click(380, 0.12, 40), scale(click(1200, 0.04, 90), 0.5)), 0.55)
+save('casino_win', mix(*[delay(tone(lambda t, f=f: f, 0.18, lambda t: math.exp(-t * 6), 'square'), i * 0.09)
+                         for i, f in enumerate((523, 659, 784, 1047, 1319))]), 0.35)
+save('casino_lose', tone(lambda t: 220 - 80 * t, 0.45, lambda t: math.exp(-t * 4), 'square'), 0.25)
+ball, t = [0.0] * n(3.6), 0.0
+while t < 3.4:                                      # the ball rattling round the wheel, slower and slower
+    for i, x in enumerate(click(2600 + random.uniform(-400, 400), 0.02, 160)):
+        if n(t) + i < len(ball):
+            ball[n(t) + i] += x * (1.0 - t / 4.5)
+    t += 0.03 + 0.09 * (t / 3.4) ** 2
+save('casino_ball', mix(ball, scale(lowpass(env_noise(3.6, 0.6), 0.04), 0.25)), 0.5)
+save('casino_chips', mix(*[delay(click(random.uniform(2500, 4200), 0.05, 90), i * random.uniform(0.03, 0.06)) for i in range(7)]), 0.45)

@@ -308,65 +308,81 @@
 
 [ext_resource type="PackedScene" path="res://scenes/props/turntable.tscn" id="154_turntable"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/fountain.tscn" id="155_fountain"]
+[ext_resource type="PackedScene" path="res://scenes/world/signs/casino.tscn" id="155_casino"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/plant_tall.tscn" id="156_plant_tall"]
+[ext_resource type="Material" path="res://materials/fabric_red.tres" id="156_fabric_red"]
 
-[ext_resource type="PackedScene" path="res://scenes/world/signs/info.tscn" id="157_info"]
+[ext_resource type="PackedScene" path="res://scenes/props/slot_machine_b.tscn" id="157_slot_machine_b"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/newspaper.tscn" id="158_newspaper"]
+[ext_resource type="PackedScene" path="res://scenes/props/casino_stool.tscn" id="158_casino_stool"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/backpack.tscn" id="159_backpack"]
+[ext_resource type="PackedScene" path="res://scenes/props/slot_machine.tscn" id="159_slot_machine"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/suitcase.tscn" id="160_suitcase"]
+[ext_resource type="PackedScene" path="res://scenes/props/roulette_table.tscn" id="160_roulette_table"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/trash_can.tscn" id="161_trash_can"]
+[ext_resource type="PackedScene" path="res://scenes/props/blackjack_table.tscn" id="161_blackjack_table"]
 
-[ext_resource type="PackedScene" path="res://scenes/props/papers.tscn" id="162_papers"]
+[ext_resource type="PackedScene" path="res://scenes/props/cashier_desk.tscn" id="162_cashier_desk"]
 
 [ext_resource type="PackedScene" path="res://scenes/zombies/walker.tscn" id="163_walker"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/runner.tscn" id="164_runner"]
+[ext_resource type="PackedScene" path="res://scenes/props/fountain.tscn" id="164_fountain"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/bloater.tscn" id="165_bloater"]
+[ext_resource type="PackedScene" path="res://scenes/props/plant_tall.tscn" id="165_plant_tall"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/soldier.tscn" id="166_soldier"]
+[ext_resource type="PackedScene" path="res://scenes/world/signs/info.tscn" id="166_info"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/spitter.tscn" id="167_spitter"]
+[ext_resource type="PackedScene" path="res://scenes/props/suitcase.tscn" id="167_suitcase"]
 
-[ext_resource type="PackedScene" path="res://scenes/zombies/mascot.tscn" id="168_mascot"]
+[ext_resource type="PackedScene" path="res://scenes/props/papers.tscn" id="168_papers"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="169_medkit"]
+[ext_resource type="PackedScene" path="res://scenes/props/trash_can.tscn" id="169_trash_can"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_pistol.tscn" id="170_ammo_pistol"]
+[ext_resource type="PackedScene" path="res://scenes/props/backpack.tscn" id="170_backpack"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rifle.tscn" id="171_ammo_rifle"]
+[ext_resource type="PackedScene" path="res://scenes/props/newspaper.tscn" id="171_newspaper"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_shells.tscn" id="172_ammo_shells"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/runner.tscn" id="172_runner"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_magnum.tscn" id="173_ammo_magnum"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/bloater.tscn" id="173_bloater"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_sniper.tscn" id="174_ammo_sniper"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/soldier.tscn" id="174_soldier"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/weapon_sniper.tscn" id="175_weapon_sniper"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/spitter.tscn" id="175_spitter"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/weapon_grenade.tscn" id="176_weapon_grenade"]
+[ext_resource type="PackedScene" path="res://scenes/zombies/mascot.tscn" id="176_mascot"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_smg.tscn" id="177_ammo_smg"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/medkit.tscn" id="177_medkit"]
 
-[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rocket.tscn" id="178_ammo_rocket"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_pistol.tscn" id="178_ammo_pistol"]
 
-[ext_resource type="Script" path="res://scripts/story/story_event.gd" id="179_story_event"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rifle.tscn" id="179_ammo_rifle"]
 
-[ext_resource type="Script" path="res://scripts/story/story_trigger.gd" id="180_story_trigger"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_shells.tscn" id="180_ammo_shells"]
 
-[ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="181_zombie_spawner"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_magnum.tscn" id="181_ammo_magnum"]
 
-[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="182_player"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_sniper.tscn" id="182_ammo_sniper"]
 
-[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="183_hud"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/weapon_sniper.tscn" id="183_weapon_sniper"]
 
-[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="184_ambience"]
+[ext_resource type="PackedScene" path="res://scenes/pickups/weapon_grenade.tscn" id="184_weapon_grenade"]
+
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_smg.tscn" id="185_ammo_smg"]
+
+[ext_resource type="PackedScene" path="res://scenes/pickups/ammo_rocket.tscn" id="186_ammo_rocket"]
+
+[ext_resource type="Script" path="res://scripts/story/story_event.gd" id="187_story_event"]
+
+[ext_resource type="Script" path="res://scripts/story/story_trigger.gd" id="188_story_trigger"]
+
+[ext_resource type="Script" path="res://scripts/story/zombie_spawner.gd" id="189_zombie_spawner"]
+
+[ext_resource type="PackedScene" path="res://scenes/player/player.tscn" id="190_player"]
+
+[ext_resource type="PackedScene" path="res://scenes/ui/hud.tscn" id="191_hud"]
+
+[ext_resource type="AudioStream" path="res://sounds/ambience.wav" id="192_ambience"]
 
 [sub_resource type="Environment" id="Environment_1"]
 background_mode = 1
@@ -535,16 +551,20 @@ material = ExtResource("15_metal_rust")
 size = Vector3(0.05, 6.5, 0.05)
 material = ExtResource("30_dark")
 
-[sub_resource type="BoxShape3D" id="BoxShape3D_39"]
-size = Vector3(8.0, 3.0, 3.0)
+[sub_resource type="BoxMesh" id="BoxMesh_39"]
+size = Vector3(27.6, 0.02, 15.1)
+material = ExtResource("156_fabric_red")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_40"]
-size = Vector3(4.0, 3.0, 3.0)
+size = Vector3(8.0, 3.0, 3.0)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_41"]
-size = Vector3(8.0, 3.0, 8.0)
+size = Vector3(4.0, 3.0, 3.0)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_42"]
+size = Vector3(8.0, 3.0, 8.0)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_43"]
 size = Vector3(5.0, 3.0, 3.0)
 
 [node name="Mall" type="Node3D"]
@@ -3756,7 +3776,7 @@ rotation = Vector3(0.0, 1.5708, 0.0)
 [node name="Checkout4" parent="NavigationRegion3D" instance=ExtResource("41_checkout")]
 position = Vector3(-27.0, 0.0, -44.0)
 
-[node name="ShoppingBags1" parent="NavigationRegion3D" instance=ExtResource("48_shopping_bags")]
+[node name="ShoppingBags1" parent="Decor" instance=ExtResource("48_shopping_bags")]
 position = Vector3(-21.5, 0.0, -57.0)
 rotation = Vector3(0.0, 0.2348, 0.0)
 
@@ -5023,7 +5043,7 @@ position = Vector3(-23.6, 5.0, -57.0)
 [node name="ShoeWall16" parent="NavigationRegion3D" instance=ExtResource("83_shoe_wall")]
 position = Vector3(-26.5, 5.0, -57.0)
 
-[node name="ShoppingBags2" parent="NavigationRegion3D" instance=ExtResource("48_shopping_bags")]
+[node name="ShoppingBags2" parent="Decor" instance=ExtResource("48_shopping_bags")]
 position = Vector3(-21.6, 5.0, -58.0)
 rotation = Vector3(0.0, 1.7735, 0.0)
 
@@ -6754,7 +6774,7 @@ mesh = SubResource("BoxMesh_24")
 position = Vector3(24.5, 10.03, -27.0)
 cast_shadow = 0
 
-[node name="BowlingPins1" parent="NavigationRegion3D" instance=ExtResource("134_bowling_pins")]
+[node name="BowlingPins1" parent="Decor" instance=ExtResource("134_bowling_pins")]
 position = Vector3(28.2, 10.0, -27.0)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
@@ -6763,7 +6783,7 @@ mesh = SubResource("BoxMesh_24")
 position = Vector3(24.5, 10.03, -31.5)
 cast_shadow = 0
 
-[node name="BowlingPins2" parent="NavigationRegion3D" instance=ExtResource("134_bowling_pins")]
+[node name="BowlingPins2" parent="Decor" instance=ExtResource("134_bowling_pins")]
 position = Vector3(28.2, 10.0, -31.5)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
@@ -6772,7 +6792,7 @@ mesh = SubResource("BoxMesh_24")
 position = Vector3(24.5, 10.03, -36.0)
 cast_shadow = 0
 
-[node name="BowlingPins3" parent="NavigationRegion3D" instance=ExtResource("134_bowling_pins")]
+[node name="BowlingPins3" parent="Decor" instance=ExtResource("134_bowling_pins")]
 position = Vector3(28.2, 10.0, -36.0)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
@@ -8617,42 +8637,23 @@ position = Vector3(-4.0, 0.0, -99.4)
 position = Vector3(-2.8, 0.0, -99.4)
 
 [node name="VendingMachine14" parent="NavigationRegion3D" instance=ExtResource("59_vending_machine")]
-position = Vector3(4.0, 0.0, -99.4)
+position = Vector3(-7.5, 0.0, -99.4)
 
 [node name="VendingMachine15" parent="NavigationRegion3D" instance=ExtResource("59_vending_machine")]
-position = Vector3(5.2, 0.0, -99.4)
-
-[node name="VendingMachine16" parent="NavigationRegion3D" instance=ExtResource("59_vending_machine")]
-position = Vector3(6.4, 0.0, -99.4)
+position = Vector3(-6.3, 0.0, -99.4)
 
 [node name="PhotoBooth3" parent="NavigationRegion3D" instance=ExtResource("127_photo_booth")]
 position = Vector3(-11.0, 0.0, -99.2)
 
-[node name="Kiosk7" parent="NavigationRegion3D" instance=ExtResource("152_kiosk")]
-position = Vector3(16.0, 0.0, -91.0)
-
 [node name="MallBench16" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
-position = Vector3(-8.0, 0.0, -95.0)
+position = Vector3(-6.0, 0.0, -94.0)
 
 [node name="Planter15" parent="NavigationRegion3D" instance=ExtResource("115_planter")]
-position = Vector3(-5.0, 0.0, -95.0)
+position = Vector3(-3.0, 0.0, -94.0)
 rotation = Vector3(0.0, -2.8624, 0.0)
 
-[node name="MallBench17" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
-position = Vector3(10.0, 0.0, -95.0)
-
-[node name="Planter16" parent="NavigationRegion3D" instance=ExtResource("115_planter")]
-position = Vector3(13.0, 0.0, -95.0)
-rotation = Vector3(0.0, 0.1517, 0.0)
-
-[node name="Armchair8" parent="NavigationRegion3D" instance=ExtResource("90_armchair")]
-position = Vector3(24.0, 0.0, -98.8)
-
-[node name="Armchair9" parent="NavigationRegion3D" instance=ExtResource("90_armchair")]
-position = Vector3(26.0, 0.0, -98.8)
-
 [node name="Stroller3" parent="NavigationRegion3D" instance=ExtResource("68_stroller")]
-position = Vector3(2.0, 0.0, -93.0)
+position = Vector3(-1.0, 0.0, -91.0)
 rotation = Vector3(0.0, 0.4, 0.0)
 
 [node name="Light82" type="OmniLight3D" parent="Lights"]
@@ -8662,190 +8663,413 @@ light_energy = 0.7
 omni_range = 11
 
 [node name="Light83" type="OmniLight3D" parent="Lights"]
-position = Vector3(0.0, 3.8, -93.0)
+position = Vector3(-2.0, 3.8, -93.0)
 light_color = Color(1.0, 0.85, 0.6, 1.0)
 light_energy = 0.7
 omni_range = 11
+
+[node name="Block763" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+position = Vector3(5.5, 2.35, -85.2)
+size = Vector3(7.0, 4.7, 0.3)
+material = ExtResource("35_plaster")
+
+[node name="Block764" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+position = Vector3(21.5, 2.35, -85.2)
+size = Vector3(17.0, 4.7, 0.3)
+material = ExtResource("35_plaster")
+
+[node name="Block765" parent="NavigationRegion3D" instance=ExtResource("3_block")]
+position = Vector3(2.0, 2.35, -92.6)
+size = Vector3(0.3, 4.7, 14.8)
+material = ExtResource("35_plaster")
+
+[node name="Casino1" parent="Decor" instance=ExtResource("155_casino")]
+position = Vector3(11.0, 3.9, -85.03)
+rotation = Vector3(0.0, 3.1416, 0.0)
 
 [node name="Light84" type="OmniLight3D" parent="Lights"]
-position = Vector3(12.0, 3.8, -93.0)
-light_color = Color(1.0, 0.85, 0.6, 1.0)
-light_energy = 0.7
-omni_range = 11
+position = Vector3(11.0, 3.9, -83.53)
+light_color = Color(1.0, 0.25, 0.2, 1.0)
+light_energy = 2.0
+omni_range = 10.0
+
+[node name="D219" type="MeshInstance3D" parent="Decor"]
+mesh = SubResource("BoxMesh_39")
+position = Vector3(16.0, 0.02, -92.6)
+cast_shadow = 0
+
+[node name="SlotMachineB1" parent="NavigationRegion3D" instance=ExtResource("157_slot_machine_b")]
+position = Vector3(19.6, 0.0, -99.5)
+
+[node name="CasinoStool1" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(19.6, 0.0, -98.3)
+rotation = Vector3(0.0, 0.1517, 0.0)
+
+[node name="SlotMachine1" parent="NavigationRegion3D" instance=ExtResource("159_slot_machine")]
+position = Vector3(20.6, 0.0, -99.5)
+
+[node name="CasinoStool2" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(20.6, 0.0, -98.3)
+rotation = Vector3(0.0, 1.4595, 0.0)
+
+[node name="SlotMachineB2" parent="NavigationRegion3D" instance=ExtResource("157_slot_machine_b")]
+position = Vector3(21.6, 0.0, -99.5)
+
+[node name="CasinoStool3" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(21.6, 0.0, -98.3)
+rotation = Vector3(0.0, 0.1499, 0.0)
+
+[node name="SlotMachine2" parent="NavigationRegion3D" instance=ExtResource("159_slot_machine")]
+position = Vector3(22.6, 0.0, -99.5)
+
+[node name="CasinoStool4" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(22.6, 0.0, -98.3)
+rotation = Vector3(0.0, 1.4501, 0.0)
+
+[node name="SlotMachineB3" parent="NavigationRegion3D" instance=ExtResource("157_slot_machine_b")]
+position = Vector3(23.6, 0.0, -99.5)
+
+[node name="CasinoStool5" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(23.6, 0.0, -98.3)
+rotation = Vector3(0.0, 0.1414, 0.0)
+
+[node name="SlotMachine3" parent="NavigationRegion3D" instance=ExtResource("159_slot_machine")]
+position = Vector3(24.6, 0.0, -99.5)
+
+[node name="CasinoStool6" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(24.6, 0.0, -98.3)
+rotation = Vector3(0.0, 2.5176, 0.0)
+
+[node name="SlotMachineB4" parent="NavigationRegion3D" instance=ExtResource("157_slot_machine_b")]
+position = Vector3(25.6, 0.0, -99.5)
+
+[node name="CasinoStool7" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(25.6, 0.0, -98.3)
+rotation = Vector3(0.0, -2.5402, 0.0)
+
+[node name="SlotMachine4" parent="NavigationRegion3D" instance=ExtResource("159_slot_machine")]
+position = Vector3(26.6, 0.0, -99.5)
+
+[node name="CasinoStool8" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(26.6, 0.0, -98.3)
+rotation = Vector3(0.0, 1.1561, 0.0)
+
+[node name="SlotMachineB5" parent="NavigationRegion3D" instance=ExtResource("157_slot_machine_b")]
+position = Vector3(27.6, 0.0, -99.5)
+
+[node name="CasinoStool9" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(27.6, 0.0, -98.3)
+rotation = Vector3(0.0, -1.0579, 0.0)
+
+[node name="SlotMachine5" parent="NavigationRegion3D" instance=ExtResource("159_slot_machine")]
+position = Vector3(28.6, 0.0, -99.5)
+
+[node name="CasinoStool10" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(28.6, 0.0, -98.3)
+rotation = Vector3(0.0, -1.3156, 0.0)
+
+[node name="SlotMachine6" parent="NavigationRegion3D" instance=ExtResource("159_slot_machine")]
+position = Vector3(29.5, 0.0, -86.6)
+rotation = Vector3(0.0, -1.5708, 0.0)
+
+[node name="CasinoStool11" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(28.3, 0.0, -86.6)
+rotation = Vector3(0.0, -3.0702, 0.0)
+
+[node name="SlotMachineB6" parent="NavigationRegion3D" instance=ExtResource("157_slot_machine_b")]
+position = Vector3(29.5, 0.0, -87.6)
+rotation = Vector3(0.0, -1.5708, 0.0)
+
+[node name="CasinoStool12" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(28.3, 0.0, -87.6)
+rotation = Vector3(0.0, 0.047, 0.0)
+
+[node name="SlotMachine7" parent="NavigationRegion3D" instance=ExtResource("159_slot_machine")]
+position = Vector3(29.5, 0.0, -88.6)
+rotation = Vector3(0.0, -1.5708, 0.0)
+
+[node name="CasinoStool13" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(28.3, 0.0, -88.6)
+rotation = Vector3(0.0, -2.4825, 0.0)
+
+[node name="SlotMachineB7" parent="NavigationRegion3D" instance=ExtResource("157_slot_machine_b")]
+position = Vector3(29.5, 0.0, -89.6)
+rotation = Vector3(0.0, -1.5708, 0.0)
+
+[node name="CasinoStool14" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(28.3, 0.0, -89.6)
+rotation = Vector3(0.0, 0.2734, 0.0)
+
+[node name="SlotMachine8" parent="NavigationRegion3D" instance=ExtResource("159_slot_machine")]
+position = Vector3(19.6, 0.0, -92.3)
+rotation = Vector3(0.0, 3.1416, 0.0)
+
+[node name="SlotMachineB8" parent="NavigationRegion3D" instance=ExtResource("157_slot_machine_b")]
+position = Vector3(19.6, 0.0, -92.9)
+
+[node name="SlotMachine9" parent="NavigationRegion3D" instance=ExtResource("159_slot_machine")]
+position = Vector3(20.6, 0.0, -92.3)
+rotation = Vector3(0.0, 3.1416, 0.0)
+
+[node name="SlotMachineB9" parent="NavigationRegion3D" instance=ExtResource("157_slot_machine_b")]
+position = Vector3(20.6, 0.0, -92.9)
+
+[node name="SlotMachine10" parent="NavigationRegion3D" instance=ExtResource("159_slot_machine")]
+position = Vector3(21.6, 0.0, -92.3)
+rotation = Vector3(0.0, 3.1416, 0.0)
+
+[node name="SlotMachineB10" parent="NavigationRegion3D" instance=ExtResource("157_slot_machine_b")]
+position = Vector3(21.6, 0.0, -92.9)
+
+[node name="SlotMachine11" parent="NavigationRegion3D" instance=ExtResource("159_slot_machine")]
+position = Vector3(22.6, 0.0, -92.3)
+rotation = Vector3(0.0, 3.1416, 0.0)
+
+[node name="SlotMachineB11" parent="NavigationRegion3D" instance=ExtResource("157_slot_machine_b")]
+position = Vector3(22.6, 0.0, -92.9)
+
+[node name="SlotMachine12" parent="NavigationRegion3D" instance=ExtResource("159_slot_machine")]
+position = Vector3(23.6, 0.0, -92.3)
+rotation = Vector3(0.0, 3.1416, 0.0)
+
+[node name="SlotMachineB12" parent="NavigationRegion3D" instance=ExtResource("157_slot_machine_b")]
+position = Vector3(23.6, 0.0, -92.9)
+
+[node name="RouletteTable1" parent="NavigationRegion3D" instance=ExtResource("160_roulette_table")]
+position = Vector3(9.5, 0.0, -89.5)
+
+[node name="CasinoStool15" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(8.3, 0.0, -88.45)
+rotation = Vector3(0.0, 2.4342, 0.0)
+
+[node name="CasinoStool16" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(9.2, 0.0, -88.45)
+rotation = Vector3(0.0, 3.0969, 0.0)
+
+[node name="CasinoStool17" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(10.1, 0.0, -88.45)
+rotation = Vector3(0.0, 1.4323, 0.0)
+
+[node name="RouletteTable2" parent="NavigationRegion3D" instance=ExtResource("160_roulette_table")]
+position = Vector3(9.5, 0.0, -96.0)
+
+[node name="CasinoStool18" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(8.3, 0.0, -94.95)
+rotation = Vector3(0.0, -1.8436, 0.0)
+
+[node name="CasinoStool19" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(9.2, 0.0, -94.95)
+rotation = Vector3(0.0, 2.7135, 0.0)
+
+[node name="CasinoStool20" parent="NavigationRegion3D" instance=ExtResource("158_casino_stool")]
+position = Vector3(10.1, 0.0, -94.95)
+rotation = Vector3(0.0, -0.7218, 0.0)
+
+[node name="BlackjackTable1" parent="NavigationRegion3D" instance=ExtResource("161_blackjack_table")]
+position = Vector3(15.0, 0.0, -89.0)
+
+[node name="BlackjackTable2" parent="NavigationRegion3D" instance=ExtResource("161_blackjack_table")]
+position = Vector3(15.0, 0.0, -96.5)
+
+[node name="CashierDesk1" parent="NavigationRegion3D" instance=ExtResource("162_cashier_desk")]
+position = Vector3(2.65, 0.0, -93.0)
+rotation = Vector3(0.0, 1.5708, 0.0)
+
+[node name="Planter16" parent="NavigationRegion3D" instance=ExtResource("115_planter")]
+position = Vector3(3.0, 0.0, -86.3)
+rotation = Vector3(0.0, 2.8848, 0.0)
+
+[node name="Planter17" parent="NavigationRegion3D" instance=ExtResource("115_planter")]
+position = Vector3(17.0, 0.0, -86.3)
+rotation = Vector3(0.0, -2.7986, 0.0)
+
+[node name="Sofa7" parent="NavigationRegion3D" instance=ExtResource("100_sofa")]
+position = Vector3(5.5, 0.0, -99.4)
 
 [node name="Light85" type="OmniLight3D" parent="Lights"]
-position = Vector3(24.0, 3.8, -93.0)
-light_color = Color(1.0, 0.85, 0.6, 1.0)
-light_energy = 0.7
-omni_range = 11
-
-[node name="Fountain1" parent="NavigationRegion3D" instance=ExtResource("155_fountain")]
-position = Vector3(0.0, 0.0, -50.0)
+position = Vector3(6.0, 3.9, -88.0)
+light_color = Color(1.0, 0.7, 0.45, 1.0)
+light_energy = 1.1
+omni_range = 9
 
 [node name="Light86" type="OmniLight3D" parent="Lights"]
+position = Vector3(6.0, 3.9, -97.0)
+light_color = Color(1.0, 0.7, 0.45, 1.0)
+light_energy = 1.1
+omni_range = 9
+
+[node name="Light87" type="OmniLight3D" parent="Lights"]
+position = Vector3(16.0, 3.9, -93.0)
+light_color = Color(1.0, 0.7, 0.45, 1.0)
+light_energy = 1.1
+omni_range = 9
+
+[node name="Light88" type="OmniLight3D" parent="Lights"]
+position = Vector3(24.0, 3.9, -88.0)
+light_color = Color(1.0, 0.7, 0.45, 1.0)
+light_energy = 1.1
+omni_range = 9
+
+[node name="Light89" type="OmniLight3D" parent="Lights"]
+position = Vector3(24.0, 3.9, -96.0)
+light_color = Color(1.0, 0.7, 0.45, 1.0)
+light_energy = 1.1
+omni_range = 9
+
+[node name="Light90" type="OmniLight3D" parent="Lights"]
+position = Vector3(11.0, 3.6, -92.0)
+light_color = Color(1.0, 0.2, 0.25, 1.0)
+light_energy = 0.9
+omni_range = 12
+script = ExtResource("29_flicker_light")
+
+[node name="Walker1" parent="Zombies" instance=ExtResource("163_walker")]
+position = Vector3(21.5, 0.0, -95.5)
+rotation = Vector3(0.0, 2.8045, 0.0)
+
+[node name="Fountain1" parent="NavigationRegion3D" instance=ExtResource("164_fountain")]
+position = Vector3(0.0, 0.0, -50.0)
+
+[node name="Light91" type="OmniLight3D" parent="Lights"]
 position = Vector3(0.0, 2.0, -50.0)
 light_color = Color(0.4, 0.7, 1.0, 1.0)
 light_energy = 2.0
 omni_range = 10
 
-[node name="MallBench18" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
+[node name="MallBench17" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
 position = Vector3(-5.5, 0.0, -30.0)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
-[node name="PlantTall1" parent="NavigationRegion3D" instance=ExtResource("156_plant_tall")]
+[node name="PlantTall1" parent="NavigationRegion3D" instance=ExtResource("165_plant_tall")]
 position = Vector3(-5.5, 0.0, -33.0)
-rotation = Vector3(0.0, 1.4595, 0.0)
+rotation = Vector3(0.0, -0.4653, 0.0)
 
-[node name="MallBench19" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
+[node name="MallBench18" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
 position = Vector3(5.5, 0.0, -30.0)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
-[node name="PlantTall2" parent="NavigationRegion3D" instance=ExtResource("156_plant_tall")]
+[node name="PlantTall2" parent="NavigationRegion3D" instance=ExtResource("165_plant_tall")]
 position = Vector3(5.5, 0.0, -33.0)
-rotation = Vector3(0.0, 0.1499, 0.0)
+rotation = Vector3(0.0, -0.2983, 0.0)
 
-[node name="MallBench20" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
+[node name="MallBench19" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
 position = Vector3(-5.5, 0.0, -38.0)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
-[node name="PlantTall3" parent="NavigationRegion3D" instance=ExtResource("156_plant_tall")]
+[node name="PlantTall3" parent="NavigationRegion3D" instance=ExtResource("165_plant_tall")]
 position = Vector3(-5.5, 0.0, -41.0)
-rotation = Vector3(0.0, 1.4501, 0.0)
+rotation = Vector3(0.0, 0.035, 0.0)
 
-[node name="MallBench21" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
+[node name="MallBench20" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
 position = Vector3(5.5, 0.0, -38.0)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
-[node name="PlantTall4" parent="NavigationRegion3D" instance=ExtResource("156_plant_tall")]
+[node name="PlantTall4" parent="NavigationRegion3D" instance=ExtResource("165_plant_tall")]
 position = Vector3(5.5, 0.0, -41.0)
-rotation = Vector3(0.0, 0.1414, 0.0)
+rotation = Vector3(0.0, 3.0723, 0.0)
 
-[node name="MallBench22" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
+[node name="MallBench21" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
 position = Vector3(-5.5, 0.0, -62.0)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
-[node name="PlantTall5" parent="NavigationRegion3D" instance=ExtResource("156_plant_tall")]
+[node name="PlantTall5" parent="NavigationRegion3D" instance=ExtResource("165_plant_tall")]
 position = Vector3(-5.5, 0.0, -65.0)
-rotation = Vector3(0.0, 2.5176, 0.0)
+rotation = Vector3(0.0, 2.3729, 0.0)
 
-[node name="MallBench23" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
+[node name="MallBench22" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
 position = Vector3(5.5, 0.0, -62.0)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
-[node name="PlantTall6" parent="NavigationRegion3D" instance=ExtResource("156_plant_tall")]
+[node name="PlantTall6" parent="NavigationRegion3D" instance=ExtResource("165_plant_tall")]
 position = Vector3(5.5, 0.0, -65.0)
-rotation = Vector3(0.0, -2.5402, 0.0)
+rotation = Vector3(0.0, 0.8887, 0.0)
 
-[node name="MallBench24" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
+[node name="MallBench23" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
 position = Vector3(-5.5, 0.0, -70.0)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
-[node name="PlantTall7" parent="NavigationRegion3D" instance=ExtResource("156_plant_tall")]
+[node name="PlantTall7" parent="NavigationRegion3D" instance=ExtResource("165_plant_tall")]
 position = Vector3(-5.5, 0.0, -73.0)
-rotation = Vector3(0.0, 1.1561, 0.0)
+rotation = Vector3(0.0, 1.2974, 0.0)
 
-[node name="MallBench25" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
+[node name="MallBench24" parent="NavigationRegion3D" instance=ExtResource("92_mall_bench")]
 position = Vector3(5.5, 0.0, -70.0)
 rotation = Vector3(0.0, 1.5708, 0.0)
 
-[node name="PlantTall8" parent="NavigationRegion3D" instance=ExtResource("156_plant_tall")]
+[node name="PlantTall8" parent="NavigationRegion3D" instance=ExtResource("165_plant_tall")]
 position = Vector3(5.5, 0.0, -73.0)
-rotation = Vector3(0.0, -1.0579, 0.0)
+rotation = Vector3(0.0, 1.9748, 0.0)
 
 [node name="PottedPlant3" parent="NavigationRegion3D" instance=ExtResource("106_potted_plant")]
 position = Vector3(4.8816, 0.0, -47.9361)
-rotation = Vector3(0.0, -1.3156, 0.0)
+rotation = Vector3(0.0, 2.6016, 0.0)
 
 [node name="PottedPlant4" parent="NavigationRegion3D" instance=ExtResource("106_potted_plant")]
 position = Vector3(1.9924, 0.0, -45.0888)
-rotation = Vector3(0.0, -3.0702, 0.0)
+rotation = Vector3(0.0, 2.0039, 0.0)
 
 [node name="PottedPlant5" parent="NavigationRegion3D" instance=ExtResource("106_potted_plant")]
 position = Vector3(-2.0639, 0.0, -45.1184)
-rotation = Vector3(0.0, 0.047, 0.0)
+rotation = Vector3(0.0, -0.8346, 0.0)
 
 [node name="PottedPlant6" parent="NavigationRegion3D" instance=ExtResource("106_potted_plant")]
 position = Vector3(-4.9112, 0.0, -48.0076)
-rotation = Vector3(0.0, -2.4825, 0.0)
+rotation = Vector3(0.0, -0.9763, 0.0)
 
 [node name="PottedPlant7" parent="NavigationRegion3D" instance=ExtResource("106_potted_plant")]
 position = Vector3(-4.8816, 0.0, -52.0639)
-rotation = Vector3(0.0, 0.2734, 0.0)
+rotation = Vector3(0.0, -0.5697, 0.0)
 
 [node name="PottedPlant8" parent="NavigationRegion3D" instance=ExtResource("106_potted_plant")]
 position = Vector3(-1.9924, 0.0, -54.9112)
-rotation = Vector3(0.0, 2.4342, 0.0)
+rotation = Vector3(0.0, 3.1086, 0.0)
 
 [node name="PottedPlant9" parent="NavigationRegion3D" instance=ExtResource("106_potted_plant")]
 position = Vector3(2.0639, 0.0, -54.8816)
-rotation = Vector3(0.0, 3.0969, 0.0)
+rotation = Vector3(0.0, -2.8353, 0.0)
 
 [node name="PottedPlant10" parent="NavigationRegion3D" instance=ExtResource("106_potted_plant")]
 position = Vector3(4.9112, 0.0, -51.9924)
-rotation = Vector3(0.0, 1.4323, 0.0)
+rotation = Vector3(0.0, 2.2379, 0.0)
 
 [node name="InfoDesk" parent="NavigationRegion3D" instance=ExtResource("3_block")]
 position = Vector3(0.0, 0.55, -20.0)
 size = Vector3(4.0, 1.1, 1.2)
 material = ExtResource("133_wood")
 
-[node name="Info1" parent="Decor" instance=ExtResource("157_info")]
+[node name="Info1" parent="Decor" instance=ExtResource("166_info")]
 position = Vector3(0.0, 2.4, -19.3)
 rotation = Vector3(0.0, 3.1416, 0.0)
 
-[node name="Newspaper1" parent="Decor" instance=ExtResource("158_newspaper")]
-position = Vector3(5.8624, 0.0, -65.7426)
-rotation = Vector3(0.0, 1.3779, 0.0)
-
-[node name="Backpack1" parent="Decor" instance=ExtResource("159_backpack")]
-position = Vector3(-8.0173, 0.0, -79.4586)
-rotation = Vector3(0.0, -0.4653, 0.0)
-
-[node name="Suitcase1" parent="Decor" instance=ExtResource("160_suitcase")]
-position = Vector3(-6.5291, 0.0, -27.0488)
-rotation = Vector3(0.0, -1.338, 0.0)
-
-[node name="TrashCan1" parent="NavigationRegion3D" instance=ExtResource("161_trash_can")]
-position = Vector3(-0.3366, 0.0, -79.0279)
-rotation = Vector3(0.0, -0.226, 0.0)
-
-[node name="TrashCan2" parent="NavigationRegion3D" instance=ExtResource("161_trash_can")]
-position = Vector3(5.7406, 0.0, -41.2333)
-rotation = Vector3(0.0, -0.9763, 0.0)
-
-[node name="Suitcase2" parent="Decor" instance=ExtResource("160_suitcase")]
-position = Vector3(1.2533, 0.0, -55.7266)
-rotation = Vector3(0.0, -3.0294, 0.0)
-
-[node name="Suitcase3" parent="Decor" instance=ExtResource("160_suitcase")]
+[node name="Suitcase1" parent="Decor" instance=ExtResource("167_suitcase")]
 position = Vector3(0.5349, 0.0, -66.2025)
 rotation = Vector3(0.0, -0.8226, 0.0)
 
-[node name="Papers1" parent="Decor" instance=ExtResource("162_papers")]
+[node name="Papers1" parent="Decor" instance=ExtResource("168_papers")]
 position = Vector3(-3.5607, 0.0, -53.3933)
 rotation = Vector3(0.0, -0.5371, 0.0)
 
-[node name="Suitcase4" parent="Decor" instance=ExtResource("160_suitcase")]
+[node name="Suitcase2" parent="Decor" instance=ExtResource("167_suitcase")]
 position = Vector3(-8.1243, 0.0, -53.7401)
 rotation = Vector3(0.0, -2.3182, 0.0)
 
-[node name="Papers2" parent="Decor" instance=ExtResource("162_papers")]
+[node name="Papers2" parent="Decor" instance=ExtResource("168_papers")]
 position = Vector3(-1.747, 0.0, -73.4742)
 rotation = Vector3(0.0, -1.1468, 0.0)
 
-[node name="Papers3" parent="Decor" instance=ExtResource("162_papers")]
+[node name="Papers3" parent="Decor" instance=ExtResource("168_papers")]
 position = Vector3(-4.4063, 0.0, -75.5915)
 rotation = Vector3(0.0, 2.815, 0.0)
 
-[node name="TrashCan3" parent="NavigationRegion3D" instance=ExtResource("161_trash_can")]
+[node name="TrashCan1" parent="NavigationRegion3D" instance=ExtResource("169_trash_can")]
 position = Vector3(7.9049, 0.0, -17.6591)
 rotation = Vector3(0.0, 0.0562, 0.0)
 
-[node name="TrashCan4" parent="NavigationRegion3D" instance=ExtResource("161_trash_can")]
+[node name="TrashCan2" parent="NavigationRegion3D" instance=ExtResource("169_trash_can")]
 position = Vector3(2.7299, 0.0, -40.365)
 rotation = Vector3(0.0, -0.5578, 0.0)
 
-[node name="Suitcase5" parent="Decor" instance=ExtResource("160_suitcase")]
+[node name="Suitcase3" parent="Decor" instance=ExtResource("167_suitcase")]
 position = Vector3(-4.0131, 0.0, -70.9249)
 rotation = Vector3(0.0, 3.1297, 0.0)
 
@@ -8853,11 +9077,11 @@ rotation = Vector3(0.0, 3.1297, 0.0)
 position = Vector3(0.0795, 0.0, -50.0528)
 rotation = Vector3(0.0, 1.0444, 0.0)
 
-[node name="Papers4" parent="Decor" instance=ExtResource("162_papers")]
+[node name="Papers4" parent="Decor" instance=ExtResource("168_papers")]
 position = Vector3(-3.8318, 0.0, -49.431)
 rotation = Vector3(0.0, -1.9483, 0.0)
 
-[node name="Suitcase6" parent="Decor" instance=ExtResource("160_suitcase")]
+[node name="Suitcase4" parent="Decor" instance=ExtResource("167_suitcase")]
 position = Vector3(0.1921, 0.0, -67.6457)
 rotation = Vector3(0.0, -1.2661, 0.0)
 
@@ -8865,55 +9089,59 @@ rotation = Vector3(0.0, -1.2661, 0.0)
 position = Vector3(5.3666, 0.0, -25.1665)
 rotation = Vector3(0.0, 2.7856, 0.0)
 
-[node name="Backpack2" parent="Decor" instance=ExtResource("159_backpack")]
+[node name="Backpack1" parent="Decor" instance=ExtResource("170_backpack")]
 position = Vector3(4.111, 0.0, -67.7647)
 rotation = Vector3(0.0, 0.4689, 0.0)
 
-[node name="Papers5" parent="Decor" instance=ExtResource("162_papers")]
+[node name="Papers5" parent="Decor" instance=ExtResource("168_papers")]
 position = Vector3(-3.2437, 0.0, -24.552)
 rotation = Vector3(0.0, 0.6114, 0.0)
 
-[node name="Backpack3" parent="Decor" instance=ExtResource("159_backpack")]
+[node name="Backpack2" parent="Decor" instance=ExtResource("170_backpack")]
 position = Vector3(-4.244, 0.0, -79.1831)
 rotation = Vector3(0.0, -0.5551, 0.0)
 
-[node name="Suitcase7" parent="Decor" instance=ExtResource("160_suitcase")]
+[node name="Suitcase5" parent="Decor" instance=ExtResource("167_suitcase")]
 position = Vector3(-6.5634, 0.0, -75.4079)
 rotation = Vector3(0.0, 2.8333, 0.0)
 
-[node name="ShoppingBags3" parent="NavigationRegion3D" instance=ExtResource("48_shopping_bags")]
-position = Vector3(-13.8827, 5.0, -13.1471)
+[node name="Papers6" parent="Decor" instance=ExtResource("168_papers")]
+position = Vector3(0.3519, 0.0, -25.1807)
 rotation = Vector3(0.0, -0.3049, 0.0)
 
-[node name="ShoppingBags4" parent="NavigationRegion3D" instance=ExtResource("48_shopping_bags")]
-position = Vector3(-16.5252, 5.0, -13.5988)
+[node name="Papers7" parent="Decor" instance=ExtResource("168_papers")]
+position = Vector3(-7.5755, 0.0, -25.4849)
 rotation = Vector3(0.0, -1.4789, 0.0)
 
-[node name="ShoppingBags5" parent="NavigationRegion3D" instance=ExtResource("48_shopping_bags")]
-position = Vector3(-11.5721, 5.0, -48.3234)
+[node name="Papers8" parent="Decor" instance=ExtResource("168_papers")]
+position = Vector3(7.2838, 0.0, -48.8708)
 rotation = Vector3(0.0, -2.4698, 0.0)
 
-[node name="Newspaper2" parent="Decor" instance=ExtResource("158_newspaper")]
-position = Vector3(-14.1317, 5.0, -22.7955)
+[node name="Suitcase6" parent="Decor" instance=ExtResource("167_suitcase")]
+position = Vector3(-0.3951, 0.0, -31.6786)
 rotation = Vector3(0.0, -1.3852, 0.0)
 
-[node name="ShoppingBags6" parent="NavigationRegion3D" instance=ExtResource("48_shopping_bags")]
-position = Vector3(-13.5277, 5.0, -44.1649)
+[node name="BoxOpen3" parent="NavigationRegion3D" instance=ExtResource("70_box_open")]
+position = Vector3(5.434, 0.0, -56.9091)
+rotation = Vector3(0.0, 0.1424, 0.0)
+
+[node name="Papers9" parent="Decor" instance=ExtResource("168_papers")]
+position = Vector3(1.4169, 0.0, -46.0702)
 rotation = Vector3(0.0, 0.1377, 0.0)
 
-[node name="Papers6" parent="Decor" instance=ExtResource("162_papers")]
+[node name="Papers10" parent="Decor" instance=ExtResource("168_papers")]
 position = Vector3(-13.8702, 5.0, -8.5256)
 rotation = Vector3(0.0, -0.8004, 0.0)
 
-[node name="Papers7" parent="Decor" instance=ExtResource("162_papers")]
+[node name="Papers11" parent="Decor" instance=ExtResource("168_papers")]
 position = Vector3(-16.8338, 5.0, -72.2456)
 rotation = Vector3(0.0, -2.4901, 0.0)
 
-[node name="ShoppingBags7" parent="NavigationRegion3D" instance=ExtResource("48_shopping_bags")]
+[node name="ShoppingBags3" parent="Decor" instance=ExtResource("48_shopping_bags")]
 position = Vector3(-14.1846, 5.0, -69.5693)
 rotation = Vector3(0.0, -0.3979, 0.0)
 
-[node name="Newspaper3" parent="Decor" instance=ExtResource("158_newspaper")]
+[node name="Newspaper1" parent="Decor" instance=ExtResource("171_newspaper")]
 position = Vector3(-11.9097, 5.0, -77.175)
 rotation = Vector3(0.0, -1.1202, 0.0)
 
@@ -8921,234 +9149,254 @@ rotation = Vector3(0.0, -1.1202, 0.0)
 position = Vector3(-13.5368, 5.0, -94.623)
 rotation = Vector3(0.0, -1.8848, 0.0)
 
-[node name="ShoppingBags8" parent="NavigationRegion3D" instance=ExtResource("48_shopping_bags")]
-position = Vector3(11.5166, 5.0, -55.6518)
+[node name="ShoppingBags4" parent="Decor" instance=ExtResource("48_shopping_bags")]
+position = Vector3(-16.4834, 5.0, -55.6518)
 rotation = Vector3(0.0, -2.1748, 0.0)
 
-[node name="ShoppingBags9" parent="NavigationRegion3D" instance=ExtResource("48_shopping_bags")]
-position = Vector3(13.0152, 5.0, -62.5075)
+[node name="ShoppingBags5" parent="Decor" instance=ExtResource("48_shopping_bags")]
+position = Vector3(-14.9848, 5.0, -62.5075)
 rotation = Vector3(0.0, 0.0783, 0.0)
 
-[node name="ShoppingBags10" parent="NavigationRegion3D" instance=ExtResource("48_shopping_bags")]
-position = Vector3(11.8518, 5.0, -15.3398)
+[node name="ShoppingBags6" parent="Decor" instance=ExtResource("48_shopping_bags")]
+position = Vector3(-16.1482, 5.0, -15.3398)
 rotation = Vector3(0.0, -2.8164, 0.0)
 
-[node name="Papers8" parent="Decor" instance=ExtResource("162_papers")]
-position = Vector3(15.7424, 5.0, -5.7994)
+[node name="Papers12" parent="Decor" instance=ExtResource("168_papers")]
+position = Vector3(-12.2576, 5.0, -5.7994)
 rotation = Vector3(0.0, -0.6565, 0.0)
 
-[node name="Newspaper4" parent="Decor" instance=ExtResource("158_newspaper")]
-position = Vector3(11.5039, 5.0, -55.8273)
+[node name="Newspaper2" parent="Decor" instance=ExtResource("171_newspaper")]
+position = Vector3(-16.4961, 5.0, -55.8273)
 rotation = Vector3(0.0, 2.9374, 0.0)
 
-[node name="Papers9" parent="Decor" instance=ExtResource("162_papers")]
+[node name="Papers13" parent="Decor" instance=ExtResource("168_papers")]
 position = Vector3(16.2197, 5.0, -46.6666)
 rotation = Vector3(0.0, 2.9378, 0.0)
 
-[node name="Newspaper5" parent="Decor" instance=ExtResource("158_newspaper")]
+[node name="Newspaper3" parent="Decor" instance=ExtResource("171_newspaper")]
 position = Vector3(11.8037, 5.0, -98.2188)
 rotation = Vector3(0.0, 0.1563, 0.0)
 
-[node name="ShoppingBags11" parent="NavigationRegion3D" instance=ExtResource("48_shopping_bags")]
+[node name="ShoppingBags7" parent="Decor" instance=ExtResource("48_shopping_bags")]
 position = Vector3(15.0013, 5.0, -83.0523)
 rotation = Vector3(0.0, 2.6332, 0.0)
 
-[node name="ShoppingBags12" parent="NavigationRegion3D" instance=ExtResource("48_shopping_bags")]
+[node name="ShoppingBags8" parent="Decor" instance=ExtResource("48_shopping_bags")]
 position = Vector3(15.9337, 5.0, -37.6594)
 rotation = Vector3(0.0, -2.7267, 0.0)
 
-[node name="ShoppingBags13" parent="NavigationRegion3D" instance=ExtResource("48_shopping_bags")]
+[node name="ShoppingBags9" parent="Decor" instance=ExtResource("48_shopping_bags")]
 position = Vector3(15.7914, 5.0, -41.7691)
 rotation = Vector3(0.0, 0.1158, 0.0)
 
 [node name="TrashBags6" parent="Decor" instance=ExtResource("20_trash_bags")]
-position = Vector3(-12.1379, 10.0, -65.5821)
+position = Vector3(15.8621, 5.0, -77.2536)
 rotation = Vector3(0.0, -1.2061, 0.0)
 
-[node name="Papers10" parent="Decor" instance=ExtResource("162_papers")]
-position = Vector3(-12.7341, 10.0, -1.6265)
+[node name="Papers14" parent="Decor" instance=ExtResource("168_papers")]
+position = Vector3(15.2659, 5.0, -1.7397)
 rotation = Vector3(0.0, 2.9114, 0.0)
 
 [node name="TrashBags7" parent="Decor" instance=ExtResource("20_trash_bags")]
-position = Vector3(-12.1055, 10.0, -57.2871)
+position = Vector3(15.8945, 5.0, -67.4595)
 rotation = Vector3(0.0, -2.3974, 0.0)
 
-[node name="BoxOpen3" parent="NavigationRegion3D" instance=ExtResource("70_box_open")]
-position = Vector3(-13.0687, 10.0, -16.9759)
+[node name="Newspaper4" parent="Decor" instance=ExtResource("171_newspaper")]
+position = Vector3(14.9313, 5.0, -19.8631)
 rotation = Vector3(0.0, 1.127, 0.0)
 
-[node name="Newspaper6" parent="Decor" instance=ExtResource("158_newspaper")]
-position = Vector3(-15.3858, 10.0, -12.8787)
+[node name="ShoppingBags10" parent="Decor" instance=ExtResource("48_shopping_bags")]
+position = Vector3(12.6142, 5.0, -15.0255)
 rotation = Vector3(0.0, -3.1255, 0.0)
 
-[node name="Papers11" parent="Decor" instance=ExtResource("162_papers")]
+[node name="Papers15" parent="Decor" instance=ExtResource("168_papers")]
 position = Vector3(-16.5175, 10.0, -16.7866)
 rotation = Vector3(0.0, 1.7025, 0.0)
 
-[node name="Papers12" parent="Decor" instance=ExtResource("162_papers")]
+[node name="Papers16" parent="Decor" instance=ExtResource("168_papers")]
 position = Vector3(-15.7571, 10.0, -58.3162)
 rotation = Vector3(0.0, -1.2747, 0.0)
 
-[node name="Papers13" parent="Decor" instance=ExtResource("162_papers")]
+[node name="Papers17" parent="Decor" instance=ExtResource("168_papers")]
 position = Vector3(-11.1979, 10.0, -4.4808)
 rotation = Vector3(0.0, -1.2052, 0.0)
 
-[node name="Walker1" parent="Zombies" instance=ExtResource("163_walker")]
-position = Vector3(-4.0, 0.0, -24.0)
-rotation = Vector3(0.0, 2.8409, 0.0)
-
-[node name="Walker2" parent="Zombies" instance=ExtResource("163_walker")]
-position = Vector3(5.0, 0.0, -40.0)
-rotation = Vector3(0.0, 2.9926, 0.0)
-
-[node name="Walker3" parent="Zombies" instance=ExtResource("163_walker")]
-position = Vector3(-3.0, 0.0, -60.0)
-rotation = Vector3(0.0, 0.6782, 0.0)
-
-[node name="Runner1" parent="Zombies" instance=ExtResource("164_runner")]
-position = Vector3(4.0, 0.0, -75.0)
-rotation = Vector3(0.0, 0.2479, 0.0)
-
-[node name="Walker4" parent="Zombies" instance=ExtResource("163_walker")]
-position = Vector3(-24.0, 0.0, -12.0)
-rotation = Vector3(0.0, -2.768, 0.0)
-
-[node name="Walker5" parent="Zombies" instance=ExtResource("163_walker")]
-position = Vector3(-23.0, 0.0, -30.0)
-rotation = Vector3(0.0, -1.6609, 0.0)
-
-[node name="Bloater1" parent="Zombies" instance=ExtResource("165_bloater")]
-position = Vector3(-24.0, 0.0, -52.0)
+[node name="TrashBags8" parent="Decor" instance=ExtResource("20_trash_bags")]
+position = Vector3(-16.6432, 10.0, -20.5593)
 rotation = Vector3(0.0, -1.5278, 0.0)
 
-[node name="Walker6" parent="Zombies" instance=ExtResource("163_walker")]
-position = Vector3(24.0, 0.0, -8.0)
-rotation = Vector3(0.0, 2.4101, 0.0)
-
-[node name="Walker7" parent="Zombies" instance=ExtResource("163_walker")]
-position = Vector3(22.0, 0.0, -50.0)
-rotation = Vector3(0.0, 2.4002, 0.0)
-
-[node name="Soldier1" parent="Zombies" instance=ExtResource("166_soldier")]
-position = Vector3(-14.0, 0.0, -90.0)
-rotation = Vector3(0.0, 0.0925, 0.0)
-
-[node name="Walker8" parent="Zombies" instance=ExtResource("163_walker")]
-position = Vector3(-14.0, 5.0, -30.0)
+[node name="TrashBags9" parent="Decor" instance=ExtResource("20_trash_bags")]
+position = Vector3(-11.7079, 10.0, -43.7217)
 rotation = Vector3(0.0, -0.6375, 0.0)
 
-[node name="Walker9" parent="Zombies" instance=ExtResource("163_walker")]
-position = Vector3(14.0, 5.0, -20.0)
-rotation = Vector3(0.0, 1.5026, 0.0)
-
-[node name="Runner2" parent="Zombies" instance=ExtResource("164_runner")]
-position = Vector3(-24.0, 5.0, -70.0)
-rotation = Vector3(0.0, -0.4144, 0.0)
-
-[node name="Walker10" parent="Zombies" instance=ExtResource("163_walker")]
-position = Vector3(24.0, 5.0, -70.0)
-rotation = Vector3(0.0, 1.5598, 0.0)
-
-[node name="Spitter1" parent="Zombies" instance=ExtResource("167_spitter")]
-position = Vector3(-25.0, 10.0, -12.0)
+[node name="BoxOpen4" parent="NavigationRegion3D" instance=ExtResource("70_box_open")]
+position = Vector3(-14.3958, 10.0, -63.1052)
 rotation = Vector3(0.0, 2.79, 0.0)
 
+[node name="TrashBags10" parent="Decor" instance=ExtResource("20_trash_bags")]
+position = Vector3(-16.8179, 10.0, -7.8363)
+rotation = Vector3(0.0, 0.9871, 0.0)
+
+[node name="TrashBags11" parent="Decor" instance=ExtResource("20_trash_bags")]
+position = Vector3(-11.5825, 10.0, -64.7615)
+rotation = Vector3(0.0, 2.7176, 0.0)
+
+[node name="Walker2" parent="Zombies" instance=ExtResource("163_walker")]
+position = Vector3(-4.0, 0.0, -24.0)
+rotation = Vector3(0.0, -0.3616, 0.0)
+
+[node name="Walker3" parent="Zombies" instance=ExtResource("163_walker")]
+position = Vector3(5.0, 0.0, -40.0)
+rotation = Vector3(0.0, -1.0321, 0.0)
+
+[node name="Walker4" parent="Zombies" instance=ExtResource("163_walker")]
+position = Vector3(-3.0, 0.0, -60.0)
+rotation = Vector3(0.0, -1.3939, 0.0)
+
+[node name="Runner1" parent="Zombies" instance=ExtResource("172_runner")]
+position = Vector3(4.0, 0.0, -75.0)
+rotation = Vector3(0.0, -3.0538, 0.0)
+
+[node name="Walker5" parent="Zombies" instance=ExtResource("163_walker")]
+position = Vector3(-24.0, 0.0, -12.0)
+rotation = Vector3(0.0, 1.6356, 0.0)
+
+[node name="Walker6" parent="Zombies" instance=ExtResource("163_walker")]
+position = Vector3(-23.0, 0.0, -30.0)
+rotation = Vector3(0.0, 1.3192, 0.0)
+
+[node name="Bloater1" parent="Zombies" instance=ExtResource("173_bloater")]
+position = Vector3(-24.0, 0.0, -52.0)
+rotation = Vector3(0.0, -2.1685, 0.0)
+
+[node name="Walker7" parent="Zombies" instance=ExtResource("163_walker")]
+position = Vector3(24.0, 0.0, -8.0)
+rotation = Vector3(0.0, 2.4885, 0.0)
+
+[node name="Walker8" parent="Zombies" instance=ExtResource("163_walker")]
+position = Vector3(22.0, 0.0, -50.0)
+rotation = Vector3(0.0, 2.118, 0.0)
+
+[node name="Soldier1" parent="Zombies" instance=ExtResource("174_soldier")]
+position = Vector3(-14.0, 0.0, -90.0)
+rotation = Vector3(0.0, 0.0836, 0.0)
+
+[node name="Walker9" parent="Zombies" instance=ExtResource("163_walker")]
+position = Vector3(-14.0, 5.0, -30.0)
+rotation = Vector3(0.0, 2.2882, 0.0)
+
+[node name="Walker10" parent="Zombies" instance=ExtResource("163_walker")]
+position = Vector3(14.0, 5.0, -20.0)
+rotation = Vector3(0.0, 0.1601, 0.0)
+
+[node name="Runner2" parent="Zombies" instance=ExtResource("172_runner")]
+position = Vector3(-24.0, 5.0, -70.0)
+rotation = Vector3(0.0, -1.2748, 0.0)
+
 [node name="Walker11" parent="Zombies" instance=ExtResource("163_walker")]
+position = Vector3(24.0, 5.0, -70.0)
+rotation = Vector3(0.0, -2.9133, 0.0)
+
+[node name="Spitter1" parent="Zombies" instance=ExtResource("175_spitter")]
+position = Vector3(-25.0, 10.0, -12.0)
+rotation = Vector3(0.0, -2.4612, 0.0)
+
+[node name="Walker12" parent="Zombies" instance=ExtResource("163_walker")]
 position = Vector3(-14.0, 10.0, -50.0)
-rotation = Vector3(0.0, 0.1374, 0.0)
+rotation = Vector3(0.0, 2.2607, 0.0)
 
-[node name="Runner3" parent="Zombies" instance=ExtResource("164_runner")]
+[node name="Runner3" parent="Zombies" instance=ExtResource("172_runner")]
 position = Vector3(14.0, 10.0, -30.0)
-rotation = Vector3(0.0, -1.9, 0.0)
+rotation = Vector3(0.0, -0.7994, 0.0)
 
-[node name="Bloater2" parent="Zombies" instance=ExtResource("165_bloater")]
+[node name="Bloater2" parent="Zombies" instance=ExtResource("173_bloater")]
 position = Vector3(14.0, 10.0, -75.0)
-rotation = Vector3(0.0, -2.6593, 0.0)
+rotation = Vector3(0.0, -2.0417, 0.0)
 
-[node name="Shopper1" parent="Zombies" instance=ExtResource("164_runner")]
+[node name="Shopper1" parent="Zombies" instance=ExtResource("172_runner")]
 position = Vector3(-7.0, 5.0, -91.0)
-rotation = Vector3(0.0, 1.6584, 0.0)
+rotation = Vector3(0.0, 0.0556, 0.0)
 
 [node name="Shopper2" parent="Zombies" instance=ExtResource("163_walker")]
 position = Vector3(-2.0, 5.0, -97.0)
-rotation = Vector3(0.0, 2.8713, 0.0)
+rotation = Vector3(0.0, -1.8671, 0.0)
 
 [node name="Shopper3" parent="Zombies" instance=ExtResource("163_walker")]
 position = Vector3(3.0, 5.0, -91.0)
-rotation = Vector3(0.0, 2.5316, 0.0)
+rotation = Vector3(0.0, -2.8982, 0.0)
 
-[node name="Shopper4" parent="Zombies" instance=ExtResource("164_runner")]
+[node name="Shopper4" parent="Zombies" instance=ExtResource("172_runner")]
 position = Vector3(8.0, 5.0, -97.0)
-rotation = Vector3(0.0, 1.6852, 0.0)
+rotation = Vector3(0.0, 0.8281, 0.0)
 
 [node name="Shopper5" parent="Zombies" instance=ExtResource("163_walker")]
 position = Vector3(-20.0, 5.0, -95.0)
-rotation = Vector3(0.0, 2.7176, 0.0)
+rotation = Vector3(0.0, 2.9098, 0.0)
 
 [node name="Shopper6" parent="Zombies" instance=ExtResource("163_walker")]
 position = Vector3(22.0, 5.0, -95.0)
-rotation = Vector3(0.0, -0.3616, 0.0)
+rotation = Vector3(0.0, -0.5891, 0.0)
 
-[node name="Gosha" parent="Zombies" instance=ExtResource("168_mascot")]
+[node name="Gosha" parent="Zombies" instance=ExtResource("176_mascot")]
 position = Vector3(0.0, 10.0, -96.0)
 rotation = Vector3(0.0, 0.0, 0.0)
 sight_range = 12.0
 alert_event = NodePath("../../Story/GoshaAppears")
 death_event = NodePath("../../Story/GoshaDead")
 
-[node name="Medkit1" parent="Pickups" instance=ExtResource("169_medkit")]
+[node name="Medkit1" parent="Pickups" instance=ExtResource("177_medkit")]
 position = Vector3(-19.6, 0.9, -8.3)
 
-[node name="AmmoPistol1" parent="Pickups" instance=ExtResource("170_ammo_pistol")]
+[node name="AmmoPistol1" parent="Pickups" instance=ExtResource("178_ammo_pistol")]
 position = Vector3(-26.0, 0.0, -30.0)
 
-[node name="AmmoRifle1" parent="Pickups" instance=ExtResource("171_ammo_rifle")]
+[node name="AmmoRifle1" parent="Pickups" instance=ExtResource("179_ammo_rifle")]
 position = Vector3(22.5, 0.8, -11.0)
 
-[node name="AmmoShells1" parent="Pickups" instance=ExtResource("172_ammo_shells")]
+[node name="AmmoShells1" parent="Pickups" instance=ExtResource("180_ammo_shells")]
 position = Vector3(24.0, 0.0, -60.0)
 
-[node name="Medkit2" parent="Pickups" instance=ExtResource("169_medkit")]
+[node name="Medkit2" parent="Pickups" instance=ExtResource("177_medkit")]
 position = Vector3(-22.0, 0.0, -76.0)
 
-[node name="AmmoMagnum1" parent="Pickups" instance=ExtResource("173_ammo_magnum")]
+[node name="AmmoMagnum1" parent="Pickups" instance=ExtResource("181_ammo_magnum")]
 position = Vector3(27.0, 0.0, -74.0)
 
-[node name="AmmoSniper1" parent="Pickups" instance=ExtResource("174_ammo_sniper")]
+[node name="AmmoSniper1" parent="Pickups" instance=ExtResource("182_ammo_sniper")]
 position = Vector3(-24.0, 5.0, -8.0)
 
-[node name="AmmoRifle2" parent="Pickups" instance=ExtResource("171_ammo_rifle")]
+[node name="AmmoRifle2" parent="Pickups" instance=ExtResource("179_ammo_rifle")]
 position = Vector3(-24.0, 5.0, -14.0)
 
-[node name="WeaponSniper1" parent="Pickups" instance=ExtResource("175_weapon_sniper")]
+[node name="WeaponSniper1" parent="Pickups" instance=ExtResource("183_weapon_sniper")]
 position = Vector3(-21.0, 5.0, -18.0)
 
-[node name="AmmoShells2" parent="Pickups" instance=ExtResource("172_ammo_shells")]
+[node name="AmmoShells2" parent="Pickups" instance=ExtResource("180_ammo_shells")]
 position = Vector3(24.0, 5.8, -15.0)
 
-[node name="WeaponGrenade1" parent="Pickups" instance=ExtResource("176_weapon_grenade")]
+[node name="WeaponGrenade1" parent="Pickups" instance=ExtResource("184_weapon_grenade")]
 position = Vector3(28.0, 5.0, -10.0)
 
-[node name="Medkit3" parent="Pickups" instance=ExtResource("169_medkit")]
+[node name="Medkit3" parent="Pickups" instance=ExtResource("177_medkit")]
 position = Vector3(0.0, 5.0, -99.0)
 
-[node name="AmmoSmg1" parent="Pickups" instance=ExtResource("177_ammo_smg")]
+[node name="AmmoSmg1" parent="Pickups" instance=ExtResource("185_ammo_smg")]
 position = Vector3(-24.0, 10.0, -70.0)
 
-[node name="Medkit4" parent="Pickups" instance=ExtResource("169_medkit")]
+[node name="Medkit4" parent="Pickups" instance=ExtResource("177_medkit")]
 position = Vector3(24.0, 10.0, -10.0)
 
-[node name="AmmoRocket1" parent="Pickups" instance=ExtResource("178_ammo_rocket")]
+[node name="AmmoRocket1" parent="Pickups" instance=ExtResource("186_ammo_rocket")]
 position = Vector3(26.0, 10.0, -90.0)
 
-[node name="AmmoRifle3" parent="Pickups" instance=ExtResource("171_ammo_rifle")]
+[node name="AmmoRifle3" parent="Pickups" instance=ExtResource("179_ammo_rifle")]
 position = Vector3(-22.0, 15.0, -40.0)
 
-[node name="Medkit5" parent="Pickups" instance=ExtResource("169_medkit")]
+[node name="Medkit5" parent="Pickups" instance=ExtResource("177_medkit")]
 position = Vector3(22.0, 15.0, -55.0)
 
 [node name="Intro" type="Node" parent="Story"]
-script = ExtResource("179_story_event")
+script = ExtResource("187_story_event")
 speaker = "Диспетчер"
 message = "Машина встала? Через улицу не пройти — там баррикада. Иди через «Галактику»: с крыши парковки пандус спускается прямо к больнице."
 message_duration = 9.0
@@ -9158,21 +9406,21 @@ position = Vector3(0.0, 1.5, -3.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("180_story_trigger")
+script = ExtResource("188_story_trigger")
 event = NodePath("../Inside")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/EntranceTrigger"]
-shape = SubResource("BoxShape3D_39")
+shape = SubResource("BoxShape3D_40")
 
 [node name="Inside" type="Node" parent="Story"]
-script = ExtResource("179_story_event")
+script = ExtResource("187_story_event")
 objective = "Запусти генератор: 1-й этаж, восточное крыло, в конце"
 speaker = "Диспетчер"
 message = "Темно… эскалаторы стоят, решётка на третий этаж без питания. Генераторная на первом этаже, в восточном крыле, в самом конце, за игрушками. Запусти генератор."
 message_duration = 9.0
 
 [node name="PowerOn" type="Node" parent="Story"]
-script = ExtResource("179_story_event")
+script = ExtResource("187_story_event")
 objective = "Поднимись на третий этаж к кинотеатру"
 speaker = "Диспетчер"
 message = "Есть свет! Решётка у эскалатора на третий этаж поднята. Кинотеатр наверху — оттуда лестница на крышу. И… на фуд-корте кто-то зашевелился."
@@ -9180,8 +9428,8 @@ message_duration = 9.0
 targets = Array[NodePath]([NodePath("../../Lights/MallLight1"), NodePath("../../Lights/MallLight2"), NodePath("../../Lights/MallLight3"), NodePath("../../Lights/MallLight4"), NodePath("../../Lights/MallLight5"), NodePath("../../Lights/MallLight6"), NodePath("../../Lights/MallLight7"), NodePath("../../Lights/MallLight8"), NodePath("../../Lights/MallLight9"), NodePath("../../Lights/MallLight10"), NodePath("../../Lights/MallLight11"), NodePath("../../Lights/MallLight12"), NodePath("../../Lights/MallLight13"), NodePath("../../Lights/MallLight14"), NodePath("../../Lights/MallLight15"), NodePath("../../Lights/MallLight16"), NodePath("../../Lights/MallLight17"), NodePath("../../Lights/MallLight18"), NodePath("../../Lights/MallLight19"), NodePath("../../Lights/MallLight20"), NodePath("../../Lights/MallLight21"), NodePath("../../Lights/MallLight22"), NodePath("../../Lights/MallLight23"), NodePath("../../Lights/MallLight24"), NodePath("../../Lights/MallLight25"), NodePath("../../Lights/MallLight26"), NodePath("../../Lights/MallLight27"), NodePath("../../Lights/MallLight28"), NodePath("../../Lights/MallLight29"), NodePath("../../Lights/MallLight30"), NodePath("../../Lights/MallLight31"), NodePath("../../Lights/MallLight32"), NodePath("../../Lights/MallLight33"), NodePath("../../Lights/MallLight34"), NodePath("../../Lights/MallLight35"), NodePath("../../Lights/MallLight36"), NodePath("../../Lights/MallLight37"), NodePath("../../Lights/MallLight38"), NodePath("../../Lights/MallLight39"), NodePath("../../Lights/MallLight40"), NodePath("../../Lights/MallLight41"), NodePath("../../Lights/MallLight42"), NodePath("../../Lights/MallLight43"), NodePath("../../Lights/MallLight44"), NodePath("../../Lights/MallLight45"), NodePath("../../Lights/MallLight46"), NodePath("../../Lights/MallLight47"), NodePath("../../Lights/MallLight48"), NodePath("../../Lights/MallLight49"), NodePath("../../Lights/MallLight50"), NodePath("../../Lights/MallLight51"), NodePath("../../Lights/MallLight52"), NodePath("../../Lights/MallLight53"), NodePath("../../Lights/MallLight54"), NodePath("../../Lights/MallLight55"), NodePath("../../Lights/MallLight56"), NodePath("../../Lights/MallLight57"), NodePath("../../Lights/MallLight58"), NodePath("../../Lights/MallLight59"), NodePath("../../Lights/MallLight60"), NodePath("../../Lights/MallLight61"), NodePath("../../Lights/MallLight62"), NodePath("../../Lights/MallLight63"), NodePath("../../Lights/ShopLight1"), NodePath("../../Lights/ShopLight2"), NodePath("../../Lights/ShopLight3"), NodePath("../../Lights/ShopLight4"), NodePath("../../Lights/ShopLight5"), NodePath("../../Lights/ShopLight6"), NodePath("../../Lights/ShopLight7"), NodePath("../../Lights/ShopLight8"), NodePath("../../Lights/ShopLight9"), NodePath("../../Lights/ShopLight10"), NodePath("../../Lights/ShopLight11"), NodePath("../../Lights/ShopLight12"), NodePath("../../Lights/ShopLight13"), NodePath("../../Lights/ShopLight14"), NodePath("../../Lights/ShopLight15"), NodePath("../../Lights/ShopLight16"), NodePath("../../Lights/ShopLight17"), NodePath("../../Lights/ShopLight18"), NodePath("../../Lights/ShopLight19"), NodePath("../../Lights/ShopLight20"), NodePath("../../Lights/ShopLight21"), NodePath("../../Lights/ShopLight22"), NodePath("../../Lights/ShopLight23"), NodePath("../../Doors/EscalatorShutter"), NodePath("../FoodCourtHorde"), NodePath("../../Zombies/Shopper1"), NodePath("../../Zombies/Shopper2"), NodePath("../../Zombies/Shopper3"), NodePath("../../Zombies/Shopper4"), NodePath("../../Zombies/Shopper5"), NodePath("../../Zombies/Shopper6")])
 
 [node name="FoodCourtHorde" type="Node3D" parent="Story"]
-script = ExtResource("181_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("163_walker"), ExtResource("164_runner"), ExtResource("163_walker"), ExtResource("165_bloater")])
+script = ExtResource("189_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("163_walker"), ExtResource("172_runner"), ExtResource("163_walker"), ExtResource("173_bloater")])
 count = 7
 interval = 1.2
 max_alive = 10
@@ -9200,25 +9448,25 @@ position = Vector3(0.0, 11.5, -89.5)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("180_story_trigger")
+script = ExtResource("188_story_trigger")
 event = NodePath("../WakeGosha")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/CinemaTrigger"]
-shape = SubResource("BoxShape3D_40")
+shape = SubResource("BoxShape3D_41")
 
 [node name="WakeGosha" type="Node" parent="Story"]
-script = ExtResource("179_story_event")
+script = ExtResource("187_story_event")
 targets = Array[NodePath]([NodePath("../../Zombies/Gosha")])
 
 [node name="GoshaAppears" type="Node" parent="Story"]
-script = ExtResource("179_story_event")
+script = ExtResource("187_story_event")
 objective = "Убей Зайца Гошу"
 speaker = "Диспетчер"
 message = "В зале кто-то есть… Это ростовая кукла? Заяц Гоша из детской комнаты. Внутри костюма давно не аниматор. Он прыгает с разбега — уходи в сторону!"
 message_duration = 9.0
 
 [node name="GoshaDead" type="Node" parent="Story"]
-script = ExtResource("179_story_event")
+script = ExtResource("187_story_event")
 objective = "Поднимись на крышу-парковку"
 speaker = "Диспетчер"
 message = "Готов! Дверь на крышу — справа от кинозала. Поднимайся!"
@@ -9230,14 +9478,14 @@ position = Vector3(26.0, 16.5, -80.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("180_story_trigger")
+script = ExtResource("188_story_trigger")
 event = NodePath("../OnRoof")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/RoofTrigger"]
-shape = SubResource("BoxShape3D_41")
+shape = SubResource("BoxShape3D_42")
 
 [node name="OnRoof" type="Node" parent="Story"]
-script = ExtResource("179_story_event")
+script = ExtResource("187_story_event")
 objective = "Спустись по пандусу к больнице"
 speaker = "Диспетчер"
 message = "Ты на крыше. Выезд у западного края: пандус спускается в переулок, там ворота к больнице. Беги!"
@@ -9245,8 +9493,8 @@ message_duration = 8.0
 targets = Array[NodePath]([NodePath("../RoofHorde"), NodePath("../ExitTrigger")])
 
 [node name="RoofHorde" type="Node3D" parent="Story"]
-script = ExtResource("181_zombie_spawner")
-zombie_scenes = Array[PackedScene]([ExtResource("164_runner"), ExtResource("164_runner"), ExtResource("163_walker")])
+script = ExtResource("189_zombie_spawner")
+zombie_scenes = Array[PackedScene]([ExtResource("172_runner"), ExtResource("172_runner"), ExtResource("163_walker")])
 count = 6
 interval = 1.5
 max_alive = 10
@@ -9265,24 +9513,24 @@ position = Vector3(-39.0, 1.5, -103.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-script = ExtResource("180_story_trigger")
+script = ExtResource("188_story_trigger")
 event = NodePath("../Exit")
 enabled = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/ExitTrigger"]
-shape = SubResource("BoxShape3D_42")
+shape = SubResource("BoxShape3D_43")
 
 [node name="Exit" type="Node" parent="Story"]
-script = ExtResource("179_story_event")
+script = ExtResource("187_story_event")
 complete_level = true
 
-[node name="Player" parent="." instance=ExtResource("182_player")]
+[node name="Player" parent="." instance=ExtResource("190_player")]
 position = Vector3(0.0, 0.0, 22.0)
 rotation = Vector3(0.0, 0.0, 0.0)
 
-[node name="HUD" parent="." instance=ExtResource("183_hud")]
+[node name="HUD" parent="." instance=ExtResource("191_hud")]
 
 [node name="Ambience" type="AudioStreamPlayer" parent="."]
-stream = ExtResource("184_ambience")
+stream = ExtResource("192_ambience")
 autoplay = true
 volume_db = -8.0

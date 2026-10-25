@@ -100,7 +100,12 @@ Linear zombie shooter in six chapters (outskirts, station, mall, hospital, subwa
   (part `mall` in `build_assets.py`: `build_mall_props` — carts, mannequins, racks, shelves, arcade cabinets, food
   stalls; `build_mall_furniture` — bistro sets, food-court tables, booths, sofas, kiosks, vending machines, ATMs, display
   cases, item walls, ball pit, cinema seats…). Shop fronts have real glass (`clear_glass`; the old `glass` material is
-  opaque). Kenney / world props face -Z, the Blender mall props face +Z. Screenshot section `mall_tour` shows every shop. The roof exit is a
+  opaque). Kenney / world props face -Z, the Blender mall props face +Z. Screenshot section `mall_tour` shows every shop.
+  The casino "Последняя ставка" (ground floor, north-east) is playable: `CasinoMachine` (StaticBody3D, kind slots /
+  roulette / cashier; set on the props in `CASINO` in `gen_props.py`) opens a `CasinoPanel` through `Level.open_panel`
+  (state `PANEL`, game paused, Esc closes). `SlotPanel` (weighted reels, `payout`), `RoulettePanel` (European wheel,
+  `multiplier`, `RouletteWheel` draws it and lands the ball in the result), `CashierPanel` (welcome gift, prizes).
+  Chips live in `Game.chips` (saved). Models: `build_casino` in `build_assets.py`; sounds `casino_*` in `gen_sounds.py`. The roof exit is a
   bridge over the west alley and a ramp down to the gate (`ExitTrigger`); the alleys round the building are walled in.
 - `tools/gen_levels.py`: chapter scenes are `Level` roots — keep `script` the first property of a node or Godot drops
   the script's exported values. After changing radio text, update `tools/voice_en.py` and rerun `tools/gen_voice.py`.
@@ -110,3 +115,4 @@ Linear zombie shooter in six chapters (outskirts, station, mall, hospital, subwa
       godot --headless --path . res://tests/test_story.tscn
       godot --headless --path . res://tests/test_combat.tscn
       godot --headless --path . res://tests/test_holes.tscn   # no spot to fall out of any map
+      godot --headless --path . res://tests/test_casino.tscn  # casino rules, odds, every game played in the mall

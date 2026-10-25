@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/props/slot_machine.glb" id="1_slot_machine"]
+
+[ext_resource type="Script" path="res://scripts/casino/casino_machine.gd" id="2_casino_machine"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.8004, 2.15, 0.805)
+
+[node name="SlotMachine" type="StaticBody3D"]
+script = ExtResource("2_casino_machine")
+kind = 0
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 1.075, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" parent="." instance=ExtResource("1_slot_machine")]

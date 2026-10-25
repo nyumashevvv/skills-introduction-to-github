@@ -306,6 +306,8 @@ LOOSE = {'debris_door', 'debris_door_window', 'debris_bumper', 'debris_tire', 'd
          'bedroll_packed', 'campfire_pit', 'tv_old', 'speaker', 'shopping_bags', 'bowling_pins'}
 # Cars get two boxes (body up to the bonnet, cabin in the middle) instead of one bounding box, so shots over the
 # bonnet or the boot reach whoever stands next to the car instead of hitting empty air around the windscreen.
+# Casino props that are games: CasinoMachine.Kind (0 slots, 1 roulette, 2 cashier).
+CASINO = {'slot_machine': 0, 'slot_machine_b': 0, 'roulette_table': 1, 'cashier_desk': 2}
 CARS = ('sedan', 'suv', 'hatchback_sports', 'taxi', 'police')
 SIRENS = {'police': ((1, 0.1, 0.1), (0.2, 0.3, 1)), 'ambulance': ((1, 0.1, 0.1), (0.2, 0.3, 1)), 'firetruck': ((1, 0.15, 0.1), (1, 0.15, 0.1))}
 
@@ -321,7 +323,10 @@ def kenney():
         if name in LOOSE:
             s.node(root, 'Node3D')
         else:
-            s.node(root, 'StaticBody3D')
+            if name in CASINO:  # playable: E opens the game's screen (scripts/casino)
+                s.node(root, 'StaticBody3D', script=s.ext_res('Script', 'res://scripts/casino/casino_machine.gd'), kind=CASINO[name])
+            else:
+                s.node(root, 'StaticBody3D')
             if name.replace('_burnt', '') in CARS:
                 body = s.sub_res('BoxShape3D', size=V3(w * 0.92, h * 0.52, d * 0.94))
                 s.node('CollisionShape3D', 'CollisionShape3D', '.', position=V3(0, h * 0.26, 0), shape=body)

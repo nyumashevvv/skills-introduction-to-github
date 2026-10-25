@@ -30,6 +30,10 @@ var difficulty := Difficulty.NORMAL
 var checkpoint: Dictionary = {}
 var kills := 0
 var play_time := 0.0
+## Casino chips (the mall): won at the slots and the roulette, spent at the cashier. Kept with the save.
+var chips := 0
+## The cashier's welcome gift has been taken.
+var casino_bonus_taken := false
 
 var _kills_at_level_start := 0
 
@@ -69,6 +73,8 @@ func new_game(level_difficulty := Difficulty.NORMAL, with_cutscene := true) -> v
 	checkpoint = {}
 	kills = 0
 	play_time = 0.0
+	chips = 0
+	casino_bonus_taken = false
 	if with_cutscene:
 		_change_scene(CUTSCENE)
 	else:
@@ -95,6 +101,8 @@ func continue_game() -> void:
 	checkpoint = config.get_value("progress", "checkpoint", {})
 	kills = config.get_value("progress", "kills", 0)
 	play_time = config.get_value("progress", "time", 0.0)
+	chips = int(config.get_value("progress", "chips", 0))
+	casino_bonus_taken = bool(config.get_value("progress", "casino_bonus", false))
 	_change_to_level()
 
 
@@ -136,4 +144,6 @@ func _save() -> void:
 	config.set_value("progress", "checkpoint", checkpoint)
 	config.set_value("progress", "kills", kills)
 	config.set_value("progress", "time", play_time)
+	config.set_value("progress", "chips", chips)
+	config.set_value("progress", "casino_bonus", casino_bonus_taken)
 	config.save(SAVE_PATH)

@@ -1,0 +1,18 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/props/cashier_desk.glb" id="1_cashier_desk"]
+
+[ext_resource type="Script" path="res://scripts/casino/casino_machine.gd" id="2_casino_machine"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(2.484, 2.5, 0.92)
+
+[node name="CashierDesk" type="StaticBody3D"]
+script = ExtResource("2_casino_machine")
+kind = 2
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 1.25, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" parent="." instance=ExtResource("1_cashier_desk")]

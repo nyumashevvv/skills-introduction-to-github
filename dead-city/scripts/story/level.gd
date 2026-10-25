@@ -3,7 +3,7 @@ extends Node3D
 ## Root of every chapter: starts it, connects the player to the HUD and
 ## handles pause, death and completion.
 
-enum State { INTRO, PLAYING, PAUSED, DEAD, COMPLETE }
+enum State { INTRO, PLAYING, PAUSED, DEAD, COMPLETE, PANEL }
 
 const MUSIC_DB := -7.0
 const SILENT_DB := -40.0
@@ -19,6 +19,7 @@ const SILENT_DB := -40.0
 @export var default_ammo := {"pistol": 24}
 
 var state := State.INTRO
+var _panel: Control
 
 var _music: AudioStreamPlayer
 var _music_tween: Tween
@@ -149,6 +150,33 @@ func toggle_pause() -> void:
 			hud.show_pause_menu()
 		State.PAUSED:
 			resume()
+		State.PANEL:
+			close_panel()
+
+
+## Shows a full-screen panel (the casino games) over the paused game; Esc or the panel's own button closes it.
+func open_panel(panel: Control) -> void:
+	if state != State.PLAYING:
+		panel.queue_free()
+		return
+	state = State.PANEL
+	_panel = panel
+	panel.tree_exited.connect(_on_panel_closed)
+	hud.add_child(panel)
+	hud.gameplay.visible = false
+	get_tree().paused = true
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+
+
+func close_panel() -> void:
+	if _panel != null:
+		_panel.queue_free()
+
+
+func _on_panel_closed() -> void:
+	_panel = null
+	if state == State.PANEL and is_inside_tree():  # (not when the whole level is being freed)
+		resume()
 
 
 func resume() -> void:
