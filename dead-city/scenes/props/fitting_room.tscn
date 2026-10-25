@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/props/fitting_room.glb" id="1_fitting_room"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(2.2172, 2.245, 1.15)
+
+[node name="FittingRoom" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 1.1225, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" parent="." instance=ExtResource("1_fitting_room")]

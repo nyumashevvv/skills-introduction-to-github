@@ -62,6 +62,7 @@ def mats():
                       ('white', (0.9, 0.95, 1.0))]:
         material(T + f'neon_{name}.tres', (0, 0, 0), emission=col, energy=7.0)
     material(T + 'door_glass_lit.tres', (0.1, 0.12, 0.14), roughness=0.1, emission=(0.8, 0.88, 0.95), energy=0.8)
+    material(T + 'clear_glass.tres', (0.7, 0.82, 0.88, 0.16), metallic=0.3, roughness=0.04, extra={'transparency': 1})  # shop windows, balustrades
     material(T + 'acid_glow.tres', (0, 0, 0), emission=(0.45, 1.0, 0.15), energy=3.0)
     # weapons & hands
     material(T + 'gun_black.tres', (0.05, 0.05, 0.055), metallic=0.3, roughness=0.55)

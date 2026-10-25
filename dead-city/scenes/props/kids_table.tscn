@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/props/kids_table.glb" id="1_kids_table"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(1.667, 0.52, 1.3984)
+
+[node name="KidsTable" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.26, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" parent="." instance=ExtResource("1_kids_table")]

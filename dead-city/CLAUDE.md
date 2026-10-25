@@ -97,7 +97,10 @@ Linear zombie shooter in six chapters (outskirts, station, mall, hospital, subwa
   builds a shop front (door, windows, the shop's sign, a power lamp inside). `limits/opengl/max_lights_per_object` is 32.
   Power comes from the generator room (ground floor, east wing, `Doors/PowerSwitch` → `PowerOn`), which lights the
   `power_light`s and raises the shutter to the third floor. Shop furniture and the atrium fountain are Blender models
-  (part `mall` in `build_assets.py`: carts, mannequins, racks, shelves, arcade cabinets, food stalls…). The roof exit is a
+  (part `mall` in `build_assets.py`: `build_mall_props` — carts, mannequins, racks, shelves, arcade cabinets, food
+  stalls; `build_mall_furniture` — bistro sets, food-court tables, booths, sofas, kiosks, vending machines, ATMs, display
+  cases, item walls, ball pit, cinema seats…). Shop fronts have real glass (`clear_glass`; the old `glass` material is
+  opaque). Kenney / world props face -Z, the Blender mall props face +Z. Screenshot section `mall_tour` shows every shop. The roof exit is a
   bridge over the west alley and a ramp down to the gate (`ExitTrigger`); the alleys round the building are walled in.
 - `tools/gen_levels.py`: chapter scenes are `Level` roots — keep `script` the first property of a node or Godot drops
   the script's exported values. After changing radio text, update `tools/voice_en.py` and rerun `tools/gen_voice.py`.

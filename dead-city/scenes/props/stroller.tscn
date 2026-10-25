@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/props/stroller.glb" id="1_stroller"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.3956, 0.974, 0.725)
+
+[node name="Stroller" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.487, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" parent="." instance=ExtResource("1_stroller")]

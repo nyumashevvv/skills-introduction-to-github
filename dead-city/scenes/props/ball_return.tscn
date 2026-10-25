@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/props/ball_return.glb" id="1_ball_return"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(0.736, 1.45, 1.288)
+
+[node name="BallReturn" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.725, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" parent="." instance=ExtResource("1_ball_return")]

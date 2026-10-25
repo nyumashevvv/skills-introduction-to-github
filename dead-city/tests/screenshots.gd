@@ -155,6 +155,27 @@ func _run() -> void:
 			await snap("ending_%d" % i)
 	if "street" in sections:
 		await _street()
+	if "mall_tour" in sections:  # every shop with the power on
+		var level := await load_level("res://scenes/levels/level_3_mall.tscn")
+		var player := await play(level)
+		freeze_zombies()
+		level.hud.gameplay.visible = false
+		player.holder.visible = false
+		level.get_node("Story/PowerOn").call("fire")
+		await get_tree().create_timer(3.0).timeout
+		for shot: Array in [["tour_clothes", Vector3(-19.5, 0, -50), 110, -12], ["tour_pharmacy", Vector3(-19.5, 0, -70), 110, -12],
+				["tour_electronics", Vector3(19.5, 0, -12), -80, -12], ["tour_coffee", Vector3(19.5, 0, -30), -70, -15],
+				["tour_toys", Vector3(19.5, 0, -52), -90, -12], ["tour_promo", Vector3(-6, 0, -86), 130, -8],
+				["tour_gallery", Vector3(14, 0, -40), 20, -5], ["tour_sport", Vector3(-19.5, 5, -12), 100, -12],
+				["tour_books", Vector3(-19.5, 5, -32), 100, -12], ["tour_watches", Vector3(-19.5, 5, -72), 100, -12],
+				["tour_security", Vector3(19.5, 5, -12), -100, -12], ["tour_optics", Vector3(19.5, 5, -32), -100, -12],
+				["tour_souvenirs", Vector3(19.5, 5, -72), -100, -12], ["tour_food_court", Vector3(0, 5, -86), 0, -15],
+				["tour_photo", Vector3(-19.5, 10, -32), 100, -12], ["tour_tattoo", Vector3(-19.5, 10, -52), 100, -12],
+				["tour_kids", Vector3(-19.5, 10, -72), 100, -12], ["tour_pizza", Vector3(19.5, 10, -12), -100, -12],
+				["tour_bowling", Vector3(19.5, 10, -32), -100, -12], ["tour_tea", Vector3(19.5, 10, -52), -100, -12],
+				["tour_cosmetics", Vector3(19.5, 10, -72), -100, -12], ["tour_cinema", Vector3(0, 10, -89.2), 0, -15]]:
+			await pose(player, shot[1], shot[2], shot[3])
+			await snap(shot[0])
 	if "signs" in sections:
 		await _signs()
 	if "ammo" in sections:

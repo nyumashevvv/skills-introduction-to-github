@@ -1,0 +1,14 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/props/turntable.glb" id="1_turntable"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_1"]
+size = Vector3(5.244, 0.2, 5.244)
+
+[node name="Turntable" type="StaticBody3D"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+position = Vector3(0.0, 0.1, 0.0)
+shape = SubResource("BoxShape3D_1")
+
+[node name="Model" parent="." instance=ExtResource("1_turntable")]

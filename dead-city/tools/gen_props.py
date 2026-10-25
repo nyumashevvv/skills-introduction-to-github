@@ -303,7 +303,7 @@ def build():
 LOOSE = {'debris_door', 'debris_door_window', 'debris_bumper', 'debris_tire', 'debris_plate', 'debris_spoiler', 'debris_axle',
          'computer_screen', 'computer_keyboard', 'laptop', 'microwave', 'coffee_machine', 'table_lamp', 'radio', 'books', 'rug',
          'rug_round', 'plant_small', 'toaster', 'bottle', 'shovel', 'pickaxe', 'axe', 'bucket', 'rock_flat', 'planks', 'bedroll',
-         'bedroll_packed', 'campfire_pit', 'tv_old', 'speaker'}
+         'bedroll_packed', 'campfire_pit', 'tv_old', 'speaker', 'shopping_bags', 'bowling_pins'}
 # Cars get two boxes (body up to the bonnet, cabin in the middle) instead of one bounding box, so shots over the
 # bonnet or the boot reach whoever stands next to the car instead of hitting empty air around the windscreen.
 CARS = ('sedan', 'suv', 'hatchback_sports', 'taxi', 'police')

@@ -126,7 +126,7 @@ class LevelBuilder(Scene):
         x, y, z = pos
         size = (width, 2.95, 0.14) if along == 'x' else (0.14, 2.95, width)
         props.setdefault('swing_degrees', 100.0)
-        self.door(name, size, (x, 1.475, z), mat, **props)
+        self.door(name, size, (x, y + 1.475, z), mat, **props)
         d = 'Doors/' + name
         n = 1.0 if face[0] == '+' else -1.0
         off = lambda a, b: (a, 0, 0.08 * b) if along == 'x' else (0.08 * b, 0, a)
@@ -144,18 +144,18 @@ class LevelBuilder(Scene):
         x, y, z = pos
         n = 1.0 if face[0] == '+' else -1.0
         for s_ in (-1, 1):
-            jamb = (x + s_ * (width / 2 + 0.07), 1.55, z) if along == 'x' else (x, 1.55, z + s_ * (width / 2 + 0.07))
+            jamb = (x + s_ * (width / 2 + 0.07), y + 1.55, z) if along == 'x' else (x, y + 1.55, z + s_ * (width / 2 + 0.07))
             self.decor((0.14, 3.1, 0.36) if along == 'x' else (0.36, 3.1, 0.14), jamb, 'dark')
         # The header hangs 3 cm below the lintel so their undersides do not z-fight.
-        self.decor((width + 0.28, 0.19, 0.36) if along == 'x' else (0.36, 0.19, width + 0.28), (x, 3.065, z), 'dark')
+        self.decor((width + 0.28, 0.19, 0.36) if along == 'x' else (0.36, 0.19, width + 0.28), (x, y + 3.065, z), 'dark')
         out = (0, 0, 0.22 * n) if along == 'x' else (0.22 * n, 0, 0)
         if lamp:
-            self.decor((0.5, 0.06, 0.2) if along == 'x' else (0.2, 0.06, 0.5), (x + out[0], 3.3, z + out[2]), 'lamp_glow',
+            self.decor((0.5, 0.06, 0.2) if along == 'x' else (0.2, 0.06, 0.5), (x + out[0], y + 3.3, z + out[2]), 'lamp_glow',
                        cast_shadow=0)
-            self.omni((x + out[0] * 3, 2.9, z + out[2] * 3), (1, 0.88, 0.7), 1.4, 6.0)
+            self.omni((x + out[0] * 3, y + 2.9, z + out[2] * 3), (1, 0.88, 0.7), 1.4, 6.0)
         if sign:
             rot = {'+z': 0.0, '-z': math.pi, '+x': math.pi / 2, '-x': -math.pi / 2}[face]
-            self.node(self.uid('Sign'), 'Label3D', 'Decor', position=V3(x + out[0] * 1.2, 3.7, z + out[2] * 1.2),
+            self.node(self.uid('Sign'), 'Label3D', 'Decor', position=V3(x + out[0] * 1.2, y + 3.7, z + out[2] * 1.2),
                       rotation=V3(0, rot, 0), text=S(sign), font_size=72, pixel_size=0.008, modulate=C(*sign_color),
                       outline_size=8)
 
@@ -1171,7 +1171,7 @@ def level_mall():
         for x, side in zip((x0 - 0.06, x1 + 0.06), sides):  # solid glass sides with a rubber handrail on top
             if not side:
                 continue
-            L.blk('glass', (0.1, 1.1, length), (x, (y_low + y_high) / 2 + 0.55, (z_low + z_high) / 2), rot=(rot, 0, 0))
+            L.blk('clear_glass', (0.1, 1.1, length), (x, (y_low + y_high) / 2 + 0.55, (z_low + z_high) / 2), rot=(rot, 0, 0))
             L.decor((0.14, 0.08, length), (x, (y_low + y_high) / 2 + 1.12, (z_low + z_high) / 2), 'dark', rot=(rot, 0, 0))
 
     def railing(x0, x1, z0, z1, y):
@@ -1179,10 +1179,10 @@ def level_mall():
         if abs(x1 - x0) < 0.01:
             if abs(z1 - z0) < 0.01:
                 return
-            L.blk('glass', (0.08, 1.05, abs(z1 - z0)), (x0, y + 0.52, (z0 + z1) / 2))
+            L.blk('clear_glass', (0.08, 1.05, abs(z1 - z0)), (x0, y + 0.52, (z0 + z1) / 2))
             L.decor((0.12, 0.08, abs(z1 - z0)), (x0, y + 1.08, (z0 + z1) / 2), 'chrome')
         else:
-            L.blk('glass', (abs(x1 - x0), 1.05, 0.08), ((x0 + x1) / 2, y + 0.52, z0))
+            L.blk('clear_glass', (abs(x1 - x0), 1.05, 0.08), ((x0 + x1) / 2, y + 0.52, z0))
             L.decor((abs(x1 - x0), 0.08, 0.12), ((x0 + x1) / 2, y + 1.08, z0), 'chrome')
 
     # --- outside: the car park in front of the entrance, the street blocked by buses
@@ -1267,11 +1267,13 @@ def level_mall():
     def front(y, side, z0, z1, name, color):
         x = 18 * side
         zc = (z0 + z1) / 2
-        L.wall_x(x, z0, zc + 1.5, W, h=H, y0=y); L.wall_x(x, zc - 1.5, z1, W, h=H, y0=y)
+        for a, b in ((z0, zc + 1.5), (zc - 1.5, z1)):                              # glass display windows into the shop
+            L.wall_x(x, a, a - 0.5, W, h=H, y0=y); L.wall_x(x, b + 0.5, b, W, h=H, y0=y)    # piers
+            L.wall_x(x, a - 0.5, b + 0.5, W, h=0.6, y0=y)                                # the sill
+            L.wall_x(x, a - 0.5, b + 0.5, W, h=H - 2.9, y0=y + 2.9)                      # the header
+            L.blk('clear_glass', (0.06, 2.3, abs(a - b) - 1.0), (x, y + 1.75, (a + b) / 2))
+            L.decor((0.08, 0.06, abs(a - b) - 1.0), (x - side * 0.05, y + 0.62, (a + b) / 2), 'chrome', cast_shadow=0)
         L.blk(W, (0.3, H - 3.0, 3.0), (x, y + 3.0 + (H - 3.0) / 2, zc))
-        for zz in ((z0 + zc + 1.5) / 2, (zc - 1.5 + z1) / 2):                     # display windows
-            L.decor((0.05, 2.2, abs(zc - z0) - 3.5), (x - side * 0.17, y + 1.5, zz),
-                    'window_lit' if L.rnd.random() < 0.35 else 'window_dark', cast_shadow=0)
         L.omni((24 * side, y + 3.0, zc), (1, 0.8, 0.55), 0.55, 9)                  # a dim lamp left on inside
         name_ = f'ShopLight{len(shop_lights) + 1}'                                # the main lamp, on with the power
         L.ceiling_lamp(24 * side, zc, y=y + 4.6, energy=1.6, rng=10.0, name=name_, power=True)
@@ -1316,11 +1318,12 @@ def level_mall():
     for z in (-44.5, -47.5, -56.5, -59.5):
         c('mannequin_dressed' if L.rnd.random() < 0.7 else 'mannequin', (-19.8, 0, z), Wf)
     c('mannequin', (-29, 0, -52), Wf); c('mannequin_dressed', (-29, 0, -54), Wf)
+    c('fitting_room', (-28.6, 0, -60), Wf); c('checkout', (-27, 0, -44), S_); c('shopping_bags', (-21.5, 0, -57))
     front(F[0], -1, -62, -82, 'АПТЕКА', 'green')
     along_wall('grocery_shelf', -1, -62.5, -81.5, 0, 2.1)
     for z in (-68, -74):
         c('grocery_shelf', (-24.5, 0, z), S_); c('grocery_shelf', (-24.5, 0, z - 0.6), N_)
-    c('checkout', (-20.8, 0, -78), Wf)
+    c('display_case', (-21.5, 0, -66.5), Wf); c('display_case', (-21.5, 0, -77.5), Wf)
     for z in (-66, -71, -77):
         c('pills', (-22, 0, z)); c('syringes_floor', (-23, 0, z - 1.5))
     # ground floor, east: electronics, coffee shop, toys, the generator room
@@ -1330,17 +1333,21 @@ def level_mall():
         L.prop('res://scenes/world/desk.tscn', (23.5, 0, z), 0.0)
         c('laptop', (23.0, 0.8, z)); c('computer_screen', (24.2, 0.8, z))
     c('speaker', (20, 0, -3.5)); c('speaker', (20, 0, -20.5)); c('checkout', (21, 0, -12), E)
+    c('display_case', (26.6, 0, -5.5), E); c('display_case', (26.6, 0, -18.5), E); c('vending_machine', (20.6, 0, -2.6), S_)
     front(F[0], 1, -22, -42, 'КОФЕЙНЯ', 'yellow')
     c('food_stall_b', (28.9, 0, -32), E)
-    for tx, tz in [(21.5, -25.5), (25, -25.5), (21.5, -38.5), (25, -38.5), (23.5, -32)]:
-        c('table_round', (tx, 0, tz)); c('chair_cushion', (tx + 0.9, 0, tz), E); c('chair_cushion', (tx - 0.9, 0, tz), Wf)
-    c('chair_fallen', (22, 0, -29)); c('mug', (21.5, 0.77, -25.3)); c('mug', (25, 0.77, -38.3))
+    for tx, tz in [(21.8, -25.5), (25.2, -25.5), (21.8, -38.5), (25.2, -38.5)]:
+        c('bistro_set', (tx, 0, tz), S_)
+    c('booth', (23.6, 0, -32), S_); c('bistro_chair', (22.2, 0, -28.6), 2.4)
+    c('bistro_set', (27.6, 0, -25.5), S_); c('bistro_set', (27.6, 0, -38.5), S_)
     front(F[0], 1, -42, -62, 'ИГРУШКИ', 'cyan')
     along_wall('plush_shelf', 1, -42.5, -61.5, 0, 2.0)
     for z in (-48, -54):
-        c('plush_shelf', (23.5, 0, z), S_); c('plush_shelf', (23.5, 0, z - 0.55), N_)
-    for _ in range(6):
-        c(L.rnd.choice(['box_pile', 'box_open', 'rug_round']), (L.rnd.uniform(20, 22), 0, L.rnd.uniform(-44, -60)))
+        for x in (23.5, 26.8):
+            c('plush_shelf', (x, 0, z), S_); c('plush_shelf', (x, 0, z - 0.55), N_)
+    c('kids_table', (26.2, 0, -59.6), S_); c('stroller', (21.2, 0, -45), 0.6); c('doll_shelf', (25.5, 0, -42.4), N_)
+    for _ in range(4):
+        c(L.rnd.choice(['box_pile', 'box_open', 'rug_round']), (L.rnd.uniform(20, 22), 0, L.rnd.uniform(-56, -60)))
     front(F[0], 1, -62, -82, 'ГЕНЕРАТОРНАЯ', 'red')
     L.blk('metal', (2.4, 2.0, 4.6), (28.0, 1.0, -72), name='Generator')            # the diesel generator
     L.blk('dark', (2.0, 0.5, 4.0), (28.0, 2.25, -72))
@@ -1358,35 +1365,43 @@ def level_mall():
     L.sign('arrow_generator_right', (14, 3.9, -2.4), '+z')
     # first floor: sport, books, shoes, watches (west); security, optics, flowers, souvenirs (east); food court (north)
     front(F[1], -1, -2, -22, 'СПОРТ', 'cyan')
-    c('weapon_rack', (-29.2, F[1], -6), Wf); c('weapon_rack', (-29.2, F[1], -10), Wf)
+    c('weapon_rack', (-29.2, F[1], -6), E); c('weapon_rack', (-29.2, F[1], -10), E)
     along_wall('shoe_wall', -1, -12, -21.5, F[1], 2.1)
     for z in (-6, -10, -15):
-        c('mannequin_dressed', (-22.5, F[1], z), Wf); c('crate_large', (-25, F[1], z - 1))
+        c('mannequin_dressed', (-22.5, F[1], z), Wf)
+    c('treadmill', (-25.5, F[1], -6.5), Wf); c('treadmill', (-25.5, F[1], -9.5), Wf)
+    c('dumbbell_rack', (-25.5, F[1], -15.5), Wf); c('ball_bin', (-21.5, F[1], -18.5))
     front(F[1], -1, -22, -42, 'КНИГИ', 'yellow')
-    for z in range(-24, -41, -2):
-        c('bookcase_wide', (-29.3, F[1], z), Wf)
+    along_wall('grocery_shelf', -1, -22.5, -41.5, F[1], 2.1)                       # shelves full of books
     for z in (-28, -34):
-        c('bookcase_wide', (-24, F[1], z), S_); c('bookcase_wide', (-24, F[1], z - 0.6), N_)
-    c('books_floor', (-21, F[1], -30)); c('books_floor', (-22, F[1], -38)); c('checkout', (-20.8, F[1], -25), Wf)
+        c('grocery_shelf', (-24, F[1], z), S_); c('grocery_shelf', (-24, F[1], z - 0.6), N_)
+    c('book_table', (-26.8, F[1], -31), S_); c('book_table', (-21.6, F[1], -26.5), S_)
+    c('books_floor', (-21, F[1], -30)); c('checkout', (-20.8, F[1], -25), Wf)
+    c('book_table', (-21.6, F[1], -37.5), S_); c('book_table', (-26.5, F[1], -24.6), S_)
+    c('armchair', (-26.8, F[1], -38.8), Wf); c('armchair', (-26.8, F[1], -40.6), Wf)
     front(F[1], -1, -42, -62, 'ОБУВЬ', 'pink')
     along_wall('shoe_wall', -1, -42.5, -61.5, F[1], 2.1)
     for z in (-47, -52, -57):
-        c('bench', (-24, F[1], z), S_); c('shoe_wall', (-26.5, F[1], z), S_)
+        c('mall_bench', (-23.6, F[1], z), S_); c('shoe_wall', (-26.5, F[1], z), S_)
+    c('shopping_bags', (-21.6, F[1], -58)); c('fitting_room', (-21.4, F[1], -44.2), N_)
     front(F[1], -1, -62, -82, 'ЧАСЫ', 'white')
-    for z in (-66, -71, -76):
-        c('checkout', (-24, F[1], z), S_)
-    c('mannequin_dressed', (-28.8, F[1], -64), Wf); c('mannequin_dressed', (-28.8, F[1], -80), Wf)
+    along_wall('watch_wall', -1, -62.5, -81.5, F[1], 2.1)
+    for z in (-66, -70.5, -75):
+        c('display_case', (-24, F[1], z), S_)
+    c('display_case', (-21.6, F[1], -79), Wf); c('armchair', (-21.6, F[1], -64), Wf)
     front(F[1], 1, -2, -22, 'ОХРАНА', 'blue')
-    L.prop('res://scenes/world/lockers.tscn', (29.5, F[1], -5), -math.pi / 2)
-    L.prop('res://scenes/world/lockers.tscn', (29.5, F[1], -7), -math.pi / 2)
+    for z in (-4, -6, -8):
+        L.prop('res://scenes/world/lockers.tscn', (29.5, F[1], z), math.pi / 2)
     c('tv_wall', (29.5, F[1], -14), E)
-    L.prop('res://scenes/world/desk.tscn', (26, F[1], -14), -math.pi / 2)
-    c('office_chair_fallen', (24.5, F[1], -13)); c('weapon_rack', (29.2, F[1], -19), E)
+    c('security_desk', (25.6, F[1], -14), Wf)
+    c('office_chair_fallen', (24.2, F[1], -13)); c('weapon_rack', (29.2, F[1], -19), Wf); c('armchair', (21.6, F[1], -17), E)
+    c('metal_detector', (21.5, F[1], -4.2), S_); c('sofa', (23.4, F[1], -21.2), S_)
     front(F[1], 1, -22, -42, 'ОПТИКА', 'cyan')
-    along_wall('grocery_shelf', 1, -22.5, -41.5, F[1], 2.1)
-    for z in (-27, -33, -38):
-        c('checkout', (23.5, F[1], z), S_)
-    c('mannequin', (20, F[1], -24), E)
+    along_wall('glasses_wall', 1, -22.5, -41.5, F[1], 2.1)
+    for z in (-26.5, -37.5):
+        c('display_case', (23.5, F[1], z), S_)
+    c('glasses_wall', (24.6, F[1], -31.7), S_); c('glasses_wall', (24.6, F[1], -32.3), N_); c('armchair', (21.6, F[1], -40.4), E)
+    c('display_case', (27.2, F[1], -26.5), S_); c('display_case', (27.2, F[1], -37.5), S_)
     front(F[1], 1, -42, -62, 'ЦВЕТЫ', 'green')
     for z in (-45, -49, -53, -57):
         c('flower_stand', (28.8, F[1], z), E)
@@ -1397,15 +1412,20 @@ def level_mall():
           (L.rnd.uniform(20, 26), F[1], L.rnd.uniform(-43, -61)))
     front(F[1], 1, -62, -82, 'СУВЕНИРЫ', 'yellow')
     along_wall('plush_shelf', 1, -62.5, -71.5, F[1], 2.0)
-    along_wall('grocery_shelf', 1, -72, -81.5, F[1], 2.1)
-    c('checkout', (21.5, F[1], -76), E); c('box_pile', (24, F[1], -66))
+    along_wall('doll_shelf', 1, -72, -81.5, F[1], 2.1)
+    c('checkout', (21.5, F[1], -77), E); c('box_pile', (24, F[1], -65.5))
+    for pos in ((24.5, F[1], -68.5), (26.5, F[1], -74), (24, F[1], -79)):
+        c('postcard_rack', pos)
     for i, x in enumerate((-25, -18, 18, 25)):                                     # food court
         c('food_stall' if i % 2 else 'food_stall_b', (x, F[1], -98.9), S_)
     for tx in (-7, -2, 3, 8):
         for tz in (-89, -95):
-            c('table_round', (tx, F[1], tz)); c('chair_cushion', (tx + 1, F[1], tz), E); c('chair_cushion', (tx - 1, F[1], tz), Wf)
-    for tx, tz in [(-22, -91), (22, -91), (-26, -92), (26, -92)]:
-        c('table_round', (tx, F[1], tz)); c('chair_fallen', (tx + 1, F[1], tz))
+            c('food_court_table', (tx, F[1], tz), S_ if (tx + tz) % 2 else math.pi / 2)
+    for tx, tz in [(-22, -91), (22, -91), (-26, -92), (26, -92), (-13, -92), (14, -93)]:
+        c('food_court_table', (tx, F[1], tz), S_)
+    c('bistro_chair', (-12, F[1], -88.5), 1.1); c('bistro_chair', (12.5, F[1], -97), -2.0)
+    for x in (-14, 14):
+        c('mall_bin', (x, F[1], -86.2)); c('planter', (x * 1.5, F[1], -86.6))
     L.sign('food_court', (0, F[1] + 3.9, -99.98), '+z', 'yellow')
     # second floor: arcade, photo, tattoo, kids' room / pizza, bowling, tea, cosmetics; the cinema in the north
     for side, names in ((-1, ['ИГРОВЫЕ АВТОМАТЫ', 'ФОТО', 'ТАТУ', 'ДЕТСКАЯ']), (1, ['ПИЦЦА', 'БОУЛИНГ', 'ЧАЙ', 'КОСМЕТИКА'])):
@@ -1416,24 +1436,40 @@ def level_mall():
     for z in (-6, -10, -14, -18):
         c('arcade_cabinet_b', (-24.5, F[2], z), Wf); c('arcade_cabinet', (-25.4, F[2], z), E)
     along_wall('tv_wall', -1, -22.5, -31, F[2], 2.5)                              # photo
-    c('checkout', (-24, F[2], -36), S_); c('mannequin', (-21, F[2], -26), Wf)
-    c('checkout', (-26, F[2], -48), S_); c('lounge_chair', (-26, F[2], -52)); c('lounge_chair', (-23, F[2], -56))  # tattoo
+    c('checkout', (-24, F[2], -36), S_); c('armchair', (-21.6, F[2], -25.5), Wf)
+    c('photo_booth', (-28.9, F[2], -34.5), Wf); c('photo_booth', (-28.9, F[2], -38.6), Wf)
+    c('display_case', (-25, F[2], -27.5), S_); c('display_case', (-25, F[2], -30.5), S_); c('sofa', (-23.5, F[2], -22.8), N_)
+    along_wall('tv_wall', -1, -42.5, -50, F[2], 2.5)                               # tattoo
+    for z in (-46, -51.5, -57):
+        c('tattoo_chair', (-26.5, F[2], z), Wf)
+    c('tattoo_chair', (-22.6, F[2], -46.5), E); c('armchair', (-28.6, F[2], -60.6), N_)
+    c('sofa', (-23, F[2], -42.8), N_); c('display_case', (-21.6, F[2], -59.5), Wf)
     along_wall('plush_shelf', -1, -62.5, -81.5, F[2], 2.0)                         # kids' room
-    for _ in range(8):
-        c(L.rnd.choice(['rug_round', 'box_open', 'chair_fallen', 'plant_small']), (L.rnd.uniform(-27, -20), F[2], L.rnd.uniform(-64, -80)))
+    c('ball_pit', (-24.8, F[2], -66.5)); c('kids_slide', (-25.5, F[2], -76.5), Wf)
+    c('kids_table', (-21.8, F[2], -79.4)); c('stroller', (-21.2, F[2], -64), 2.0)
+    for _ in range(4):
+        c(L.rnd.choice(['rug_round', 'plant_small']), (L.rnd.uniform(-23, -20), F[2], L.rnd.uniform(-66, -69)))
     c('food_stall', (28.9, F[2], -12), E)                                          # pizza
-    for tx, tz in [(22, -5), (22, -18), (25, -7), (25, -17)]:
-        c('table_round', (tx, F[2], tz)); c('chair_cushion', (tx + 0.9, F[2], tz), E)
+    c('pizza_oven', (28.6, F[2], -5.2), E)
+    c('booth', (23, F[2], -4), S_); c('booth', (23, F[2], -19.8), S_)
+    c('bistro_set', (25.5, F[2], -16), S_); c('bistro_set', (25.5, F[2], -8.5), S_)
+    c('bistro_set', (22.3, F[2], -8), S_); c('bistro_set', (22.3, F[2], -16.5), S_)
     for i in range(3):                                                             # bowling lanes and pins
         z = -27 - i * 4.5
         L.decor((9, 0.05, 1.6), (24.5, F[2] + 0.03, z), 'wood', cast_shadow=0)
-        for j, (dx, dz) in enumerate([(0, 0), (0.3, -0.2), (0.3, 0.2), (0.6, -0.4), (0.6, 0), (0.6, 0.4)]):
-            L.decor((0.1, 0.38, 0.1), (28.4 + dx, F[2] + 0.22, z + dz), 'plastic_white', cast_shadow=0)
-    c('table_round', (21, F[2], -50)); c('table_round', (24, F[2], -56)); c('chair_cushion', (22, F[2], -50))  # tea
-    along_wall('grocery_shelf', 1, -62.5, -81.5, F[2], 2.1)                        # cosmetics
-    c('mannequin_dressed', (21, F[2], -66), E); c('mannequin_dressed', (21, F[2], -78), E); c('checkout', (24, F[2], -72), S_)
+        c('bowling_pins', (28.2, F[2], z), Wf)
+    for z in (-29.25, -33.75):
+        c('ball_return', (21.8, F[2], z), Wf)
+    c('sofa', (22.6, F[2], -40.6), S_); c('sofa', (22.6, F[2], -23.4), N_)
+    along_wall('tea_shelf', 1, -42.5, -61.5, F[2], 2.1)                            # tea
+    c('booth', (23, F[2], -44.2), S_); c('booth', (23, F[2], -59.8), S_)
+    c('bistro_set', (26.3, F[2], -49), S_); c('bistro_set', (26.3, F[2], -55), S_)
+    c('bistro_set', (22.3, F[2], -48.4), S_); c('bistro_set', (22.3, F[2], -56), S_); c('sofa', (27, F[2], -60.9), S_)
+    along_wall('perfume_wall', 1, -62.5, -81.5, F[2], 2.1)                         # cosmetics
+    c('mannequin_dressed', (21, F[2], -66), E); c('mannequin_dressed', (21, F[2], -78), E)
+    c('cosmetics_island', (24.5, F[2], -67.5)); c('cosmetics_island', (24.5, F[2], -76.5)); c('display_case', (27, F[2], -72), E)
     for x in (-14, 14):                                                            # the cinema lobby
-        c('popcorn_machine', (x, F[2], -86.6), S_)
+        c('popcorn_machine', (x, F[2], -86.6), S_); c('stanchions', (x * 0.4, F[2], -86.5), S_)
     # the cinema hall: screen, rows of seats
     L.wall_z(-88, -20, -2.2, W, h=H, y0=F[2]); L.wall_z(-88, 2.2, 20, W, h=H, y0=F[2])
     L.blk(W, (4.4, H - 3.2, 0.3), (0, F[2] + 3.2 + (H - 3.2) / 2, -88))
@@ -1441,15 +1477,15 @@ def level_mall():
     L.sign('cinema', (0, F[2] + 3.85, -87.83), '+z', 'red', flicker=True)
     L.decor((34, 3.6, 0.1), (0, F[2] + 2.6, -99.75), 'screen_glow', cast_shadow=0)
     L.omni((0, F[2] + 2.5, -97), (0.8, 0.85, 1.0), 1.4, 16)
-    for z in (-91.5, -94):
-        for x0, x1 in ((-17, -3), (3, 17)):
-            L.blk('fabric_red', (x1 - x0, 0.5, 0.8), ((x0 + x1) / 2, F[2] + 0.25, z))
-            L.decor((x1 - x0, 0.6, 0.15), ((x0 + x1) / 2, F[2] + 0.75, z + 0.35), 'fabric_red')
+    for z in (-91.5, -94):                                                         # rows of seats, an aisle in the middle
+        for x in (-15.6, -11.4, -7.2, -3.0, 3.0, 7.2, 11.4, 15.6):
+            c('cinema_seats', (x, F[2], z), N_)
     # the stairwell to the roof (F2, north-east), behind a door locked from inside
     L.wall_x(24, -86, -96.3, W, h=H, y0=F[2]); L.wall_x(24, -98.7, -100, W, h=H, y0=F[2])
     L.blk(W, (0.3, H - 3.0, 2.4), (24, F[2] + 3.0 + (H - 3.0) / 2, -97.5))
     L.wall_z(-86, 24, 30, W, h=H, y0=F[2])
     L.dress_door((24, F[2], -97.5), 'z', '-x', sign='ВЫХОД НА КРЫШУ', width=2.4)
+    L.omni((27, F[2] + 3.5, -96), (1, 0.85, 0.6), 1.0, 9)                          # the stairwell's lamp
     L.door('RoofDoor', (0.2, 3.0, 2.4), (24, F[2] + 1.5, -97.5), 'door_steel', player_can_open=False,
            locked_message='Заперто изнутри', swing_degrees=100.0, open_time=1.0)
     ramp(24.5, 29.5, -98.5, F[2], -87.2, 15.0, 'concrete', sides=(False, True))   # open on the door side
@@ -1505,20 +1541,44 @@ def level_mall():
         L.decor((0.05, 6.5, 0.05), (0, 11.6, z), 'dark', cast_shadow=0)
         L.ceiling_lamp(0, z, y=8.3, energy=6.0, rng=22.0, name=name, power=True)
         power.append('Lights/' + name)
+    # galleries: vending machines, ATMs, benches, planters and bins against the shop walls, kiosks in the middle
+    doors = {F[0]: {-1: (-22, -52, -72), 1: (-12, -32, -52, -72)}}
+    for y in F:
+        for side in (-1, 1):
+            busy = doors.get(y, {}).get(side, (-12, -32, -52, -72))
+            for z, kind in ((-5.5, 'vending_machine'), (-19, 'atm'), (-25.5, 'mall_bench'), (-40, 'planter'),
+                            (-44.5, 'mall_bin'), (-59, 'vending_machine'), (-65.5, 'mall_bench'), (-79.5, 'planter')):
+                if all(abs(z - d) > 3.2 for d in busy):
+                    c(kind, (side * 17.45, y, z), Wf if side < 0 else E)
+            c('kiosk', (side * 13.6, y, -22 if (y == F[1]) == (side < 0) else -62), math.pi / 2)
+    # the ground floor's north end: a promo zone with a car on a turntable, machines and seats
+    c('turntable', (-20, 0, -92))
+    L.prop(VEHICLE.format('sedan'), (-20, 0.2, -92), 0.7)
+    L.omni((-20, 4.2, -92), (0.6, 0.8, 1.0), 2.0, 9)
+    for x in (-4, -2.8):
+        c('atm', (x, 0, -99.4), S_)
+    for x in (4, 5.2, 6.4):
+        c('vending_machine', (x, 0, -99.4), S_)
+    c('photo_booth', (-11, 0, -99.2), S_); c('kiosk', (16, 0, -91), 0.0)
+    for x in (-8, 10):
+        c('mall_bench', (x, 0, -95), S_); c('planter', (x + 3, 0, -95))
+    c('armchair', (24, 0, -98.8), S_); c('armchair', (26, 0, -98.8), S_); c('stroller', (2, 0, -93), 0.4)
+    for x in (-12, 0, 12, 24):
+        L.omni((x, 3.8, -93), (1, 0.85, 0.6), 0.7, 11)
     # the atrium floor: fountain, benches, plants, the information desk
     c('fountain', (0, 0, -50), 0.0)
     L.omni((0, 2.0, -50), (0.4, 0.7, 1.0), 2.0, 10)
     for z in (-30, -38, -62, -70):
         for x in (-5.5, 5.5):
-            c('bench', (x, 0, z), math.pi / 2); c('plant_tall', (x, 0, z - 3))
+            c('mall_bench', (x, 0, z), math.pi / 2); c('plant_tall', (x, 0, z - 3))
     for a in range(8):                                                             # benches round the fountain
         ang = a * math.tau / 8 + 0.4
         c('potted_plant', (math.cos(ang) * 5.3, 0, -50 + math.sin(ang) * 5.3))
     L.blk('wood', (4, 1.1, 1.2), (0, 0.55, -20), name='InfoDesk')
     L.sign('info', (0, 2.4, -19.3), '+z')
     L.scatter(['trash_bags', 'newspaper', 'papers', 'suitcase', 'backpack', 'trash_can', 'box_open'], -9, 9, -17, -83, 22)
-    L.scatter(['papers', 'trash_bags', 'chair_fallen', 'newspaper'], -17, -11, -1, -99, 10, y=F[1])
-    L.scatter(['papers', 'trash_bags', 'chair_fallen', 'newspaper'], 11, 17, -1, -99, 10, y=F[1])
+    L.scatter(['papers', 'trash_bags', 'shopping_bags', 'newspaper'], -17, -11, -1, -99, 10, y=F[1])
+    L.scatter(['papers', 'trash_bags', 'shopping_bags', 'newspaper'], 11, 17, -1, -99, 10, y=F[1])
     L.scatter(['papers', 'trash_bags', 'newspaper', 'box_open'], -17, -11, -1, -84, 8, y=F[2])
 
     # --- the dead

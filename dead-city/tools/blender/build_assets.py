@@ -1987,6 +1987,438 @@ def export_world_model(objs, root, path):
     root.matrix_world = saved
 
 
+def build_mall_furniture():
+    """Second batch of mall furniture: cafe and food-court seating, gallery fittings (kiosks, vending machines, ATMs,
+    planters, bins), shop fittings for every unit and cinema seats. Fronts face -Y (Godot +Z), like the first batch."""
+    sizes = {}
+
+    def new(seed):
+        reset()
+        return mall_materials(), Kit(seed)
+
+    def glow(name, c, s=2.0):
+        return emissive(name, c, s)
+
+    def chair_frame(k, m, seat_mat, x=0.0, y=0.0, rot=0.0, h=0.46, back=True):
+        """A bistro chair centred at (x, y) whose back is towards +Y turned by rot."""
+        ca, sa = math.cos(rot), math.sin(rot)
+        P = lambda u, v, z: (x + u * ca - v * sa, y + u * sa + v * ca, z)
+        for u in (-0.18, 0.18):
+            for v in (-0.18, 0.18):
+                k.cyl(0.014, h, P(u, v, h / 2), m.steel, verts=6)
+        k.box((0.42, 0.42, 0.04), P(0, 0, h + 0.02), seat_mat, rot=(0, 0, rot), bevel=0.01)
+        if back:
+            for u in (-0.18, 0.18):
+                k.cyl(0.014, 0.42, P(u, 0.2, h + 0.23), m.steel, verts=6)
+            for z in (0.18, 0.32):
+                k.box((0.4, 0.025, 0.08), P(0, 0.2, h + z), seat_mat, rot=(0, 0, rot), bevel=0.005)
+
+    # bistro table and chair (cafes, tea, pizza)
+    m, k = new(21)
+    k.cyl(0.4, 0.035, (0, 0, 0.74), m.wood, verts=24)
+    k.cyl(0.03, 0.7, (0, 0, 0.37), m.steel, verts=8)
+    k.cyl(0.24, 0.03, (0, 0, 0.015), m.steel, verts=16)
+    sizes["bistro_table"] = k.export("bistro_table")
+    m, k = new(22)
+    chair_frame(k, m, m.wood)
+    sizes["bistro_chair"] = k.export("bistro_chair")
+    m, k = new(23)                                                           # a bistro set: table and two chairs
+    k.cyl(0.4, 0.035, (0, 0, 0.74), m.wood, verts=24)
+    k.cyl(0.03, 0.7, (0, 0, 0.37), m.steel, verts=8)
+    k.cyl(0.24, 0.03, (0, 0, 0.015), m.steel, verts=16)
+    for side in (-1, 1):
+        chair_frame(k, m, m.wood, x=side * 0.62, rot=side * math.pi / 2)
+    k.cyl(0.05, 0.1, (0.1, 0.05, 0.81), m.white, verts=12)                  # a forgotten cup
+    sizes["bistro_set"] = k.export("bistro_set")
+
+    # food-court table with four stools on arms (one piece, like the real ones bolted to the floor)
+    m, k = new(24)
+    tray = material("FoodTray", (0.75, 0.15, 0.1), roughness=0.4)
+    k.box((1.3, 0.75, 0.04), (0, 0, 0.74), m.white, bevel=0.015)
+    k.box((0.08, 0.08, 0.72), (0, 0, 0.36), m.steel)
+    k.box((1.6, 0.08, 0.06), (0, 0, 0.12), m.steel)
+    k.box((0.08, 1.4, 0.06), (0, 0, 0.12), m.steel)
+    for x, y in ((-0.45, -0.62), (0.45, -0.62), (-0.45, 0.62), (0.45, 0.62)):
+        k.cyl(0.04, 0.35, (x, y, 0.27), m.steel, verts=8)
+        k.cyl(0.2, 0.06, (x, y, 0.47), tray, verts=20)
+        k.box((abs(x), 0.06, 0.05), (x / 2, y, 0.12), m.steel)
+    k.box((0.42, 0.3, 0.02), (-0.25, -0.1, 0.77), tray)
+    k.cyl(0.04, 0.16, (-0.15, -0.1, 0.86), m.white, verts=10)
+    sizes["food_court_table"] = k.export("food_court_table")
+
+    # diner booth: two high-backed benches facing each other over a table
+    m, k = new(25)
+    leather = material("BoothLeather", (0.55, 0.08, 0.07), roughness=0.35)
+    for side in (-1, 1):
+        k.box((1.4, 0.55, 0.45), (0, side * 0.75, 0.225), leather, bevel=0.03)
+        k.box((1.4, 0.15, 0.75), (0, side * 1.0, 0.8), leather, bevel=0.04)
+        k.box((1.4, 0.04, 0.45), (0, side * 1.08, 0.22), m.wood)
+    k.box((1.2, 0.75, 0.04), (0, 0, 0.74), m.wood, bevel=0.01)
+    k.box((0.1, 0.1, 0.72), (0, 0, 0.36), m.steel)
+    k.box((0.3, 0.2, 0.15), (0.45, 0.2, 0.83), m.chrome)                         # napkin box
+    sizes["booth"] = k.export("booth")
+
+    # armchair and sofa
+    for name, seats, seed, col in (("armchair", 1, 26, (0.25, 0.32, 0.45)), ("sofa", 3, 27, (0.35, 0.22, 0.15))):
+        m, k = new(seed)
+        cloth = material(f"Uph_{seed}", col, roughness=0.9)
+        w = 0.7 * seats + 0.3
+        k.box((w, 0.8, 0.25), (0, 0, 0.25), cloth, bevel=0.04)
+        for i in range(seats):
+            k.box((0.68, 0.62, 0.14), (-w / 2 + 0.15 + 0.35 + i * 0.7, -0.05, 0.44), cloth, bevel=0.05)
+        k.box((w, 0.2, 0.55), (0, 0.32, 0.65), cloth, bevel=0.06)
+        for side in (-1, 1):
+            k.box((0.16, 0.8, 0.32), (side * (w / 2 - 0.08), 0, 0.5), cloth, bevel=0.05)
+        for x in (-w / 2 + 0.08, w / 2 - 0.08):
+            for y in (-0.33, 0.33):
+                k.cyl(0.025, 0.12, (x, y, 0.06), m.dark, verts=6)
+        sizes[name] = k.export(name)
+
+    # gallery bench: wooden slats on steel legs
+    m, k = new(28)
+    for y in (-0.15, 0.0, 0.15):
+        k.box((2.0, 0.12, 0.04), (0, y, 0.45), m.wood, bevel=0.008)
+    for x in (-0.8, 0.8):
+        k.box((0.06, 0.45, 0.43), (x, 0, 0.215), m.steel)
+    sizes["mall_bench"] = k.export("mall_bench")
+
+    # planter with a small tree
+    m, k = new(29)
+    leaf = material("PlanterLeaf", (0.16, 0.35, 0.12), roughness=0.8)
+    k.box((1.2, 1.2, 0.6), (0, 0, 0.3), m.stone, bevel=0.03)
+    k.box((1.1, 1.1, 0.04), (0, 0, 0.58), material("Soil", (0.12, 0.08, 0.05), roughness=1.0))
+    k.cyl(0.05, 1.3, (0, 0, 1.2), m.wood, verts=8)
+    for i in range(7):
+        k.ball(0.32, (k.rnd.uniform(-0.3, 0.3), k.rnd.uniform(-0.3, 0.3), 1.8 + k.rnd.uniform(-0.2, 0.35)), leaf)
+    sizes["planter"] = k.export("planter")
+
+    # waste bin
+    m, k = new(30)
+    k.cyl(0.24, 0.85, (0, 0, 0.425), m.steel, verts=16)
+    k.cyl(0.26, 0.06, (0, 0, 0.86), m.chrome, verts=16)
+    k.cyl(0.2, 0.08, (0, 0, 0.92), m.dark, verts=16)
+    sizes["mall_bin"] = k.export("mall_bin")
+
+    # vending machine and ATM
+    m, k = new(31)
+    body = material("VendRed", (0.6, 0.06, 0.05), roughness=0.35)
+    k.box((0.95, 0.8, 1.95), (0, 0, 0.975), body, bevel=0.02)
+    k.box((0.62, 0.04, 1.3), (-0.1, -0.3, 1.2), glow("VendBack", (0.75, 0.85, 0.95), 1.2))      # lit back, cans, glass
+    k.box((0.64, 0.02, 1.32), (-0.1, -0.41, 1.2), m.glass)
+    for row in range(5):
+        for col in range(5):
+            c = BRIGHT[(row * 5 + col) % len(BRIGHT)]
+            k.cyl(0.035, 0.16, (-0.34 + col * 0.12, -0.36, 0.72 + row * 0.24), material(f"Can_{row}_{col}", c, 0.6, 0.3), verts=8)
+    k.box((0.2, 0.04, 0.5), (0.35, -0.42, 1.3), m.dark)
+    k.box((0.12, 0.03, 0.08), (0.35, -0.44, 1.45), glow("VendScreen", (0.3, 1.0, 0.4), 3.0))
+    k.box((0.6, 0.06, 0.2), (-0.1, -0.41, 0.3), m.dark)
+    sizes["vending_machine"] = k.export("vending_machine")
+    m, k = new(32)
+    k.box((0.7, 0.6, 1.55), (0, 0, 0.775), m.steel, bevel=0.02)
+    k.box((0.72, 0.3, 0.3), (0, -0.35, 1.5), glow("AtmTop", (0.1, 0.45, 0.9), 2.0))
+    k.box((0.4, 0.03, 0.3), (0, -0.31, 1.15), glow("AtmScreen", (0.4, 0.8, 1.0), 2.5))
+    k.box((0.3, 0.2, 0.04), (0, -0.4, 0.92), m.dark, rot=(0.4, 0, 0))
+    for i in range(12):
+        k.box((0.06, 0.03, 0.04), (-0.09 + (i % 3) * 0.09, -0.45 + (i // 3) * 0.02, 0.9 + (i // 3) * 0.035), m.chrome)
+    k.box((0.3, 0.03, 0.03), (0, -0.31, 0.75), m.dark)
+    sizes["atm"] = k.export("atm")
+
+    # phone-case kiosk: an island with glass counters round a column and a canopy
+    m, k = new(33)
+    tint = material("KioskTint", (0.85, 0.85, 0.88), roughness=0.3)
+    k.box((2.8, 1.4, 0.9), (0, 0, 0.45), tint, bevel=0.03)
+    k.box((2.85, 1.45, 0.05), (0, 0, 0.92), m.chrome)
+    k.box((2.6, 1.2, 0.3), (0, 0, 1.1), m.glass)
+    for i in range(24):
+        c = BRIGHT[i % len(BRIGHT)]
+        k.box((0.08, 0.02, 0.15), (-1.15 + (i % 12) * 0.2, -0.45 if i < 12 else 0.45, 1.03), material(f"Case{i}", c, 0.1, 0.3))
+    k.box((0.5, 0.5, 1.4), (0, 0, 1.65), tint)
+    k.box((0.52, 0.52, 0.6), (0, 0, 2.1), glow("KioskPanel", (1.0, 0.95, 0.85), 1.5))
+    k.box((3.0, 1.6, 0.12), (0, 0, 2.45), tint, bevel=0.03)
+    k.box((3.02, 0.04, 0.2), (0, -0.8, 2.45), glow("KioskBand", (0.2, 0.8, 1.0), 3.0))
+    sizes["kiosk"] = k.export("kiosk")
+
+    # glass display counter with lit trays (watches, optics, pharmacy, cosmetics)
+    m, k = new(34)
+    k.box((1.6, 0.6, 0.75), (0, 0, 0.375), m.dark, bevel=0.01)
+    k.box((1.6, 0.6, 0.3), (0, 0, 0.9), m.glass)
+    k.box((1.5, 0.5, 0.02), (0, 0, 0.77), glow("CaseLight", (1.0, 0.95, 0.85), 1.2))
+    gold = material("Gold", (0.95, 0.7, 0.25), metallic=1.0, roughness=0.25)
+    for i in range(12):
+        k.cyl(0.04, 0.012, (-0.62 + (i % 6) * 0.25, -0.1 + (i // 6) * 0.2, 0.79), gold if i % 3 else m.chrome, verts=12,
+              rot=(0.3, 0, 0))
+    k.box((1.62, 0.62, 0.02), (0, 0, 1.06), m.chrome)
+    sizes["display_case"] = k.export("display_case")
+
+    # a wall of small items in rows: glasses, watches, perfume, tea tins, nesting dolls
+    def item_wall(name, seed, item, rows=5, cols=8, panel=(0.95, 0.95, 0.92), lit=True):
+        m, k = new(seed)
+        k.box((2.0, 0.3, 2.2), (0, 0.12, 1.1), material(f"Panel_{seed}", panel, roughness=0.6))
+        for r in range(rows):
+            z = 0.55 + r * 0.32
+            k.box((1.9, 0.28, 0.025), (0, 0.0, z - 0.03), glow(f"Shelf_{seed}", (1.0, 0.95, 0.85), 0.8) if lit else m.wood)
+            for cidx in range(cols):
+                item(k, m, -0.85 + cidx * (1.7 / (cols - 1)), -0.04, z, r * cols + cidx)
+        sizes[name] = k.export(name)
+
+    def glasses(k, m, x, y, z, i):
+        frame = material(f"Frame{i % 5}", BRIGHT[i % 5] if i % 2 else (0.05, 0.05, 0.05), 0.3, 0.3)
+        for s in (-1, 1):
+            bpy.ops.mesh.primitive_torus_add(major_radius=0.035, minor_radius=0.006, location=(x + s * 0.042, y, z + 0.06),
+                                             rotation=(math.pi / 2, 0, 0))
+            o = bpy.context.object; o.data.materials.append(frame); k.parts.append(o)
+        k.box((0.02, 0.006, 0.006), (x, y, z + 0.07), frame)
+
+    def watch(k, m, x, y, z, i):
+        k.cyl(0.035, 0.012, (x, y, z + 0.06), material("WatchFace", (0.95, 0.95, 0.9)) if i % 2 else m.dark, verts=14,
+              rot=(math.pi / 2, 0, 0))
+        k.box((0.025, 0.01, 0.13), (x, y + 0.01, z + 0.06), m.chrome if i % 3 else material("Strap", (0.3, 0.15, 0.05)))
+
+    def bottle(k, m, x, y, z, i):
+        c = BRIGHT[i % len(BRIGHT)]
+        k.cyl(0.028, 0.12, (x, y, z + 0.06), emissive(f"Perfume{i % 7}", c, 0.6), verts=8)
+        k.cyl(0.012, 0.03, (x, y, z + 0.135), m.chrome, verts=6)
+
+    def tin(k, m, x, y, z, i):
+        k.cyl(0.045, 0.14, (x, y, z + 0.07), material(f"Tin{i % 6}", BRIGHT[(i * 3) % len(BRIGHT)], 0.5, 0.35), verts=10)
+
+    def doll(k, m, x, y, z, i):
+        paint = material(f"Doll{i % 4}", ((0.8, 0.1, 0.08), (0.9, 0.6, 0.1), (0.15, 0.3, 0.7), (0.2, 0.5, 0.2))[i % 4], roughness=0.3)
+        s = 0.7 + (i % 3) * 0.15
+        k.ball(0.05 * s, (x, y, z + 0.05 * s), paint, (1, 1, 1.2))
+        k.ball(0.035 * s, (x, y, z + 0.13 * s), paint)
+        k.ball(0.024 * s, (x, y - 0.025 * s, z + 0.135 * s), material("DollFace", (0.95, 0.85, 0.75)))
+
+    item_wall("glasses_wall", 35, glasses)
+    item_wall("watch_wall", 36, watch, panel=(0.12, 0.12, 0.13))
+    item_wall("perfume_wall", 37, bottle, cols=10, panel=(0.92, 0.88, 0.9))
+    item_wall("tea_shelf", 38, tin, cols=9, panel=(0.4, 0.26, 0.15), lit=False)
+    item_wall("doll_shelf", 39, doll, cols=9, panel=(0.55, 0.12, 0.1), lit=False)
+
+    # cosmetics island: a round stand in tiers
+    m, k = new(40)
+    k.cyl(0.9, 0.7, (0, 0, 0.35), m.white, verts=28)
+    k.cyl(0.65, 0.3, (0, 0, 0.85), m.white, verts=24)
+    k.cyl(0.4, 0.3, (0, 0, 1.15), m.white, verts=20)
+    for tier, (r, z, n) in enumerate(((0.8, 0.72, 16), (0.55, 1.02, 12), (0.3, 1.32, 8))):
+        for i in range(n):
+            a = i * math.tau / n
+            k.cyl(0.03, 0.12, (math.cos(a) * r, math.sin(a) * r, z + 0.06),
+                  emissive(f"Cosm{(i + tier) % 6}", BRIGHT[(i + tier) % len(BRIGHT)], 0.5), verts=8)
+    k.cyl(0.05, 0.5, (0, 0, 1.55), m.chrome, verts=8)
+    k.ball(0.18, (0, 0, 1.9), glow("CosmBall", (1.0, 0.6, 0.8), 2.5))
+    sizes["cosmetics_island"] = k.export("cosmetics_island")
+
+    # tattoo chair with a lamp, and the artist's stool
+    m, k = new(41)
+    leather = material("TattooLeather", (0.05, 0.05, 0.05), roughness=0.3)
+    k.cyl(0.25, 0.05, (0, 0, 0.025), m.chrome, verts=16)
+    k.cyl(0.06, 0.5, (0, 0, 0.3), m.chrome, verts=10)
+    k.box((0.6, 0.7, 0.12), (0, 0.05, 0.6), leather, bevel=0.03)
+    k.box((0.6, 0.65, 0.12), (0, 0.55, 0.85), leather, rot=(-0.9, 0, 0), bevel=0.03)
+    k.box((0.55, 0.55, 0.1), (0, -0.55, 0.5), leather, rot=(0.5, 0, 0), bevel=0.03)
+    for s in (-1, 1):
+        k.box((0.1, 0.5, 0.06), (s * 0.38, 0.1, 0.75), leather, bevel=0.02)
+    k.cyl(0.02, 1.6, (0.6, 0.3, 0.8), m.steel, verts=6)
+    k.box((0.6, 0.03, 0.03), (0.35, 0.3, 1.6), m.steel)
+    k.cyl(0.12, 0.1, (0.1, 0.3, 1.55), glow("TattooLamp", (1.0, 0.97, 0.9), 4.0), verts=12)
+    k.cyl(0.18, 0.05, (0.6, -0.6, 0.55), m.chrome, verts=14)
+    k.cyl(0.03, 0.5, (0.6, -0.6, 0.27), m.chrome, verts=6)
+    sizes["tattoo_chair"] = k.export("tattoo_chair")
+
+    # photo booth with a curtain
+    m, k = new(42)
+    shell = material("BoothShell", (0.9, 0.75, 0.1), roughness=0.4)
+    k.box((1.3, 1.0, 2.1), (0.25, 0.2, 1.05), shell, bevel=0.03)
+    k.box((0.65, 0.04, 1.6), (-0.1, -0.31, 1.1), material("Curtain", (0.6, 0.05, 0.08), roughness=0.9))
+    k.box((0.4, 0.04, 0.5), (0.6, -0.31, 1.3), glow("BoothPhotos", (1.0, 0.95, 0.9), 1.5))
+    k.box((1.3, 0.06, 0.3), (0.25, -0.31, 2.2), glow("BoothSign", (1.0, 0.3, 0.6), 3.0))
+    sizes["photo_booth"] = k.export("photo_booth")
+
+    # pizza oven: a brick dome on a counter
+    m, k = new(43)
+    brick = material("OvenBrick", (0.55, 0.25, 0.15), roughness=0.9)
+    k.box((1.6, 1.2, 0.9), (0, 0, 0.45), m.steel)
+    bpy.ops.mesh.primitive_uv_sphere_add(segments=20, ring_count=10, radius=0.7, location=(0, 0.05, 0.9))
+    o = bpy.context.object; o.scale = (1, 1, 0.75); o.data.materials.append(brick); k.parts.append(o)
+    k.box((0.5, 0.2, 0.35), (0, -0.6, 1.1), glow("OvenFire", (1.0, 0.45, 0.1), 4.0))
+    k.cyl(0.12, 0.8, (0, 0.25, 1.75), m.steel, verts=10)
+    sizes["pizza_oven"] = k.export("pizza_oven")
+
+    # ball pit and a kids' slide
+    m, k = new(44)
+    soft = material("PitSoft", (0.15, 0.55, 0.85), roughness=0.8)
+    for s in (-1, 1):
+        k.box((3.0, 0.2, 0.6), (0, s * 1.4, 0.3), soft, bevel=0.06)
+        k.box((0.2, 2.6, 0.6), (s * 1.4, 0, 0.3), soft, bevel=0.06)
+    for i in range(170):
+        c = ((0.9, 0.15, 0.1), (0.95, 0.85, 0.1), (0.1, 0.4, 0.9), (0.2, 0.75, 0.2))[i % 4]
+        k.ball(0.07, (k.rnd.uniform(-1.2, 1.2), k.rnd.uniform(-1.2, 1.2), 0.08 + k.rnd.uniform(0, 0.3)), material(f"Ball{i % 4}", c, 0.0, 0.3))
+    sizes["ball_pit"] = k.export("ball_pit")
+    m, k = new(45)
+    plast = material("SlideRed", (0.85, 0.15, 0.1), roughness=0.4)
+    k.box((1.0, 1.0, 1.2), (0, 0.8, 0.6), material("SlideBlue", (0.15, 0.35, 0.8), roughness=0.4), bevel=0.05)
+    k.box((0.7, 2.3, 0.06), (0, -0.65, 0.6), plast, rot=(0.56, 0, 0))          # the chute down to the floor
+    for s in (-1, 1):
+        k.box((0.06, 2.3, 0.2), (s * 0.35, -0.65, 0.7), plast, rot=(0.56, 0, 0))
+    for z in (0.3, 0.6, 0.9):
+        k.box((0.6, 0.15, 0.05), (0, 1.35, z), m.steel)
+    sizes["kids_slide"] = k.export("kids_slide")
+
+    # a row of six cinema seats with armrests
+    m, k = new(46)
+    velvet = material("Velvet", (0.5, 0.04, 0.06), roughness=0.85)
+    for i in range(6):
+        x = -1.5 + i * 0.6
+        k.box((0.5, 0.5, 0.12), (x, -0.05, 0.45), velvet, bevel=0.03)
+        k.box((0.52, 0.12, 0.65), (x, 0.25, 0.8), velvet, bevel=0.04)
+    for i in range(7):
+        k.box((0.07, 0.55, 0.65), (-1.8 + i * 0.6, 0.0, 0.33), m.dark)
+        k.cyl(0.04, 0.08, (-1.8 + i * 0.6, -0.15, 0.68), m.dark, verts=8)
+    sizes["cinema_seats"] = k.export("cinema_seats")
+
+    # rope stanchions
+    m, k = new(47)
+    for x in (-0.9, 0.9):
+        k.cyl(0.15, 0.04, (x, 0, 0.02), m.chrome, verts=14)
+        k.cyl(0.025, 0.95, (x, 0, 0.5), m.chrome, verts=8)
+        k.ball(0.04, (x, 0, 0.98), m.chrome)
+    for i in range(9):
+        t = i / 8
+        k.ball(0.025, (-0.9 + 1.8 * t, 0, 0.92 - 0.18 * math.sin(t * math.pi)), material("Rope", (0.6, 0.05, 0.05), roughness=0.8))
+    sizes["stanchions"] = k.export("stanchions")
+
+    # bowling: ball return with balls, a proper set of ten pins
+    m, k = new(48)
+    k.box((0.8, 1.4, 0.55), (0, 0, 0.275), m.dark, bevel=0.03)
+    k.box((0.5, 1.2, 0.1), (0, 0, 0.6), m.chrome)
+    for i in range(5):
+        k.ball(0.11, (0, -0.48 + i * 0.24, 0.75), material(f"Bowl{i}", BRIGHT[(i * 2) % len(BRIGHT)], 0.3, 0.15))
+    k.box((0.6, 0.1, 0.9), (0, 0.65, 1.0), glow("BowlScreen", (0.2, 0.5, 1.0), 2.0))
+    sizes["ball_return"] = k.export("ball_return")
+    m, k = new(49)
+    stripe = material("PinStripe", (0.8, 0.05, 0.05))
+    for row in range(4):
+        for j in range(row + 1):
+            x, y = (j - row / 2) * 0.3, -row * 0.26
+            k.ball(0.06, (x, y, 0.09), m.white, (1, 1, 1.4))
+            k.cyl(0.03, 0.12, (x, y, 0.22), m.white, verts=10)
+            k.ball(0.04, (x, y, 0.32), m.white, (1, 1, 1.2))
+            k.cyl(0.032, 0.02, (x, y, 0.25), stripe, verts=10)
+    sizes["bowling_pins"] = k.export("bowling_pins")
+
+    # sport: treadmill, dumbbell rack, a bin of balls
+    m, k = new(50)
+    k.box((0.8, 1.8, 0.2), (0, 0, 0.1), m.dark, bevel=0.03)
+    k.box((0.6, 1.6, 0.03), (0, 0, 0.21), material("Belt", (0.08, 0.08, 0.08), roughness=0.9))
+    for s in (-1, 1):
+        k.box((0.05, 0.05, 1.2), (s * 0.38, -0.8, 0.75), m.steel, rot=(0.2, 0, 0))
+    k.box((0.8, 0.3, 0.2), (0, -0.95, 1.35), m.dark, rot=(0.6, 0, 0))
+    k.box((0.3, 0.02, 0.12), (0, -1.0, 1.38), glow("TreadScreen", (0.3, 1.0, 0.5), 2.0), rot=(0.6, 0, 0))
+    sizes["treadmill"] = k.export("treadmill")
+    m, k = new(51)
+    k.box((1.6, 0.5, 0.06), (0, 0, 0.4), m.steel); k.box((1.6, 0.5, 0.06), (0, 0, 0.8), m.steel)
+    for x in (-0.75, 0.75):
+        k.box((0.06, 0.5, 0.85), (x, 0, 0.425), m.steel)
+    for row, z in enumerate((0.48, 0.88)):
+        for i in range(5):
+            x, r = -0.6 + i * 0.3, 0.05 + i * 0.01 + row * 0.02
+            for s in (-1, 1):
+                k.cyl(r, 0.05, (x + s * 0.08, 0, z + r), m.dark, rot=(0, math.pi / 2, 0), verts=12)
+            k.cyl(0.015, 0.2, (x, 0, z + r), m.chrome, rot=(0, math.pi / 2, 0), verts=6)
+    sizes["dumbbell_rack"] = k.export("dumbbell_rack")
+    m, k = new(52)
+    for s in (-1, 1):
+        k.box((1.0, 0.04, 0.7), (0, s * 0.5, 0.35), m.chrome)
+        k.box((0.04, 1.0, 0.7), (s * 0.5, 0, 0.35), m.chrome)
+    for i in range(14):
+        c = ((0.95, 0.95, 0.95), (0.9, 0.45, 0.1), (0.85, 0.75, 0.2), (0.1, 0.3, 0.8))[i % 4]
+        k.ball(0.12, (k.rnd.uniform(-0.35, 0.35), k.rnd.uniform(-0.35, 0.35), 0.15 + k.rnd.uniform(0, 0.55)), material(f"SBall{i % 4}", c))
+    sizes["ball_bin"] = k.export("ball_bin")
+
+    # a table of books, a spinning postcard rack
+    m, k = new(53)
+    k.box((1.4, 0.8, 0.05), (0, 0, 0.75), m.wood)
+    for x in (-0.65, 0.65):
+        for y in (-0.35, 0.35):
+            k.box((0.05, 0.05, 0.73), (x, y, 0.365), m.wood)
+    for i in range(10):
+        x, y = -0.5 + (i % 5) * 0.25, -0.2 + (i // 5) * 0.4
+        for j in range(k.rnd.randint(1, 4)):
+            k.box((0.18, 0.26, 0.04), (x, y, 0.8 + j * 0.04), material(f"Cover{(i + j) % 6}", BRIGHT[(i + j) % len(BRIGHT)]),
+                  rot=(0, 0, k.rnd.uniform(-0.2, 0.2)))
+    sizes["book_table"] = k.export("book_table")
+    m, k = new(54)
+    k.cyl(0.3, 0.03, (0, 0, 0.015), m.steel, verts=14)
+    k.cyl(0.02, 1.7, (0, 0, 0.85), m.chrome, verts=6)
+    for side in range(4):
+        a = side * math.pi / 2
+        for r in range(5):
+            for cidx in range(2):
+                off = (cidx - 0.5) * 0.14
+                k.box((0.12, 0.01, 0.16), (math.cos(a) * 0.12 - math.sin(a) * off, math.sin(a) * 0.12 + math.cos(a) * off,
+                                           0.6 + r * 0.22), material(f"Card{(side + r + cidx) % 6}", BRIGHT[(side + r + cidx) % len(BRIGHT)]),
+                      rot=(0, 0, a + math.pi / 2))
+    sizes["postcard_rack"] = k.export("postcard_rack")
+
+    # security desk with CCTV screens, and a metal-detector arch
+    m, k = new(55)
+    k.box((2.0, 0.7, 1.05), (0, 0, 0.525), m.dark, bevel=0.02)
+    k.box((2.1, 0.8, 0.04), (0, 0.05, 1.07), m.steel)
+    for i, x in enumerate((-0.6, 0.0, 0.6)):
+        k.box((0.5, 0.06, 0.32), (x, 0.25, 1.3), m.dark)
+        k.box((0.45, 0.02, 0.27), (x, 0.21, 1.3), glow(f"Cctv{i}", (0.55, 0.75, 0.6), 1.8))
+    sizes["security_desk"] = k.export("security_desk")
+    m, k = new(56)
+    for s in (-1, 1):
+        k.box((0.12, 0.5, 2.1), (s * 0.5, 0, 1.05), material("DetectorGrey", (0.7, 0.7, 0.72)), bevel=0.02)
+    k.box((1.12, 0.5, 0.15), (0, 0, 2.17), material("DetectorGrey", (0.7, 0.7, 0.72)), bevel=0.02)
+    k.box((0.06, 0.04, 0.1), (0.5, -0.26, 2.0), glow("DetectorLamp", (0.2, 1.0, 0.3), 4.0))
+    sizes["metal_detector"] = k.export("metal_detector")
+
+    # a fitting room: two cubicles with curtains
+    m, k = new(57)
+    for i in range(2):
+        x = -0.6 + i * 1.2
+        k.box((0.05, 1.2, 2.2), (x - 0.58, 0, 1.1), m.white)
+        k.box((1.1, 0.05, 2.2), (x, 0.58, 1.1), m.white)
+        k.box((1.0, 0.04, 1.8), (x, -0.58, 1.1), material("FitCurtain", (0.2, 0.25, 0.45), roughness=0.9))
+    k.box((0.05, 1.2, 2.2), (1.18, 0, 1.1), m.white)
+    k.box((2.4, 1.25, 0.05), (0, 0, 2.22), m.white)
+    sizes["fitting_room"] = k.export("fitting_room")
+
+    # a car on a turntable for the promo zone (the body comes from the vehicle scene; this is the stage)
+    m, k = new(58)
+    k.cyl(2.8, 0.2, (0, 0, 0.1), m.chrome, verts=40)
+    k.cyl(2.85, 0.04, (0, 0, 0.05), glow("StageRing", (0.3, 0.7, 1.0), 3.0), verts=40)
+    sizes["turntable"] = k.export("turntable")
+
+    # kids' table with little stools, a stroller, shopping bags
+    m, k = new(59)
+    k.box((1.0, 0.7, 0.04), (0, 0, 0.5), material("KidsTop", (0.95, 0.75, 0.1)), bevel=0.01)
+    for x in (-0.45, 0.45):
+        for y in (-0.3, 0.3):
+            k.cyl(0.025, 0.48, (x, y, 0.24), material("KidsLeg", (0.2, 0.5, 0.9)), verts=8)
+    for i, (x, y) in enumerate(((-0.75, 0), (0.75, 0), (0, -0.6), (0, 0.6))):
+        k.cyl(0.16, 0.3, (x, y, 0.15), material(f"Stool{i}", ((0.9, 0.15, 0.1), (0.2, 0.7, 0.2), (0.1, 0.4, 0.9), (0.9, 0.5, 0.1))[i]), verts=14)
+    sizes["kids_table"] = k.export("kids_table")
+    m, k = new(60)
+    k.box((0.35, 0.7, 0.3), (0, 0, 0.55), material("Pram", (0.25, 0.35, 0.5), roughness=0.8), bevel=0.06)
+    k.box((0.37, 0.3, 0.25), (0, 0.25, 0.82), material("Pram", (0.25, 0.35, 0.5)), rot=(-0.4, 0, 0), bevel=0.05)
+    for x in (-0.2, 0.2):
+        for y in (-0.28, 0.28):
+            k.cyl(0.09, 0.03, (x, y, 0.09), m.dark, rot=(0, math.pi / 2, 0), verts=12)
+    k.cyl(0.015, 0.4, (0, 0.4, 0.95), m.chrome, rot=(0, math.pi / 2, 0), verts=6)
+    sizes["stroller"] = k.export("stroller")
+    m, k = new(61)
+    for i, (x, y, rot) in enumerate(((0, 0, 0.0), (0.3, 0.1, 0.4), (-0.25, 0.15, -0.3))):
+        bag = material(f"Bag{i}", ((0.85, 0.2, 0.5), (0.95, 0.95, 0.9), (0.15, 0.55, 0.3))[i], roughness=0.7)
+        o = k.box((0.3, 0.12, 0.38), (x, y, 0.19), bag, rot=(0, 0, rot))
+        k.box((0.16, 0.02, 0.1), (x, y, 0.42), m.dark, rot=(0, 0, rot))
+    sizes["shopping_bags"] = k.export("shopping_bags")
+    return sizes
+
+
 # ---------------------------------------------------------------- signs
 # Shop and street signs (part "signs"): 3D channel letters, light boxes, marquee bulbs and parody logos. Each one is
 # drawn in a flat "sign plane" (u to the viewer's right, v up, d towards the viewer, the back at d = 0, the centre at
@@ -2629,6 +3061,7 @@ if "mall" in PARTS:
     sizes_path = os.path.join(PROJECT, "models", "kenney_sizes.json")
     sizes = json.load(open(sizes_path))
     sizes.update(build_mall_props())
+    sizes.update(build_mall_furniture())
     json.dump(sizes, open(sizes_path, "w"), indent=1, sort_keys=True)
 if "signs" in PARTS:
     build_signs()
