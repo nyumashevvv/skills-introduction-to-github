@@ -1,0 +1,31 @@
+[gd_scene format=3]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+shading_mode = 0
+vertex_color_use_as_albedo = true
+billboard_mode = 3
+transparency = 1
+
+[sub_resource type="QuadMesh" id="QuadMesh_2"]
+size = Vector2(0.035, 0.035)
+material = SubResource("StandardMaterial3D_1")
+
+[sub_resource type="Gradient" id="Gradient_3"]
+offsets = PackedFloat32Array(0, 0.2, 0.8, 1)
+colors = PackedColorArray(1, 0.95, 0.85, 0, 1, 0.95, 0.85, 0.5, 1, 0.95, 0.85, 0.5, 1, 0.95, 0.85, 0)
+
+[node name="DustMotes" type="CPUParticles3D"]
+amount = 160
+lifetime = 14.0
+preprocess = 14.0
+mesh = SubResource("QuadMesh_2")
+emission_shape = 3
+emission_box_extents = Vector3(9.0, 5.0, 30.0)
+direction = Vector3(0.3, 1.0, 0.0)
+spread = 180.0
+gravity = Vector3(0.0, -0.015, 0.0)
+initial_velocity_min = 0.02
+initial_velocity_max = 0.08
+scale_amount_min = 0.5
+scale_amount_max = 1.4
+color_ramp = SubResource("Gradient_3")

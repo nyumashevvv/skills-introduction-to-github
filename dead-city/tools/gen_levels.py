@@ -164,6 +164,28 @@ class LevelBuilder(Scene):
 
     SIGN = 'res://scenes/world/signs/{}.tscn'
 
+    def quad(self, mat, size, pos, face, tilt=0.0, yaw=0.0, parent='Decor'):
+        """A flat picture (poster, screen, graffiti; a blood splat with face 'up') looking along `face`."""
+        mesh = self.cached_mesh('QuadMesh', size=V2(*size), material=self.mat(mat))
+        rot = (-math.pi / 2, yaw, 0) if face == 'up' else \
+            (tilt, {'+z': 0.0, '-z': math.pi, '+x': math.pi / 2, '-x': -math.pi / 2}[face], 0)
+        self._mesh_node(self.uid('Pic'), parent, mesh, pos, rot, {'cast_shadow': 0})
+
+    def motion(self, pos, rot_y=0.0, **motion):
+        """A Node3D that sways, bobs or spins what is put under it (idle_motion.gd); returns its path."""
+        name = self.uid('Moving')
+        self.node(name, 'Node3D', 'Decor', script=self.ext_res('Script', 'res://scripts/world/idle_motion.gd'),
+                  position=V3(*pos), rotation=V3(0, rot_y, 0), **{k: float(v) for k, v in motion.items()})
+        return 'Decor/' + name
+
+    def ambient(self, sound, pos, volume=0.0, unit=6.0, distance=40.0, gap=(0.0, 0.0), bus='Master'):
+        """A sound in the world that loops or comes back now and then (ambient_sound.gd)."""
+        self.node(self.uid('Ambient'), 'AudioStreamPlayer3D', 'Decor',
+                  script=self.ext_res('Script', 'res://scripts/world/ambient_sound.gd'),
+                  stream=self.ext_res('AudioStream', f'res://sounds/{sound}'), position=V3(*pos), volume_db=float(volume),
+                  unit_size=float(unit), max_distance=float(distance), bus=S(bus), gap_min=float(gap[0]), gap_max=float(gap[1]))
+
+
     def sign(self, name, pos, face, color=None, energy=1.6, rng=8.0, flicker=False):
         """A Blender sign from models/signs (3D letters, logo, running bulbs) with its back at pos, looking along
         `face`; `color` adds the light it throws on the street."""
@@ -1275,6 +1297,7 @@ def level_mall():
             L.decor((0.08, 0.06, abs(a - b) - 1.0), (x - side * 0.05, y + 0.62, (a + b) / 2), 'chrome', cast_shadow=0)
         L.blk(W, (0.3, H - 3.0, 3.0), (x, y + 3.0 + (H - 3.0) / 2, zc))
         L.omni((24 * side, y + 3.0, zc), (1, 0.8, 0.55), 0.55, 9)                  # a dim lamp left on inside
+        L.omni((21.5 * side, y + 2.2, zc + 5), L.NEON[color], 0.45, 7)               # and a glow in the shop's colour
         name_ = f'ShopLight{len(shop_lights) + 1}'                                # the main lamp, on with the power
         L.ceiling_lamp(24 * side, zc, y=y + 4.6, energy=1.6, rng=10.0, name=name_, power=True)
         shop_lights.append('Lights/' + name_)
@@ -1552,8 +1575,9 @@ def level_mall():
                     c(kind, (side * 17.45, y, z), Wf if side < 0 else E)
             c('kiosk', (side * 13.6, y, -22 if (y == F[1]) == (side < 0) else -62), math.pi / 2)
     # the ground floor's north end: a promo zone with a car on a turntable, machines and seats
-    c('turntable', (-20, 0, -92))
-    L.prop(VEHICLE.format('sedan'), (-20, 0.2, -92), 0.7)
+    stage = L.motion((-20, 0, -92), spin_speed=0.25)                             # the car turns on its stage
+    L.prop(PROP.format('turntable'), (0, 0, 0), parent=stage)
+    L.prop(VEHICLE.format('sedan'), (0, 0.2, 0), 0.7, parent=stage)
     L.omni((-20, 4.2, -92), (0.6, 0.8, 1.0), 2.0, 9)
     for x in (-4, -2.8):
         c('atm', (x, 0, -99.4), S_)
@@ -1602,6 +1626,76 @@ def level_mall():
     L.scatter(['papers', 'trash_bags', 'shopping_bags', 'newspaper'], -17, -11, -1, -99, 10, y=F[1])
     L.scatter(['papers', 'trash_bags', 'shopping_bags', 'newspaper'], 11, 17, -1, -99, 10, y=F[1])
     L.scatter(['papers', 'trash_bags', 'newspaper', 'box_open'], -17, -11, -1, -84, 8, y=F[2])
+
+    # --- life: sounds, things that move, adverts and screens, and what the people who hid here left behind
+    L.ambient('mall_fountain.wav', (0, 1.0, -50), -3.0, 5.0, 26.0)
+    for pos in [(0, 4.5, -28), (0, 9.5, -72), (0, F[1] + 4.0, -93)]:                # muzak from the ceiling speakers
+        L.ambient('mall_muzak.wav', pos, -12.0, 6.0, 34.0, bus='Music')
+    L.ambient('mall_pa.ogg', (0, 13.0, -50), -2.0, 18.0, 140.0, (35.0, 75.0), bus='Voice')
+    L.prop('res://scenes/effects/dust_motes.tscn', (0, 7.0, -50))
+    for i, (z, banner) in enumerate([(-24, 'banner_galaktika'), (-42, 'banner_sale'), (-58, 'banner_new'), (-76, 'banner_sale')]):
+        hang = L.motion((4.5 if i % 2 else -4.5, 14.7, z), sway_degrees=2.5, period=5.0 + i)
+        L.box(L.uid('Rod'), hang, (1.9, 0.06, 0.06), (0, 0, 0), 'metal')
+        L.quad('mall/' + banner, (1.6, 4.8), (0, -2.5, 0), '+z', parent=hang)
+    for z, front_ad, back_ad in [(-20, 'screen_galaktika', 'screen_sale'), (-80, 'screen_exit', 'screen_casino')]:
+        screen = L.motion((0, 12.2, z), sway_degrees=0.6, period=7.0)                # hanging screens over the atrium
+        L.box(L.uid('Frame'), screen, (4.3, 2.5, 0.16), (0, 0, 0), 'dark')
+        L.quad('mall/' + front_ad, (4.0, 2.25), (0, 0, 0.09), '+z', parent=screen)
+        L.quad('mall/' + back_ad, (4.0, 2.25), (0, 0, -0.09), '-z', parent=screen)
+        L.box(L.uid('Wire'), screen, (0.03, 2.6, 0.03), (-1.8, 1.3, 0), 'dark'); L.box(L.uid('Wire'), screen, (0.03, 2.6, 0.03), (1.8, 1.3, 0), 'dark')
+    posters = ['poster_black_friday', 'poster_evacuation', 'poster_dvoechka', 'poster_quarantine', 'poster_y_video',
+               'poster_lost_cat', 'poster_gosha', 'poster_cinema']
+    for fi, y in enumerate(F):                                                      # the gallery ends by the entrance
+        for side in (-1, 1):
+            for j, x in enumerate((12.4, 16.2)):
+                L.quad('mall/' + posters[(fi * 4 + (side + 1) + j) % len(posters)], (1.05, 1.4), (side * x, y + 1.6, -0.03), '-z')
+            ads = ['screen_sale', 'screen_pizza', 'screen_galaktika', 'screen_casino', 'screen_exit', 'screen_sale']
+            L.box(L.uid('ScreenFrame'), 'Decor', (2.2, 1.3, 0.1), (side * 14.3, y + 3.4, -0.06), 'dark')
+            L.quad('mall/' + ads[fi * 2 + (side + 1) // 2], (2.0, 1.125), (side * 14.3, y + 3.4, -0.12), '-z')
+    for x, ad in ((-12, 'screen_pizza'), (12, 'screen_casino')):                       # over the food court
+        L.box(L.uid('ScreenFrame'), 'Decor', (3.2, 1.85, 0.1), (x, F[1] + 2.7, -99.95), 'dark')
+        L.quad('mall/' + ad, (3.0, 1.69), (x, F[1] + 2.7, -99.89), '+z')
+    L.box(L.uid('ScreenFrame'), 'Decor', (3.2, 1.85, 0.1), (-20, 3.0, -99.95), 'dark')    # over the car
+    L.quad('mall/screen_sale', (3.0, 1.69), (-20, 3.0, -99.89), '+z')
+    for x, p in ((-14, 'poster_evacuation'), (-15.3, 'poster_quarantine'), (-6, 'poster_cinema'), (6, 'poster_gosha')):
+        y = 1.7 if x < -10 else F[2] + 1.7
+        z = -99.97 if x < -10 else -87.82
+        L.quad('mall/' + p, (1.05, 1.4), (x, y, z), '+z')
+    L.quad('mall/screen_casino', (3.0, 1.69), (5.0, 2.6, -85.03), '+z')
+    for mat, size, pos, face in [('graffiti_cinema', (3.0, 1.1), (-11, F[2] + 1.8, -87.82), '+z'),
+                                 ('graffiti_gosha', (2.6, 1.0), (10.5, F[2] + 1.5, -87.82), '+z'),
+                                 ('graffiti_stadium', (3.4, 1.3), (29.97, F[1] + 2.9, -11), '-x'),
+                                 ('graffiti_days', (2.4, 0.9), (24, F[1] + 1.8, -2.17), '-z'),
+                                 ('graffiti_vasya', (2.0, 0.75), (-11.2, 1.1, -0.03), '-z'),
+                                 ('graffiti_doshirak', (2.6, 1.0), (6.5, F[1] + 1.4, -99.97), '+z'),
+                                 ('graffiti_alive', (2.4, 0.9), (11.2, F[2] + 1.4, -0.03), '-z'),
+                                 ('graffiti_roof', (2.4, 0.9), (20.17, F[2] + 1.6, -92), '+x'),
+                                 ('graffiti_help', (3.2, 1.2), (16.6, 1.7, -85.03), '+z')]:
+        L.quad('mall/' + mat, size, pos, face)
+    for i, (x, y, z) in enumerate([(-6, 0, -26), (4.5, 0, -64), (14, 0, -30), (-14, F[1], -60), (2, F[1], -90),
+                                   (-13, F[2], -40), (21, 0.02, -89), (-3, F[2], -95), (14, F[2], -70)]):
+        L.quad(f'mall/blood_{i % 3}', (1.7, 1.7), (x, y + 0.025, z), 'up', yaw=i * 1.3)
+    for x, y, z, yaw in [(-14, 0, -73, 0.3), (13.5, F[1], -40, -0.2), (-5, F[2], -91.5, 1.4)]:   # something dragged here
+        L.quad('mall/blood_trail', (0.8, 3.2), (x, y + 0.03, z), 'up', yaw=yaw)
+    for y in (0.9, 1.35):                                                           # taped off: the dark corner
+        L.quad('mall/tape', (3.0, 0.12), (18.05, y, -83.7), '+x', tilt=0.05 * (y - 1))
+    # the survivors' corner in the guards' room: bedding, a stove, food, a radio, crates across half the door
+    for pos, kind in [((26, F[1], -17.5), 'bedroll'), ((27.6, F[1], -17.5), 'bedroll'), ((24.4, F[1], -18), 'bedroll_packed'),
+                      ((23.6, F[1], -16.6), 'campfire_pit'), ((21.5, F[1], -19), 'box_open'), ((21, F[1], -20.5), 'jerrycan'),
+                      ((23.8, F[1], -20.5), 'radio'), ((25, F[1], -10), 'books'), ((20.6, F[1], -6), 'box_pile')]:
+        c(kind, pos)
+    c('crate_large', (19.2, F[1], -9.4)); c('crate_large', (19.2, F[1], -14.6))
+    L.omni((23.6, F[1] + 1.0, -16.6), (1.0, 0.55, 0.25), 0.9, 6, flicker=True)
+    for pos in [(21, 0, -58), (27.5, 0, -44.5), (-21.5, F[2], -69.5), (-28.5, F[2], -62.5)]:   # balloons
+        L.prop(PROP.format('balloons'), (0, 0, 0), parent=L.motion(pos, bob_height=0.07, sway_degrees=3.0, period=3.5))
+    for pos in [(-8, F[1] + 4.7, -92), (8, F[1] + 4.7, -92), (23.5, 4.7, -32), (23.5, F[2] + 4.7, -52)]:   # ceiling fans
+        L.prop(PROP.format('ceiling_fan'), (0, 0, 0), parent=L.motion(pos, spin_speed=2.4))
+    for x, y, z in [(14.5, 0, -55), (-14.5, F[2], -28)]:                            # lamps hanging by their wires
+        L.decor((1.2, 0.08, 0.3), (x, y + 3.7, z), 'lamp_glow', rot=(0.0, 0.0, 1.0), cast_shadow=0)
+        L.decor((0.02, 0.9, 0.02), (x - 0.35, y + 4.3, z), 'dark')
+        L.prop('res://scenes/effects/sparks_loop.tscn', (x + 0.4, y + 3.3, z))
+    for x, y, z in [(13, 0, -12), (-15.5, F[1], -48), (15.2, F[2], -36), (-12.5, 0, -88)]:   # trolleys left anywhere
+        c('shopping_cart', (x, y, z))
 
     # --- the dead
     for kind, pos in [('walker', (-4, 0, -24)), ('walker', (5, 0, -40)), ('walker', (-3, 0, -60)), ('runner', (4, 0, -75)),

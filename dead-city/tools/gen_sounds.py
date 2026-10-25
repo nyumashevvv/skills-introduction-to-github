@@ -138,3 +138,36 @@ while t < 3.4:                                      # the ball rattling round th
     t += 0.03 + 0.09 * (t / 3.4) ** 2
 save('casino_ball', mix(ball, scale(lowpass(env_noise(3.6, 0.6), 0.04), 0.25)), 0.5)
 save('casino_chips', mix(*[delay(click(random.uniform(2500, 4200), 0.05, 90), i * random.uniform(0.03, 0.06)) for i in range(7)]), 0.45)
+
+# the mall's life: the fountain, muzak from the ceiling speakers, the PA chime, a shorting lamp
+random.seed(71)
+water = bandpass([noise() for _ in range(n(6.0))], 900, 0.6)
+water = [x * (0.8 + 0.2 * math.sin(i / SR * 2.1) + 0.1 * math.sin(i / SR * 7.7)) for i, x in enumerate(water)]
+for k in range(n(0.4)):                                   # cross-fade the ends so it loops without a click
+    a = k / n(0.4)
+    water[k] = water[k] * a + water[-n(0.4) + k] * (1 - a)
+save('mall_fountain', water[:-n(0.4)], 0.5)
+
+
+def muzak():
+    """Sixteen seconds of shopping-centre easy listening through a tired speaker: soft chords, a slow tune, wow."""
+    chords = [(261.6, 329.6, 392.0), (220.0, 261.6, 329.6), (174.6, 220.0, 261.6), (196.0, 246.9, 293.7)]
+    tune = [523.3, 587.3, 659.3, 587.3, 523.3, 440.0, 392.0, 440.0, 523.3, 659.3, 698.5, 659.3, 587.3, 523.3, 493.9, 523.3]
+    out = [0.0] * n(16.0)
+    for i in range(len(out)):
+        t = i / SR
+        wow = 1.0 + 0.004 * math.sin(t * 2 * math.pi * 0.7)
+        bar = int(t / 4.0) % 4
+        x = sum(math.sin(2 * math.pi * f * wow * t) for f in chords[bar]) * 0.18 * (0.75 + 0.25 * math.sin(t * math.pi / 2))
+        note, nt = tune[int(t / 1.0) % 16], t % 1.0
+        x += math.sin(2 * math.pi * note * wow * t) * 0.3 * math.exp(-nt * 2.5) * min(1.0, nt * 40)
+        x += math.sin(2 * math.pi * chords[bar][0] / 2 * t) * 0.25 * math.exp(-(t % 1.0) * 3)  # soft bass
+        out[i] = x
+    return lowpass(highpass(out, 0.05), 0.35)
+
+
+save('mall_muzak', muzak(), 0.4)
+save('mall_chime', mix(tone(lambda t: 784, 0.9, lambda t: math.exp(-t * 3)), delay(tone(lambda t: 659, 0.9, lambda t: math.exp(-t * 3)), 0.45),
+                       delay(tone(lambda t: 523, 1.3, lambda t: math.exp(-t * 2.5)), 0.9)), 0.4)
+save('mall_sparks', mix(*[delay(scale(highpass(env_noise(0.06, 60), 0.4), random.uniform(0.3, 1.0)), random.uniform(0, 0.5))
+                         for _ in range(9)]), 0.5)

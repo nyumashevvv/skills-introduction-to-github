@@ -1,0 +1,7 @@
+[gd_scene format=3]
+
+[ext_resource type="PackedScene" path="res://models/props/ceiling_fan.glb" id="1_ceiling_fan"]
+
+[node name="CeilingFan" type="Node3D"]
+
+[node name="Model" parent="." instance=ExtResource("1_ceiling_fan")]

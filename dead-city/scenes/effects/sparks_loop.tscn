@@ -1,0 +1,48 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://scripts/world/flicker_light.gd" id="1_flicker_light"]
+
+[ext_resource type="Script" path="res://scripts/world/ambient_sound.gd" id="2_ambient_sound"]
+
+[ext_resource type="AudioStream" path="res://sounds/mall_sparks.wav" id="3_mall_sparks"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_1"]
+shading_mode = 0
+vertex_color_use_as_albedo = true
+billboard_mode = 3
+
+[sub_resource type="BoxMesh" id="BoxMesh_2"]
+size = Vector3(0.015, 0.015, 0.05)
+material = SubResource("StandardMaterial3D_1")
+
+[node name="Sparks" type="Node3D"]
+
+[node name="Burst" type="CPUParticles3D" parent="."]
+amount = 24
+lifetime = 0.9
+explosiveness = 0.85
+randomness = 0.5
+mesh = SubResource("BoxMesh_2")
+direction = Vector3(0.0, -1.0, 0.0)
+spread = 55.0
+gravity = Vector3(0.0, -9.8, 0.0)
+initial_velocity_min = 1.0
+initial_velocity_max = 3.5
+particle_flag_align_y = true
+color = Color(4.0, 2.4, 0.8, 1.0)
+
+[node name="Glow" type="OmniLight3D" parent="."]
+light_color = Color(1.0, 0.7, 0.35, 1.0)
+light_energy = 1.5
+omni_range = 5.0
+script = ExtResource("1_flicker_light")
+flicker_chance = 0.4
+
+[node name="Crackle" type="AudioStreamPlayer3D" parent="."]
+script = ExtResource("2_ambient_sound")
+stream = ExtResource("3_mall_sparks")
+volume_db = -6.0
+unit_size = 4.0
+max_distance = 18.0
+gap_min = 0.3
+gap_max = 2.5

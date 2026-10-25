@@ -84,6 +84,30 @@ def main():
                             '-c:a', 'libvorbis', '-q:a', '4', out], check=True)
         made += 1
     print(f'voice ok: {made} new, {len(lines)} lines')
+    mall_pa(models)
+
+
+# The mall's public-address loop (sounds/mall_pa.ogg, played now and then by the ceiling speakers): the chime from
+# tools/gen_sounds.py, then this in Russian (Piper ru_RU denis, CC0) through a hall's worth of echo.
+MALL_PA = ('Уважаемые посетители! Торговый центр «Галактика» закрыт. Пожалуйста, сохраняйте спокойствие '
+           'и проследуйте к ближайшему выходу. Пункт эвакуации — стадион «Динамо». Благодарим за покупки.')
+
+
+def mall_pa(models):
+    out = 'sounds/mall_pa.ogg'
+    model = os.path.join(models, 'ru_RU-denis-medium.onnx')
+    if os.path.exists(out) or not os.path.exists(model):
+        return
+    voice = PiperVoice.load(model)
+    with tempfile.NamedTemporaryFile(suffix='.wav') as tmp:
+        with wave.open(tmp.name, 'wb') as wav:
+            voice.synthesize_wav(MALL_PA, wav, syn_config=SynthesisConfig(length_scale=1.08))
+        subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', 'sounds/mall_chime.wav', '-i', tmp.name, '-filter_complex',
+                        '[0:a]aresample=22050,aformat=channel_layouts=mono[c];[1:a]aresample=22050,aformat=channel_layouts=mono,'
+                        'adelay=300[v];[c][v]concat=n=2:v=0:a=1,highpass=f=250,lowpass=f=4000,'
+                        'aecho=0.8:0.7:90|170:0.35|0.22,volume=4dB,alimiter=limit=0.9',
+                        '-c:a', 'libvorbis', '-q:a', '4', out], check=True)
+    print('mall PA ok')
 
 
 if __name__ == '__main__':

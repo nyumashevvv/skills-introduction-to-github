@@ -2416,6 +2416,25 @@ def build_mall_furniture():
         o = k.box((0.3, 0.12, 0.38), (x, y, 0.19), bag, rot=(0, 0, rot))
         k.box((0.16, 0.02, 0.1), (x, y, 0.42), m.dark, rot=(0, 0, rot))
     sizes["shopping_bags"] = k.export("shopping_bags")
+
+    # a bunch of balloons on strings tied to a weight (the toy shop, the kids' room)
+    m, k = new(62)
+    k.cyl(0.08, 0.06, (0, 0, 0.03), m.dark, verts=10)
+    for i, (x, y, z) in enumerate(((0, 0, 1.8), (0.25, 0.1, 1.65), (-0.22, 0.12, 1.7), (0.08, -0.2, 1.95), (-0.1, -0.15, 1.55))):
+        c = ((0.95, 0.1, 0.15), (0.1, 0.45, 0.95), (0.95, 0.8, 0.1), (0.2, 0.8, 0.3), (0.9, 0.3, 0.7))[i]
+        k.ball(0.17, (x, y, z), material(f"Balloon{i}", c, 0.0, 0.15), (1, 1, 1.2))
+        k.cyl(0.004, z - 0.2, (x / 2, y / 2, (z - 0.2) / 2 + 0.03), m.white, rot=(math.atan2(y, z) * -1, math.atan2(x, z), 0), verts=4)
+    sizes["balloons"] = k.export("balloons")
+
+    # ceiling fan: a hub and four blades (spun by idle_motion.gd)
+    m, k = new(63)
+    k.cyl(0.03, 0.4, (0, 0, -0.2), m.steel, verts=8)
+    k.cyl(0.14, 0.12, (0, 0, -0.45), m.chrome, verts=16)
+    for i in range(4):
+        a = i * math.pi / 2
+        k.box((0.7, 0.16, 0.02), (math.cos(a) * 0.45, math.sin(a) * 0.45, -0.47), m.wood, rot=(0.12, 0, a))
+    k.ball(0.09, (0, 0, -0.56), emissive("FanLamp", (1, 0.9, 0.7), 2.0))
+    sizes["ceiling_fan"] = k.export("ceiling_fan")
     return sizes
 
 

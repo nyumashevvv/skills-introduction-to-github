@@ -155,6 +155,21 @@ func _run() -> void:
 			await snap("ending_%d" % i)
 	if "street" in sections:
 		await _street()
+	if "mall_life" in sections:  # banners, screens, posters, graffiti, the survivors' corner
+		var level := await load_level("res://scenes/levels/level_3_mall.tscn")
+		var player := await play(level)
+		freeze_zombies()
+		level.hud.gameplay.visible = false
+		player.holder.visible = false
+		level.get_node("Story/PowerOn").call("fire")
+		await get_tree().create_timer(3.0).timeout
+		for shot: Array in [["life_atrium", Vector3(0, 0, -6), 0, 14], ["life_atrium_up", Vector3(-3, 5, -12), -10, 18],
+				["life_gallery_end", Vector3(14, 0, -9), 180, 6], ["life_food_court", Vector3(0, 5, -86), 0, 4],
+				["life_camp", Vector3(19.5, 5, -12), -110, -12], ["life_cinema", Vector3(0, 10, -85.5), 0, 8],
+				["life_kids", Vector3(-19.5, 10, -72), 100, -5], ["life_sparks", Vector3(11, 0, -50), -60, 10],
+				["life_promo", Vector3(-12, 0, -86), -150, -2], ["life_casino_front", Vector3(10, 0, -76), 10, 8]]:
+			await pose(player, shot[1], shot[2], shot[3])
+			await snap(shot[0])
 	if "casino" in sections:  # the casino hall and its three screens
 		var level := await load_level("res://scenes/levels/level_3_mall.tscn")
 		var player := await play(level)

@@ -303,7 +303,7 @@ def build():
 LOOSE = {'debris_door', 'debris_door_window', 'debris_bumper', 'debris_tire', 'debris_plate', 'debris_spoiler', 'debris_axle',
          'computer_screen', 'computer_keyboard', 'laptop', 'microwave', 'coffee_machine', 'table_lamp', 'radio', 'books', 'rug',
          'rug_round', 'plant_small', 'toaster', 'bottle', 'shovel', 'pickaxe', 'axe', 'bucket', 'rock_flat', 'planks', 'bedroll',
-         'bedroll_packed', 'campfire_pit', 'tv_old', 'speaker', 'shopping_bags', 'bowling_pins'}
+         'bedroll_packed', 'campfire_pit', 'tv_old', 'speaker', 'shopping_bags', 'bowling_pins', 'balloons', 'ceiling_fan'}
 # Cars get two boxes (body up to the bonnet, cabin in the middle) instead of one bounding box, so shots over the
 # bonnet or the boot reach whoever stands next to the car instead of hitting empty air around the windscreen.
 # Casino props that are games: CasinoMachine.Kind (0 slots, 1 roulette, 2 cashier).
@@ -361,9 +361,37 @@ def signs():
         s.save(f'scenes/world/signs/{name}.tscn')
 
 
+def ambient_effects():
+    """Looping atmosphere: dust drifting in the light (the mall's atrium) and a shorting lamp spitting sparks."""
+    def unshaded(s, transparent=True):
+        return s.sub_res('StandardMaterial3D', shading_mode=0, vertex_color_use_as_albedo=True, billboard_mode=3,
+                         **({'transparency': 1} if transparent else {}))
+    s = Scene()
+    s.node('DustMotes', 'CPUParticles3D', amount=160, lifetime=14.0, preprocess=14.0,
+           mesh=s.sub_res('QuadMesh', size=V2(0.035, 0.035), material=unshaded(s)), emission_shape=3,
+           emission_box_extents=V3(9, 5, 30), direction=V3(0.3, 1, 0), spread=180.0, gravity=V3(0, -0.015, 0),
+           initial_velocity_min=0.02, initial_velocity_max=0.08, scale_amount_min=0.5, scale_amount_max=1.4,
+           color_ramp=s.sub_res('Gradient', offsets='PackedFloat32Array(0, 0.2, 0.8, 1)',
+                                colors='PackedColorArray(1, 0.95, 0.85, 0, 1, 0.95, 0.85, 0.5, 1, 0.95, 0.85, 0.5, 1, 0.95, 0.85, 0)'))
+    s.save('scenes/effects/dust_motes.tscn')
+    s = Scene()
+    s.node('Sparks', 'Node3D')
+    s.node('Burst', 'CPUParticles3D', '.', amount=24, lifetime=0.9, explosiveness=0.85, randomness=0.5,
+           mesh=s.sub_res('BoxMesh', size=V3(0.015, 0.015, 0.05), material=unshaded(s, False)),
+           direction=V3(0, -1, 0), spread=55.0, gravity=V3(0, -9.8, 0), initial_velocity_min=1.0, initial_velocity_max=3.5,
+           particle_flag_align_y=True, color=C(4, 2.4, 0.8))
+    s.node('Glow', 'OmniLight3D', '.', light_color=C(1, 0.7, 0.35), light_energy=1.5, omni_range=5.0,
+           script=s.ext_res('Script', 'res://scripts/world/flicker_light.gd'), flicker_chance=0.4)
+    s.node('Crackle', 'AudioStreamPlayer3D', '.', script=s.ext_res('Script', 'res://scripts/world/ambient_sound.gd'),
+           stream=s.ext_res('AudioStream', 'res://sounds/mall_sparks.wav'), volume_db=-6.0, unit_size=4.0, max_distance=18.0,
+           gap_min=0.3, gap_max=2.5)
+    s.save('scenes/effects/sparks_loop.tscn')
+
+
 if __name__ == '__main__':
     mats()
     build()
     kenney()
     signs()
+    ambient_effects()
     print('props ok')

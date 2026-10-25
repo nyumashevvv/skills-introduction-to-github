@@ -105,7 +105,13 @@ Linear zombie shooter in six chapters (outskirts, station, mall, hospital, subwa
   roulette / cashier; set on the props in `CASINO` in `gen_props.py`) opens a `CasinoPanel` through `Level.open_panel`
   (state `PANEL`, game paused, Esc closes). `SlotPanel` (weighted reels, `payout`), `RoulettePanel` (European wheel,
   `multiplier`, `RouletteWheel` draws it and lands the ball in the result), `CashierPanel` (welcome gift, prizes).
-  Chips live in `Game.chips` (saved). Models: `build_casino` in `build_assets.py`; sounds `casino_*` in `gen_sounds.py`. The roof exit is a
+  Chips live in `Game.chips` (saved). Models: `build_casino` in `build_assets.py`; sounds `casino_*` in `gen_sounds.py`.
+  Life in the mall: `tools/gen_mall_art.py` (Pillow) draws posters, ad screens (`materials/mall/ad_screen.gdshader`:
+  scanlines, tearing, flicker), banners, graffiti, blood and tape into `textures/mall/` + `materials/mall/`;
+  `LevelBuilder.quad` hangs them, `motion` wraps props in `idle_motion.gd` (sway / bob / spin: banners, balloons,
+  fans, the car's turntable), `ambient` places `ambient_sound.gd` players (fountain, muzak on the Music bus, the PA
+  announcement `sounds/mall_pa.ogg` from `gen_voice.py` with the ru_RU voice, sparks). Effects `dust_motes` and
+  `sparks_loop` come from `gen_props.ambient_effects()`. The survivors' corner is in the guards' room (1st floor). The roof exit is a
   bridge over the west alley and a ramp down to the gate (`ExitTrigger`); the alleys round the building are walled in.
 - `tools/gen_levels.py`: chapter scenes are `Level` roots — keep `script` the first property of a node or Godot drops
   the script's exported values. After changing radio text, update `tools/voice_en.py` and rerun `tools/gen_voice.py`.
