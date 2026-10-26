@@ -954,6 +954,105 @@ def build_helicopter(out_path):
 # Shop fittings for the "Galaktika" mall, modelled from primitives (base on z = 0, centred, the front looks along -Y,
 # i.e. +Z in Godot). Exported to models/props/<name>.glb; their sizes go into kenney_sizes.json, so tools/gen_props.py
 # makes scenes with collision boxes for them like for the Kenney props.
+def palettize(objs, name):
+    """Collapses the many flat-coloured materials of a model into a few: every colour goes into one small palette
+    image and the faces' UVs point at their swatch; materials are then grouped by kind (matte, shiny metal,
+    see-through, glowing by strength) and each kind is one material reading the palette. A big chapter full of
+    props otherwise asks the GPU for hundreds of materials and mesh surfaces, more than some drivers allow."""
+    mats = []
+    for o in objs:
+        for slot in o.material_slots:
+            if slot.material is not None and slot.material not in mats:
+                mats.append(slot.material)
+    if len(mats) <= 1:
+        return
+
+    def info(m):
+        bsdf = m.node_tree.nodes.get("Principled BSDF") if m.use_nodes else None
+        if bsdf is None:
+            return (0.5, 0.5, 0.5), 0.0, 0.6, 0.0, 1.0
+        get = lambda key: bsdf.inputs[key].default_value
+        return tuple(get("Base Color")[:3]), get("Metallic"), get("Roughness"), get("Emission Strength"), get("Alpha")
+
+    def kind(m):
+        color, metallic, rough, glow, alpha = info(m)
+        if alpha < 0.95:
+            return ("clear", round(alpha, 1))
+        if glow > 0.0:
+            return ("glow", 1.0 if glow < 1.8 else (3.0 if glow < 3.6 else (5.0 if glow < 7 else 9.0)))
+        return ("metal", 0.0) if metallic > 0.5 else ("matte", 0.0)
+
+    cells = math.ceil(math.sqrt(len(mats)))
+    px = 8
+    size = cells * px
+    img = bpy.data.images.new(f"Palette_{name}", size, size, alpha=True)
+    pixels = [0.0] * (size * size * 4)
+    swatch = {}
+    for i, m in enumerate(mats):
+        cx, cy = i % cells, i // cells
+        color, *_ = info(m)
+        swatch[m.name] = ((cx + 0.5) / cells, (cy + 0.5) / cells)
+        for y in range(cy * px, cy * px + px):
+            for x in range(cx * px, cx * px + px):
+                pixels[(y * size + x) * 4:(y * size + x) * 4 + 4] = [*color, 1.0]
+    img.pixels = pixels
+    img.filepath_raw = f"//Palette_{name}.png"
+    img.file_format = 'PNG'
+    img.pack()
+
+    kinds = {}
+
+    def kind_material(key):
+        if key in kinds:
+            return kinds[key]
+        what, amount = key
+        m = bpy.data.materials.new(f"{name}_{what}_{amount}")
+        m.use_nodes = True
+        nodes = m.node_tree.nodes
+        bsdf = nodes["Principled BSDF"]
+        tex = nodes.new("ShaderNodeTexImage")
+        tex.image = img
+        tex.interpolation = 'Closest'
+        m.node_tree.links.new(tex.outputs["Color"], bsdf.inputs["Base Color"])
+        bsdf.inputs["Metallic"].default_value = 0.85 if what == "metal" else 0.0
+        bsdf.inputs["Roughness"].default_value = {"metal": 0.3, "clear": 0.05, "glow": 0.5}.get(what, 0.6)
+        if what == "glow":
+            m.node_tree.links.new(tex.outputs["Color"], bsdf.inputs["Emission Color"])
+            bsdf.inputs["Emission Strength"].default_value = amount
+        if what == "clear":
+            m.blend_method = 'BLEND'
+            bsdf.inputs["Alpha"].default_value = amount
+        kinds[key] = m
+        return m
+
+    for o in objs:
+        me = o.data
+        if not me.uv_layers:
+            me.uv_layers.new(name="UVMap")
+        uv = me.uv_layers.active.data
+        old = [slot.material for slot in o.material_slots]
+        new_slots = []
+        remap = {}
+        for i, m in enumerate(old):
+            if m is None:
+                continue
+            km = kind_material(kind(m))
+            if km not in new_slots:
+                new_slots.append(km)
+            remap[i] = (new_slots.index(km), swatch[m.name])
+        for poly in me.polygons:
+            if poly.material_index in remap:
+                index, (u, v) = remap[poly.material_index]
+                for li in poly.loop_indices:
+                    uv[li].uv = (u, v)
+        me.materials.clear()
+        for km in new_slots:
+            me.materials.append(km)
+        for poly in me.polygons:
+            if poly.material_index in remap:
+                poly.material_index = remap[poly.material_index][0]
+
+
 class Kit:
     def __init__(self, seed=0):
         self.parts = []
@@ -1005,6 +1104,7 @@ class Kit:
         bpy.ops.object.join()
         o = bpy.context.object
         o.name = name
+        palettize([o], name)
         lo, hi = bounds(world_verts([o]))
         export_glb(os.path.join(PROJECT, "models", "props", name + ".glb"), [o])
         return [round(hi.x - lo.x, 3), round(hi.z - lo.z, 3), round(hi.y - lo.y, 3)]
@@ -2722,6 +2822,7 @@ class SignKit(Kit):
             o = bpy.context.view_layer.objects.active
             o.name = gname
             objs.append(o)
+        palettize(objs[:1], name)  # the bulbs keep their single shared material
         export_glb(os.path.join(PROJECT, 'models', 'signs', name + '.glb'), objs)
 
 

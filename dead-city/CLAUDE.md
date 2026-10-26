@@ -100,7 +100,11 @@ Linear zombie shooter in six chapters (outskirts, station, mall, hospital, subwa
   (part `mall` in `build_assets.py`: `build_mall_props` — carts, mannequins, racks, shelves, arcade cabinets, food
   stalls; `build_mall_furniture` — bistro sets, food-court tables, booths, sofas, kiosks, vending machines, ATMs, display
   cases, item walls, ball pit, cinema seats…). Shop fronts have real glass (`clear_glass`; the old `glass` material is
-  opaque). Kenney / world props face -Z, the Blender mall props face +Z. Screenshot section `mall_tour` shows every shop.
+  opaque). Kenney / world props face -Z, the Blender mall props face +Z. GPU budget: some drivers run out of buffers
+  (VkResult -10) when a chapter has too many meshes / surfaces / materials, so `Kit.export` and `SignKit.export` run
+  `palettize` (all flat colours in one palette image, faces' UVs on their swatch, one material per kind: matte,
+  metal, see-through, glowing by strength) and `Block` shares meshes and shapes between equal blocks. Keep new props
+  flat-coloured through `Kit` and reuse props instead of making one-off variants. Screenshot section `mall_tour` shows every shop.
   The casino "Последняя ставка" (ground floor, north-east) is playable: `CasinoMachine` (StaticBody3D, kind slots /
   roulette / cashier; set on the props in `CASINO` in `gen_props.py`) opens a `CasinoPanel` through `Level.open_panel`
   (state `PANEL`, game paused, Esc closes). `SlotPanel` (weighted reels, `payout`), `RoulettePanel` (European wheel,
