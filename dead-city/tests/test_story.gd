@@ -248,8 +248,9 @@ func _run() -> void:
 	await kill_all(level, true)
 	await frames(5)
 	check(roof_door.is_open and level.hud.objective_label.text.contains("крышу"), "Gosha dead -> " + level.hud.objective_label.text)
-	await teleport(level, Vector3(26, 15.1, -80))
+	await teleport(level, Vector3(27, 15.2, -88.0))  # where the roof stairs come out
 	check(level.hud.objective_label.text.contains("пандусу"), "on the roof: " + level.hud.objective_label.text)
+	check(level.get_node("Story/ExitTrigger").get("enabled") == true, "the gate to the hospital is live")
 	await kill_all(level)
 	await teleport(level, Vector3(-39, 0.1, -98))
 	await teleport(level, Vector3(-39, 0.1, -103))

@@ -828,7 +828,7 @@ size = Vector3(8.0, 3.0, 3.0)
 size = Vector3(4.0, 3.0, 3.0)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_86"]
-size = Vector3(8.0, 3.0, 8.0)
+size = Vector3(60.0, 3.0, 100.0)
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_87"]
 size = Vector3(5.0, 3.0, 3.0)
@@ -10574,7 +10574,7 @@ message_duration = 7.0
 targets = Array[NodePath]([NodePath("../../Doors/RoofDoor")])
 
 [node name="RoofTrigger" type="Area3D" parent="Story"]
-position = Vector3(26.0, 16.5, -80.0)
+position = Vector3(0.0, 16.6, -50.0)
 collision_layer = 0
 collision_mask = 2
 monitorable = false
@@ -10615,7 +10615,6 @@ collision_mask = 2
 monitorable = false
 script = ExtResource("233_story_trigger")
 event = NodePath("../Exit")
-enabled = false
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Story/ExitTrigger"]
 shape = SubResource("BoxShape3D_87")

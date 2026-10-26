@@ -1743,12 +1743,12 @@ def level_mall():
                     'не аниматор. Он прыгает с разбега — уходи в сторону!')
     L.event('GoshaDead', speaker=D, duration=7, objective='Поднимись на крышу-парковку',
             message='Готов! Дверь на крышу — справа от кинозала. Поднимайся!', targets=['Doors/RoofDoor'])
-    L.trigger('RoofTrigger', (26, 16.5, -80), (8, 3, 8), 'OnRoof')
+    L.trigger('RoofTrigger', (0, 16.6, -50), (60, 3, 100), 'OnRoof')                 # anywhere on the roof
     L.event('OnRoof', speaker=D, duration=8, objective='Спустись по пандусу к больнице',
             message='Ты на крыше. Выезд у западного края: пандус спускается в переулок, там ворота к больнице. Беги!',
             targets=['Story/RoofHorde', 'Story/ExitTrigger'])
     L.spawner('RoofHorde', [(-25, 15, -95), (25, 15, -60), (-5, 15, -95)], ['runner', 'runner', 'walker'], 6, interval=1.5)
-    L.trigger('ExitTrigger', (-39, 1.5, -103), (5, 3, 3), 'Exit', enabled=False)
+    L.trigger('ExitTrigger', (-39, 1.5, -103), (5, 3, 3), 'Exit')                  # only reached over the roof anyway
     L.event('Exit', complete=True)
 
     L.finish((0, 0, 22))
