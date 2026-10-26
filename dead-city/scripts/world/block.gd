@@ -19,6 +19,11 @@ extends StaticBody3D
 		cylinder = value
 		_update()
 
+## Meshes and shapes shared by every block of the same size, shape and material: a big chapter has hundreds of
+## blocks but only a few dozen different ones, and one mesh each would run some GPUs out of buffers.
+static var _meshes := {}
+static var _shapes := {}
+
 
 func _ready() -> void:
 	_update()
@@ -27,22 +32,33 @@ func _ready() -> void:
 func _update() -> void:
 	if not is_node_ready():
 		return
-	if cylinder:
-		var mesh := CylinderMesh.new()
-		mesh.top_radius = size.x / 2.0
-		mesh.bottom_radius = size.x / 2.0
-		mesh.height = size.y
+	var key := "%s|%s|%s" % [size, cylinder, material.get_rid() if material else RID()]
+	var mesh: PrimitiveMesh = _meshes.get(key)
+	if mesh == null:
+		if cylinder:
+			var cyl := CylinderMesh.new()
+			cyl.top_radius = size.x / 2.0
+			cyl.bottom_radius = size.x / 2.0
+			cyl.height = size.y
+			mesh = cyl
+		else:
+			var box := BoxMesh.new()
+			box.size = size
+			mesh = box
 		mesh.material = material
-		$MeshInstance3D.mesh = mesh
-		var shape := CylinderShape3D.new()
-		shape.radius = size.x / 2.0
-		shape.height = size.y
-		$CollisionShape3D.shape = shape
-	else:
-		var mesh := BoxMesh.new()
-		mesh.size = size
-		mesh.material = material
-		$MeshInstance3D.mesh = mesh
-		var shape := BoxShape3D.new()
-		shape.size = size
-		$CollisionShape3D.shape = shape
+		_meshes[key] = mesh
+	$MeshInstance3D.mesh = mesh
+	var shape_key := "%s|%s" % [size, cylinder]
+	var shape: Shape3D = _shapes.get(shape_key)
+	if shape == null:
+		if cylinder:
+			var round_shape := CylinderShape3D.new()
+			round_shape.radius = size.x / 2.0
+			round_shape.height = size.y
+			shape = round_shape
+		else:
+			var box_shape := BoxShape3D.new()
+			box_shape.size = size
+			shape = box_shape
+		_shapes[shape_key] = shape
+	$CollisionShape3D.shape = shape
