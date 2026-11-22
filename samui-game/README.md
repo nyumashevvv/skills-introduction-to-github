@@ -3,7 +3,10 @@
 Прототип игры на Godot 4.3: остров Ко Самуи (Таиланд) в масштабе 1:1. Катаешься на скутере по настоящим дорогам острова.
 
 - **Карта**: 24 × 24 км, рельеф с шагом 10 м (до 630 м над уровнем моря).
-- **Данные**: около 10 500 дорог и 9 500 зданий из OpenStreetMap, береговая линия, пляжи, посёлки, водопады и храмы.
+- **Дороги**: около 10 750 из OpenStreetMap и TomTom (через Overture Maps).
+- **Здания**: 76 тыс. контуров из Overture Maps — это OSM, Google Open Buildings и Microsoft ML Buildings без дублей.
+- **Земля**: безоблачная мозаика спутниковых снимков Sentinel-2 (10 м), собранная из 20 снимков 2023–2026 годов.
+- **Места**: береговая линия, пляжи, посёлки, водопады и храмы из OpenStreetMap.
 - **Рельеф**: SRTM через AWS Terrain Tiles.
 - **Подгрузка**: местность грузится кусками 1,2 × 1,2 км, у каждого куска три уровня детализации. Дороги, дома и пальмы строятся вокруг игрока.
 
@@ -32,8 +35,11 @@
 
 ```bash
 pip install numpy pillow scipy
-python3 tools/fetch_data.py raw/
-python3 tools/build_map.py --osm raw/osm --dem raw/dem   # пишет в data/
+pip install duckdb pyarrow shapely rasterio
+python3 tools/fetch_data.py raw/                  # OSM + рельеф
+python3 tools/fetch_overture.py raw/overture      # здания OSM/Google/Microsoft + дороги TomTom
+python3 tools/fetch_sentinel.py raw/s2_rgb.npy    # спутниковая мозаика (~3 мин)
+python3 tools/build_map.py --osm raw/osm --dem raw/dem --overture raw/overture --s2 raw/s2_rgb.npy
 ```
 
 ## Устройство кода
@@ -46,4 +52,7 @@ python3 tools/build_map.py --osm raw/osm --dem raw/dem   # пишет в data/
 
 ## Лицензии данных
 
-Картографические данные © участники OpenStreetMap, лицензия ODbL. Рельеф: SRTM и другие открытые источники через AWS Terrain Tiles.
+- Картографические данные © участники OpenStreetMap, ODbL.
+- Overture Maps Foundation, ODbL; в том числе Google Open Buildings (CC BY 4.0 / ODbL) и Microsoft ML Building Footprints (ODbL), а также данные TomTom.
+- Спутниковые данные: модифицированные данные Copernicus Sentinel (2023–2026).
+- Рельеф: SRTM и другие открытые источники через AWS Terrain Tiles.

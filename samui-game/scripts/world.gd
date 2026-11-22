@@ -34,7 +34,6 @@ var _queue := []            # pending jobs [priority, kind, chunk, arg]
 var _queued := {}
 var _focus := Vector3.ZERO
 var _since_scan := 1.0
-var building_polys := {}    # chunk -> Array of [Rect2, PackedVector2Array]
 
 
 func _ready() -> void:
@@ -126,14 +125,15 @@ func chunk_of(x: float, z: float) -> int:
 
 
 func is_blocked(x: float, z: float) -> bool:
-	var c := chunk_of(x, z)
 	var p := Vector2(x, z)
-	for cc in [c, c - 1, c + 1, c - NC, c + NC]:
-		if not building_polys.has(cc):
-			continue
-		for b in building_polys[cc]:
-			if b[0].has_point(p) and Geometry2D.is_point_in_polygon(p, b[1]):
-				return true
+	var key := Vector2i(floori(x / GRID), floori(z / GRID))
+	var c0 := chunk_of(x, z)
+	for dz in range(-1, 2):
+		for dx in range(-1, 2):
+			var grid: Dictionary = building_grid.get(c0 + dz * NC + dx, {})
+			for b in grid.get(key, []):
+				if b[0].has_point(p) and Geometry2D.is_point_in_polygon(p, b[1]):
+					return true
 	return false
 
 
@@ -200,7 +200,7 @@ func _scan() -> void:
 		elif d > CONTENT_FREE and ch["content"] != null:
 			ch["content"].queue_free()
 			ch["content"] = null
-			building_polys.erase(c)
+			_free_buildings(c)
 	_queue.sort_custom(func(a, b): return a[0] < b[0])
 
 
@@ -388,23 +388,54 @@ const WALLS := [Color(0.93, 0.92, 0.88), Color(0.95, 0.89, 0.76), Color(0.88, 0.
 const ROOFS := [Color(0.72, 0.32, 0.18), Color(0.62, 0.22, 0.16), Color(0.80, 0.45, 0.22), Color(0.25, 0.42, 0.45), Color(0.45, 0.30, 0.22)]
 
 
+class MeshBuf:
+	var v := PackedVector3Array()
+	var n := PackedVector3Array()
+	var c := PackedColorArray()
+
+	func tri(a: Vector3, b: Vector3, d: Vector3, nn: Vector3, col: Color) -> void:
+		v.append(a); v.append(b); v.append(d)
+		n.append(nn); n.append(nn); n.append(nn)
+		c.append(col); c.append(col); c.append(col)
+
+	func quad(a: Vector3, b: Vector3, d: Vector3, e: Vector3, nn: Vector3, col: Color) -> void:
+		tri(a, b, d, nn, col)
+		tri(a, d, e, nn, col)
+
+	func commit() -> ArrayMesh:
+		if v.is_empty():
+			return null
+		var arr := []
+		arr.resize(Mesh.ARRAY_MAX)
+		arr[Mesh.ARRAY_VERTEX] = v
+		arr[Mesh.ARRAY_NORMAL] = n
+		arr[Mesh.ARRAY_COLOR] = c
+		var m := ArrayMesh.new()
+		m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+		return m
+
+
+const GRID := 40.0                  # collision grid cell, metres
+var building_grid := {}             # chunk -> {Vector2i cell -> Array of [Rect2, PackedVector2Array]}
+
+
 func _build_buildings(c: int, o: Vector3) -> ArrayMesh:
 	var list: Array = buildings_data[c]
 	if list.is_empty():
 		return null
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var mb := MeshBuf.new()
 	var rng := RandomNumberGenerator.new()
 	rng.seed = c * 7919 + 13
-	var polys := []
+	var grid := {}
 	for b in list:
 		var p: Array = b["p"]
 		var cnt := p.size() / 2
 		if cnt < 3:
 			continue
 		var poly := PackedVector2Array()
+		poly.resize(cnt)
 		for k in cnt:
-			poly.append(Vector2(p[k * 2], p[k * 2 + 1]))
+			poly[k] = Vector2(p[k * 2], p[k * 2 + 1])
 		if Geometry2D.is_polygon_clockwise(poly):
 			poly.reverse()
 		var gmin := INF
@@ -413,39 +444,45 @@ func _build_buildings(c: int, o: Vector3) -> ArrayMesh:
 			var hh := height_at(q.x, q.y)
 			gmin = minf(gmin, hh)
 			gmax = maxf(gmax, hh)
+		var bh: float = b["h"]
 		var bottom := gmin - 1.0
-		var top: float = gmax + float(b["h"])
+		var top: float = gmax + bh
 		var wall: Color = WALLS[rng.randi() % WALLS.size()]
 		var roof: Color = ROOFS[rng.randi() % ROOFS.size()]
-		polys.append([_rect_of(poly), poly])
+		var rect := _rect_of(poly)
+		for gx in range(floori(rect.position.x / GRID), floori(rect.end.x / GRID) + 1):
+			for gz in range(floori(rect.position.y / GRID), floori(rect.end.y / GRID) + 1):
+				var key := Vector2i(gx, gz)
+				if not grid.has(key):
+					grid[key] = []
+				grid[key].append([rect, poly])
 		# walls
 		for k in cnt:
 			var a2: Vector2 = poly[k]
 			var b2: Vector2 = poly[(k + 1) % cnt]
-			var e := (b2 - a2)
-			if e.length() < 0.01:
+			var e := b2 - a2
+			if e.length_squared() < 0.0001:
 				continue
 			var nn := Vector3(e.y, 0, -e.x).normalized()
-			var shade := 0.82 + 0.18 * absf(nn.x)
-			st.set_color(wall * shade)
-			st.set_normal(nn)
 			var A := Vector3(a2.x - o.x, bottom, a2.y - o.z)
 			var B := Vector3(b2.x - o.x, bottom, b2.y - o.z)
-			var At := Vector3(A.x, top, A.z)
-			var Bt := Vector3(B.x, top, B.z)
-			for vv in [A, B, Bt, A, Bt, At]:
-				st.add_vertex(vv)
+			mb.quad(A, B, Vector3(B.x, top, B.z), Vector3(A.x, top, A.z), nn, wall * (0.82 + 0.18 * absf(nn.x)))
 		# roof
-		if cnt == 4 and float(b["h"]) < 8.0:
-			_gable_roof(st, poly, top, o, roof)
+		if cnt == 4 and bh < 8.0:
+			_gable_roof(mb, poly, top, o, roof)
 		else:
 			var tri := Geometry2D.triangulate_polygon(poly)
-			st.set_color(Color(0.62, 0.61, 0.58) if rng.randf() < 0.6 else roof)
-			st.set_normal(Vector3.UP)
-			for t in tri:
-				st.add_vertex(Vector3(poly[t].x - o.x, top, poly[t].y - o.z))
-	building_polys[c] = polys
-	return st.commit()
+			var rc := Color(0.62, 0.61, 0.58) if rng.randf() < 0.6 else roof
+			for t in range(0, tri.size() - 2, 3):
+				mb.tri(Vector3(poly[tri[t]].x - o.x, top, poly[tri[t]].y - o.z),
+					Vector3(poly[tri[t + 1]].x - o.x, top, poly[tri[t + 1]].y - o.z),
+					Vector3(poly[tri[t + 2]].x - o.x, top, poly[tri[t + 2]].y - o.z), Vector3.UP, rc)
+	building_grid[c] = grid
+	return mb.commit()
+
+
+func _free_buildings(c: int) -> void:
+	building_grid.erase(c)
 
 
 func _rect_of(poly: PackedVector2Array) -> Rect2:
@@ -455,7 +492,7 @@ func _rect_of(poly: PackedVector2Array) -> Rect2:
 	return r.grow(0.5)
 
 
-func _gable_roof(st: SurfaceTool, poly: PackedVector2Array, top: float, o: Vector3, col: Color) -> void:
+func _gable_roof(mb: MeshBuf, poly: PackedVector2Array, top: float, o: Vector3, col: Color) -> void:
 	# ridge runs along the longer side
 	var p := poly
 	if p[0].distance_to(p[1]) > p[1].distance_to(p[2]):
@@ -463,27 +500,18 @@ func _gable_roof(st: SurfaceTool, poly: PackedVector2Array, top: float, o: Vecto
 	# now p0-p1 and p2-p3 are the short sides
 	var m1 := (p[0] + p[1]) * 0.5
 	var m2 := (p[2] + p[3]) * 0.5
-	var rh := p[0].distance_to(p[1]) * 0.32
-	var o2 := Vector2(o.x, o.z)
-	var V := func(q: Vector2, y: float) -> Vector3: return Vector3(q.x - o2.x, y, q.y - o2.y)
-	var R1: Vector3 = V.call(m1, top + rh)
-	var R2: Vector3 = V.call(m2, top + rh)
-	var P := []
+	var rh := minf(p[0].distance_to(p[1]) * 0.32, 4.0)
+	var R1 := Vector3(m1.x - o.x, top + rh, m1.y - o.z)
+	var R2 := Vector3(m2.x - o.x, top + rh, m2.y - o.z)
+	var P: Array[Vector3] = []
 	for q in p:
-		P.append(V.call(q, top))
-	var faces := [[P[1], P[2], R2, R1], [P[3], P[0], R1, R2]]
-	for f in faces:
+		P.append(Vector3(q.x - o.x, top, q.y - o.z))
+	for f in [[P[1], P[2], R2, R1], [P[3], P[0], R1, R2]]:
 		var nn: Vector3 = (f[1] - f[0]).cross(f[3] - f[0]).normalized()
 		if nn.y < 0: nn = -nn
-		st.set_color(col * (0.8 + 0.2 * nn.y))
-		st.set_normal(nn)
-		for vv in [f[0], f[1], f[2], f[0], f[2], f[3]]:
-			st.add_vertex(vv)
-	st.set_color(Color(0.9, 0.88, 0.84))
+		mb.quad(f[0], f[1], f[2], f[3], nn, col * (0.8 + 0.2 * nn.y))
 	for tr in [[P[0], P[1], R1], [P[2], P[3], R2]]:
-		st.set_normal((tr[1] - tr[0]).cross(tr[2] - tr[0]).normalized())
-		for vv in tr:
-			st.add_vertex(vv)
+		mb.tri(tr[0], tr[1], tr[2], (tr[1] - tr[0]).cross(tr[2] - tr[0]).normalized(), Color(0.9, 0.88, 0.84))
 
 
 const PALM_P := [0.0, 0.05, 0.10, 0.45, 0.04, 0.0, 0.0, 0.0]

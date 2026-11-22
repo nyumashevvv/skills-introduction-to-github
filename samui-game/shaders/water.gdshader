@@ -21,7 +21,7 @@ void fragment() {
 	NORMAL = normalize((VIEW_MATRIX * vec4(n, 0.0)).xyz);
 	float fres = pow(1.0 - clamp(dot(NORMAL, VIEW), 0.0, 1.0), 3.0);
 	ALBEDO = mix(shallow, deep, 0.4 + 0.3 * c);
-	ALPHA = clamp(0.5 + fres * 0.35, 0.0, 0.9);
+	ALPHA = clamp(0.22 + fres * 0.55, 0.0, 0.85);
 	ROUGHNESS = 0.08;
 	METALLIC = 0.0;
 	SPECULAR = 0.6;

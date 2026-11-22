@@ -162,7 +162,7 @@ class BigMap extends Control:
 					draw_string(ThemeDB.fallback_font, q + Vector2(6, 5), pl["n"], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, col)
 		MiniMap._arrow(self, _to_screen(scooter.position.x, scooter.position.z), scooter.heading, 10.0)
 		draw_string(ThemeDB.fallback_font, Vector2(20, 34), "Ко Самуи 1:1 — нажми на карту, чтобы переместиться.  M — закрыть", HORIZONTAL_ALIGNMENT_LEFT, -1, 20)
-		draw_string(ThemeDB.fallback_font, Vector2(20, size.y - 14), "© OpenStreetMap contributors (ODbL) · рельеф: SRTM / AWS Terrain Tiles", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(1, 1, 1, 0.6))
+		draw_string(ThemeDB.fallback_font, Vector2(20, size.y - 14), "© OpenStreetMap contributors (ODbL) · здания: Overture Maps, Google Open Buildings, Microsoft · снимок: Copernicus Sentinel-2 · рельеф: SRTM", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(1, 1, 1, 0.6))
 
 	func _to_screen(x: float, z: float) -> Vector2:
 		var px := (Vector2(x, z) + Vector2(World.HALF, World.HALF)) / World.CELL

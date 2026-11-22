@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 """Builds the Koh Samui game map from real-world data.
 
+Optional: --overture (buildings from OSM + Google Open Buildings + Microsoft via
+Overture Maps, extra TomTom roads) and --s2 (Sentinel-2 satellite colour).
+
 Inputs
   --osm  folder with *.osm XML chunks from the OpenStreetMap API (see fetch_data.py)
   --dem  folder with Terrarium elevation tiles, zoom 13, named X_Y.png
@@ -178,10 +181,111 @@ ROAD_CLASSES = {
 }
 
 
+def guess_height(area, rng):
+    if area < 60:
+        return 3.0 + rng.random() * 0.6
+    if area < 250:
+        return (3.4 if rng.random() < 0.65 else 6.5) * (0.9 + 0.2 * rng.random())
+    if area < 900:
+        return (6.5 if rng.random() < 0.6 else 9.8) * (0.9 + 0.2 * rng.random())
+    return 9.0 + rng.random() * 6.0
+
+
+def osm_buildings(ways, nodes):
+    rng = np.random.default_rng(3)
+    out = []
+    for nds, t in ways.values():
+        if "building" not in t or len(nds) < 4 or nds[0] != nds[-1]:
+            continue
+        p = ring_xy(nds[:-1], nodes)
+        if len(p) < 3:
+            continue
+        lv = t.get("building:levels")
+        try:
+            hh = float(t["height"].replace("m", "")) if "height" in t else (float(lv) * 3.2 if lv else 0)
+        except ValueError:
+            hh = 0
+        if hh <= 0:
+            area = abs(sum(p[i][0] * p[i - 1][1] - p[i - 1][0] * p[i][1] for i in range(len(p)))) / 2
+            hh = guess_height(area, rng)
+        out.append((p, hh))
+    return out
+
+
+def overture_buildings(path, roads, rng):
+    """Footprints from Overture Maps (OSM + Google Open Buildings + Microsoft ML Buildings, deduplicated)."""
+    import pyarrow.parquet as pq
+    import shapely
+    t = pq.read_table(path).to_pydict()
+    F = 4  # fine road mask, 2.5 m per pixel, drawn with the real road widths
+    img = Image.new("1", (N * F, N * F), 0)
+    d = ImageDraw.Draw(img)
+    for pts, width, kind, name in roads:
+        if kind != 2:
+            d.line([((x + HALF) / CELL * F, (z + HALF) / CELL * F) for x, z in pts], fill=1, width=max(1, int(width * 0.8 / CELL * F)))
+    rmask = np.asarray(img)
+    out, skipped = [], 0
+    proj = lambda lon, lat: ((np.asarray(lon) - LON0) * KX, -(np.asarray(lat) - LAT0) * KZ)
+    for geom, height, floors in zip(t["geometry"], t["height"], t["num_floors"]):
+        g = shapely.transform(shapely.from_wkb(geom), lambda c: np.column_stack(proj(c[:, 0], c[:, 1])))
+        polys = list(g.geoms) if g.geom_type == "MultiPolygon" else [g]
+        for poly in polys:
+            if poly.geom_type != "Polygon" or poly.area < 15:
+                continue
+            poly = poly.simplify(0.4, preserve_topology=True)
+            pts = list(poly.exterior.coords)[:-1]
+            if len(pts) < 3:
+                continue
+            c = poly.centroid
+            gi, gj = int((c.x + HALF) / CELL * F), int((c.y + HALF) / CELL * F)
+            # machine-traced footprints sometimes sit on a road: drop small ones there
+            if 0 <= gi < N * F and 0 <= gj < N * F and rmask[gj, gi] and poly.area < 300 and height is None and floors is None:
+                skipped += 1
+                continue
+            if height:
+                hh = float(height)
+            elif floors:
+                hh = float(floors) * 3.2
+            else:
+                hh = guess_height(poly.area, rng)
+            out.append((pts, hh))
+    print(f"overture buildings: {len(out)} (dropped {skipped} on roads)")
+    return out
+
+
+def overture_extra_roads(path, roads):
+    """Road segments Overture has from sources other than OSM (TomTom), if not already mapped."""
+    import pyarrow.parquet as pq
+    import shapely
+    img = Image.new("L", (N * 2, N * 2), 0)
+    d = ImageDraw.Draw(img)
+    for pts, width, kind, name in roads:
+        d.line([((x + HALF) / CELL * 2, (z + HALF) / CELL * 2) for x, z in pts], fill=255, width=4)
+    m = np.asarray(img)
+    out = []
+    for geom in pq.read_table(path).column("geometry").to_pylist():
+        g = shapely.from_wkb(geom)
+        lines = list(g.geoms) if g.geom_type == "MultiLineString" else [g]
+        for ln in lines:
+            pts = [to_local(lon, lat) for lon, lat in ln.coords]
+            rp = resample_line(pts, 5.0)
+            hit = 0
+            for x, z in rp:
+                u, v = int((x + HALF) / CELL * 2), int((z + HALF) / CELL * 2)
+                if 0 <= u < N * 2 and 0 <= v < N * 2 and m[v, u]:
+                    hit += 1
+            if hit < 0.5 * len(rp):
+                out.append((pts, 5, 1, ""))
+    print("extra (non-OSM) roads added:", len(out))
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--osm", required=True)
     ap.add_argument("--dem", required=True)
+    ap.add_argument("--overture", help="folder with buildings.parquet / roads_extra.parquet (tools/fetch_overture.py)")
+    ap.add_argument("--s2", help="Sentinel-2 composite .npy (tools/fetch_sentinel.py)")
     ap.add_argument("--out", default=os.path.join(os.path.dirname(__file__), "..", "data"))
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
@@ -228,6 +332,8 @@ def main():
         name = t.get("name:ru") or t.get("name:en") or t.get("name") or ""
         roads.append((pts, width, kind, name))
     print("roads:", len(roads))
+    if a.overture and os.path.exists(os.path.join(a.overture, "roads_extra.parquet")):
+        roads += overture_extra_roads(os.path.join(a.overture, "roads_extra.parquet"), roads)
 
     # flatten terrain along roads (weighted stamp of smoothed road profile)
     sw = np.zeros((N, N), np.float32)
@@ -297,42 +403,44 @@ def main():
     cls[rock & landb] = ROCK
     fresh = poly_mask(lambda t: t.get("natural") == "water" or t.get("landuse") in ("reservoir", "basin"))
 
+    rmask_img = Image.new("L", (N, N), 0)
+    rd = ImageDraw.Draw(rmask_img)
+    for pts, width, kind, name in roads:
+        rd.line([to_grid(x, z) for x, z in pts], fill=255 if kind != 2 else 128, width=max(1, int(round(width / CELL))))
+    rmask = np.asarray(rmask_img)
+
     # buildings
     bld_out = [[] for _ in range(NC * NC)]
     bld_polys = []
     nb = 0
-    for nds, t in ways.values():
-        if "building" not in t or len(nds) < 4 or nds[0] != nds[-1]:
-            continue
-        p = ring_xy(nds[:-1], nodes)
-        if len(p) < 3:
-            continue
+    if a.overture:
+        footprints = overture_buildings(os.path.join(a.overture, "buildings.parquet"), roads, rng)
+    else:
+        footprints = osm_buildings(ways, nodes)
+    for p, hh in footprints:
         cx = sum(q[0] for q in p) / len(p)
         cz = sum(q[1] for q in p) / len(p)
         if abs(cx) >= HALF or abs(cz) >= HALF:
             continue
-        lv = t.get("building:levels")
-        try:
-            hh = float(t["height"].replace("m", "")) if "height" in t else (float(lv) * 3.2 if lv else 0)
-        except ValueError:
-            hh = 0
-        if hh <= 0:
-            area = abs(sum(p[i][0] * p[i - 1][1] - p[i - 1][0] * p[i][1] for i in range(len(p)))) / 2
-            hh = 3.4 if area < 120 else (6.5 if area < 600 else 9.5)
-            hh *= 0.85 + 0.3 * random.random()
         c = int((cz + HALF) // CHUNK) * NC + int((cx + HALF) // CHUNK)
         bld_out[c].append({"h": round(hh, 1), "p": [round(v, 1) for q in p for v in q]})
         bld_polys.append(p)
         nb += 1
     print("buildings:", nb)
     bmask = raster_polys(bld_polys, 1) > 0.5
-    rmask_img = Image.new("L", (N, N), 0)
-    rd = ImageDraw.Draw(rmask_img)
-    for pts, width, kind, name in roads:
-        rd.line([to_grid(x, z) for x, z in pts], fill=255 if kind != 2 else 128, width=max(1, int(round(width / CELL))))
-    rmask = np.asarray(rmask_img)
     cls[(rmask > 0) & landb] = ROAD
     cls[bmask & landb] = BUILDING
+
+    s2 = np.load(a.s2) if a.s2 else None
+    if s2 is not None:
+        # surface classes from the satellite image where OSM has no landuse
+        R_, G_, B_ = s2[..., 0], s2[..., 1], s2[..., 2]
+        exg = 2 * G_ - R_ - B_
+        bright = s2.sum(-1) / 3
+        free = landb & np.isin(cls, [GRASS, JUNGLE, URBAN]) & (R_ >= 0)
+        cls[free & (exg > 14) & (bright < 75)] = JUNGLE
+        cls[free & (exg > 6) & ((exg <= 14) | (bright >= 75))] = GRASS
+        cls[free & (exg <= 6)] = URBAN
 
     # colour map
     pal = {
@@ -355,6 +463,13 @@ def main():
     col *= (1 + 0.08 * noise)[..., None]
     shade = np.clip(1 - slope * 0.6, 0.7, 1)[..., None]
     col[landb] *= shade[landb]
+    if s2 is not None:
+        v = np.power(np.clip(s2, 0, 255) / 255, 0.8)
+        sat = 255 * (v / (1 + 0.75 * v) * 1.45)   # lift shadows, compress bright roofs
+        ok = s2[..., 0] >= 0
+        col[ok] = sat[ok]
+        # roofs seen from space under the 3D buildings read as bright glare: tone them down
+        col[bmask & ok] *= 0.62
     col = np.clip(col, 0, 255).astype(np.uint8)
     Image.fromarray(col, "RGB").save(os.path.join(a.out, "colormap.png"), optimize=True)
 
