@@ -27,6 +27,9 @@ var terrain_mat: ShaderMaterial
 var road_mat: ShaderMaterial
 var building_mat: StandardMaterial3D
 var building_wall_mat: ShaderMaterial
+var wire_mat: StandardMaterial3D
+var pole_mesh: Mesh
+var transformer_mesh: Mesh
 var palm_mesh: ArrayMesh
 
 var _indices := {}          # step -> PackedInt32Array
@@ -84,6 +87,13 @@ func _make_materials() -> void:
 	terrain_mat.set_shader_parameter("detail", nt)
 	road_mat = ShaderMaterial.new()
 	road_mat.shader = load("res://shaders/road.gdshader")
+	road_mat.set_shader_parameter("noise", nt)
+	wire_mat = StandardMaterial3D.new()
+	wire_mat.albedo_color = Color(0.04, 0.04, 0.04)
+	wire_mat.roughness = 0.6
+	wire_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	pole_mesh = Props.make_pole()
+	transformer_mesh = Props.make_transformer()
 	building_mat = StandardMaterial3D.new()
 	building_mat.vertex_color_use_as_albedo = true
 	building_mat.vertex_color_is_srgb = true
@@ -312,78 +322,264 @@ func _build_content(c: int) -> void:
 	ch["node"].add_child(root)
 	ch["content"] = root
 	var origin: Vector3 = ch["node"].position
-	var rm := _build_roads(c, origin)
+	var bm := _build_buildings(c, origin)
+	if bm:
+		var mi2 := MeshInstance3D.new()
+		mi2.mesh = bm
+		root.add_child(mi2)
+	var pole_runs := []
+	var rm := _build_roads(c, origin, pole_runs)
 	if rm:
 		var mi := MeshInstance3D.new()
 		mi.mesh = rm
 		mi.material_override = road_mat
 		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 		root.add_child(mi)
-	var bm := _build_buildings(c, origin)
-	if bm:
-		var mi2 := MeshInstance3D.new()
-		mi2.mesh = bm
-		root.add_child(mi2)
+	if not pole_runs.is_empty():
+		root.add_child(_build_poles(pole_runs))
 	var palms := _build_palms(c, origin)
 	if palms:
 		root.add_child(palms)
 
 
-const ROAD_COL := [Color(0.30, 0.30, 0.31, 1), Color(0.36, 0.36, 0.35, 0), Color(0.58, 0.45, 0.32, 0), Color(0.34, 0.34, 0.35, 1)]
-const ROAD_LIFT := [0.24, 0.20, 0.16, 0.14]
+# ------------------------------------------------------------ roads
+const ROAD_LIFT := [0.10, 0.08, 0.06, 0.05]
+const CURB_H := 0.15
+const WALK_W := 1.8
+const POLE_SPACING := 36.0
 
 
-func _build_roads(c: int, o: Vector3) -> ArrayMesh:
+class RoadBuf:
+	var v := PackedVector3Array()
+	var n := PackedVector3Array()
+	var c := PackedColorArray()
+	var uv := PackedVector2Array()
+	var uv2 := PackedVector2Array()
+	var idx := PackedInt32Array()
+
+	## Adds one strip: a[i] and b[i] are the two long edges, across_a/b their UV.x.
+	func strip(a: PackedVector3Array, b: PackedVector3Array, along: PackedFloat32Array, across_a: float, across_b: float,
+			nrm: Array, col: Color, kind: float, seed: float) -> void:
+		var base := v.size()
+		for i in a.size():
+			v.append(a[i]); v.append(b[i])
+			n.append(nrm[i]); n.append(nrm[i])
+			c.append(col); c.append(col)
+			uv.append(Vector2(across_a, along[i])); uv.append(Vector2(across_b, along[i]))
+			uv2.append(Vector2(kind, seed)); uv2.append(Vector2(kind, seed))
+			if i > 0:
+				var k := base + (i - 1) * 2
+				idx.append_array([k, k + 2, k + 1, k + 1, k + 2, k + 3])
+
+	func set_junction(from: int, flags: PackedFloat32Array) -> void:
+		# junction flag lives in COLOR.r, one value per cross-section (two vertices)
+		for i in flags.size():
+			c[from + i * 2].r = flags[i]
+			c[from + i * 2 + 1].r = flags[i]
+
+	func commit() -> ArrayMesh:
+		if idx.is_empty():
+			return null
+		var arr := []
+		arr.resize(Mesh.ARRAY_MAX)
+		arr[Mesh.ARRAY_VERTEX] = v
+		arr[Mesh.ARRAY_NORMAL] = n
+		arr[Mesh.ARRAY_COLOR] = c
+		arr[Mesh.ARRAY_TEX_UV] = uv
+		arr[Mesh.ARRAY_TEX_UV2] = uv2
+		arr[Mesh.ARRAY_INDEX] = idx
+		var m := ArrayMesh.new()
+		m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
+		return m
+
+
+func _build_roads(c: int, o: Vector3, poles: Array) -> ArrayMesh:
 	var list: Array = roads_data[c]
 	if list.is_empty():
 		return null
-	var v := PackedVector3Array()
-	var nrm := PackedVector3Array()
-	var col := PackedColorArray()
-	var uv := PackedVector2Array()
-	var idx := PackedInt32Array()
+	var rb := RoadBuf.new()
+	var ri := 0
 	for r in list:
+		ri += 1
 		var p: Array = r["p"]
 		var cnt := p.size() / 2
 		if cnt < 2:
 			continue
-		var hw: float = r["w"] * 0.5
+		var w: float = r["w"]
+		var hw := w * 0.5
 		var kind: int = r["k"]
+		var mat: int = r.get("m", 0)
+		var jstr: String = r.get("j", "")
 		var lift: float = ROAD_LIFT[kind]
-		var cc: Color = ROAD_COL[kind]
-		if kind == 0 and hw < 3.4:
-			cc.a = 0.0
+		var seed := fmod(float(c * 131 + ri) * 0.618034, 1.0)
+		var markings := 0.0
+		if kind == 3:
+			markings = 0.6
+		elif kind == 0 and w >= 6.0 and mat == 0:
+			markings = 1.0
+		var col := Color(0.0, w / 50.0, mat * 0.5, markings)
+		# town roads get raised sidewalks with painted curbs
+		var mid := Vector2(p[(cnt / 2) * 2], p[(cnt / 2) * 2 + 1])
+		var urban := kind <= 1 and w >= 6.0 and mat != 2 and _is_town(mid)
+		var verge := 0.6 if mat == 2 else 1.1
+		# centre line, sides and distance along
+		var C := PackedVector2Array()
+		var S := PackedVector2Array()
+		var along := PackedFloat32Array()
 		var dist := 0.0
-		var base := v.size()
 		for k in cnt:
 			var pt := Vector2(p[k * 2], p[k * 2 + 1])
 			var prev := Vector2(p[maxi(k - 1, 0) * 2], p[maxi(k - 1, 0) * 2 + 1])
 			var nxt := Vector2(p[mini(k + 1, cnt - 1) * 2], p[mini(k + 1, cnt - 1) * 2 + 1])
 			var t := (nxt - prev).normalized()
-			var side := Vector2(-t.y, t.x) * hw
 			if k > 0:
 				dist += pt.distance_to(prev)
-			for sgn in [-1.0, 1.0]:
-				var q: Vector2 = pt + side * sgn
-				v.append(Vector3(q.x - o.x, height_at(q.x, q.y) + lift, q.y - o.z))
-				nrm.append(Vector3.UP)
-				col.append(cc)
-				uv.append(Vector2(0.0 if sgn < 0 else 1.0, dist))
-			if k > 0:
-				var a := base + (k - 1) * 2
-				idx.append_array([a, a + 2, a + 1, a + 1, a + 2, a + 3])
-	if idx.is_empty():
-		return null
-	var arr := []
-	arr.resize(Mesh.ARRAY_MAX)
-	arr[Mesh.ARRAY_VERTEX] = v
-	arr[Mesh.ARRAY_NORMAL] = nrm
-	arr[Mesh.ARRAY_COLOR] = col
-	arr[Mesh.ARRAY_TEX_UV] = uv
-	arr[Mesh.ARRAY_INDEX] = idx
+			C.append(pt)
+			S.append(Vector2(-t.y, t.x))
+			along.append(dist)
+		var ups := []
+		ups.resize(cnt)
+		ups.fill(Vector3.UP)
+		# road surface
+		var L := PackedVector3Array()
+		var R := PackedVector3Array()
+		for k in cnt:
+			var a := C[k] - S[k] * hw
+			var b := C[k] + S[k] * hw
+			L.append(Vector3(a.x - o.x, height_at(a.x, a.y) + lift, a.y - o.z))
+			R.append(Vector3(b.x - o.x, height_at(b.x, b.y) + lift, b.y - o.z))
+		var first := rb.v.size()
+		rb.strip(L, R, along, 0.0, w, ups, col, 0.0, seed)
+		if jstr.length() == cnt:
+			var fl := PackedFloat32Array()
+			for k in cnt:
+				fl.append(1.0 if jstr[k] == "1" else 0.0)
+			rb.set_junction(first, fl)
+		# both sides: curb + sidewalk, or a gravel verge
+		for side in [-1.0, 1.0]:
+			var edge := L if side < 0 else R
+			if urban:
+				var top := PackedVector3Array()
+				var outer := PackedVector3Array()
+				var ground := PackedVector3Array()
+				var curb_n := []
+				for k in cnt:
+					var e := edge[k]
+					top.append(e + Vector3(0, CURB_H, 0))
+					var q: Vector2 = C[k] + S[k] * side * (hw + WALK_W)
+					var gq: Vector2 = C[k] + S[k] * side * (hw + WALK_W + 0.5)
+					var yt := maxf(e.y + CURB_H, height_at(q.x, q.y) + 0.05)
+					outer.append(Vector3(q.x - o.x, yt, q.y - o.z))
+					ground.append(Vector3(gq.x - o.x, height_at(gq.x, gq.y) - 0.05, gq.y - o.z))
+					curb_n.append(Vector3(-S[k].x * side, 0, -S[k].y * side))
+				rb.strip(edge, top, along, 0.0, CURB_H, curb_n, col, 1.0, seed)
+				rb.strip(top, outer, along, 0.0, WALK_W, ups, col, 2.0, seed)
+				rb.strip(outer, ground, along, 0.0, 0.5, ups, col, 3.0, seed)
+			else:
+				var ground2 := PackedVector3Array()
+				for k in cnt:
+					var gq: Vector2 = C[k] + S[k] * side * (hw + verge)
+					ground2.append(Vector3(gq.x - o.x, height_at(gq.x, gq.y) - 0.04, gq.y - o.z))
+				rb.strip(edge, ground2, along, 0.0, verge, ups, col, 3.0, seed)
+		# electricity poles along bigger roads, Thai style
+		if (kind == 0 or (kind == 1 and w >= 5.0)) and dist > 20.0:
+			var side_p := -1.0 if seed < 0.5 else 1.0
+			var off := hw + (WALK_W - 0.4 if urban else verge + 0.4)
+			var run := []
+			var next_d := fmod(seed * 97.0, POLE_SPACING)
+			var k2 := 0
+			while next_d < dist:
+				while k2 < cnt - 2 and along[k2 + 1] < next_d:
+					k2 += 1
+				var f := (next_d - along[k2]) / maxf(along[k2 + 1] - along[k2], 0.01)
+				var cp := C[k2].lerp(C[k2 + 1], f)
+				var sd := S[k2].lerp(S[k2 + 1], f).normalized()
+				var pp := cp + sd * side_p * off
+				var pos := Vector3(pp.x - o.x, height_at(pp.x, pp.y), pp.y - o.z)
+				if class_at(pp.x, pp.y) != BUILDING and pos.y > 0.3 and not is_blocked(pp.x, pp.y):
+					run.append([pos, Vector3(sd.x, 0, sd.y)])
+				else:
+					if run.size() > 0:
+						poles.append(run)
+					run = []
+				next_d += POLE_SPACING
+			if run.size() > 0:
+				poles.append(run)
+	return rb.commit()
+
+
+func _is_town(pt: Vector2) -> bool:
+	var n := 0
+	for d in [Vector2(12, 0), Vector2(-12, 0), Vector2(0, 12), Vector2(0, -12), Vector2(20, 20), Vector2(-20, -20)]:
+		var cl := class_at(pt.x + d.x, pt.y + d.y)
+		if cl == BUILDING or cl == URBAN:
+			n += 1
+	return n >= 3
+
+
+## Poles (MultiMesh) and the sagging cable bundles between them.
+func _build_poles(runs: Array) -> Node3D:
+	var xf := []
+	var tf := []
+	var wires := MeshBuf.new()
+	var rng := RandomNumberGenerator.new()
+	rng.seed = runs.size() * 31 + 5
+	for run in runs:
+		for i in run.size():
+			var pos: Vector3 = run[i][0]
+			var sd: Vector3 = run[i][1]
+			var basis := Basis(Vector3.UP, atan2(sd.x, sd.z))
+			xf.append(Transform3D(basis, pos))
+			if rng.randf() < 0.12:
+				tf.append(Transform3D(basis, pos))
+			if i == 0:
+				continue
+			var a: Vector3 = run[i - 1][0]
+			var asd: Vector3 = run[i - 1][1]
+			# three power lines on the crossarm + a telecom bundle lower down
+			for line in [[-0.6, 8.15, 0.55], [0.0, 8.15, 0.6], [0.6, 8.15, 0.55], [0.18, 6.6, 0.9], [0.22, 6.35, 1.1], [0.15, 6.1, 1.3]]:
+				var p0: Vector3 = a + asd * line[0] + Vector3(0, line[1], 0)
+				var p1: Vector3 = pos + sd * line[0] + Vector3(0, line[1], 0)
+				_cable(wires, p0, p1, line[2] + rng.randf() * 0.3)
+	var root := Node3D.new()
+	if xf.size() > 0:
+		root.add_child(_multimesh(pole_mesh, xf))
+	if tf.size() > 0:
+		root.add_child(_multimesh(transformer_mesh, tf))
 	var m := ArrayMesh.new()
-	m.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arr)
-	return m
+	wires.add_to(m, wire_mat)
+	if m.get_surface_count() > 0:
+		var mi := MeshInstance3D.new()
+		mi.mesh = m
+		mi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		mi.visibility_range_end = 450.0
+		root.add_child(mi)
+	return root
+
+
+func _cable(mb: MeshBuf, a: Vector3, b: Vector3, sag: float) -> void:
+	var segs := 7
+	var prev := a
+	var th := Vector3(0, 0.02, 0)
+	for s in range(1, segs + 1):
+		var t := float(s) / segs
+		var q := a.lerp(b, t) - Vector3(0, sag * 4.0 * t * (1.0 - t), 0)
+		var nn := (q - prev).cross(Vector3.UP).normalized()
+		mb.quad(prev - th, q - th, q + th, prev + th, nn, Color(0.05, 0.05, 0.05))
+		prev = q
+
+
+func _multimesh(mesh: Mesh, xf: Array) -> MultiMeshInstance3D:
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.mesh = mesh
+	mm.instance_count = xf.size()
+	for k in xf.size():
+		mm.set_instance_transform(k, xf[k])
+	var mmi := MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	mmi.visibility_range_end = 700.0
+	return mmi
 
 
 class MeshBuf:

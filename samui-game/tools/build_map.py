@@ -280,6 +280,23 @@ def overture_extra_roads(path, roads):
     return out
 
 
+def road_material(t, kind):
+    """0 asphalt, 1 concrete, 2 dirt - from the OSM surface tag, else a typical Samui guess."""
+    sf = t.get("surface", "")
+    if sf in ("asphalt", "paved", "chipseal"):
+        return 0
+    if sf.startswith("concrete") or sf in ("paving_stones", "sett"):
+        return 1
+    if sf in ("unpaved", "gravel", "dirt", "ground", "compacted", "fine_gravel", "earth", "mud", "sand", "grass"):
+        return 2
+    if kind == 2:
+        return 2
+    if kind in (0, 3) or t.get("highway") in ("tertiary", "unclassified", "tertiary_link"):
+        return 0
+    # village lanes (soi) on Samui are mostly poured concrete
+    return 1 if random.random() < 0.6 else 0
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--osm", required=True)
@@ -315,6 +332,8 @@ def main():
 
     # ---- roads
     roads = []  # (pts, width, kind, name)
+    mats = []   # surface: 0 asphalt, 1 concrete, 2 dirt
+    node_deg = {}
     for nds, t in ways.values():
         hw = t.get("highway")
         width = kind = None
@@ -331,9 +350,19 @@ def main():
             continue
         name = t.get("name:ru") or t.get("name:en") or t.get("name") or ""
         roads.append((pts, width, kind, name))
+        mats.append(road_material(t, kind))
+        for i, nd in enumerate(nds):
+            node_deg[nd] = node_deg.get(nd, 0) + (1 if i in (0, len(nds) - 1) else 2)
     print("roads:", len(roads))
+    # junctions: nodes where three or more road ends meet
+    junctions = np.array([to_local(*nodes[nd]) for nd, d in node_deg.items() if d >= 3 and nd in nodes], np.float32)
+    print("junctions:", len(junctions))
     if a.overture and os.path.exists(os.path.join(a.overture, "roads_extra.parquet")):
-        roads += overture_extra_roads(os.path.join(a.overture, "roads_extra.parquet"), roads)
+        extra = overture_extra_roads(os.path.join(a.overture, "roads_extra.parquet"), roads)
+        roads += extra
+        mats += [0] * len(extra)
+    from scipy.spatial import cKDTree
+    jtree = cKDTree(junctions) if len(junctions) else None
 
     # flatten terrain along roads (weighted stamp of smoothed road profile)
     sw = np.zeros((N, N), np.float32)
@@ -341,7 +370,7 @@ def main():
     wmax = np.zeros((N, N), np.float32)
     road_out = [[] for _ in range(NC * NC)]
     hs = ndimage.map_coordinates
-    for pts, width, kind, name in roads:
+    for (pts, width, kind, name), mat in zip(roads, mats):
         rp = np.array(resample_line(pts, 4.0), np.float32)
         gi, gj = to_grid(rp[:, 0], rp[:, 1])
         th = hs(h, [gj, gi], order=1, mode="nearest")
@@ -363,20 +392,35 @@ def main():
                 np.maximum.at(wmax, (cj[ok], ci[ok]), w[ok])
         # export resampled at 8 m, split into chunks
         ep = resample_line(pts, 8.0)
-        cur, cur_c = [], None
-        for x, z in ep:
+        # per point: is it inside a junction (markings are left out there)
+        if jtree is not None and kind in (0, 3):
+            d, _ = jtree.query(np.array(ep, np.float32))
+            jflag = ["1" if dd < max(10.0, width) else "0" for dd in d]
+        else:
+            jflag = ["0"] * len(ep)
+
+        def emit(c, seg, js):
+            e = {"w": width, "k": kind, "m": mat, "p": [round(v, 1) for q in seg for v in q]}
+            if "1" in js:
+                e["j"] = "".join(js)
+            road_out[c].append(e)
+
+        cur, cj, cur_c = [], [], None
+        for (x, z), jf in zip(ep, jflag):
             c = int((z + HALF) // CHUNK) * NC + int((x + HALF) // CHUNK)
             if not (0 <= c < NC * NC):
-                cur, cur_c = [], None
+                cur, cj, cur_c = [], [], None
                 continue
             if c != cur_c and cur:
                 cur.append((x, z))  # overlap one point to avoid gaps
-                road_out[cur_c].append({"w": width, "k": kind, "p": [round(v, 1) for q in cur for v in q]})
-                cur = [cur[-2]] if len(cur) > 1 else []
+                cj.append(jf)
+                emit(cur_c, cur, cj)
+                cur, cj = ([cur[-2]], [cj[-2]]) if len(cur) > 1 else ([], [])
             cur_c = c
             cur.append((x, z))
+            cj.append(jf)
         if len(cur) > 1:
-            road_out[cur_c].append({"w": width, "k": kind, "p": [round(v, 1) for q in cur for v in q]})
+            emit(cur_c, cur, cj)
     m = sw > 0
     h[m] = h[m] * (1 - wmax[m]) + (swh[m] / sw[m]) * wmax[m]
 
