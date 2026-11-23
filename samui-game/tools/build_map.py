@@ -333,6 +333,7 @@ def main():
     # ---- roads
     roads = []  # (pts, width, kind, name)
     mats = []   # surface: 0 asphalt, 1 concrete, 2 dirt
+    road_meta = []  # (lanes, oneway, ref)
     node_deg = {}
     for nds, t in ways.values():
         hw = t.get("highway")
@@ -348,9 +349,23 @@ def main():
         pts = ring_xy(nds, nodes)
         if len(pts) < 2:
             continue
+        # real width from tags where mapped
+        try:
+            if "width" in t:
+                width = max(2.5, float(t["width"].split()[0].replace(",", ".")))
+            elif "lanes" in t and kind in (0, 1):
+                width = max(width, float(t["lanes"].split(";")[0]) * 3.4 + (0.8 if kind == 0 else 0.0))
+        except ValueError:
+            pass
+        lanes = 2
+        try:
+            lanes = int(t.get("lanes", "0").split(";")[0]) or (1 if t.get("oneway") == "yes" else 2)
+        except ValueError:
+            pass
         name = t.get("name:ru") or t.get("name:en") or t.get("name") or ""
         roads.append((pts, width, kind, name))
         mats.append(road_material(t, kind))
+        road_meta.append((lanes, t.get("oneway") == "yes", t.get("ref", "")))
         for i, nd in enumerate(nds):
             node_deg[nd] = node_deg.get(nd, 0) + (1 if i in (0, len(nds) - 1) else 2)
     print("roads:", len(roads))
@@ -361,6 +376,7 @@ def main():
         extra = overture_extra_roads(os.path.join(a.overture, "roads_extra.parquet"), roads)
         roads += extra
         mats += [0] * len(extra)
+        road_meta += [(2, False, "")] * len(extra)
     from scipy.spatial import cKDTree
     jtree = cKDTree(junctions) if len(junctions) else None
 
@@ -370,7 +386,7 @@ def main():
     wmax = np.zeros((N, N), np.float32)
     road_out = [[] for _ in range(NC * NC)]
     hs = ndimage.map_coordinates
-    for (pts, width, kind, name), mat in zip(roads, mats):
+    for (pts, width, kind, name), mat, meta in zip(roads, mats, road_meta):
         rp = np.array(resample_line(pts, 4.0), np.float32)
         gi, gj = to_grid(rp[:, 0], rp[:, 1])
         th = hs(h, [gj, gi], order=1, mode="nearest")
@@ -400,7 +416,13 @@ def main():
             jflag = ["0"] * len(ep)
 
         def emit(c, seg, js):
-            e = {"w": width, "k": kind, "m": mat, "p": [round(v, 1) for q in seg for v in q]}
+            e = {"w": round(width, 1), "k": kind, "m": mat, "p": [round(v, 1) for q in seg for v in q]}
+            if meta[0] != 2:
+                e["l"] = meta[0]
+            if meta[1]:
+                e["o"] = 1
+            if meta[2]:
+                e["r"] = meta[2]
             if "1" in js:
                 e["j"] = "".join(js)
             road_out[c].append(e)

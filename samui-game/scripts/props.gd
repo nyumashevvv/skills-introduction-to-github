@@ -135,3 +135,46 @@ static func make_transformer() -> ArrayMesh:
 	var m := st.commit()
 	m.surface_set_material(0, _vc_mat())
 	return m
+
+
+## Town street lamp: 7.5 m steel pole, arm reaching over the road (local -Z).
+static func make_streetlamp() -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var steel := Color(0.42, 0.46, 0.45)
+	_prism(st, Vector3.ZERO, 7.4, 0.09, 0.05, 8, steel)
+	st.set_color(steel)
+	_box(st, Vector3(0, 7.35, -0.7), Vector3(0.03, 0.03, 0.75))
+	st.set_color(Color(0.25, 0.27, 0.27))
+	_box(st, Vector3(0, 7.32, -1.45), Vector3(0.14, 0.06, 0.3))
+	st.set_color(Color(1.0, 0.97, 0.85))
+	_box(st, Vector3(0, 7.25, -1.45), Vector3(0.1, 0.012, 0.24))
+	st.set_color(Color(0.3, 0.32, 0.32))
+	_box(st, Vector3(0, 0.25, 0), Vector3(0.14, 0.25, 0.14))
+	var m := st.commit()
+	m.surface_set_material(0, _vc_mat())
+	return m
+
+
+## Blue Thai highway direction board on two posts, facing along local +Z.
+static func make_sign() -> ArrayMesh:
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var post := Color(0.75, 0.76, 0.76)
+	for x in [-1.0, 1.0]:
+		_prism(st, Vector3(x, 0, 0), 3.4, 0.05, 0.05, 6, post)
+	st.set_color(Color(0.95, 0.95, 0.95))
+	_box(st, Vector3(0, 2.6, 0.06), Vector3(1.55, 0.8, 0.03))
+	st.set_color(Color(0.05, 0.25, 0.62))
+	_box(st, Vector3(0, 2.6, 0.075), Vector3(1.47, 0.72, 0.03))
+	# white text lines and arrows
+	st.set_color(Color(0.95, 0.95, 0.95))
+	for y in [2.95, 2.7, 2.45, 2.2]:
+		_box(st, Vector3(-0.25, y, 0.11), Vector3(0.9, 0.05, 0.01))
+	_box(st, Vector3(1.05, 2.75, 0.11), Vector3(0.22, 0.05, 0.01))
+	_box(st, Vector3(1.05, 2.35, 0.11), Vector3(0.22, 0.05, 0.01))
+	var m := st.commit()
+	var mat := _vc_mat()
+	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
+	m.surface_set_material(0, mat)
+	return m

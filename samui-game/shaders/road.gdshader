@@ -42,26 +42,41 @@ void fragment() {
 		float u = x / max(w, 0.1);                 // 0..1 across
 		if (mat < 0.25) {
 			// asphalt: grain, repaired patches, polished wheel tracks, dusty edges
-			col = vec3(0.075, 0.077, 0.08) * (0.8 + 0.45 * n1);
-			if (n2 > 0.62) col = mix(col, vec3(0.045, 0.046, 0.05), 0.7);
-			if (n2 < 0.3) col = mix(col, vec3(0.11, 0.105, 0.1), 0.5);
+			col = vec3(0.075, 0.077, 0.08) * (0.85 + 0.3 * n1);
+			col = mix(col, vec3(0.055, 0.056, 0.06), 0.45 * smoothstep(0.6, 0.72, n2));   // repaired patches
+			col = mix(col, vec3(0.1, 0.097, 0.093), 0.3 * smoothstep(0.35, 0.25, n2));    // faded, dusty asphalt
 			float tracks = exp(-pow((fract(u * 2.0) - 0.5) * 6.0, 2.0));
 			col *= 1.0 - 0.15 * tracks * (1.0 - COLOR.r);
 			float edge = min(x, w - x);
 			col = mix(lin(vec3(0.55, 0.48, 0.38)), col, smoothstep(0.0, 0.45 + 0.4 * n1, edge));
 			rough = 0.85 - 0.15 * tracks;
 			// markings
-			float mk = COLOR.a * (1.0 - COLOR.r);
-			if (mk > 0.8) {
-				bool centre = abs(x - w * 0.5) < 0.07 && fract(y / 9.0) < 0.45;
-				bool edges = abs(x - 0.35) < 0.06 || abs(x - (w - 0.35)) < 0.06;
-				float paint = 0.85 + 0.15 * n1;
-				if (centre) col = lin(vec3(0.92, 0.72, 0.12)) * paint;
-				if (edges) col = lin(vec3(0.9)) * paint;
-			} else if (mk > 0.5) {
+			// markings: 1 two-lane, .85 four-lane, .75 one-way, .6 runway, .5 minor road
+			float mk = COLOR.a;
+			float paint = 0.85 + 0.15 * n1;
+			bool on = COLOR.r < 0.5;
+			vec3 yellow = lin(vec3(0.92, 0.72, 0.12)) * paint;
+			vec3 white = lin(vec3(0.9)) * paint;
+			bool edges = abs(x - 0.35) < 0.06 || abs(x - (w - 0.35)) < 0.06;
+			if (!on) {
+			} else if (mk > 0.95) {
+				if (abs(x - w * 0.5) < 0.07 && fract(y / 9.0) < 0.45) col = yellow;
+				if (edges) col = white;
+			} else if (mk > 0.8) {
+				if (abs(abs(x - w * 0.5) - 0.12) < 0.06) col = yellow;                        // double yellow
+				if (abs(abs(x - w * 0.5) - w * 0.25) < 0.06 && fract(y / 9.0) < 0.4) col = white;  // lane lines
+				if (edges) col = white;
+			} else if (mk > 0.7) {
+				float lanes_n = max(1.0, floor(w / 3.3));
+				float lx = fract(x / (w / lanes_n));
+				if (lanes_n > 1.0 && min(lx, 1.0 - lx) * (w / lanes_n) < 0.06 && x > 0.5 && x < w - 0.5 && fract(y / 9.0) < 0.4) col = white;
+				if (edges) col = white;
+			} else if (mk > 0.55) {
 				bool centre = abs(x - w * 0.5) < 0.45 && fract(y / 50.0) < 0.6;
 				bool edges = abs(x - 1.5) < 0.45 || abs(x - (w - 1.5)) < 0.45;
-				if (centre || edges) col = lin(vec3(0.9)) * (0.85 + 0.15 * n1);
+				if (centre || edges) col = white;
+			} else if (mk > 0.45) {
+				if (abs(x - w * 0.5) < 0.06 && fract(y / 8.0) < 0.35) col = white;
 			}
 		} else if (mat < 0.75) {
 			// poured concrete lane: slabs with joints, stains
@@ -71,6 +86,9 @@ void fragment() {
 			float jy = abs(fract(y / 4.5) - 0.5) * 4.5;
 			float jx = abs(x - w * 0.5);
 			if (jy > 2.2 || jx < 0.02) col *= 0.45;
+			// speed bump every ~90 m, painted yellow and black
+			float sb = mod(y + seed * 90.0, 90.0);
+			if (sb < 0.6) col = lin(fract(x / 0.5) < 0.5 ? vec3(0.9, 0.75, 0.1) : vec3(0.08));
 			float edge = min(x, w - x);
 			col = mix(lin(vec3(0.5, 0.45, 0.36)), col, smoothstep(0.0, 0.3, edge));
 		} else {

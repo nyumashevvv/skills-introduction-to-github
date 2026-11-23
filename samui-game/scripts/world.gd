@@ -34,6 +34,8 @@ var building_wall_mat: ShaderMaterial
 var wire_mat: StandardMaterial3D
 var pole_mesh: Mesh
 var transformer_mesh: Mesh
+var lamp_mesh: Mesh
+var sign_mesh: Mesh
 var vegetation: Vegetation
 
 var _indices := {}          # step -> PackedInt32Array
@@ -102,6 +104,8 @@ func _make_materials() -> void:
 	wire_mat.cull_mode = BaseMaterial3D.CULL_DISABLED
 	pole_mesh = Props.make_pole()
 	transformer_mesh = Props.make_transformer()
+	lamp_mesh = Props.make_streetlamp()
+	sign_mesh = Props.make_sign()
 	building_mat = StandardMaterial3D.new()
 	building_mat.vertex_color_use_as_albedo = true
 	building_mat.vertex_color_is_srgb = true
@@ -353,8 +357,9 @@ func _build_content(c: int) -> void:
 		var mi2 := MeshInstance3D.new()
 		mi2.mesh = bm
 		root.add_child(mi2)
-	var pole_runs := []
-	var rm := _build_roads(c, origin, pole_runs)
+	var extras := {"poles": [], "lamps": [], "signs": []}
+	var pole_runs: Array = extras["poles"]
+	var rm := _build_roads(c, origin, extras)
 	if rm:
 		var mi := MeshInstance3D.new()
 		mi.mesh = rm
@@ -363,6 +368,14 @@ func _build_content(c: int) -> void:
 		root.add_child(mi)
 	if not pole_runs.is_empty():
 		root.add_child(_build_poles(pole_runs))
+	if not extras["lamps"].is_empty():
+		var lm := _multimesh(lamp_mesh, extras["lamps"])
+		lm.visibility_range_end = 600.0
+		root.add_child(lm)
+	if not extras["signs"].is_empty():
+		var sm := _multimesh(sign_mesh, extras["signs"])
+		sm.visibility_range_end = 500.0
+		root.add_child(sm)
 
 
 # ------------------------------------------------------------ roads
@@ -416,7 +429,8 @@ class RoadBuf:
 		return m
 
 
-func _build_roads(c: int, o: Vector3, poles: Array) -> ArrayMesh:
+func _build_roads(c: int, o: Vector3, extras: Dictionary) -> ArrayMesh:
+	var poles: Array = extras["poles"]
 	var list: Array = roads_data[c]
 	if list.is_empty():
 		return null
@@ -435,11 +449,16 @@ func _build_roads(c: int, o: Vector3, poles: Array) -> ArrayMesh:
 		var jstr: String = r.get("j", "")
 		var lift: float = ROAD_LIFT[kind]
 		var seed := fmod(float(c * 131 + ri) * 0.618034, 1.0)
+		# marking scheme (decoded in road.gdshader)
+		var lanes: int = r.get("l", 2)
+		var oneway: bool = r.get("o", 0) == 1
 		var markings := 0.0
 		if kind == 3:
 			markings = 0.6
 		elif kind == 0 and w >= 6.0 and mat == 0:
-			markings = 1.0
+			markings = 0.75 if oneway else (0.85 if lanes >= 4 or w >= 12.0 else 1.0)
+		elif kind == 1 and w >= 6.0 and mat == 0:
+			markings = 0.5
 		var col := Color(0.0, w / 50.0, mat * 0.5, markings)
 		# town roads get raised sidewalks with painted curbs
 		var mid := Vector2(p[(cnt / 2) * 2], p[(cnt / 2) * 2 + 1])
@@ -528,6 +547,27 @@ func _build_roads(c: int, o: Vector3, poles: Array) -> ArrayMesh:
 				next_d += POLE_SPACING
 			if run.size() > 0:
 				poles.append(run)
+		# street lamps on town sidewalks (opposite the poles), signs along the ring road
+		if urban and dist > 15.0:
+			var side_l := 1.0 if seed < 0.5 else -1.0
+			var d2 := fmod(seed * 53.0, 30.0) + 5.0
+			var k3 := 0
+			while d2 < dist:
+				while k3 < cnt - 2 and along[k3 + 1] < d2:
+					k3 += 1
+				var f2 := (d2 - along[k3]) / maxf(along[k3 + 1] - along[k3], 0.01)
+				var sd2 := S[k3].lerp(S[k3 + 1], f2).normalized()
+				var lp := C[k3].lerp(C[k3 + 1], f2) + sd2 * side_l * (hw + 0.45)
+				if not is_blocked(lp.x, lp.y):
+					extras["lamps"].append(Transform3D(Basis(Vector3.UP, atan2(-sd2.x * side_l, -sd2.y * side_l)), Vector3(lp.x - o.x, height_at(lp.x, lp.y) + CURB_H, lp.y - o.z)))
+				d2 += 30.0
+		if kind == 0 and dist > 200.0 and seed < 0.35:
+			var k4 := cnt / 2
+			var sd3 := S[k4]
+			var sp := C[k4] + sd3 * (hw + verge + 0.8)
+			if not is_blocked(sp.x, sp.y) and road_dist(sp.x, sp.y) > 0.3:
+				var t3 := (C[mini(k4 + 1, cnt - 1)] - C[k4]).normalized()
+				extras["signs"].append(Transform3D(Basis(Vector3.UP, atan2(t3.x, t3.y)), Vector3(sp.x - o.x, height_at(sp.x, sp.y), sp.y - o.z)))
 	return rb.commit()
 
 
