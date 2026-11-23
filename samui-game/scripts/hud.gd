@@ -30,7 +30,7 @@ func _ready() -> void:
 	fuel_bar.size = Vector2(160, 14)
 	fuel_bar.show_percentage = false
 	add_child(fuel_bar)
-	help_label.text = "W/S — газ/тормоз   A/D — руль   Shift — турбо   M — карта   C — камера   R — на дорогу   Q — качество"
+	help_label.text = "W/S — газ/тормоз   A/D — руль   Shift — турбо   M — карта   C — камера   R — на дорогу   Q — качество   N — +1 час"
 	msg_label = _label(Vector2(0, 120), 24, Control.PRESET_TOP_WIDE)
 	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	minimap = MiniMap.new()
@@ -89,7 +89,8 @@ func _process(dt: float) -> void:
 	place_label.text = _where(p)
 	var lon := p.x / (111320.0 * cos(deg_to_rad(9.495))) + 100.01
 	var lat := -p.z / 110574.0 + 9.495
-	info_label.text = "%.5f° N  %.5f° E    высота %d м    пройдено %.1f км" % [lat, lon, p.y, scooter.odometer / 1000.0]
+	var dn: DayNight = get_parent().daynight
+	info_label.text = "%s    %.5f° N  %.5f° E    высота %d м    пройдено %.1f км" % [dn.clock(), lat, lon, p.y, scooter.odometer / 1000.0]
 	_msg_t -= dt
 	msg_label.modulate.a = clampf(_msg_t, 0.0, 1.0)
 	if Input.is_action_just_pressed("map"):

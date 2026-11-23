@@ -86,13 +86,26 @@ static func make_streetlamp() -> ArrayMesh:
 	_box(st, Vector3(0, 7.35, -0.7), Vector3(0.03, 0.03, 0.75))
 	st.set_color(Color(0.25, 0.27, 0.27))
 	_box(st, Vector3(0, 7.32, -1.45), Vector3(0.14, 0.06, 0.3))
-	st.set_color(Color(1.0, 0.97, 0.85))
-	_box(st, Vector3(0, 7.25, -1.45), Vector3(0.1, 0.012, 0.24))
 	st.set_color(Color(0.3, 0.32, 0.32))
 	_box(st, Vector3(0, 0.25, 0), Vector3(0.14, 0.25, 0.14))
 	var m := st.commit()
 	m.surface_set_material(0, _vc_mat())
+	var lens := SurfaceTool.new()
+	lens.begin(Mesh.PRIMITIVE_TRIANGLES)
+	lens.set_color(Color(1, 1, 1))
+	_box(lens, Vector3(0, 7.25, -1.45), Vector3(0.1, 0.012, 0.24))
+	lens.commit(m)
+	m.surface_set_material(1, night_light_mat())
 	return m
+
+
+## Material that glows after dark (lamp lenses, bulbs, canopy lights).
+static func night_light_mat(glow := Color(1.0, 0.82, 0.55), strength := 6.0) -> ShaderMaterial:
+	var mat := ShaderMaterial.new()
+	mat.shader = load("res://shaders/night_light.gdshader")
+	mat.set_shader_parameter("glow", glow)
+	mat.set_shader_parameter("strength", strength)
+	return mat
 
 
 ## Blue Thai highway direction board on two posts, facing along local +Z.

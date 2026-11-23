@@ -37,6 +37,10 @@ var transformer_mesh: Mesh
 var lamp_mesh: Mesh
 var sign_mesh: Mesh
 var vegetation: Vegetation
+var lamp_points := {}           # chunk -> Array of Vector3 lamp heads (for night lights)
+var extra_lights := []          # [Vector3, colour, range] from POIs (canopies, shops, markets)
+var _light_pool := []
+var _light_t := 0.0
 var landmarks: Landmarks
 var pois: Pois
 
@@ -216,6 +220,46 @@ func nearest_road(x: float, z: float, main_only := false) -> Dictionary:
 	return best
 
 
+# ------------------------------------------------------------ night lights
+## A pool of real lights moved to the nearest lamps, canopies and shops after dark.
+func _update_lights() -> void:
+	var night: float = DayNight.night_now
+	if _light_pool.is_empty():
+		for i in 28:
+			var l := OmniLight3D.new()
+			l.shadow_enabled = false
+			l.visible = false
+			add_child(l)
+			_light_pool.append(l)
+	if night < 0.05:
+		for l in _light_pool:
+			l.visible = false
+		return
+	var cand := []
+	var c0 := chunk_of(_focus.x, _focus.z)
+	for dz in range(-1, 2):
+		for dx in range(-1, 2):
+			for p in lamp_points.get(c0 + dz * NC + dx, []):
+				var d: float = p.distance_squared_to(_focus)
+				if d < 220.0 * 220.0:
+					cand.append([d, p, Color(1.0, 0.8, 0.55), 22.0, 3.2])
+	for e in extra_lights:
+		var d2: float = e[0].distance_squared_to(_focus)
+		if d2 < 300.0 * 300.0:
+			cand.append([d2, e[0], e[1], e[2], 2.2])
+	cand.sort_custom(func(a, b): return a[0] < b[0])
+	for i in _light_pool.size():
+		var l: OmniLight3D = _light_pool[i]
+		if i < cand.size():
+			l.position = cand[i][1]
+			l.light_color = cand[i][2]
+			l.omni_range = cand[i][3]
+			l.light_energy = cand[i][4] * night
+			l.visible = true
+		else:
+			l.visible = false
+
+
 # ------------------------------------------------------------ streaming
 func set_focus(p: Vector3) -> void:
 	_focus = p
@@ -224,6 +268,10 @@ func set_focus(p: Vector3) -> void:
 
 
 func _process(delta: float) -> void:
+	_light_t += delta
+	if _light_t > 0.4:
+		_light_t = 0.0
+		_update_lights()
 	_since_scan += delta
 	if _since_scan > 0.2:
 		_since_scan = 0.0
@@ -261,6 +309,7 @@ func _scan() -> void:
 		elif d > CONTENT_FREE and ch["content"] != null:
 			ch["content"].queue_free()
 			ch["content"] = null
+			lamp_points.erase(c)
 			_free_buildings(c)
 	_queue.sort_custom(func(a, b): return a[0] < b[0])
 
@@ -388,6 +437,11 @@ func _build_content(c: int) -> void:
 		root.add_child(mi)
 	if not pole_runs.is_empty():
 		root.add_child(_build_poles(pole_runs))
+	var lights := []
+	for t in extras["lamps"]:
+		var lt: Transform3D = t
+		lights.append(origin + lt * Vector3(0, 7.1, -1.45))
+	lamp_points[c] = lights
 	if not extras["lamps"].is_empty():
 		var lm := _multimesh(lamp_mesh, extras["lamps"])
 		lm.visibility_range_end = 600.0

@@ -16,12 +16,25 @@ var fuel_spots := []            # [Vector2 position, radius, price, name]
 var shops := []                 # [Vector2 position, name] for the map
 var shop_grid := {}             # Vector2i(40 m cell) -> Array of Vector2: shops inside mapped buildings
 var stats := {}
+var _signs := []                # sign materials that light up at night
 
 
 func setup() -> void:
 	var scene: Node = load("res://models/pois.glb").instantiate()
 	for mi in scene.find_children("*", "MeshInstance3D", true, false):
-		meshes[String(mi.name)] = mi.mesh
+		var mesh: Mesh = mi.mesh.duplicate()
+		for k in mesh.get_surface_count():
+			var mat := mesh.surface_get_material(k)
+			if mat and mat.resource_name in ["Light", "Bulb"]:
+				mesh.surface_set_material(k, Props.night_light_mat(Color(1, 0.95, 0.85) if mat.resource_name == "Light" else Color(1.0, 0.75, 0.35), 8.0))
+			elif mat and mat.resource_name in ["BandTeal", "BandOrange", "Text"] and mat is BaseMaterial3D:
+				var m2: BaseMaterial3D = mat.duplicate()
+				m2.emission_enabled = true
+				m2.emission = m2.albedo_color
+				m2.emission_energy_multiplier = 0.0
+				mesh.surface_set_material(k, m2)
+				_signs.append(m2)
+		meshes[String(mi.name)] = mesh
 	scene.free()
 	all = JSON.parse_string(FileAccess.get_file_as_string("res://data/pois.json"))
 	for p in all:
@@ -40,6 +53,9 @@ func setup() -> void:
 				else:
 					_place_minimart(at, p.get("n", ""))
 	_place_bottle_stands()
+	for p in all:
+		if p["t"] == "market":
+			_place_market(Vector2(p["x"], p["z"]), float(p.get("r", 15.0)))
 	print("pois placed: ", stats)
 
 
@@ -104,6 +120,8 @@ func _place_station(at: Vector2, name: String) -> void:
 	_put("FuelStation", front, side, 1500.0)
 	var centre := front + side * 9.0
 	world.landmarks.exclusions.append([centre, 15.0])
+	var gy := world.height_at(centre.x, centre.y)
+	world.extra_lights.append([Vector3(centre.x, gy + 4.6, centre.y), Color(0.95, 0.97, 1.0), 22.0])
 	fuel_spots.append([front + side * 8.5, 9.0, STATION_PRICE, name if name != "" else "Заправка"])
 	_count("fuel station")
 	var moved := at.distance_to(centre)
@@ -123,6 +141,7 @@ func _place_minimart(at: Vector2, name: String) -> void:
 	_put("MiniMart", front, side)
 	var centre := front + side * 5.5
 	world.landmarks.exclusions.append([centre, 7.5])
+	world.extra_lights.append([Vector3(front.x, world.height_at(front.x, front.y) + 2.8, front.y), Color(0.92, 0.97, 1.0), 12.0])
 	world.landmarks.blockers.append([centre + side * 0.5, 4.2])
 	shops.append([centre, name])
 	_count("mini-mart model")
@@ -186,3 +205,93 @@ func nearest_fuel(p: Vector2) -> Array:
 			bd = d
 			best = f
 	return [best, bd]
+
+
+
+func _process(_dt: float) -> void:
+	var night: float = DayNight.night_now
+	for m in _signs:
+		m.emission_energy_multiplier = 1.6 * night
+
+
+
+## Night market at an OSM marketplace: rows of stalls with coloured awnings
+## and strings of bulbs. Stalls go only where there is free ground.
+func _place_market(at: Vector2, radius: float) -> void:
+	var stall_mesh := _stall_mesh()
+	var xf := []
+	var rng := RandomNumberGenerator.new()
+	rng.seed = hash(at)
+	var r := clampf(radius, 10.0, 35.0)
+	var tries := 0
+	while xf.size() < int(r * 0.9) and tries < 400:
+		tries += 1
+		var q := at + Vector2(rng.randf_range(-r, r), rng.randf_range(-r, r))
+		if q.distance_to(at) > r or world.road_dist(q.x, q.y) < 1.0 or world.is_blocked(q.x, q.y) or world.height_at(q.x, q.y) < 0.4:
+			continue
+		var clash := false
+		for t in xf:
+			if Vector2(t.origin.x, t.origin.z).distance_to(q) < 3.4:
+				clash = true
+				break
+		if clash:
+			continue
+		var yaw: float = round(rng.randf() * 4.0) * PI * 0.5
+		xf.append(Transform3D(Basis(Vector3.UP, yaw), Vector3(q.x, world.height_at(q.x, q.y), q.y)))
+	if xf.size() < 3:
+		_count("market skipped (no free ground)")
+		return
+	var mm := MultiMesh.new()
+	mm.transform_format = MultiMesh.TRANSFORM_3D
+	mm.use_colors = true
+	mm.mesh = stall_mesh
+	mm.instance_count = xf.size()
+	var awn := [Color(0.85, 0.2, 0.15), Color(0.15, 0.4, 0.75), Color(0.95, 0.75, 0.15), Color(0.2, 0.6, 0.3), Color(0.9, 0.9, 0.88)]
+	for i in xf.size():
+		mm.set_instance_transform(i, xf[i])
+		mm.set_instance_color(i, awn[rng.randi() % awn.size()])
+	var mmi := MultiMeshInstance3D.new()
+	mmi.multimesh = mm
+	mmi.visibility_range_end = 700.0
+	add_child(mmi)
+	var c3 := Vector3(at.x, world.height_at(at.x, at.y) + 3.0, at.y)
+	world.extra_lights.append([c3, Color(1.0, 0.7, 0.4), r + 10.0])
+	_count("night market")
+
+
+var _stall: ArrayMesh
+func _stall_mesh() -> ArrayMesh:
+	if _stall:
+		return _stall
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	st.set_color(Color(0.55, 0.42, 0.3))
+	Props._box(st, Vector3(0, 0.45, 0), Vector3(1.2, 0.45, 0.6))          # counter
+	st.set_color(Color(0.85, 0.85, 0.85))
+	for x in [-1.15, 1.15]:
+		for z in [-0.55, 0.55]:
+			Props._box(st, Vector3(x, 1.2, z), Vector3(0.03, 1.2, 0.03))    # poles
+	st.set_color(Color(0.9, 0.5, 0.2))
+	for i in 6:                                                          # goods
+		Props._box(st, Vector3(-0.9 + i * 0.36, 0.98, 0.1), Vector3(0.13, 0.08, 0.2))
+	var m := st.commit()
+	var mat := Props._vc_mat()
+	m.surface_set_material(0, mat)
+	var aw := SurfaceTool.new()   # awning tinted per stall (instance colour)
+	aw.begin(Mesh.PRIMITIVE_TRIANGLES)
+	aw.set_color(Color(1, 1, 1))
+	Props._box(aw, Vector3(0, 2.45, 0), Vector3(1.35, 0.05, 0.85))
+	aw.commit(m)
+	var am := StandardMaterial3D.new()
+	am.vertex_color_use_as_albedo = true
+	am.roughness = 0.7
+	m.surface_set_material(1, am)
+	var bulbs := SurfaceTool.new()
+	bulbs.begin(Mesh.PRIMITIVE_TRIANGLES)
+	bulbs.set_color(Color(1, 1, 1))
+	for i in 7:
+		Props._box(bulbs, Vector3(-1.2 + i * 0.4, 2.3 - 0.08 * sin(i * 0.45), 0.85), Vector3(0.05, 0.05, 0.05))
+	bulbs.commit(m)
+	m.surface_set_material(2, Props.night_light_mat(Color(1.0, 0.75, 0.35), 10.0))
+	_stall = m
+	return m

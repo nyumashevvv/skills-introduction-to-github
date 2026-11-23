@@ -8,6 +8,7 @@ render_mode cull_disabled;
 // UV2.x wall length (m), UV2.y wall height to the eaves (m)
 
 const float FLOOR_H = 3.2;
+global uniform float night;
 
 float hash(float n) { return fract(sin(mod(n, 289.0) * 12.9898 + 0.5) * 43758.5453); }
 vec3 lin(vec3 c) { return pow(c, vec3(2.2)); }
@@ -27,6 +28,7 @@ void fragment() {
 	vec3 col = wall;
 	float rough = 0.9;
 	float metal = 0.0;
+	vec3 emit = vec3(0.0);       // lit windows, shops and signs after dark
 
 	bool house = style < 0.5, shop = abs(style - 1.0) < 0.5, bung = abs(style - 2.0) < 0.5, hotel = abs(style - 3.0) < 0.5;
 	bool villa = abs(style - 4.0) < 0.5, temple = abs(style - 5.0) < 0.5, big = abs(style - 6.0) < 0.5, fisher = abs(style - 7.0) < 0.5;
@@ -83,6 +85,7 @@ void fragment() {
 				if (open) {
 					// shop interior with warm light and shelves
 					col = vec3(0.05, 0.04, 0.03) + vec3(0.35, 0.22, 0.08) * smoothstep(2.6, 0.4, fv);
+					emit = vec3(1.0, 0.72, 0.38) * 1.6 * night * smoothstep(2.7, 0.6, fv);
 					if (abs(fract(fv * 2.2) - 0.5) < 0.04 && fv < 2.2) col += vec3(0.08);
 					rough = 0.4;
 				} else if (fisher) {
@@ -100,6 +103,7 @@ void fragment() {
 				col = lin(sign * (0.75 + 0.25 * hash(h)));
 				// pale "lettering" stripes
 				if (abs(fv - 2.95) < 0.07 && fract(u * 1.7 + h * 3.0) < 0.55) col = lin(vec3(0.95));
+				emit = col * 2.5 * night * step(0.4, hash(h + 2.0));
 			}
 		} else if (door_bay) {
 			float dw = big ? 0.38 : (bung ? clamp(0.9 / bay, 0.2, 0.42) : clamp(0.5 / bay, 0.12, 0.3));
@@ -150,6 +154,11 @@ void fragment() {
 				if (hash(wall_id + idx * 3.0 + fl * 13.0) < 0.3 && fy > 0.55 && !villa) col = lin(vec3(0.85, 0.8, 0.7)) * 0.6;
 				rough = 0.08;
 				metal = 0.2;
+				float lit = hash(wall_id * 0.37 + idx * 7.0 + fl * 3.0 + 1.0);
+				if (lit < (hotel || villa ? 0.6 : 0.42)) {
+					vec3 lamp = lit < 0.12 ? vec3(0.75, 0.85, 1.0) : vec3(1.0, 0.74, 0.42);
+					emit = lamp * (0.8 + 0.6 * fy) * night;
+				}
 			}
 			if (fv > y0 - 0.1 && fv < y0 && !villa) col = wall * 0.7;
 		} else if ((hash(seed * 5.0) < 0.35 || fisher) && !tall && !villa && !temple && !big && abs(fu - 0.5) < hw * 1.55 && abs(fu - 0.5) >= hw && fv > y0 && fv < y1) {
@@ -171,6 +180,7 @@ void fragment() {
 		if (v < 2.75 && v > 0.15) {
 			float m = fract(u / 1.6);
 			col = (m < 0.05 || v < 0.25 || v > 2.65) ? lin(vec3(0.93)) : mix(vec3(0.02, 0.05, 0.06), vec3(0.75, 0.72, 0.6), 0.25 + 0.2 * smoothstep(2.6, 0.4, v));
+			if (m >= 0.05 && v >= 0.25 && v <= 2.65) emit = vec3(0.92, 0.96, 1.0) * 2.2 * night;
 			rough = 0.1;
 			metal = 0.1;
 		} else if (v >= 2.75) {
@@ -178,6 +188,7 @@ void fragment() {
 			if (v < 2.88) col = lin(vec3(0.91, 0.46, 0.12));
 			if (abs(v - 3.22) < 0.12 && fract(u * 1.3) < 0.6 && abs(u - len * 0.5) < min(3.0, len * 0.35)) col = lin(vec3(0.97));
 			rough = 0.4;
+			emit = col * 2.5 * night;
 		}
 	}
 	if (temple && H - v < 0.9 && H - v > 0.0) {
@@ -191,5 +202,6 @@ void fragment() {
 	ALBEDO = col;
 	ROUGHNESS = rough;
 	METALLIC = metal;
+	EMISSION = emit;
 }
 

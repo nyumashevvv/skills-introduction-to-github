@@ -9,13 +9,14 @@ var cam_mode := 0
 var quality := 2
 var env: Environment
 var sun: DirectionalLight3D
+var daynight: DayNight
 var _cam_pos := Vector3.ZERO
 var _shot := {}   # debug: --shot=file.png --frames=N --pos=x,z --cam=N --gas --map
 var _frame := 0
 
 const ACTIONS := {
 	"gas": [KEY_W, KEY_UP], "brake": [KEY_S, KEY_DOWN], "left": [KEY_A, KEY_LEFT], "right": [KEY_D, KEY_RIGHT],
-	"turbo": [KEY_SHIFT], "map": [KEY_M, KEY_TAB], "camera": [KEY_C], "reset": [KEY_R], "quality": [KEY_Q],
+	"turbo": [KEY_SHIFT], "map": [KEY_M, KEY_TAB], "camera": [KEY_C], "reset": [KEY_R], "quality": [KEY_Q], "time": [KEY_N],
 }
 
 
@@ -61,6 +62,13 @@ func _ready() -> void:
 		scooter.teleport(float(xz[0]), float(xz[1]))
 		_cam_pos = scooter.position + Vector3(0, 3, 6)
 	cam_mode = int(_shot.get("cam", "0"))
+	if _shot.has("heading"):
+		scooter.heading = deg_to_rad(float(_shot["heading"]))
+		scooter._update_transform(0.0)
+		_cam_pos = scooter.position - scooter.forward() * 5.0 + Vector3.UP * 2.5
+	if _shot.has("time"):
+		daynight.hour = float(_shot["time"])
+		daynight.apply()
 	if _shot.has("quality"):
 		set_quality(int(_shot["quality"]))
 	if _shot.has("gas"):
@@ -117,6 +125,9 @@ func _setup_environment() -> void:
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
 	sun.shadow_blur = 1.5
 	add_child(sun)
+	daynight = DayNight.new()
+	add_child(daynight)
+	daynight.setup(env, sun, self)
 
 
 func _process(dt: float) -> void:
@@ -127,8 +138,12 @@ func _process(dt: float) -> void:
 			get_viewport().get_texture().get_image().save_png(_shot["shot"])
 			print("speed ", scooter.speed, " pos ", scooter.position, " fps ", Engine.get_frames_per_second(),
 				" triangles ", RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME),
-				" draw calls ", RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME))
+				" draw calls ", RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME),
+				" night %.2f lights %d lamps-near %d" % [DayNight.night_now, world._light_pool.filter(func(l): return l.visible).size(), world.lamp_points.get(world.chunk_of(scooter.position.x, scooter.position.z), []).size()])
 			get_tree().quit()
+	if Input.is_action_just_pressed("time"):
+		daynight.hour = fposmod(daynight.hour + 1.0, 24.0)
+		hud.show_message("Время: " + daynight.clock())
 	if Input.is_action_just_pressed("quality"):
 		set_quality((quality + 2) % 3)
 	if Input.is_action_just_pressed("camera"):

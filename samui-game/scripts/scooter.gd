@@ -23,6 +23,7 @@ var surface := World.ROAD
 var model: Node3D
 var wheel_front: Node3D
 var wheel_rear: Node3D
+var headlight: SpotLight3D
 const WHEEL_R := 0.28
 var _safe_pos := Vector3.ZERO
 var _safe_heading := 0.0
@@ -43,6 +44,15 @@ func _ready() -> void:
 	add_child(model)
 	wheel_front = model.find_child("WheelFront", true, false)
 	wheel_rear = model.find_child("WheelRear", true, false)
+	headlight = SpotLight3D.new()
+	headlight.position = Vector3(0, 1.0, -0.75)
+	headlight.rotation_degrees = Vector3(-8, 0, 0)
+	headlight.spot_range = 45.0
+	headlight.spot_angle = 28.0
+	headlight.light_energy = 0.0
+	headlight.light_color = Color(1.0, 0.95, 0.85)
+	headlight.shadow_enabled = true
+	model.add_child(headlight)
 
 
 func place(p: Vector2, dir: Vector2) -> void:
@@ -170,6 +180,12 @@ func _say(t: String) -> void:
 		_msg_cooldown = 2.5
 		message.emit(t)
 
+
+
+func _process(_dt: float) -> void:
+	var night: float = DayNight.night_now
+	headlight.light_energy = 4.0 * smoothstep(0.1, 0.6, night)
+	headlight.visible = night > 0.1
 
 
 func _update_fuel(dt: float) -> void:
