@@ -113,8 +113,8 @@ func _process(dt: float) -> void:
 	var want: Vector3
 	match cam_mode:
 		0:
-			var back := 5.5 + absf(scooter.speed) * 0.08
-			want = p - f * back + Vector3.UP * (2.4 + absf(scooter.speed) * 0.02)
+			var back := 4.3 + absf(scooter.speed) * 0.07
+			want = p - f * back + Vector3.UP * (2.0 + absf(scooter.speed) * 0.02)
 			target = p + Vector3.UP * 1.3 + f * 2.0
 		1:
 			want = p - f * 14.0 + Vector3.UP * 7.0

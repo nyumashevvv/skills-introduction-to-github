@@ -14,6 +14,9 @@ var odometer := 0.0
 var turbo := false
 var surface := World.ROAD
 var model: Node3D
+var wheel_front: Node3D
+var wheel_rear: Node3D
+const WHEEL_R := 0.28
 var _safe_pos := Vector3.ZERO
 var _safe_heading := 0.0
 var _safe_timer := 0.0
@@ -28,8 +31,11 @@ const BRAKE := 14.0
 
 
 func _ready() -> void:
-	model = Props.make_scooter()
+	# scooter + rider modelled in Blender (tools/blender/make_scooter_rider.py)
+	model = load("res://models/scooter_rider.glb").instantiate()
 	add_child(model)
+	wheel_front = model.find_child("WheelFront", true, false)
+	wheel_rear = model.find_child("WheelRear", true, false)
 
 
 func place(p: Vector2, dir: Vector2) -> void:
@@ -120,6 +126,10 @@ func _update_transform(dt: float) -> void:
 	var target_lean := -steer * clampf(absf(speed) / 12.0, 0.0, 1.0) * 0.45
 	lean = lerpf(lean, target_lean, clampf(dt * 6.0, 0.0, 1.0))
 	position.y = (hf + hb) * 0.5
+	if wheel_front and dt > 0.0:
+		var spin := -speed / WHEEL_R * dt
+		wheel_front.rotate_object_local(Vector3.RIGHT, spin)
+		wheel_rear.rotate_object_local(Vector3.RIGHT, spin)
 	basis = Basis(Vector3.UP, heading) * Basis(Vector3.RIGHT, pitch) * Basis(Vector3.FORWARD, -lean)
 
 

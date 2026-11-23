@@ -1,5 +1,6 @@
 class_name Props
-## Procedural models: palm tree, scooter with rider, Big Buddha statue.
+## Procedural models: palm tree, Big Buddha statue, electricity poles.
+## The scooter and rider come from Blender: models/scooter_rider.glb.
 
 
 static func make_palm() -> ArrayMesh:
@@ -130,41 +131,6 @@ static func _sph(r: float) -> SphereMesh:
 	s.radial_segments = 16
 	s.rings = 8
 	return s
-
-
-## Scooter facing -Z, origin between the wheels on the ground.
-static func make_scooter(body_col := Color(0.85, 0.15, 0.2)) -> Node3D:
-	var root := Node3D.new()
-	var paint := _mat(body_col, 0.3, 0.35)
-	var black := _mat(Color(0.05, 0.05, 0.05), 0.0, 0.8)
-	var chrome := _mat(Color(0.8, 0.8, 0.82), 0.9, 0.2)
-	var skin := _mat(Color(0.85, 0.65, 0.5))
-	var shirt := _mat(Color(0.95, 0.95, 0.9))
-	var shorts := _mat(Color(0.2, 0.35, 0.6))
-	var helmet := _mat(Color(0.95, 0.8, 0.1), 0.2, 0.3)
-	var wheel := _cyl(0.27, 0.12)
-	_part(root, wheel, black, Vector3(0, 0.27, -0.62), Vector3(0, 0, PI / 2))
-	_part(root, wheel, black, Vector3(0, 0.27, 0.6), Vector3(0, 0, PI / 2))
-	_part(root, _box_mesh(Vector3(0.36, 0.22, 0.9)), paint, Vector3(0, 0.42, 0.25))            # rear body
-	_part(root, _box_mesh(Vector3(0.30, 0.08, 0.55)), black, Vector3(0, 0.36, -0.2))          # floorboard
-	_part(root, _box_mesh(Vector3(0.34, 0.70, 0.16)), paint, Vector3(0, 0.72, -0.52), Vector3(-0.25, 0, 0))  # leg shield
-	_part(root, _box_mesh(Vector3(0.32, 0.10, 0.62)), black, Vector3(0, 0.6, 0.28))           # seat
-	_part(root, _cyl(0.025, 0.95), chrome, Vector3(0, 0.75, -0.6), Vector3(-0.3, 0, 0))       # steering column
-	_part(root, _cyl(0.02, 0.62), chrome, Vector3(0, 1.17, -0.48), Vector3(0, 0, PI / 2))     # handlebar
-	_part(root, _box_mesh(Vector3(0.18, 0.12, 0.1)), chrome, Vector3(0, 1.08, -0.66))         # headlight
-	_part(root, _box_mesh(Vector3(0.22, 0.24, 0.3)), paint, Vector3(0, 0.3, -0.62))           # front fender
-	# rider
-	var r := Node3D.new()
-	r.name = "Rider"
-	root.add_child(r)
-	_part(r, _box_mesh(Vector3(0.4, 0.55, 0.24)), shirt, Vector3(0, 1.05, 0.18), Vector3(-0.15, 0, 0))   # torso
-	_part(r, _sph(0.14), skin, Vector3(0, 1.45, 0.1))                                                     # head
-	_part(r, _sph(0.165), helmet, Vector3(0, 1.49, 0.11), Vector3.ZERO, Vector3(1, 0.85, 1.05))           # helmet
-	for sx in [-1.0, 1.0]:
-		_part(r, _box_mesh(Vector3(0.15, 0.14, 0.45)), shorts, Vector3(0.11 * sx, 0.72, 0.05))            # thigh
-		_part(r, _box_mesh(Vector3(0.11, 0.38, 0.12)), skin, Vector3(0.12 * sx, 0.5, -0.17))              # shin
-		_part(r, _box_mesh(Vector3(0.09, 0.09, 0.46)), skin, Vector3(0.22 * sx, 1.12, -0.18), Vector3(0.3, 0.15 * sx, 0))  # arm
-	return root
 
 
 ## Seated golden Buddha on a white pedestal, about 15 m tall.
