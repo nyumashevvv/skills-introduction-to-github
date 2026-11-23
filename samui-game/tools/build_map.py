@@ -208,7 +208,7 @@ def osm_buildings(ways, nodes):
         if hh <= 0:
             area = abs(sum(p[i][0] * p[i - 1][1] - p[i - 1][0] * p[i][1] for i in range(len(p)))) / 2
             hh = guess_height(area, rng)
-        out.append((p, hh))
+        out.append((p, hh, t.get("building", ""), bool(lv or "height" in t)))
     return out
 
 
@@ -226,7 +226,7 @@ def overture_buildings(path, roads, rng):
     rmask = np.asarray(img)
     out, skipped = [], 0
     proj = lambda lon, lat: ((np.asarray(lon) - LON0) * KX, -(np.asarray(lat) - LAT0) * KZ)
-    for geom, height, floors in zip(t["geometry"], t["height"], t["num_floors"]):
+    for geom, height, floors, bclass, sub in zip(t["geometry"], t["height"], t["num_floors"], t["class"], t["subtype"]):
         g = shapely.transform(shapely.from_wkb(geom), lambda c: np.column_stack(proj(c[:, 0], c[:, 1])))
         polys = list(g.geoms) if g.geom_type == "MultiPolygon" else [g]
         for poly in polys:
@@ -248,7 +248,7 @@ def overture_buildings(path, roads, rng):
                 hh = float(floors) * 3.2
             else:
                 hh = guess_height(poly.area, rng)
-            out.append((pts, hh))
+            out.append((pts, hh, bclass or sub or "", bool(height or floors)))
     print(f"overture buildings: {len(out)} (dropped {skipped} on roads)")
     return out
 
@@ -461,16 +461,60 @@ def main():
         footprints = overture_buildings(os.path.join(a.overture, "buildings.parquet"), roads, rng)
     else:
         footprints = osm_buildings(ways, nodes)
-    for p, hh in footprints:
+    # context for building styles
+    temple_mask = raster_polys(area_polygons(ways, rels, nodes, lambda t: t.get("amenity") == "place_of_worship"
+                                             or t.get("landuse") == "religious"), 1) > 0.5
+    resort_mask = raster_polys(area_polygons(ways, rels, nodes, lambda t: t.get("tourism") in
+                                             ("hotel", "resort", "guest_house", "chalet", "motel", "apartment", "hostel")), 1) > 0.5
+    main_img = Image.new("1", (N, N), 0)
+    md = ImageDraw.Draw(main_img)
+    for pts, width, kind, name in roads:
+        if kind == 0 or width >= 7:
+            md.line([to_grid(x, z) for x, z in pts], fill=1, width=1)
+    main_dist = ndimage.distance_transform_edt(~np.asarray(main_img)) * CELL
+    # Fisherman's Village (Bophut): anything tagged with that address
+    fisher = [to_local(*nodes[nid]) for nid, t in pois.items() if "fisherman" in " ".join(t.values()).lower()]
+    fisher += [to_local(*nodes[nds[0]]) for nds, t in ways.values() if nds and nds[0] in nodes
+               and "fisherman" in " ".join(t.values()).lower()]
+    fisher = [q for q in fisher if (q[0] - 1636) ** 2 + (q[1] + 7317) ** 2 < 1500 ** 2]  # Bophut only
+    print("fisherman's village road points:", len(fisher))
+    style_count = {}
+    for p, hh, bclass, known_h in footprints:
         cx = sum(q[0] for q in p) / len(p)
         cz = sum(q[1] for q in p) / len(p)
         if abs(cx) >= HALF or abs(cz) >= HALF:
             continue
+        gi, gj = min(N - 1, int((cx + HALF) / CELL)), min(N - 1, int((cz + HALF) / CELL))
+        area = abs(sum(p[i][0] * p[i - 1][1] - p[i - 1][0] * p[i][1] for i in range(len(p)))) / 2
+        sea = d_land[gj, gi]
+        elev = h[gj, gi]
+        mroad = main_dist[gj, gi]
+        if bclass in ("temple", "religious", "shrine") or (temple_mask[gj, gi] and area > 60):
+            st = 5
+        elif bclass in ("warehouse", "industrial", "supermarket") or area > 1500:
+            st = 6
+        elif fisher and sea < 160 and area < 600 and min((cx - fx) ** 2 + (cz - fz) ** 2 for fx, fz in fisher) < 70 ** 2:
+            st = 7
+        elif bclass == "hotel" or ((resort_mask[gj, gi] or sea < 150) and area > 300):
+            st = 3
+        elif bclass == "bungalow" or (resort_mask[gj, gi] and area <= 160) or (sea < 90 and area <= 110):
+            st = 2
+        elif mroad < 30 and 30 < area < 700 and elev < 25:
+            st = 1
+        elif elev > 30 and area > 70:
+            st = 4
+        else:
+            st = 0
+        if not known_h:  # typical heights per style
+            r = rng.random()
+            hh = {1: (6.6 if r < 0.55 else 9.8 if r < 0.9 else 13.0), 2: 3.3 + 0.4 * r, 3: hh if area < 800 else 6.6 + 6.5 * r,
+                  4: 3.6 if r < 0.5 else 6.8, 5: 7.5 + 5 * r, 6: 6.0 + 3 * r, 7: 6.4 + 0.6 * r}.get(st, hh)
+        style_count[st] = style_count.get(st, 0) + 1
         c = int((cz + HALF) // CHUNK) * NC + int((cx + HALF) // CHUNK)
-        bld_out[c].append({"h": round(hh, 1), "p": [round(v, 1) for q in p for v in q]})
+        bld_out[c].append({"h": round(hh, 1), "s": st, "p": [round(v, 1) for q in p for v in q]})
         bld_polys.append(p)
         nb += 1
-    print("buildings:", nb)
+    print("buildings:", nb, "styles (0 house, 1 shop, 2 bungalow, 3 hotel, 4 villa, 5 temple, 6 big, 7 fisherman):", style_count)
     bmask = raster_polys(bld_polys, 1) > 0.5
     cls[(rmask > 0) & landb] = ROAD
     cls[bmask & landb] = BUILDING

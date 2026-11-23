@@ -654,11 +654,56 @@ const GRID := 40.0                  # collision grid cell, metres
 var building_grid := {}             # chunk -> {Vector2i cell -> Array of [Rect2, PackedVector2Array]}
 
 # Thai street palette: whitewash, cream, pastel and a few bold colours
+# Building styles (from tools/build_map.py): what Samui streets are made of
+enum { HOUSE, SHOP, BUNGALOW, HOTEL, VILLA, TEMPLE, BIG, FISHER }
+
 const WALLS := [Color(0.95, 0.94, 0.90), Color(0.96, 0.91, 0.78), Color(0.93, 0.86, 0.70), Color(0.97, 0.84, 0.72),
 	Color(0.80, 0.88, 0.90), Color(0.78, 0.90, 0.80), Color(0.96, 0.80, 0.80), Color(0.88, 0.88, 0.86),
 	Color(0.98, 0.93, 0.60), Color(0.85, 0.62, 0.45), Color(0.70, 0.82, 0.92), Color(0.92, 0.92, 0.92)]
 const ROOFS := [Color(0.72, 0.28, 0.16), Color(0.62, 0.18, 0.14), Color(0.84, 0.45, 0.20), Color(0.20, 0.42, 0.50),
 	Color(0.24, 0.48, 0.30), Color(0.45, 0.28, 0.20), Color(0.55, 0.57, 0.60), Color(0.22, 0.32, 0.52)]
+const WOOD := [Color(0.46, 0.30, 0.18), Color(0.40, 0.26, 0.15), Color(0.55, 0.38, 0.22)]
+const FISHER_WOOD := [Color(0.36, 0.23, 0.14), Color(0.30, 0.20, 0.13), Color(0.42, 0.52, 0.48), Color(0.40, 0.46, 0.58)]
+const AWNINGS := [Color(0.75, 0.15, 0.12), Color(0.12, 0.35, 0.65), Color(0.15, 0.5, 0.25), Color(0.92, 0.9, 0.85), Color(0.9, 0.6, 0.1)]
+const GOLD := Color(0.95, 0.72, 0.22)
+
+
+func _wall_colour(style: int, rng: RandomNumberGenerator) -> Color:
+	match style:
+		BUNGALOW:
+			return WOOD[rng.randi() % WOOD.size()] if rng.randf() < 0.55 else Color(0.95, 0.93, 0.88)
+		HOTEL, VILLA:
+			return [Color(0.96, 0.95, 0.92), Color(0.93, 0.90, 0.84), Color(0.90, 0.90, 0.88)][rng.randi() % 3]
+		TEMPLE:
+			return Color(0.97, 0.96, 0.92)
+		BIG:
+			return [Color(0.82, 0.83, 0.84), Color(0.75, 0.82, 0.88), Color(0.88, 0.86, 0.8)][rng.randi() % 3]
+		FISHER:
+			return FISHER_WOOD[rng.randi() % FISHER_WOOD.size()]
+	return WALLS[rng.randi() % WALLS.size()]
+
+
+## Minimum-area rectangle around a polygon (4 corners, counter-clockwise) and how well it fits.
+func _min_rect(poly: PackedVector2Array) -> Array:
+	var best_area := INF
+	var best := PackedVector2Array()
+	for i in poly.size():
+		var e := (poly[(i + 1) % poly.size()] - poly[i])
+		if e.length_squared() < 0.01:
+			continue
+		var ax := e.normalized()
+		var ay := Vector2(-ax.y, ax.x)
+		var mn := Vector2(INF, INF)
+		var mx := Vector2(-INF, -INF)
+		for q in poly:
+			var l := Vector2(q.dot(ax), q.dot(ay))
+			mn = mn.min(l)
+			mx = mx.max(l)
+		var ar := (mx.x - mn.x) * (mx.y - mn.y)
+		if ar < best_area:
+			best_area = ar
+			best = PackedVector2Array([ax * mn.x + ay * mn.y, ax * mx.x + ay * mn.y, ax * mx.x + ay * mx.y, ax * mn.x + ay * mx.y])
+	return [best, absf(_area(poly)) / maxf(best_area, 0.01)]
 
 
 func _build_buildings(c: int, o: Vector3) -> ArrayMesh:
@@ -682,6 +727,7 @@ func _build_buildings(c: int, o: Vector3) -> ArrayMesh:
 			poly[k] = Vector2(p[k * 2], p[k * 2 + 1])
 		if Geometry2D.is_polygon_clockwise(poly):
 			poly.reverse()
+		var style: int = b.get("s", HOUSE)
 		var gmin := INF
 		var gmax := -INF
 		for q in poly:
@@ -690,10 +736,11 @@ func _build_buildings(c: int, o: Vector3) -> ArrayMesh:
 			gmax = maxf(gmax, hh)
 		var bh: float = b["h"]
 		var bottom := gmin - 1.0
-		var ground := gmax                       # facade starts at the highest ground point
+		var ground := gmax
 		var top: float = gmax + bh
-		var wall_col: Color = WALLS[rng.randi() % WALLS.size()]
-		wall_col.a = rng.randf()                 # seed for the facade shader
+		var seed := rng.randi() % 32
+		var wall_col := _wall_colour(style, rng)
+		wall_col.a = (style * 32 + seed) / 255.0        # style + seed for the facade shader
 		var roof_col: Color = ROOFS[rng.randi() % ROOFS.size()]
 		var rect := _rect_of(poly)
 		for gx in range(floori(rect.position.x / GRID), floori(rect.end.x / GRID) + 1):
@@ -703,8 +750,27 @@ func _build_buildings(c: int, o: Vector3) -> ArrayMesh:
 					grid[key] = []
 				grid[key].append([rect, poly])
 		var area := absf(_area(poly))
-		var pitched := cnt == 4 and bh < 8.0 and area < 600.0
-		var wall_top := top if pitched else top + 0.8   # flat roofs get a parapet
+		# rectangular enough for a pitched roof?
+		var mr := _min_rect(poly)
+		var box: PackedVector2Array = mr[0]
+		var boxy: bool = mr[1] > 0.86 and box.size() == 4
+		var pitched := false
+		match style:
+			HOUSE:
+				pitched = boxy and bh < 8.0 and area < 600.0
+			SHOP:
+				pitched = boxy and rng.randf() < 0.3
+			BUNGALOW, TEMPLE, FISHER:
+				pitched = boxy
+			HOTEL:
+				pitched = boxy and area < 2500.0
+			BIG:
+				pitched = boxy
+			VILLA:
+				pitched = boxy and rng.randf() < 0.35
+		var wall_top := top if pitched else top + 0.8     # flat roofs get a parapet
+		var street_k := -1
+		var street_d := INF
 		for k in cnt:
 			var a2: Vector2 = poly[k]
 			var b2: Vector2 = poly[(k + 1) % cnt]
@@ -712,16 +778,19 @@ func _build_buildings(c: int, o: Vector3) -> ArrayMesh:
 			if e.length_squared() < 0.0001:
 				continue
 			var nn := Vector3(e.y, 0, -e.x).normalized()
-			var shade := 0.86 + 0.14 * absf(nn.x)
+			var shade := 0.88 + 0.12 * absf(nn.x)
 			var wc := Color(wall_col.r * shade, wall_col.g * shade, wall_col.b * shade, wall_col.a)
 			walls.wall(Vector3(a2.x - o.x, bottom, a2.y - o.z), Vector3(b2.x - o.x, bottom, b2.y - o.z),
 				wall_top, ground, nn, wc, Vector2(e.length(), bh))
+			if e.length() > 3.0:
+				var mid := (a2 + b2) * 0.5 + Vector2(nn.x, nn.z) * 4.0
+				var rd := road_dist(mid.x, mid.y)
+				if rd < street_d:
+					street_d = rd
+					street_k = k
+		# roof
 		if pitched:
-			var sides := [poly[0].distance_to(poly[1]), poly[1].distance_to(poly[2])]
-			if maxf(sides[0], sides[1]) / maxf(minf(sides[0], sides[1]), 0.1) < 1.35 and rng.randf() < 0.6:
-				_hip_roof(roofs, poly, top, o, roof_col)
-			else:
-				_gable_roof(roofs, poly, top, o, roof_col)
+			_roof_for(roofs, style, box, top, o, roof_col, area, rng)
 		else:
 			var tri := Geometry2D.triangulate_polygon(poly)
 			var rc := Color(0.58, 0.57, 0.54).lerp(Color(0.7, 0.68, 0.64), rng.randf())
@@ -729,17 +798,56 @@ func _build_buildings(c: int, o: Vector3) -> ArrayMesh:
 				roofs.tri(Vector3(poly[tri[t]].x - o.x, top, poly[tri[t]].y - o.z),
 					Vector3(poly[tri[t + 1]].x - o.x, top, poly[tri[t + 1]].y - o.z),
 					Vector3(poly[tri[t + 2]].x - o.x, top, poly[tri[t + 2]].y - o.z), Vector3.UP, rc)
-			# rooftop water tank or AC unit
-			if area > 40.0 and rng.randf() < 0.45:
+			if area > 40.0 and rng.randf() < 0.5:
 				var cpos := _centroid(poly) + Vector2(rng.randf_range(-1.5, 1.5), rng.randf_range(-1.5, 1.5))
 				if Geometry2D.is_point_in_polygon(cpos, poly):
 					var tank := Color(0.15, 0.3, 0.6) if rng.randf() < 0.5 else Color(0.85, 0.85, 0.82)
 					_box(roofs, Vector3(cpos.x - o.x, top + 0.75, cpos.y - o.z), Vector3(0.6, 0.75, 0.6), tank)
+			if style == VILLA:
+				_villa_extras(roofs, poly, top, o, rng)
+		# street details: awnings on shops, AC units everywhere in town
+		if street_k >= 0 and street_d < 8.0 and (style == SHOP or style == FISHER):
+			_awning(roofs, poly[street_k], poly[(street_k + 1) % cnt], ground, o, AWNINGS[rng.randi() % AWNINGS.size()])
+		if style in [HOUSE, SHOP, HOTEL, FISHER] and cnt >= 3:
+			var k2 := rng.randi() % cnt
+			var a3: Vector2 = poly[k2]
+			var b3: Vector2 = poly[(k2 + 1) % cnt]
+			if a3.distance_to(b3) > 3.0 and bh > 3.0:
+				var e3 := (b3 - a3).normalized()
+				var n3 := Vector2(e3.y, -e3.x)
+				var at := a3.lerp(b3, rng.randf_range(0.25, 0.75)) + n3 * 0.3
+				_box(roofs, Vector3(at.x - o.x, ground + minf(bh - 1.0, 2.6 + 3.2 * (rng.randi() % 2)), at.y - o.z),
+					Vector3(0.4, 0.28, 0.4), Color(0.9, 0.9, 0.88))
 	building_grid[c] = grid
 	var m := ArrayMesh.new()
 	walls.add_to(m, building_wall_mat)
 	roofs.add_to(m, building_mat)
 	return m if m.get_surface_count() > 0 else null
+
+
+func _roof_for(mb: MeshBuf, style: int, box: PackedVector2Array, top: float, o: Vector3, col: Color, area: float, rng: RandomNumberGenerator) -> void:
+	match style:
+		BUNGALOW:
+			var thatch := rng.randf() < 0.4
+			var rc: Color = Color(0.58, 0.45, 0.28) if thatch else [Color(0.42, 0.22, 0.12), Color(0.62, 0.2, 0.12), Color(0.2, 0.25, 0.28)][rng.randi() % 3]
+			_gable(mb, box, top, 0.62, 1.0, o, rc, Color(0.45, 0.3, 0.18), rc * 0.6)
+		TEMPLE:
+			_temple_roof(mb, box, top, o)
+		HOTEL:
+			var tiles: Color = [Color(0.72, 0.30, 0.16), Color(0.55, 0.20, 0.14), Color(0.45, 0.28, 0.2)][rng.randi() % 3]
+			_hip(mb, box, top, 0.3, 1.0, o, tiles)
+		BIG:
+			_gable(mb, box, top, 0.12, 0.5, o, [Color(0.6, 0.62, 0.64), Color(0.3, 0.42, 0.6), Color(0.65, 0.3, 0.2)][rng.randi() % 3], Color(0.8, 0.8, 0.78), Color(0.5, 0.5, 0.5))
+		FISHER:
+			_gable(mb, box, top, 0.3, 0.7, o, [Color(0.5, 0.3, 0.2), Color(0.45, 0.45, 0.42), Color(0.55, 0.22, 0.15)][rng.randi() % 3], Color(0.36, 0.24, 0.15), Color(0.3, 0.3, 0.3))
+		VILLA:
+			_hip(mb, box, top, 0.25, 0.9, o, Color(0.3, 0.3, 0.32))
+		_:
+			var sides := [box[0].distance_to(box[1]), box[1].distance_to(box[2])]
+			if maxf(sides[0], sides[1]) / maxf(minf(sides[0], sides[1]), 0.1) < 1.35 and rng.randf() < 0.6:
+				_hip(mb, box, top, 0.35, 0.6, o, col)
+			else:
+				_gable(mb, box, top, 0.38, 0.6, o, col, Color(0.93, 0.91, 0.86), col * 0.6)
 
 
 func _free_buildings(c: int) -> void:
@@ -780,61 +888,164 @@ func _box(mb: MeshBuf, c: Vector3, h: Vector3, col: Color) -> void:
 		mb.quad(c + nrm - side - y, c + nrm + side - y, c + nrm + side + y, c + nrm - side + y, nrm.normalized(), col * 0.85)
 
 
-## Gable roof with eaves: ridge along the longer side, overhang all round.
-func _gable_roof(mb: MeshBuf, poly: PackedVector2Array, top: float, o: Vector3, col: Color) -> void:
-	var p := poly
+func _v3(q: Vector2, y: float, o: Vector3) -> Vector3:
+	return Vector3(q.x - o.x, y, q.y - o.z)
+
+
+## Gable roof over a rectangle: ridge along the long side, eaves overhang `ov`,
+## rise = pitch * span. Gable triangles in `gable_col`, ridge cap in `ridge_col`.
+func _gable(mb: MeshBuf, rect: PackedVector2Array, top: float, pitch: float, ov: float, o: Vector3,
+		col: Color, gable_col: Color, ridge_col: Color, trim := Color(0, 0, 0, 0)) -> void:
+	var p := rect
 	if p[0].distance_to(p[1]) > p[1].distance_to(p[2]):
-		p = PackedVector2Array([poly[1], poly[2], poly[3], poly[0]])
-	# p0-p1 and p2-p3 are the short (gable) sides
-	var ov := 0.6
-	var ctr := _centroid(p)
+		p = PackedVector2Array([rect[1], rect[2], rect[3], rect[0]])
+	# p0-p1 and p2-p3 are the short (gable) ends
 	var along := ((p[2] + p[3]) * 0.5 - (p[0] + p[1]) * 0.5).normalized()
-	var q := PackedVector2Array()
-	for pt in p:
-		var d := pt - ctr
-		var across := d - along * d.dot(along)
-		q.append(pt + along * signf(d.dot(along)) * ov + across.normalized() * ov)
+	var across := (p[1] - p[0]).normalized()
 	var span := p[0].distance_to(p[1])
-	var rh := clampf(span * 0.38, 1.0, 4.5)            # steep Thai-style pitch
+	var rh := clampf(span * pitch, 0.4, 7.0)
 	var drop := ov * rh / (span * 0.5)
+	var q := PackedVector2Array([p[0] - along * ov - across * ov, p[1] - along * ov + across * ov,
+		p[2] + along * ov + across * ov, p[3] + along * ov - across * ov])
 	var m1 := (q[0] + q[1]) * 0.5
 	var m2 := (q[2] + q[3]) * 0.5
-	var R1 := Vector3(m1.x - o.x, top + rh, m1.y - o.z)
-	var R2 := Vector3(m2.x - o.x, top + rh, m2.y - o.z)
+	var R1 := _v3(m1, top + rh, o)
+	var R2 := _v3(m2, top + rh, o)
 	var P: Array[Vector3] = []
 	for pt in q:
-		P.append(Vector3(pt.x - o.x, top - drop, pt.y - o.z))
+		P.append(_v3(pt, top - drop, o))
 	for f in [[P[1], P[2], R2, R1], [P[3], P[0], R1, R2]]:
 		var nn: Vector3 = (f[1] - f[0]).cross(f[3] - f[0]).normalized()
 		if nn.y < 0: nn = -nn
 		mb.quad(f[0], f[1], f[2], f[3], nn, col * (0.78 + 0.22 * nn.y))
-	# gable triangles (wall colour is unknown here, keep them light)
-	var g1 := [Vector3(p[0].x - o.x, top, p[0].y - o.z), Vector3(p[1].x - o.x, top, p[1].y - o.z), Vector3(((p[0] + p[1]) * 0.5).x - o.x, top + rh - drop, ((p[0] + p[1]) * 0.5).y - o.z)]
-	var g2 := [Vector3(p[2].x - o.x, top, p[2].y - o.z), Vector3(p[3].x - o.x, top, p[3].y - o.z), Vector3(((p[2] + p[3]) * 0.5).x - o.x, top + rh - drop, ((p[2] + p[3]) * 0.5).y - o.z)]
+		if trim.a > 0.0:   # coloured eave band
+			var e0: Vector3 = f[0] + (f[3] - f[0]).normalized() * 0.45
+			var e1: Vector3 = f[1] + (f[2] - f[1]).normalized() * 0.45
+			mb.quad(f[0] + Vector3(0, 0.02, 0), f[1] + Vector3(0, 0.02, 0), e1 + Vector3(0, 0.02, 0), e0 + Vector3(0, 0.02, 0), nn, trim)
+	var g1 := [_v3(p[0], top, o), _v3(p[1], top, o), _v3((p[0] + p[1]) * 0.5, top + rh - drop, o)]
+	var g2 := [_v3(p[2], top, o), _v3(p[3], top, o), _v3((p[2] + p[3]) * 0.5, top + rh - drop, o)]
 	for tr in [g1, g2]:
-		mb.tri(tr[0], tr[1], tr[2], (tr[1] - tr[0]).cross(tr[2] - tr[0]).normalized(), Color(0.93, 0.91, 0.86))
-	# ridge cap
-	mb.quad(R1 + Vector3(0, 0.08, 0), R2 + Vector3(0, 0.08, 0), R2 - Vector3(0, 0.05, 0), R1 - Vector3(0, 0.05, 0), Vector3.UP, col * 0.6)
+		mb.tri(tr[0], tr[1], tr[2], (tr[1] - tr[0]).cross(tr[2] - tr[0]).normalized(), gable_col)
+	mb.quad(R1 + Vector3(0, 0.08, 0), R2 + Vector3(0, 0.08, 0), R2 - Vector3(0, 0.05, 0), R1 - Vector3(0, 0.05, 0), Vector3.UP, ridge_col)
 
 
-## Hip roof (pyramid-like) for squarish houses.
-func _hip_roof(mb: MeshBuf, poly: PackedVector2Array, top: float, o: Vector3, col: Color) -> void:
-	var ctr := _centroid(poly)
-	var span := minf(poly[0].distance_to(poly[1]), poly[1].distance_to(poly[2]))
-	var rh := clampf(span * 0.35, 1.0, 4.0)
-	var apex := Vector3(ctr.x - o.x, top + rh, ctr.y - o.z)
-	var ov := 0.6
+## Hip roof over a rectangle.
+func _hip(mb: MeshBuf, rect: PackedVector2Array, top: float, pitch: float, ov: float, o: Vector3, col: Color) -> void:
+	var p := rect
+	if p[0].distance_to(p[1]) > p[1].distance_to(p[2]):
+		p = PackedVector2Array([rect[1], rect[2], rect[3], rect[0]])
+	var along := ((p[2] + p[3]) * 0.5 - (p[0] + p[1]) * 0.5).normalized()
+	var across := (p[1] - p[0]).normalized()
+	var span := p[0].distance_to(p[1])
+	var length := p[1].distance_to(p[2])
+	var rh := clampf(span * pitch, 0.5, 6.0)
+	var q := PackedVector2Array([p[0] - along * ov - across * ov, p[1] - along * ov + across * ov,
+		p[2] + along * ov + across * ov, p[3] + along * ov - across * ov])
+	var ctr := _centroid(p)
+	var half_ridge := maxf(0.0, (length - span) * 0.5)
+	var r1 := _v3(ctr - along * half_ridge, top + rh, o)
+	var r2 := _v3(ctr + along * half_ridge, top + rh, o)
+	var drop := ov * rh / (span * 0.5)
 	var P: Array[Vector3] = []
-	for pt in poly:
-		var d := (pt - ctr)
-		var q := pt + d.normalized() * ov * 1.4
-		P.append(Vector3(q.x - o.x, top - 0.25, q.y - o.z))
-	for k in P.size():
-		var a: Vector3 = P[k]
-		var b: Vector3 = P[(k + 1) % P.size()]
-		var nn := (b - a).cross(apex - a).normalized()
+	for pt in q:
+		P.append(_v3(pt, top - drop, o))
+	var faces := [[P[0], P[1], r1], [P[2], P[3], r2], [P[1], P[2], r2, r1], [P[3], P[0], r1, r2]]
+	for f in faces:
+		var nn: Vector3 = (f[1] - f[0]).cross(f[2] - f[0]).normalized()
 		if nn.y < 0: nn = -nn
-		mb.tri(a, b, apex, nn, col * (0.78 + 0.22 * nn.y))
+		var cc := col * (0.78 + 0.22 * nn.y)
+		if f.size() == 3:
+			mb.tri(f[0], f[1], f[2], nn, cc)
+		else:
+			mb.quad(f[0], f[1], f[2], f[3], nn, cc)
+
+
+## Thai temple (ubosot) roof: three stacked steep gables, orange tiles with green
+## eave bands, red-and-gold gable boards and golden chofa horns at the ridge ends.
+func _temple_roof(mb: MeshBuf, rect: PackedVector2Array, top: float, o: Vector3) -> void:
+	var p := rect
+	if p[0].distance_to(p[1]) > p[1].distance_to(p[2]):
+		p = PackedVector2Array([rect[1], rect[2], rect[3], rect[0]])
+	var ctr := _centroid(p)
+	var span := p[0].distance_to(p[1])
+	var base := top
+	var tiles := [Color(0.85, 0.35, 0.1), Color(0.75, 0.15, 0.1), Color(0.85, 0.35, 0.1)]
+	for k in 3:
+		var s_along := 1.0 - 0.16 * k
+		var s_across := 1.0 - 0.22 * k
+		var r := PackedVector2Array()
+		for pt in p:
+			var d := pt - ctr
+			var al := ((p[2] + p[3]) * 0.5 - (p[0] + p[1]) * 0.5).normalized()
+			var a_part := al * d.dot(al)
+			r.append(ctr + a_part * s_along + (d - a_part) * s_across)
+		_gable(mb, r, base, 0.75, 0.9 if k == 0 else 0.4, o, tiles[k], Color(0.7, 0.12, 0.08), GOLD, Color(0.12, 0.45, 0.25))
+		var rh := clampf(span * s_across * 0.75, 0.4, 7.0)
+		# chofa: golden horns at both ridge ends
+		var al2 := ((r[2] + r[3]) * 0.5 - (r[0] + r[1]) * 0.5).normalized()
+		for end in [(r[0] + r[1]) * 0.5 - al2 * (0.9 if k == 0 else 0.4), (r[2] + r[3]) * 0.5 + al2 * (0.9 if k == 0 else 0.4)]:
+			var tip := _v3(end, base + rh + 1.0, o)
+			_box(mb, tip - Vector3(0, 0.5, 0), Vector3(0.12, 0.55, 0.12), GOLD)
+		base += rh * 0.42
+	# golden spire on top of the highest tier
+	_box(mb, _v3(ctr, base + span * 0.3, o), Vector3(0.15, 1.0, 0.15), GOLD)
+
+
+func _awning(mb: MeshBuf, a: Vector2, b: Vector2, ground: float, o: Vector3, col: Color) -> void:
+	var e := (b - a)
+	var n := Vector2(e.y, -e.x).normalized()
+	var a2 := a + e.normalized() * 0.3
+	var b2 := b - e.normalized() * 0.3
+	var y0 := ground + 3.0
+	var y1 := ground + 2.55
+	var A := _v3(a2, y0, o)
+	var B := _v3(b2, y0, o)
+	var C := _v3(b2 + n * 1.7, y1, o)
+	var D := _v3(a2 + n * 1.7, y1, o)
+	var nn := (B - A).cross(D - A).normalized()
+	if nn.y < 0: nn = -nn
+	mb.quad(A, B, C, D, nn, col)
+	# front valance
+	mb.quad(D, C, C - Vector3(0, 0.25, 0), D - Vector3(0, 0.25, 0), Vector3(n.x, 0, n.y), col * 0.85)
+
+
+## Villa extras: a pool on the downhill side if there is room, and a timber sun deck.
+func _villa_extras(mb: MeshBuf, poly: PackedVector2Array, top: float, o: Vector3, rng: RandomNumberGenerator) -> void:
+	var ctr := _centroid(poly)
+	var gx := height_at(ctr.x + 8, ctr.y) - height_at(ctr.x - 8, ctr.y)
+	var gz := height_at(ctr.x, ctr.y + 8) - height_at(ctr.x, ctr.y - 8)
+	var down := Vector2(-gx, -gz)
+	if down.length() < 0.05 or rng.randf() < 0.3:
+		return
+	down = down.normalized()
+	var r := _rect_of(poly)
+	var reach := maxf(r.size.x, r.size.y) * 0.5 + 4.5
+	var pc := ctr + down * reach
+	if is_blocked(pc.x, pc.y) or road_dist(pc.x, pc.y) < 3.0:
+		return
+	var y := height_at(ctr.x, ctr.y) + 0.15
+	var side := Vector2(-down.y, down.x)
+	var w := 3.2
+	var l := 6.5
+	var corners := [pc - side * l * 0.5 - down * w * 0.5, pc + side * l * 0.5 - down * w * 0.5,
+		pc + side * l * 0.5 + down * w * 0.5, pc - side * l * 0.5 + down * w * 0.5]
+	# deck around, then water
+	var deck := Color(0.62, 0.45, 0.3)
+	var big := []
+	for cpt in corners:
+		big.append(pc + (cpt - pc) * 1.45)
+	mb.quad(_v3(big[0], y, o), _v3(big[1], y, o), _v3(big[2], y, o), _v3(big[3], y, o), Vector3.UP, deck)
+	mb.quad(_v3(corners[0], y + 0.03, o), _v3(corners[1], y + 0.03, o), _v3(corners[2], y + 0.03, o), _v3(corners[3], y + 0.03, o),
+		Vector3.UP, Color(0.15, 0.62, 0.78))
+	# retaining wall under the deck on slopes
+	var low := height_at(pc.x, pc.y)
+	if low < y - 0.3:
+		for i in 4:
+			var a: Vector2 = big[i]
+			var b: Vector2 = big[(i + 1) % 4]
+			var e := (b - a)
+			var nn := Vector3(e.y, 0, -e.x).normalized()
+			mb.quad(_v3(a, low - 0.5, o), _v3(b, low - 0.5, o), _v3(b, y, o), _v3(a, y, o), nn, Color(0.85, 0.84, 0.8))
 
 
 # ------------------------------------------------------------ static scenery
