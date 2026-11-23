@@ -21,7 +21,7 @@ func _ready() -> void:
 	place_label = _label(Vector2(24, 18), 30, Control.PRESET_TOP_LEFT)
 	info_label = _label(Vector2(24, 60), 16, Control.PRESET_TOP_LEFT)
 	help_label = _label(Vector2(24, -40), 15, Control.PRESET_BOTTOM_LEFT)
-	help_label.text = "W/S — газ/тормоз   A/D — руль   Shift — турбо   M — карта острова   C — камера   R — на дорогу"
+	help_label.text = "W/S — газ/тормоз   A/D — руль   Shift — турбо   M — карта   C — камера   R — на дорогу   Q — качество"
 	msg_label = _label(Vector2(0, 120), 24, Control.PRESET_TOP_WIDE)
 	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	minimap = MiniMap.new()

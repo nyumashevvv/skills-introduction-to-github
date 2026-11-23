@@ -6,9 +6,9 @@ extends Node3D
 ## Which plants grow where comes from the land classes (satellite + OSM).
 
 const CELL := 150.0
-const NEAR_R := 330.0       # full models (and shadows)
-const MID_R := 1800.0       # simplified models
-const FAR_R := 3600.0       # canopy blobs
+var NEAR_R := 330.0         # full models (and shadows)
+var MID_R := 1800.0         # simplified models
+var FAR_R := 3600.0         # canopy blobs
 const GRASS_CELL := 30.0
 const GRASS_R := 75.0
 
@@ -60,6 +60,17 @@ func _ready() -> void:
 			mesh.surface_set_material(s, mat)
 		meshes[String(mi.name)] = mesh
 	scene.free()
+
+
+## 0 low, 1 medium, 2 high: plant density and view ranges. Rebuilds the cells.
+func set_quality(level: int) -> void:
+	density = [0.45, 0.75, 1.0][level]
+	NEAR_R = [200.0, 270.0, 330.0][level]
+	MID_R = [1000.0, 1400.0, 1800.0][level]
+	FAR_R = [2200.0, 2900.0, 3600.0][level]
+	for key in _cells.keys():
+		_free_cell(key)
+	_scan_t = 1.0
 
 
 func set_focus(p: Vector3) -> void:

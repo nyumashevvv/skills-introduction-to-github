@@ -6,13 +6,16 @@ var scooter: Scooter
 var camera: Camera3D
 var hud: Hud
 var cam_mode := 0
+var quality := 2
+var env: Environment
+var sun: DirectionalLight3D
 var _cam_pos := Vector3.ZERO
 var _shot := {}   # debug: --shot=file.png --frames=N --pos=x,z --cam=N --gas --map
 var _frame := 0
 
 const ACTIONS := {
 	"gas": [KEY_W, KEY_UP], "brake": [KEY_S, KEY_DOWN], "left": [KEY_A, KEY_LEFT], "right": [KEY_D, KEY_RIGHT],
-	"turbo": [KEY_SHIFT], "map": [KEY_M, KEY_TAB], "camera": [KEY_C], "reset": [KEY_R],
+	"turbo": [KEY_SHIFT], "map": [KEY_M, KEY_TAB], "camera": [KEY_C], "reset": [KEY_R], "quality": [KEY_Q],
 }
 
 
@@ -58,6 +61,8 @@ func _ready() -> void:
 		scooter.teleport(float(xz[0]), float(xz[1]))
 		_cam_pos = scooter.position + Vector3(0, 3, 6)
 	cam_mode = int(_shot.get("cam", "0"))
+	if _shot.has("quality"):
+		set_quality(int(_shot["quality"]))
 	if _shot.has("gas"):
 		Input.action_press("gas")
 	if _shot.has("map"):
@@ -66,7 +71,7 @@ func _ready() -> void:
 
 func _setup_environment() -> void:
 	# Forward+ look for a tropical afternoon: high sun, humid haze, soft AO
-	var env := Environment.new()
+	env = Environment.new()
 	var sky_mat := ProceduralSkyMaterial.new()
 	sky_mat.sky_top_color = Color(0.16, 0.42, 0.82)
 	sky_mat.sky_horizon_color = Color(0.66, 0.80, 0.93)
@@ -103,7 +108,7 @@ func _setup_environment() -> void:
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
-	var sun := DirectionalLight3D.new()
+	sun = DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-55, -35, 0)
 	sun.light_energy = 1.5
 	sun.light_color = Color(1, 0.95, 0.86)
@@ -120,8 +125,12 @@ func _process(dt: float) -> void:
 		_frame += 1
 		if _frame == int(_shot.get("frames", "60")):
 			get_viewport().get_texture().get_image().save_png(_shot["shot"])
-			print("speed ", scooter.speed, " pos ", scooter.position, " fps ", Engine.get_frames_per_second())
+			print("speed ", scooter.speed, " pos ", scooter.position, " fps ", Engine.get_frames_per_second(),
+				" triangles ", RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_PRIMITIVES_IN_FRAME),
+				" draw calls ", RenderingServer.get_rendering_info(RenderingServer.RENDERING_INFO_TOTAL_DRAW_CALLS_IN_FRAME))
 			get_tree().quit()
+	if Input.is_action_just_pressed("quality"):
+		set_quality((quality + 2) % 3)
 	if Input.is_action_just_pressed("camera"):
 		cam_mode = (cam_mode + 1) % 3
 	var f := scooter.forward()
@@ -146,3 +155,14 @@ func _process(dt: float) -> void:
 	_cam_pos.y = maxf(_cam_pos.y, maxf(ground, 0.0) + 1.0)
 	camera.position = _cam_pos
 	camera.look_at(target, Vector3.UP)
+
+
+## Q cycles quality: high -> low -> medium -> high.
+func set_quality(level: int) -> void:
+	quality = level
+	world.vegetation.set_quality(level)
+	env.ssao_enabled = level >= 1
+	env.glow_enabled = level >= 1
+	sun.directional_shadow_max_distance = [90.0, 150.0, 220.0][level]
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS if level == 0 else DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+	hud.show_message("Качество: " + ["низкое", "среднее", "высокое"][level])
