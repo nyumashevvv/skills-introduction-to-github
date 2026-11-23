@@ -65,35 +65,52 @@ func _ready() -> void:
 
 
 func _setup_environment() -> void:
+	# Forward+ look for a tropical afternoon: high sun, humid haze, soft AO
 	var env := Environment.new()
 	var sky_mat := ProceduralSkyMaterial.new()
-	sky_mat.sky_top_color = Color(0.22, 0.48, 0.85)
-	sky_mat.sky_horizon_color = Color(0.72, 0.84, 0.95)
-	sky_mat.ground_horizon_color = Color(0.72, 0.84, 0.95)
-	sky_mat.ground_bottom_color = Color(0.2, 0.35, 0.45)
+	sky_mat.sky_top_color = Color(0.16, 0.42, 0.82)
+	sky_mat.sky_horizon_color = Color(0.66, 0.80, 0.93)
+	sky_mat.ground_horizon_color = Color(0.66, 0.80, 0.93)
+	sky_mat.ground_bottom_color = Color(0.18, 0.3, 0.4)
 	sky_mat.sun_angle_max = 20
+	sky_mat.sky_energy_multiplier = 1.0
 	var sky := Sky.new()
 	sky.sky_material = sky_mat
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = Color(0.62, 0.68, 0.78)
-	env.ambient_light_energy = 0.5
-	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	env.tonemap_white = 1.6
+	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.ambient_light_sky_contribution = 0.35
+	env.ambient_light_color = Color(0.78, 0.78, 0.76)
+	env.ambient_light_energy = 0.7
+	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
+	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_exposure = 0.78
+	env.tonemap_white = 6.0
+	env.ssao_enabled = true
+	env.ssao_radius = 1.2
+	env.ssao_intensity = 1.6
+	env.glow_enabled = true
+	env.glow_intensity = 0.35
+	env.glow_bloom = 0.04
 	env.fog_enabled = true
-	env.fog_light_color = Color(0.72, 0.82, 0.92)
-	env.fog_density = 0.00006
+	env.fog_light_color = Color(0.70, 0.80, 0.90)
+	env.fog_density = 0.00012
+	env.fog_aerial_perspective = 0.6
 	env.fog_sky_affect = 0.0
+	env.adjustment_enabled = true
+	env.adjustment_saturation = 1.12
+	env.adjustment_contrast = 1.05
 	var we := WorldEnvironment.new()
 	we.environment = env
 	add_child(we)
 	var sun := DirectionalLight3D.new()
-	sun.rotation_degrees = Vector3(-52, -35, 0)
-	sun.light_energy = 1.05
-	sun.light_color = Color(1, 0.96, 0.88)
+	sun.rotation_degrees = Vector3(-55, -35, 0)
+	sun.light_energy = 1.5
+	sun.light_color = Color(1, 0.95, 0.86)
 	sun.shadow_enabled = true
-	sun.directional_shadow_max_distance = 160
+	sun.directional_shadow_max_distance = 220
+	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
+	sun.shadow_blur = 1.5
 	add_child(sun)
 
 

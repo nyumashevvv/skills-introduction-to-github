@@ -1,7 +1,7 @@
 class_name World
 extends Node3D
 ## Koh Samui at 1:1 scale: heightfield terrain streamed in chunks with LOD,
-## plus roads, buildings and palms built around the player.
+## plus roads and buildings built around the player (plants: vegetation.gd).
 
 const N := 2400            # heightfield samples per side
 const CELL := 10.0         # metres between samples
@@ -18,6 +18,10 @@ enum { WATER, SAND, GRASS, JUNGLE, URBAN, ROAD, BUILDING, ROCK }
 
 var heights: PackedFloat32Array
 var classes: PackedByteArray
+var road_distance: PackedByteArray   # 2.5 m grid, 0.25 m units, +8 m offset
+const RD_N := 9600
+const RD_STEP := 2.5
+const RD_OFF := 1.25
 var roads_data: Array
 var buildings_data: Array
 var places: Array = []
@@ -30,7 +34,7 @@ var building_wall_mat: ShaderMaterial
 var wire_mat: StandardMaterial3D
 var pole_mesh: Mesh
 var transformer_mesh: Mesh
-var palm_mesh: ArrayMesh
+var vegetation: Vegetation
 
 var _indices := {}          # step -> PackedInt32Array
 var _chunks := []           # per chunk: {node, lod, meshes, content}
@@ -43,7 +47,6 @@ var _since_scan := 1.0
 func _ready() -> void:
 	_load_data()
 	_make_materials()
-	palm_mesh = Props.make_palm()
 	for c in NC * NC:
 		var n := Node3D.new()
 		n.name = "C%d" % c
@@ -57,6 +60,9 @@ func _ready() -> void:
 		_set_lod(c, LODS.size() - 1)
 	if not OS.get_cmdline_user_args().has("--nowater"):
 		_add_water()
+	vegetation = Vegetation.new()
+	vegetation.world = self
+	add_child(vegetation)
 	_add_places()
 
 
@@ -65,6 +71,8 @@ func _load_data() -> void:
 	heights = f.get_buffer(f.get_length()).decompress(N * N * 4, FileAccess.COMPRESSION_DEFLATE).to_float32_array()
 	f = FileAccess.open("res://data/landclass.bin", FileAccess.READ)
 	classes = f.get_buffer(f.get_length()).decompress(N * N, FileAccess.COMPRESSION_DEFLATE)
+	f = FileAccess.open("res://data/roaddist.bin", FileAccess.READ)
+	road_distance = f.get_buffer(f.get_length()).decompress(RD_N * RD_N, FileAccess.COMPRESSION_DEFLATE)
 	roads_data = JSON.parse_string(FileAccess.get_file_as_string("res://data/roads.json"))
 	buildings_data = JSON.parse_string(FileAccess.get_file_as_string("res://data/buildings.json"))
 	places = JSON.parse_string(FileAccess.get_file_as_string("res://data/places.json"))
@@ -125,6 +133,20 @@ func height_at(x: float, z: float) -> float:
 	return d + (c - d) * (1.0 - fx) + (b - d) * (1.0 - fz)
 
 
+## Signed metres from (x, z) to the nearest road edge: negative on the road, up to 55 m.
+func road_dist(x: float, z: float) -> float:
+	var gx := clampf((x + HALF - RD_OFF) / RD_STEP, 0.0, RD_N - 1.001)
+	var gz := clampf((z + HALF - RD_OFF) / RD_STEP, 0.0, RD_N - 1.001)
+	var i := int(gx)
+	var j := int(gz)
+	var fx := gx - i
+	var fz := gz - j
+	var k := j * RD_N + i
+	var a := lerpf(road_distance[k], road_distance[k + 1], fx)
+	var b := lerpf(road_distance[k + RD_N], road_distance[k + RD_N + 1], fx)
+	return lerpf(a, b, fz) * 0.25 - 8.0
+
+
 func class_at(x: float, z: float) -> int:
 	var i := clampi(int(round((x + HALF) / CELL)), 0, N - 1)
 	var j := clampi(int(round((z + HALF) / CELL)), 0, N - 1)
@@ -173,6 +195,8 @@ func nearest_road(x: float, z: float, main_only := false) -> Dictionary:
 # ------------------------------------------------------------ streaming
 func set_focus(p: Vector3) -> void:
 	_focus = p
+	if vegetation:
+		vegetation.set_focus(p)
 
 
 func _process(delta: float) -> void:
@@ -241,6 +265,8 @@ func warm_up(p: Vector3) -> void:
 		if job[0] < 900.0:
 			_run_job(job)
 	_scan()
+	if vegetation:
+		vegetation.warm_up(p)
 
 
 func _set_lod(c: int, lod: int) -> void:
@@ -337,9 +363,6 @@ func _build_content(c: int) -> void:
 		root.add_child(mi)
 	if not pole_runs.is_empty():
 		root.add_child(_build_poles(pole_runs))
-	var palms := _build_palms(c, origin)
-	if palms:
-		root.add_child(palms)
 
 
 # ------------------------------------------------------------ roads
@@ -812,46 +835,6 @@ func _hip_roof(mb: MeshBuf, poly: PackedVector2Array, top: float, o: Vector3, co
 		var nn := (b - a).cross(apex - a).normalized()
 		if nn.y < 0: nn = -nn
 		mb.tri(a, b, apex, nn, col * (0.78 + 0.22 * nn.y))
-
-
-const PALM_P := [0.0, 0.05, 0.10, 0.45, 0.04, 0.0, 0.0, 0.0]
-
-
-func _build_palms(c: int, o: Vector3) -> MultiMeshInstance3D:
-	var rng := RandomNumberGenerator.new()
-	rng.seed = c * 104729 + 7
-	var xf := []
-	var step := 13.0
-	var cells := int(CHUNK / step)
-	for b in cells:
-		for a in cells:
-			var x := o.x + (a + rng.randf()) * step
-			var z := o.z + (b + rng.randf()) * step
-			var cl := class_at(x, z)
-			if rng.randf() >= PALM_P[cl]:
-				continue
-			var y := height_at(x, z)
-			if y < 0.6:
-				continue
-			# keep palms off roads and buildings nearby
-			if class_at(x + 6, z) == ROAD or class_at(x - 6, z) == ROAD or class_at(x, z + 6) == ROAD or class_at(x, z - 6) == ROAD:
-				continue
-			var s := rng.randf_range(0.75, 1.3)
-			var basis := Basis(Vector3.UP, rng.randf() * TAU).scaled(Vector3(s, s, s))
-			basis = Basis(Vector3(rng.randf() - 0.5, 0, rng.randf() - 0.5).normalized(), rng.randf() * 0.12) * basis
-			xf.append(Transform3D(basis, Vector3(x - o.x, y - 0.2, z - o.z)))
-	if xf.is_empty():
-		return null
-	var mm := MultiMesh.new()
-	mm.transform_format = MultiMesh.TRANSFORM_3D
-	mm.mesh = palm_mesh
-	mm.instance_count = xf.size()
-	for k in xf.size():
-		mm.set_instance_transform(k, xf[k])
-	var mmi := MultiMeshInstance3D.new()
-	mmi.multimesh = mm
-	mmi.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	return mmi
 
 
 # ------------------------------------------------------------ static scenery

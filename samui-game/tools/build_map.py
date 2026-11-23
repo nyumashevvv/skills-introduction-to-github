@@ -524,6 +524,26 @@ def main():
     with open(os.path.join(a.out, "landclass.bin"), "wb") as f:
         f.write(zlib.compress(cls.tobytes(), 9))
 
+    # signed distance to the nearest road edge, 2.5 m grid, 0.25 m units, offset 8 m (for placing plants, poles)
+    F = 4
+    img = Image.new("1", (N * F, N * F), 0)
+    d = ImageDraw.Draw(img)
+    for pts, width, kind, name in roads:
+        d.line([((x + HALF) / CELL * F, (z + HALF) / CELL * F) for x, z in pts], fill=1, width=max(1, int(round(width / CELL * F))))
+        for x, z in pts:  # round joints
+            r = width / 2 / CELL * F
+            u, v = (x + HALF) / CELL * F, (z + HALF) / CELL * F
+            d.ellipse([u - r, v - r, u + r, v + r], fill=1)
+    on = np.asarray(img)
+    # signed distance: negative on the road, so it interpolates cleanly across road edges
+    dist = ndimage.distance_transform_edt(~on).astype(np.float32) * (CELL / F)
+    dist -= ndimage.distance_transform_edt(on).astype(np.float32) * (CELL / F)
+    rd = dist                                   # 2.5 m samples
+    rdq = np.clip(np.round((rd + 8.0) * 4), 0, 255).astype(np.uint8)
+    with open(os.path.join(a.out, "roaddist.bin"), "wb") as f:
+        f.write(zlib.compress(rdq.tobytes(), 9))
+    del on, dist
+
     with open(os.path.join(a.out, "roads.json"), "w") as f:
         json.dump(road_out, f, separators=(",", ":"))
     with open(os.path.join(a.out, "buildings.json"), "w") as f:

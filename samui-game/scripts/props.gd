@@ -1,77 +1,7 @@
 class_name Props
-## Procedural models: palm tree, Big Buddha statue, electricity poles.
+## Procedural models: Big Buddha statue, electricity poles.
+## Plants come from Blender: models/vegetation.glb.
 ## The scooter and rider come from Blender: models/scooter_rider.glb.
-
-
-static func make_palm() -> ArrayMesh:
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-	# trunk: slightly curved tapered prism
-	var sides := 6
-	var segs := 5
-	var height := 9.0
-	var ring := []
-	for s in segs + 1:
-		var t := float(s) / segs
-		var cpos := Vector3(0.6 * t * t, height * t, 0)
-		var r := lerpf(0.24, 0.14, t)
-		var pts := []
-		for k in sides:
-			var a := TAU * k / sides
-			pts.append(cpos + Vector3(cos(a) * r, 0, sin(a) * r))
-		ring.append(pts)
-	for s in segs:
-		for k in sides:
-			var k2 := (k + 1) % sides
-			var a: Vector3 = ring[s][k]
-			var b: Vector3 = ring[s][k2]
-			var c: Vector3 = ring[s + 1][k]
-			var d: Vector3 = ring[s + 1][k2]
-			var shade := 0.8 + 0.2 * float(s % 2)
-			st.set_color(Color(0.45, 0.36, 0.26) * shade)
-			st.set_normal(Vector3(a.x + b.x, 0, a.z + b.z).normalized())
-			for v in [a, b, d, a, d, c]:
-				st.add_vertex(v)
-	# fronds
-	var top := Vector3(0.6, height, 0)
-	var fronds := 9
-	for f in fronds:
-		var ang := TAU * f / fronds + 0.3 * sin(f * 2.1)
-		var dir := Vector3(cos(ang), 0, sin(ang))
-		var side := Vector3(-dir.z, 0, dir.x)
-		var length := 4.6 + 0.8 * sin(f * 1.7)
-		var lift := 0.9 + 0.3 * cos(f * 2.3)
-		var n := 5
-		var prev_l := top
-		var prev_r := top
-		var prev_c := top
-		for s in range(1, n + 1):
-			var t := float(s) / n
-			var c := top + dir * length * t + Vector3.UP * (lift * t * 2.0 - 2.4 * t * t)
-			var w := 0.85 * sin(PI * minf(t * 1.1, 1.0))
-			var l := c + side * w - Vector3.UP * w * 0.25
-			var r := c - side * w - Vector3.UP * w * 0.25
-			var g := Color(0.16, 0.36, 0.10).lerp(Color(0.32, 0.42, 0.12), t * 0.6)
-			st.set_color(g)
-			st.set_normal((Vector3.UP + dir * 0.2).normalized())
-			for v in [prev_c, prev_l, l, prev_c, l, c, prev_c, c, r, prev_c, r, prev_r]:
-				st.add_vertex(v)
-			prev_l = l
-			prev_r = r
-			prev_c = c
-	# coconuts
-	st.set_color(Color(0.35, 0.30, 0.12))
-	for k in 3:
-		var p := top + Vector3(cos(k * 2.1) * 0.3, -0.35, sin(k * 2.1) * 0.3)
-		_box(st, p, Vector3(0.18, 0.18, 0.18))
-	var m := st.commit()
-	var mat := StandardMaterial3D.new()
-	mat.vertex_color_use_as_albedo = true
-	mat.vertex_color_is_srgb = true
-	mat.cull_mode = BaseMaterial3D.CULL_DISABLED
-	mat.roughness = 0.9
-	m.surface_set_material(0, mat)
-	return m
 
 
 static func _box(st: SurfaceTool, c: Vector3, h: Vector3) -> void:
