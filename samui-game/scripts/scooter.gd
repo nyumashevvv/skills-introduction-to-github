@@ -29,6 +29,7 @@ var _safe_pos := Vector3.ZERO
 var _safe_heading := 0.0
 var _safe_timer := 0.0
 var _msg_cooldown := 0.0
+var _hit_cooldown := 0.0
 
 const MAX_ROAD := 22.0      # ~80 km/h
 const MAX_OFFROAD := 11.0
@@ -70,6 +71,8 @@ func forward() -> Vector3:
 
 func _physics_process(dt: float) -> void:
 	_msg_cooldown -= dt
+	_hit_cooldown -= dt
+	world.traffic.update(dt, self)
 	var thr := Input.get_action_strength("gas")
 	var brk := Input.get_action_strength("brake")
 	var st := Input.get_action_strength("left") - Input.get_action_strength("right")
@@ -168,6 +171,7 @@ func reset_to_safe() -> void:
 
 func teleport(x: float, z: float) -> void:
 	world.warm_up(Vector3(x, 0, z))
+	world.traffic.clear()
 	var r := world.nearest_road(x, z)
 	if r.has("pos"):
 		place(r["pos"], r["dir"])
@@ -209,3 +213,14 @@ func _update_fuel(dt: float) -> void:
 	money -= add * price
 	refuelling = true
 	_low_warned = false
+
+
+
+## Knocked by a traffic vehicle moving with velocity `v`.
+func hit_by(v: Vector3) -> void:
+	if _hit_cooldown > 0.0:
+		return
+	_hit_cooldown = 1.0
+	var f := forward()
+	speed = speed * -0.3 + f.dot(v) * 0.5
+	_say("Осторожно! Столкновение с машиной")

@@ -10,13 +10,14 @@ var quality := 2
 var env: Environment
 var sun: DirectionalLight3D
 var daynight: DayNight
+var missions: Missions
 var _cam_pos := Vector3.ZERO
 var _shot := {}   # debug: --shot=file.png --frames=N --pos=x,z --cam=N --gas --map
 var _frame := 0
 
 const ACTIONS := {
 	"gas": [KEY_W, KEY_UP], "brake": [KEY_S, KEY_DOWN], "left": [KEY_A, KEY_LEFT], "right": [KEY_D, KEY_RIGHT],
-	"turbo": [KEY_SHIFT], "map": [KEY_M, KEY_TAB], "camera": [KEY_C], "reset": [KEY_R], "quality": [KEY_Q], "time": [KEY_N],
+	"turbo": [KEY_SHIFT], "map": [KEY_M, KEY_TAB], "camera": [KEY_C], "reset": [KEY_R], "quality": [KEY_Q], "time": [KEY_N], "job": [KEY_J],
 }
 
 
@@ -53,6 +54,12 @@ func _ready() -> void:
 	hud.scooter = scooter
 	add_child(hud)
 	scooter.message.connect(hud.show_message)
+	missions = Missions.new()
+	missions.world = world
+	missions.scooter = scooter
+	missions.hud = hud
+	add_child(missions)
+	missions.setup()
 	hud.show_message("Добро пожаловать на Самуи! Остров в масштабе 1:1. M — карта")
 	for arg in OS.get_cmdline_user_args():
 		var kv := arg.trim_prefix("--").split("=")
@@ -163,6 +170,12 @@ func _process(dt: float) -> void:
 		_:
 			want = p - f * 60.0 + Vector3.UP * 140.0
 			target = p + f * 40.0
+	if _shot.has("follow-car") and world.traffic.cars.size() > int(_shot["follow-car"]):
+		var car: Dictionary = world.traffic.cars[int(_shot["follow-car"])]
+		var cf: Vector3 = car["fwd"]
+		want = car["pos"] - cf * 9.0 + Vector3.UP * 4.0 + Vector3(-cf.z, 0, cf.x) * 3.0
+		target = car["pos"] + cf * 6.0
+		_cam_pos = want
 	_cam_pos = _cam_pos.lerp(want, clampf(dt * 6.0, 0.0, 1.0))
 	if _cam_pos.distance_to(want) > 200.0:
 		_cam_pos = want
@@ -176,6 +189,7 @@ func _process(dt: float) -> void:
 func set_quality(level: int) -> void:
 	quality = level
 	world.vegetation.set_quality(level)
+	world.traffic.target_count = [18, 30, 45][level]
 	env.ssao_enabled = level >= 1
 	env.glow_enabled = level >= 1
 	sun.directional_shadow_max_distance = [90.0, 150.0, 220.0][level]

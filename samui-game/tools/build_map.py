@@ -617,6 +617,41 @@ def main():
     with open(os.path.join(a.out, "buildings.json"), "w") as f:
         json.dump(bld_out, f, separators=(",", ":"))
 
+    # ---- road graph for traffic: OSM ways split at shared nodes (junctions)
+    drive = {}
+    use = {}
+    for wid, (nds, t) in ways.items():
+        hw = t.get("highway")
+        if hw in ROAD_CLASSES and ROAD_CLASSES[hw][1] in (0, 1) and t.get("area") != "yes" and road_material(t, 1) != 2 \
+                and t.get("access") not in ("private", "no") and len(nds) > 1:
+            drive[wid] = (nds, t)
+            for n in nds:
+                use[n] = use.get(n, 0) + 1
+    g_nodes, g_edges = {}, []
+    for wid, (nds, t) in drive.items():
+        kind = ROAD_CLASSES[t["highway"]][1]
+        width = ROAD_CLASSES[t["highway"]][0]
+        oneway = t.get("oneway") == "yes" or t.get("junction") == "roundabout"
+        seg = [nds[0]]
+        for n in nds[1:]:
+            seg.append(n)
+            if use.get(n, 0) > 1 or n == nds[-1]:
+                pts = [to_local(*nodes[q]) for q in seg if q in nodes]
+                if len(pts) > 1 and all(abs(x) < HALF and abs(z) < HALF for x, z in pts):
+                    for q in (seg[0], seg[-1]):
+                        g_nodes[q] = to_local(*nodes[q])
+                    e = {"a": seg[0], "b": seg[-1], "k": kind, "w": width, "p": [round(v, 1) for q in pts for v in q]}
+                    if oneway:
+                        e["o"] = 1
+                    g_edges.append(e)
+                seg = [n]
+    ids = {nid: i for i, nid in enumerate(g_nodes)}
+    for e in g_edges:
+        e["a"], e["b"] = ids[e["a"]], ids[e["b"]]
+    with open(os.path.join(a.out, "roadgraph.json"), "w") as f:
+        json.dump({"n": [[round(v, 1) for v in g_nodes[nid]] for nid in g_nodes], "e": g_edges}, f, separators=(",", ":"))
+    print("road graph:", len(g_nodes), "nodes", len(g_edges), "edges")
+
     # ---- points of interest for gameplay (checked: on land, near a road, de-duplicated)
     def poi_type(t):
         if t.get("amenity") == "fuel":

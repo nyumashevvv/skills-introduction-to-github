@@ -43,6 +43,7 @@ var _light_pool := []
 var _light_t := 0.0
 var landmarks: Landmarks
 var pois: Pois
+var traffic: Traffic
 
 var _indices := {}          # step -> PackedInt32Array
 var _chunks := []           # per chunk: {node, lod, meshes, content}
@@ -76,6 +77,10 @@ func _ready() -> void:
 	pois.world = self
 	add_child(pois)
 	pois.setup()
+	traffic = Traffic.new()
+	traffic.world = self
+	add_child(traffic)
+	traffic.setup()
 	vegetation = Vegetation.new()
 	vegetation.world = self
 	add_child(vegetation)

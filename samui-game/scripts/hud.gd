@@ -10,6 +10,7 @@ var info_label: Label
 var msg_label: Label
 var help_label: Label
 var fuel_label: Label
+var mission_label: Label
 var fuel_bar: ProgressBar
 var minimap: MiniMap
 var bigmap: BigMap
@@ -24,13 +25,14 @@ func _ready() -> void:
 	info_label = _label(Vector2(24, 60), 16, Control.PRESET_TOP_LEFT)
 	help_label = _label(Vector2(24, -40), 15, Control.PRESET_BOTTOM_LEFT)
 	fuel_label = _label(Vector2(24, -128), 17, Control.PRESET_BOTTOM_LEFT)
+	mission_label = _label(Vector2(24, 86), 18, Control.PRESET_TOP_LEFT)
 	fuel_bar = ProgressBar.new()
 	fuel_bar.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
 	fuel_bar.position = Vector2(230, -88)
 	fuel_bar.size = Vector2(160, 14)
 	fuel_bar.show_percentage = false
 	add_child(fuel_bar)
-	help_label.text = "W/S — газ/тормоз   A/D — руль   Shift — турбо   M — карта   C — камера   R — на дорогу   Q — качество   N — +1 час"
+	help_label.text = "W/S — газ/тормоз   A/D — руль   Shift — турбо   M — карта   C — камера   R — на дорогу   Q — качество   N — +1 час   J — заказ"
 	msg_label = _label(Vector2(0, 120), 24, Control.PRESET_TOP_WIDE)
 	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	minimap = MiniMap.new()
@@ -85,6 +87,9 @@ func _process(dt: float) -> void:
 			var dvec: Vector2 = nf[0][0] - Vector2(scooter.position.x, scooter.position.z)
 			fuel_txt += "   ближайший бензин: %.1f км %s" % [nf[1] / 1000.0, _compass(dvec)]
 	fuel_label.text = fuel_txt
+	var ms: Missions = get_parent().missions
+	if ms:
+		mission_label.text = ms.status()
 	var p := scooter.position
 	place_label.text = _where(p)
 	var lon := p.x / (111320.0 * cos(deg_to_rad(9.495))) + 100.01
@@ -156,6 +161,12 @@ class MiniMap extends Control:
 			var q3: Vector2 = (sh[0] - Vector2(p.x, p.z)) * k + size / 2
 			if Rect2(Vector2.ZERO, size).has_point(q3):
 				Hud.shop_icon(self, q3)
+		var ms: Missions = get_parent().get_parent().missions
+		if ms and ms.target() != Vector2.INF:
+			var tq: Vector2 = (ms.target() - Vector2(p.x, p.z)) * k + size / 2
+			tq = tq.clamp(Vector2(8, 8), size - Vector2(8, 8))
+			draw_circle(tq, 6.0, Color(0.2, 1.0, 0.45))
+			draw_arc(tq, 8.0, 0, TAU, 16, Color.BLACK, 1.5)
 		_arrow(self, size / 2, scooter.heading, 9.0)
 		draw_string(ThemeDB.fallback_font, Vector2(size.x / 2 - 4, 14), "С", HORIZONTAL_ALIGNMENT_LEFT, -1, 14)
 
@@ -198,9 +209,17 @@ class BigMap extends Control:
 			Hud.fuel_icon(self, _to_screen(f[0].x, f[0].y), f[1] > 5.0)
 		for sh in world.pois.shops:
 			Hud.shop_icon(self, _to_screen(sh[0].x, sh[0].y))
-		var legend := "■ заправка   ▪ бензин в бутылках   ● мини-маркет 24"
+		var legend := "■ заправка   ▪ бензин в бутылках   ● мини-маркет 24   ▲ смотровая / водопад   ● заказ"
 		var lw := ThemeDB.fallback_font.get_string_size(legend, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
 		draw_string(ThemeDB.fallback_font, Vector2(size.x - lw - 20, 34), legend, HORIZONTAL_ALIGNMENT_LEFT, -1, 14)
+		var ms: Missions = get_parent().get_parent().missions
+		if ms:
+			for i in ms.sights.size():
+				var sq := _to_screen(ms.sights[i][0].x, ms.sights[i][0].y)
+				var col := Color(0.6, 0.6, 0.6, 0.7) if ms.found.has(i) else (Color(0.5, 0.85, 1.0) if ms.sights[i][2] == "waterfall" else Color(1.0, 0.85, 0.35))
+				draw_colored_polygon(PackedVector2Array([sq + Vector2(0, -5), sq + Vector2(4, 3), sq + Vector2(-4, 3)]), col)
+			if ms.target() != Vector2.INF:
+				draw_circle(_to_screen(ms.target().x, ms.target().y), 7.0, Color(0.2, 1.0, 0.45))
 		MiniMap._arrow(self, _to_screen(scooter.position.x, scooter.position.z), scooter.heading, 10.0)
 		draw_string(ThemeDB.fallback_font, Vector2(20, 34), "Ко Самуи 1:1 — нажми на карту, чтобы переместиться.  M — закрыть", HORIZONTAL_ALIGNMENT_LEFT, -1, 20)
 		draw_string(ThemeDB.fallback_font, Vector2(20, size.y - 14), "© OpenStreetMap contributors (ODbL) · здания: Overture Maps, Google Open Buildings, Microsoft · снимок: Copernicus Sentinel-2 · рельеф: SRTM", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(1, 1, 1, 0.6))
