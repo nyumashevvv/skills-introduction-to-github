@@ -11,6 +11,7 @@ var env: Environment
 var sun: DirectionalLight3D
 var daynight: DayNight
 var missions: Missions
+var audio: GameAudio
 var _cam_pos := Vector3.ZERO
 var _shot := {}   # debug: --shot=file.png --frames=N --pos=x,z --cam=N --gas --map
 var _frame := 0
@@ -60,6 +61,11 @@ func _ready() -> void:
 	missions.hud = hud
 	add_child(missions)
 	missions.setup()
+	audio = GameAudio.new()
+	audio.world = world
+	audio.scooter = scooter
+	add_child(audio)
+	audio.setup()
 	hud.show_message("Добро пожаловать на Самуи! Остров в масштабе 1:1. M — карта")
 	for arg in OS.get_cmdline_user_args():
 		var kv := arg.trim_prefix("--").split("=")
