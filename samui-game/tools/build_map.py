@@ -617,6 +617,68 @@ def main():
     with open(os.path.join(a.out, "buildings.json"), "w") as f:
         json.dump(bld_out, f, separators=(",", ":"))
 
+    # ---- beach life: sunbed rows in front of beach resorts, longtail boats off the beaches
+    gy, gx = np.gradient(ndimage.gaussian_filter(d_land, 2.0))
+    beach_rows, boats = [], []
+    used = []
+    for ch in bld_out:
+        for b in ch:
+            if b["s"] not in (2, 3):
+                continue
+            p = b["p"]
+            cx, cz = sum(p[0::2]) / (len(p) / 2), sum(p[1::2]) / (len(p) / 2)
+            gi, gj = int((cx + HALF) / CELL), int((cz + HALF) / CELL)
+            if not (0 <= gi < N and 0 <= gj < N) or not landb[gj, gi] or d_land[gj, gi] > 180:
+                continue
+            # walk downhill on the distance-to-sea field until the sand
+            x, z = cx, cz
+            spot = None
+            for step in range(60):
+                i, j = int((x + HALF) / CELL), int((z + HALF) / CELL)
+                if not landb[j, i]:
+                    break
+                if cls[j, i] == SAND and d_land[j, i] < 30 and rmask[j, i] == 0:
+                    spot = (x, z, i, j)
+                    if d_land[j, i] < 18:
+                        break
+                g = np.array([gx[j, i], gy[j, i]])
+                if np.hypot(*g) < 1e-3:
+                    break
+                g /= np.hypot(*g)
+                x -= g[0] * 4.0
+                z -= g[1] * 4.0
+            if spot is None:
+                continue
+            x, z, i, j = spot
+            if any((x - u) ** 2 + (z - v) ** 2 < 40 ** 2 for u, v in used):
+                continue
+            used.append((x, z))
+            g = np.array([gx[j, i], gy[j, i]])
+            g /= max(np.hypot(*g), 1e-6)
+            sea = (-g[0], -g[1])                      # direction to the water
+            beach_rows.append([round(x, 1), round(z, 1), round(sea[0], 3), round(sea[1], 3), 3 if b["s"] == 2 else 5,
+                               1 if b["s"] == 2 else 0])
+    # boats: shallow water 0.5-1.6 m deep in front of sandy beaches, ~1 per 300 m of beach
+    cand = np.argwhere((~landb) & (h < -0.5) & (h > -1.6) & (d_sea < 60))
+    rng2 = np.random.default_rng(5)
+    rng2.shuffle(cand)
+    for j, i in cand[:20000]:
+        x, z = i * CELL - HALF, j * CELL - HALF
+        # nearest land must be sand (a beach), not rocks or a harbour wall
+        near = cls[max(0, j - 6):j + 7, max(0, i - 6):i + 7]
+        if not (near == SAND).any():
+            continue
+        if any((x - u) ** 2 + (z - v) ** 2 < 300 ** 2 for u, v, *_ in boats):
+            continue
+        g = np.array([gx[j, i], gy[j, i]])  # in the sea d_land is 0; use the distance-to-land field instead
+        sg = np.gradient(ndimage.gaussian_filter(d_sea[max(0, j - 3):j + 4, max(0, i - 3):i + 4], 1.0))
+        bx, bz = float(sg[1][3, 3]) if sg[1].shape[0] > 3 and sg[1].shape[1] > 3 else 0.0, float(sg[0][3, 3]) if sg[0].shape[0] > 3 and sg[0].shape[1] > 3 else 1.0
+        nrm = max(np.hypot(bx, bz), 1e-6)
+        boats.append([round(x, 1), round(z, 1), round(bx / nrm, 3), round(bz / nrm, 3)])
+    with open(os.path.join(a.out, "beach.json"), "w") as f:
+        json.dump({"rows": beach_rows, "boats": boats}, f, separators=(",", ":"))
+    print("beach rows:", len(beach_rows), "boats:", len(boats))
+
     # ---- road graph for traffic: OSM ways split at shared nodes (junctions)
     drive = {}
     use = {}

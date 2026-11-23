@@ -170,6 +170,16 @@ func _process(dt: float) -> void:
 		_:
 			want = p - f * 60.0 + Vector3.UP * 140.0
 			target = p + f * 40.0
+	if _shot.has("look"):
+		# debug: look at a point from a given distance/direction: --look=x,z[,dist,height,bearing_deg]
+		var lv: PackedStringArray = String(_shot["look"]).split(",")
+		var lp := Vector2(float(lv[0]), float(lv[1]))
+		var ld := float(lv[2]) if lv.size() > 2 else 30.0
+		var lh := float(lv[3]) if lv.size() > 3 else 12.0
+		var lb := deg_to_rad(float(lv[4])) if lv.size() > 4 else 0.0
+		target = Vector3(lp.x, world.height_at(lp.x, lp.y) + 2.0, lp.y)
+		want = target + Vector3(sin(lb) * ld, lh, cos(lb) * ld)
+		_cam_pos = want
 	if _shot.has("follow-car") and world.traffic.cars.size() > int(_shot["follow-car"]):
 		var car: Dictionary = world.traffic.cars[int(_shot["follow-car"])]
 		var cf: Vector3 = car["fwd"]
