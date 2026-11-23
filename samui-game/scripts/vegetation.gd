@@ -183,7 +183,7 @@ func _plants(key: Vector2i) -> Dictionary:
 			var rd := world.road_dist(x, z)
 			if rd < CLEAR.get(name, 2.5):
 				continue
-			if world.is_blocked(x, z):
+			if world.is_blocked(x, z) or world.landmarks.excluded(Vector2(x, z)):
 				continue
 			var y := world.height_at(x, z)
 			if y < 0.5:

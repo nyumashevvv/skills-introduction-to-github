@@ -41,7 +41,7 @@ func _ready() -> void:
 func place(p: Vector2, dir: Vector2) -> void:
 	heading = atan2(-dir.x, -dir.y)
 	speed = 0.0
-	position = Vector3(p.x, world.height_at(p.x, p.y), p.y)
+	position = Vector3(p.x, world.ground_at(p.x, p.y), p.y)
 	_safe_pos = position
 	_safe_heading = heading
 	_update_transform(0.0)
@@ -94,7 +94,7 @@ func _physics_process(dt: float) -> void:
 
 	var step := forward() * speed * dt
 	var np := position + step
-	var nh := world.height_at(np.x, np.z)
+	var nh := world.ground_at(np.x, np.z)
 	if absf(np.x) > World.HALF - 50 or absf(np.z) > World.HALF - 50:
 		speed = 0.0
 		np = position
@@ -107,7 +107,7 @@ func _physics_process(dt: float) -> void:
 		np = position
 		_say("Бум! Здание")
 	odometer += (np - position).length()
-	position = Vector3(np.x, world.height_at(np.x, np.z), np.z)
+	position = Vector3(np.x, world.ground_at(np.x, np.z), np.z)
 
 	_safe_timer += dt
 	if _safe_timer > 1.0:
@@ -120,8 +120,8 @@ func _physics_process(dt: float) -> void:
 
 func _update_transform(dt: float) -> void:
 	var f := forward()
-	var hf := world.height_at(position.x + f.x * 0.65, position.z + f.z * 0.65)
-	var hb := world.height_at(position.x - f.x * 0.65, position.z - f.z * 0.65)
+	var hf := world.ground_at(position.x + f.x * 0.65, position.z + f.z * 0.65)
+	var hb := world.ground_at(position.x - f.x * 0.65, position.z - f.z * 0.65)
 	pitch = atan2(hf - hb, 1.3)
 	var target_lean := -steer * clampf(absf(speed) / 12.0, 0.0, 1.0) * 0.45
 	lean = lerpf(lean, target_lean, clampf(dt * 6.0, 0.0, 1.0))

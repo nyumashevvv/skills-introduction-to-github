@@ -527,6 +527,8 @@ def main():
             st = 4
         else:
             st = 0
+        if st == 5 and area > 2500:
+            continue  # temple grounds traced as one "building" (e.g. Wat Phra Yai): not a roof
         if not known_h:  # typical heights per style
             r = rng.random()
             hh = {1: (6.6 if r < 0.55 else 9.8 if r < 0.9 else 13.0), 2: 3.3 + 0.4 * r, 3: hh if area < 800 else 6.6 + 6.5 * r,
@@ -614,6 +616,27 @@ def main():
         json.dump(road_out, f, separators=(",", ":"))
     with open(os.path.join(a.out, "buildings.json"), "w") as f:
         json.dump(bld_out, f, separators=(",", ":"))
+
+    # ---- piers (OSM man_made=pier: lines get a width, areas are decks)
+    piers = []
+    for nds, t in ways.values():
+        if t.get("man_made") != "pier" or len(nds) < 2:
+            continue
+        pts = ring_xy(nds, nodes)
+        if not pts or abs(pts[0][0]) > HALF or abs(pts[0][1]) > HALF:
+            continue
+        flat = [round(v, 1) for q in pts for v in q]
+        if nds[0] == nds[-1] and len(nds) > 3:
+            piers.append({"poly": flat[:-2]})
+        else:
+            try:
+                w = float(t.get("width", "4").split()[0])
+            except ValueError:
+                w = 4.0
+            piers.append({"line": flat, "w": w})
+    print("piers:", len(piers))
+    with open(os.path.join(a.out, "piers.json"), "w") as f:
+        json.dump(piers, f, separators=(",", ":"))
 
     # ---- places
     places = []

@@ -37,6 +37,7 @@ var transformer_mesh: Mesh
 var lamp_mesh: Mesh
 var sign_mesh: Mesh
 var vegetation: Vegetation
+var landmarks: Landmarks
 
 var _indices := {}          # step -> PackedInt32Array
 var _chunks := []           # per chunk: {node, lod, meshes, content}
@@ -62,6 +63,10 @@ func _ready() -> void:
 		_set_lod(c, LODS.size() - 1)
 	if not OS.get_cmdline_user_args().has("--nowater"):
 		_add_water()
+	landmarks = Landmarks.new()
+	landmarks.world = self
+	add_child(landmarks)
+	landmarks.setup()
 	vegetation = Vegetation.new()
 	vegetation.world = self
 	add_child(vegetation)
@@ -151,6 +156,14 @@ func road_dist(x: float, z: float) -> float:
 	return lerpf(a, b, fz) * 0.25 - 8.0
 
 
+## Height of what you drive on: terrain, or a pier deck over the water.
+func ground_at(x: float, z: float) -> float:
+	var h := height_at(x, z)
+	if h < 1.0 and landmarks:
+		h = maxf(h, landmarks.pier_height(x, z))
+	return h
+
+
 func class_at(x: float, z: float) -> int:
 	var i := clampi(int(round((x + HALF) / CELL)), 0, N - 1)
 	var j := clampi(int(round((z + HALF) / CELL)), 0, N - 1)
@@ -165,6 +178,8 @@ func chunk_of(x: float, z: float) -> int:
 
 func is_blocked(x: float, z: float) -> bool:
 	var p := Vector2(x, z)
+	if landmarks and landmarks.blocked(p):
+		return true
 	var key := Vector2i(floori(x / GRID), floori(z / GRID))
 	var c0 := chunk_of(x, z)
 	for dz in range(-1, 2):
@@ -767,6 +782,8 @@ func _build_buildings(c: int, o: Vector3) -> ArrayMesh:
 			poly[k] = Vector2(p[k * 2], p[k * 2 + 1])
 		if Geometry2D.is_polygon_clockwise(poly):
 			poly.reverse()
+		if landmarks and landmarks.excluded(_centroid(poly)):
+			continue
 		var style: int = b.get("s", HOUSE)
 		var gmin := INF
 		var gmax := -INF
@@ -1126,10 +1143,4 @@ func _add_places() -> void:
 		l.position = Vector3(x, height_at(x, z) + (45.0 if k == "town" else 18.0), z)
 		l.visibility_range_end = 3500.0 if k == "town" else 1200.0
 		add_child(l)
-	# a golden landmark at the Big Buddha temple
-	for p in places:
-		if p["en"] == "Big Buddha":
-			var bb := Props.make_buddha()
-			bb.position = Vector3(p["x"], height_at(p["x"], p["z"]), p["z"])
-			add_child(bb)
-			break
+
