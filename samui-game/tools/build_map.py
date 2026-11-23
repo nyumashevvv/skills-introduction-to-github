@@ -617,6 +617,86 @@ def main():
     with open(os.path.join(a.out, "buildings.json"), "w") as f:
         json.dump(bld_out, f, separators=(",", ":"))
 
+    # ---- points of interest for gameplay (checked: on land, near a road, de-duplicated)
+    def poi_type(t):
+        if t.get("amenity") == "fuel":
+            return "fuel"
+        if t.get("shop") in ("convenience", "supermarket"):
+            return "shop"
+        if t.get("amenity") in ("restaurant", "fast_food", "cafe"):
+            return "food"
+        if t.get("amenity") == "bar":
+            return "bar"
+        if t.get("amenity") == "marketplace":
+            return "market"
+        if t.get("tourism") == "viewpoint":
+            return "viewpoint"
+        if t.get("waterway") == "waterfall":
+            return "waterfall"
+        return None
+
+    raw = []
+    for nid, t in pois.items():
+        k = poi_type(t)
+        if k:
+            raw.append((k, *to_local(*nodes[nid]), t, None))
+    for nds, t in ways.values():
+        k = poi_type(t)
+        if k and len(nds) > 2:
+            pts = [to_local(*nodes[n]) for n in nds if n in nodes]
+            if pts:
+                raw.append((k, sum(q[0] for q in pts) / len(pts), sum(q[1] for q in pts) / len(pts), t, pts))
+    rdist_fine = None
+    poi_out, rejected = [], {}
+    from scipy.spatial import cKDTree
+    bld_centres = cKDTree(np.array([(sum(q[0] for q in p) / len(p), sum(q[1] for q in p) / len(p)) for p in bld_polys]))
+    def in_building(x, z):
+        for i in bld_centres.query_ball_point((x, z), 40):
+            p = bld_polys[i]
+            inside = False
+            j = len(p) - 1
+            for k2 in range(len(p)):
+                if ((p[k2][1] > z) != (p[j][1] > z)) and x < (p[j][0] - p[k2][0]) * (z - p[k2][1]) / (p[j][1] - p[k2][1] + 1e-9) + p[k2][0]:
+                    inside = not inside
+                j = k2
+            if inside:
+                return i
+        return -1
+    for k, x, z, t, area_pts in raw:
+        if abs(x) >= HALF - 50 or abs(z) >= HALF - 50:
+            rejected["outside map"] = rejected.get("outside map", 0) + 1
+            continue
+        gi, gj = int((x + HALF) / CELL), int((z + HALF) / CELL)
+        if not landb[gj, gi] and k != "waterfall":
+            rejected["in the sea"] = rejected.get("in the sea", 0) + 1
+            continue
+        # duplicates: the same place mapped as node and area, or twice
+        nm0 = t.get("name:en") or t.get("name") or ""
+        if any(o["t"] == k and ((o["x"] - x) ** 2 + (o["z"] - z) ** 2 < (40 if k == "fuel" else 6) ** 2 or
+                                (nm0 and o.get("_n") == nm0 and (o["x"] - x) ** 2 + (o["z"] - z) ** 2 < 60 ** 2))
+               for o in poi_out):
+            rejected["duplicate"] = rejected.get("duplicate", 0) + 1
+            continue
+        road = main_dist[gj, gi]
+        e = {"t": k, "x": round(x, 1), "z": round(z, 1), "_n": nm0}
+        nm = t.get("name:en") or t.get("name") or ""
+        if nm and not any("\u0e00" <= ch <= "\u0e7f" for ch in nm):
+            e["n"] = nm
+        bi = in_building(x, z)
+        if bi >= 0:
+            e["b"] = 1  # inside a mapped building: that building becomes the shop
+        if area_pts:
+            e["r"] = round(max(((q[0] - x) ** 2 + (q[1] - z) ** 2) ** 0.5 for q in area_pts), 1)
+        poi_out.append(e)
+    for e in poi_out:
+        e.pop("_n", None)
+    cnt = {}
+    for e in poi_out:
+        cnt[e["t"]] = cnt.get(e["t"], 0) + 1
+    print("pois:", cnt, "rejected:", rejected)
+    with open(os.path.join(a.out, "pois.json"), "w") as f:
+        json.dump(poi_out, f, ensure_ascii=False, separators=(",", ":"))
+
     # ---- piers (OSM man_made=pier: lines get a width, areas are decks)
     piers = []
     for nds, t in ways.values():

@@ -22,6 +22,8 @@ void fragment() {
 	float v = UV.y;
 	float len = floor(UV2.x * 10.0 + 0.5) / 10.0;
 	float H = floor(UV2.y * 10.0 + 0.5) / 10.0;
+	bool minimart = H > 500.0;          // an OSM convenience store is inside this building
+	if (minimart) H -= 1000.0;
 	vec3 col = wall;
 	float rough = 0.9;
 	float metal = 0.0;
@@ -164,6 +166,20 @@ void fragment() {
 		}
 	}
 	// temple: red-and-gold band under the eaves
+	// 24-hour mini-mart: glass shopfront and a sign band on the ground floor
+	if (minimart && len > 4.0 && v < 3.6) {
+		if (v < 2.75 && v > 0.15) {
+			float m = fract(u / 1.6);
+			col = (m < 0.05 || v < 0.25 || v > 2.65) ? lin(vec3(0.93)) : mix(vec3(0.02, 0.05, 0.06), vec3(0.75, 0.72, 0.6), 0.25 + 0.2 * smoothstep(2.6, 0.4, v));
+			rough = 0.1;
+			metal = 0.1;
+		} else if (v >= 2.75) {
+			col = lin(vec3(0.12, 0.54, 0.54));
+			if (v < 2.88) col = lin(vec3(0.91, 0.46, 0.12));
+			if (abs(v - 3.22) < 0.12 && fract(u * 1.3) < 0.6 && abs(u - len * 0.5) < min(3.0, len * 0.35)) col = lin(vec3(0.97));
+			rough = 0.4;
+		}
+	}
 	if (temple && H - v < 0.9 && H - v > 0.0) {
 		col = lin(fract(u / 0.6) < 0.5 ? vec3(0.7, 0.1, 0.06) : GOLD_FIX());
 		metal = 0.5;

@@ -38,6 +38,7 @@ var lamp_mesh: Mesh
 var sign_mesh: Mesh
 var vegetation: Vegetation
 var landmarks: Landmarks
+var pois: Pois
 
 var _indices := {}          # step -> PackedInt32Array
 var _chunks := []           # per chunk: {node, lod, meshes, content}
@@ -67,6 +68,10 @@ func _ready() -> void:
 	landmarks.world = self
 	add_child(landmarks)
 	landmarks.setup()
+	pois = Pois.new()
+	pois.world = self
+	add_child(pois)
+	pois.setup()
 	vegetation = Vegetation.new()
 	vegetation.world = self
 	add_child(vegetation)
@@ -807,6 +812,7 @@ func _build_buildings(c: int, o: Vector3) -> ArrayMesh:
 					grid[key] = []
 				grid[key].append([rect, poly])
 		var area := absf(_area(poly))
+		var minimart := pois != null and pois.shop_inside(poly, rect)
 		# rectangular enough for a pitched roof?
 		var mr := _min_rect(poly)
 		var box: PackedVector2Array = mr[0]
@@ -838,7 +844,7 @@ func _build_buildings(c: int, o: Vector3) -> ArrayMesh:
 			var shade := 0.88 + 0.12 * absf(nn.x)
 			var wc := Color(wall_col.r * shade, wall_col.g * shade, wall_col.b * shade, wall_col.a)
 			walls.wall(Vector3(a2.x - o.x, bottom, a2.y - o.z), Vector3(b2.x - o.x, bottom, b2.y - o.z),
-				wall_top, ground, nn, wc, Vector2(e.length(), bh))
+				wall_top, ground, nn, wc, Vector2(e.length(), bh + (1000.0 if minimart else 0.0)))
 			if e.length() > 3.0:
 				var mid := (a2 + b2) * 0.5 + Vector2(nn.x, nn.z) * 4.0
 				var rd := road_dist(mid.x, mid.y)

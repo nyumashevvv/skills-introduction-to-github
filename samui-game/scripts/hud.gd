@@ -9,6 +9,8 @@ var place_label: Label
 var info_label: Label
 var msg_label: Label
 var help_label: Label
+var fuel_label: Label
+var fuel_bar: ProgressBar
 var minimap: MiniMap
 var bigmap: BigMap
 var touch: TouchPad
@@ -21,6 +23,13 @@ func _ready() -> void:
 	place_label = _label(Vector2(24, 18), 30, Control.PRESET_TOP_LEFT)
 	info_label = _label(Vector2(24, 60), 16, Control.PRESET_TOP_LEFT)
 	help_label = _label(Vector2(24, -40), 15, Control.PRESET_BOTTOM_LEFT)
+	fuel_label = _label(Vector2(24, -128), 17, Control.PRESET_BOTTOM_LEFT)
+	fuel_bar = ProgressBar.new()
+	fuel_bar.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	fuel_bar.position = Vector2(230, -88)
+	fuel_bar.size = Vector2(160, 14)
+	fuel_bar.show_percentage = false
+	add_child(fuel_bar)
 	help_label.text = "W/S — газ/тормоз   A/D — руль   Shift — турбо   M — карта   C — камера   R — на дорогу   Q — качество"
 	msg_label = _label(Vector2(0, 120), 24, Control.PRESET_TOP_WIDE)
 	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -65,6 +74,17 @@ func show_message(t: String) -> void:
 func _process(dt: float) -> void:
 	var kmh := absf(scooter.speed) * 3.6
 	speed_label.text = "%d км/ч%s" % [kmh, "  ТУРБО" if scooter.turbo else ""]
+	fuel_bar.value = scooter.fuel / scooter.TANK * 100.0
+	fuel_bar.modulate = Color(1, 0.35, 0.3) if scooter.fuel < scooter.TANK * 0.15 else Color(1, 1, 1)
+	var fuel_txt := "Бензин %.1f / %.1f л   %d ฿" % [scooter.fuel, scooter.TANK, scooter.money]
+	if scooter.refuelling:
+		fuel_txt += "   ⟳ заправка…"
+	elif scooter.fuel < scooter.TANK * 0.3:
+		var nf: Array = world.pois.nearest_fuel(Vector2(scooter.position.x, scooter.position.z))
+		if not nf[0].is_empty():
+			var dvec: Vector2 = nf[0][0] - Vector2(scooter.position.x, scooter.position.z)
+			fuel_txt += "   ближайший бензин: %.1f км %s" % [nf[1] / 1000.0, _compass(dvec)]
+	fuel_label.text = fuel_txt
 	var p := scooter.position
 	place_label.text = _where(p)
 	var lon := p.x / (111320.0 * cos(deg_to_rad(9.495))) + 100.01
@@ -74,6 +94,11 @@ func _process(dt: float) -> void:
 	msg_label.modulate.a = clampf(_msg_t, 0.0, 1.0)
 	if Input.is_action_just_pressed("map"):
 		bigmap.visible = not bigmap.visible
+
+
+func _compass(d: Vector2) -> String:
+	var a := fposmod(rad_to_deg(atan2(d.x, -d.y)), 360.0)
+	return ["на север", "на северо-восток", "на восток", "на юго-восток", "на юг", "на юго-запад", "на запад", "на северо-запад"][int((a + 22.5) / 45.0) % 8]
 
 
 func _where(p: Vector3) -> String:
@@ -122,6 +147,14 @@ class MiniMap extends Control:
 			if Rect2(Vector2.ZERO, size).has_point(q):
 				draw_circle(q, 3, Color.WHITE)
 				draw_string(ThemeDB.fallback_font, q + Vector2(5, 4), pl["n"], HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
+		for f in world.pois.fuel_spots:
+			var q2: Vector2 = (f[0] - Vector2(p.x, p.z)) * k + size / 2
+			if Rect2(Vector2.ZERO, size).has_point(q2):
+				Hud.fuel_icon(self, q2, f[1] > 5.0)
+		for sh in world.pois.shops:
+			var q3: Vector2 = (sh[0] - Vector2(p.x, p.z)) * k + size / 2
+			if Rect2(Vector2.ZERO, size).has_point(q3):
+				Hud.shop_icon(self, q3)
 		_arrow(self, size / 2, scooter.heading, 9.0)
 		draw_string(ThemeDB.fallback_font, Vector2(size.x / 2 - 4, 14), "С", HORIZONTAL_ALIGNMENT_LEFT, -1, 14)
 
@@ -160,6 +193,13 @@ class BigMap extends Control:
 				draw_circle(q, 3.5, col)
 				if pl["k"] != "waterfall":
 					draw_string(ThemeDB.fallback_font, q + Vector2(6, 5), pl["n"], HORIZONTAL_ALIGNMENT_LEFT, -1, 14, col)
+		for f in world.pois.fuel_spots:
+			Hud.fuel_icon(self, _to_screen(f[0].x, f[0].y), f[1] > 5.0)
+		for sh in world.pois.shops:
+			Hud.shop_icon(self, _to_screen(sh[0].x, sh[0].y))
+		var legend := "■ заправка   ▪ бензин в бутылках   ● мини-маркет 24"
+		var lw := ThemeDB.fallback_font.get_string_size(legend, HORIZONTAL_ALIGNMENT_LEFT, -1, 14).x
+		draw_string(ThemeDB.fallback_font, Vector2(size.x - lw - 20, 34), legend, HORIZONTAL_ALIGNMENT_LEFT, -1, 14)
 		MiniMap._arrow(self, _to_screen(scooter.position.x, scooter.position.z), scooter.heading, 10.0)
 		draw_string(ThemeDB.fallback_font, Vector2(20, 34), "Ко Самуи 1:1 — нажми на карту, чтобы переместиться.  M — закрыть", HORIZONTAL_ALIGNMENT_LEFT, -1, 20)
 		draw_string(ThemeDB.fallback_font, Vector2(20, size.y - 14), "© OpenStreetMap contributors (ODbL) · здания: Overture Maps, Google Open Buildings, Microsoft · снимок: Copernicus Sentinel-2 · рельеф: SRTM", HORIZONTAL_ALIGNMENT_LEFT, -1, 13, Color(1, 1, 1, 0.6))
@@ -242,3 +282,14 @@ class TouchPad extends Control:
 	func _release(i: int) -> void:
 		Input.action_release(_held[i])
 		_held.erase(i)
+
+
+
+static func fuel_icon(ci: CanvasItem, at: Vector2, station: bool) -> void:
+	var r := 5.0 if station else 2.0
+	ci.draw_rect(Rect2(at - Vector2(r, r), Vector2(r, r) * 2), Color(0.95, 0.55, 0.12) if station else Color(0.98, 0.8, 0.2))
+	ci.draw_rect(Rect2(at - Vector2(r, r), Vector2(r, r) * 2), Color(0, 0, 0, 0.8), false, 1.0)
+
+
+static func shop_icon(ci: CanvasItem, at: Vector2) -> void:
+	ci.draw_circle(at, 3.2, Color(0.15, 0.65, 0.65))

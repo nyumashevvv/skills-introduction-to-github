@@ -11,6 +11,13 @@ var steer := 0.0
 var lean := 0.0
 var pitch := 0.0
 var odometer := 0.0
+# fuel and money
+const TANK := 4.2               # litres
+const USE_PER_KM := 0.03        # litres per km (turbo burns three times as much)
+var fuel := 3.0
+var money := 1000.0             # THB
+var refuelling := false
+var _low_warned := false
 var turbo := false
 var surface := World.ROAD
 var model: Node3D
@@ -62,6 +69,7 @@ func _physics_process(dt: float) -> void:
 		return
 
 	surface = world.class_at(position.x, position.z)
+	_update_fuel(dt)
 	var vmax := MAX_ROAD
 	if surface == World.SAND:
 		vmax = MAX_SAND
@@ -69,6 +77,9 @@ func _physics_process(dt: float) -> void:
 		vmax = MAX_OFFROAD
 	if turbo:
 		vmax *= TURBO_MULT
+	if fuel <= 0.0:
+		vmax = 1.5   # out of fuel: pushing the scooter
+		thr = minf(thr, 0.3)
 	var accel := ACCEL * (TURBO_MULT * 0.8 if turbo else 1.0)
 
 	if thr > 0.0:
@@ -106,7 +117,9 @@ func _physics_process(dt: float) -> void:
 		speed = -speed * 0.25
 		np = position
 		_say("Бум! Здание")
-	odometer += (np - position).length()
+	var moved := (np - position).length()
+	odometer += moved
+	fuel = maxf(0.0, fuel - moved / 1000.0 * USE_PER_KM * (3.0 if turbo else 1.0))
 	position = Vector3(np.x, world.ground_at(np.x, np.z), np.z)
 
 	_safe_timer += dt
@@ -156,3 +169,27 @@ func _say(t: String) -> void:
 	if _msg_cooldown <= 0.0:
 		_msg_cooldown = 2.5
 		message.emit(t)
+
+
+
+func _update_fuel(dt: float) -> void:
+	refuelling = false
+	if fuel < TANK * 0.15 and not _low_warned:
+		_low_warned = true
+		_say("Бензин на исходе! Ближайшая заправка — на карте (M)")
+	if fuel <= 0.0:
+		_say("Бензин кончился — толкай скутер до заправки или бутылочного стенда")
+	if absf(speed) > 0.6 or fuel >= TANK - 0.01:
+		return
+	var nf: Array = world.pois.nearest_fuel(Vector2(position.x, position.z))
+	if nf[0].is_empty() or nf[1] > nf[0][1]:
+		return
+	var price: float = nf[0][2]
+	var add := minf(minf(0.6 * dt, TANK - fuel), money / price)
+	if add <= 0.0:
+		_say("Не хватает денег на бензин")
+		return
+	fuel += add
+	money -= add * price
+	refuelling = true
+	_low_warned = false
