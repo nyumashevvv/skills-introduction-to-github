@@ -5,8 +5,12 @@ config_version=5
 
 config/name="Samui Ride"
 config/description="Explore Koh Samui at 1:1 scale on a scooter"
-run/main_scene="res://main.tscn"
+run/main_scene="res://menu.tscn"
 config/features=PackedStringArray("4.3", "Forward Plus")
+
+[autoload]
+
+Settings="*res://scripts/settings.gd"
 
 [display]
 

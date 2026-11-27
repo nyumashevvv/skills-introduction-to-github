@@ -18,6 +18,7 @@ var restaurants := []           # [Vector2, name]
 var sights := []                # [Vector2, name, kind]
 var found := {}                 # sight index -> true
 var deliveries := 0
+var saved := {}                 # the loaded save (position and time are restored by main)
 var job := {}                   # {state: "pickup"/"drop", from, to, name, time_left, reward}
 var beacon: MeshInstance3D
 var _save_t := 0.0
@@ -173,11 +174,12 @@ func save_game() -> void:
 	if f == null:
 		return
 	f.store_string(JSON.stringify({"money": scooter.money, "fuel": scooter.fuel, "found": found.keys(),
-		"deliveries": deliveries, "odo": scooter.odometer, "hour": get_parent().daynight.hour}))
+		"deliveries": deliveries, "odo": scooter.odometer, "hour": get_parent().daynight.hour,
+		"x": scooter.position.x, "z": scooter.position.z, "heading": scooter.heading}))
 
 
 func load_game() -> void:
-	if not FileAccess.file_exists(SAVE_PATH) or OS.get_cmdline_user_args().has("--fresh"):
+	if not FileAccess.file_exists(SAVE_PATH) or Settings.new_game or OS.get_cmdline_user_args().has("--fresh"):
 		return
 	var d = JSON.parse_string(FileAccess.get_file_as_string(SAVE_PATH))
 	if typeof(d) != TYPE_DICTIONARY:
@@ -188,3 +190,4 @@ func load_game() -> void:
 	deliveries = int(d.get("deliveries", 0))
 	for i in d.get("found", []):
 		found[int(i)] = true
+	saved = d

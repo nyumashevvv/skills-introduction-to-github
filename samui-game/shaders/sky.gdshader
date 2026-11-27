@@ -34,7 +34,7 @@ void sky() {
 	c += sunset * dusk * band * (0.35 + 1.4 * pow(to_sun, 6.0));
 	c += vec3(0.55, 0.22, 0.35) * dusk * 0.35 * pow(1.0 - h, 2.5) * (1.0 - to_sun);
 	// sun disk
-	if (LIGHT0_ENABLED && to_sun > 0.9993) c += LIGHT0_COLOR * LIGHT0_ENERGY * 6.0;
+	if (LIGHT0_ENABLED && to_sun > 0.99993) c += LIGHT0_COLOR * LIGHT0_ENERGY * 6.0;
 	// stars and moon
 	if (night > 0.01 && d.y > 0.0) {
 		vec3 p = floor(d * 420.0);

@@ -32,7 +32,7 @@ func _ready() -> void:
 	fuel_bar.size = Vector2(160, 14)
 	fuel_bar.show_percentage = false
 	add_child(fuel_bar)
-	help_label.text = "W/S — газ/тормоз   A/D — руль   Shift — турбо   M — карта   C — камера   R — на дорогу   Q — качество   N — +1 час   J — заказ   H — гудок"
+	help_label.text = "W/S — газ/тормоз   A/D — руль   Shift — турбо   M — карта   C — камера   R — на дорогу   Q — качество   N — +1 час   J — заказ   H — гудок   Esc — меню"
 	msg_label = _label(Vector2(0, 120), 24, Control.PRESET_TOP_WIDE)
 	msg_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	minimap = MiniMap.new()

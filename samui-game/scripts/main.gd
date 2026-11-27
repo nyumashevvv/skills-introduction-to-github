@@ -66,7 +66,20 @@ func _ready() -> void:
 	audio.scooter = scooter
 	add_child(audio)
 	audio.setup()
-	hud.show_message("Добро пожаловать на Самуи! Остров в масштабе 1:1. M — карта")
+	add_child(PauseMenu.new())
+	get_child(get_child_count() - 1).main = self
+	if missions.saved.has("x"):
+		scooter.teleport(missions.saved["x"], missions.saved["z"])
+		_cam_pos = scooter.position + Vector3(0, 3, 6)
+		daynight.hour = float(missions.saved.get("hour", daynight.hour))
+		hud.show_message("С возвращением на Самуи!")
+	else:
+		daynight.hour = Settings.start_hour
+		if Settings.new_game:
+			missions.save_game()
+		hud.show_message("Добро пожаловать на Самуи! Остров в масштабе 1:1. M — карта, Esc — меню")
+	daynight.apply()
+	set_quality(Settings.quality, false)
 	for arg in OS.get_cmdline_user_args():
 		var kv := arg.trim_prefix("--").split("=")
 		_shot[kv[0]] = kv[1] if kv.size() > 1 else "1"
@@ -79,6 +92,10 @@ func _ready() -> void:
 		scooter.heading = deg_to_rad(float(_shot["heading"]))
 		scooter._update_transform(0.0)
 		_cam_pos = scooter.position - scooter.forward() * 5.0 + Vector3.UP * 2.5
+	if _shot.has("nohud"):
+		hud.visible = false
+		for l in world.find_children("*", "Label3D", false, false):
+			l.visible = false
 	if _shot.has("time"):
 		daynight.hour = float(_shot["time"])
 		daynight.apply()
@@ -202,7 +219,7 @@ func _process(dt: float) -> void:
 
 
 ## Q cycles quality: high -> low -> medium -> high.
-func set_quality(level: int) -> void:
+func set_quality(level: int, announce := true) -> void:
 	quality = level
 	world.vegetation.set_quality(level)
 	world.traffic.target_count = [18, 30, 45][level]
@@ -210,4 +227,7 @@ func set_quality(level: int) -> void:
 	env.glow_enabled = level >= 1
 	sun.directional_shadow_max_distance = [90.0, 150.0, 220.0][level]
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS if level == 0 else DirectionalLight3D.SHADOW_PARALLEL_4_SPLITS
-	hud.show_message("Качество: " + ["низкое", "среднее", "высокое"][level])
+	Settings.quality = level
+	Settings.save()
+	if announce:
+		hud.show_message("Качество: " + ["низкое", "среднее", "высокое"][level])
